@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'jp.leafytree.android-scala'
 
 android {
     compileSdkVersion 22
@@ -6,10 +7,13 @@ android {
 
     defaultConfig {
         applicationId "com.dhpcs.liquidity"
-        minSdkVersion 15
+        // TODO: To reduce compilation time
+        minSdkVersion 22
         targetSdkVersion 22
         versionCode 1
         versionName "1.0"
+        multiDexEnabled true
+        testInstrumentationRunner "com.android.test.runner.MultiDexTestRunner"
     }
     buildTypes {
         release {
@@ -17,9 +21,25 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    packagingOptions {
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'rootdoc.txt'
+    }
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.android.support:multidex:1.0.1'
+    compile 'org.scala-lang:scala-library:2.11.6'
+    compile 'com.dhpcs:liquidity-common_2.11:0.1.0'
+    compile 'com.google.android.gms:play-services-base:7.3.0'
+    compile 'com.madgag.spongycastle:pkix:1.51.0.0'
+    compile 'com.squareup.okhttp:okhttp:2.3.0'
+    compile 'com.squareup.okhttp:okhttp-ws:2.3.0'
     compile 'com.android.support:appcompat-v7:22.1.1'
+    compile 'commons-io:commons-io:2.4'
+    androidTestCompile 'com.android.support:multidex-instrumentation:1.0.1', { exclude module: "multidex" }
 }
