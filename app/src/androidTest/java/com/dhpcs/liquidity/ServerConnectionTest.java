@@ -1,39 +1,86 @@
 package com.dhpcs.liquidity;
 
 import android.test.AndroidTestCase;
-import android.util.Log;
-
-import java.io.IOException;
 
 import com.dhpcs.liquidity.models.CreateZone;
 import com.dhpcs.liquidity.models.Event;
 import com.dhpcs.liquidity.models.ZoneCreated;
 import com.dhpcs.liquidity.models.ZoneState;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import de.greenrobot.event.EventBus;
+
 public class ServerConnectionTest extends AndroidTestCase {
 
-    public void testStream() throws IOException {
+    private final Logger log = LoggerFactory.getLogger(ServerConnectionTest.class);
 
-        ServerConnection serverConnection = new ServerConnection(getContext());
-        serverConnection.connect();
+    private final CyclicBarrier eventSetBarrier = new CyclicBarrier(2);
+    private final CyclicBarrier eventReadBarrier = new CyclicBarrier(2);
+    private final CyclicBarrier serverConnectionStateSetBarrier = new CyclicBarrier(2);
+    private final CyclicBarrier serverConnectionStateReadBarrier = new CyclicBarrier(2);
 
-        serverConnection.post(new CreateZone("Dave's zone", "test"));
+    private Event event;
+    private ServerConnection.ServerConnectionState serverConnectionState;
 
-        Event zoneCreated = serverConnection.read();
-        Log.d(getClass().getSimpleName(), zoneCreated.getClass().getCanonicalName());
-        boolean isZoneCreated = zoneCreated instanceof ZoneCreated;
-        assertTrue(isZoneCreated);
+    public void onEvent(Event event) throws InterruptedException, BrokenBarrierException {
+        log.debug("event={}", event);
+        eventReadBarrier.await();
+        this.event = event;
+        eventSetBarrier.await();
+    }
 
-        Event zoneState = serverConnection.read();
-        boolean isZoneState = zoneState instanceof ZoneState;
-        assertTrue(isZoneState);
+    public void onEvent(ServerConnection.ServerConnectionState serverConnectionState) throws BrokenBarrierException, InterruptedException {
+        log.debug("serverConnectionState={}", serverConnectionState);
+        serverConnectionStateReadBarrier.await();
+        this.serverConnectionState = serverConnectionState;
+        serverConnectionStateSetBarrier.await();
+    }
 
-        Log.d(getClass().getSimpleName(), zoneState.toString());
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        EventBus.getDefault().registerSticky(this);
+    }
 
-        assertEquals("Dave's zone", ((ZoneState)zoneState).zone().name());
-        assertEquals("test", ((ZoneState)zoneState).zone().zoneType());
+    @Override
+    public void tearDown() throws Exception {
+        EventBus.getDefault().unregister(this);
+        super.tearDown();
+    }
 
-        serverConnection.disconnect();
+    public void testStream() throws InterruptedException, BrokenBarrierException, TimeoutException {
+
+        ServerConnection.getInstance(getContext()).connect();
+        serverConnectionStateReadBarrier.await(15, TimeUnit.SECONDS);
+        serverConnectionStateSetBarrier.await(15, TimeUnit.SECONDS);
+        assertEquals(ServerConnection.ServerConnectionState.CONNECTING, serverConnectionState);
+        serverConnectionStateReadBarrier.await(15, TimeUnit.SECONDS);
+        serverConnectionStateSetBarrier.await(15, TimeUnit.SECONDS);
+        assertEquals(ServerConnection.ServerConnectionState.CONNECTED, serverConnectionState);
+
+        EventBus.getDefault().post(new CreateZone("Dave's zone", GameType.TEST.typeName));
+        eventReadBarrier.await(15, TimeUnit.SECONDS);
+        eventSetBarrier.await(15, TimeUnit.SECONDS);
+        assertTrue(event instanceof ZoneCreated);
+        eventReadBarrier.await(15, TimeUnit.SECONDS);
+        eventSetBarrier.await(15, TimeUnit.SECONDS);
+        assertTrue(event instanceof ZoneState);
+        assertEquals(GameType.TEST.typeName, ((ZoneState) event).zone().zoneType());
+
+        ServerConnection.getInstance(getContext()).disconnect();
+        serverConnectionStateReadBarrier.await(15, TimeUnit.SECONDS);
+        serverConnectionStateSetBarrier.await(15, TimeUnit.SECONDS);
+        assertEquals(ServerConnection.ServerConnectionState.DISCONNECTING, serverConnectionState);
+        serverConnectionStateReadBarrier.await(15, TimeUnit.SECONDS);
+        serverConnectionStateSetBarrier.await(15, TimeUnit.SECONDS);
+        assertEquals(ServerConnection.ServerConnectionState.DISCONNECTED, serverConnectionState);
 
     }
 
