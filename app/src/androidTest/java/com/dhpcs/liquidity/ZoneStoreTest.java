@@ -24,12 +24,12 @@ public class ZoneStoreTest extends AndroidTestCase {
                         zoneId,
                         Zone.apply(
                                 "Dave's zone",
-                                "test"
+                                GameType.TEST.typeName
                         )
                 );
-        new ZoneStore(getContext(), zoneId).saveState(zoneState);
+        new ZoneStore(getContext(), GameType.TEST.typeName, zoneId).saveState(zoneState);
 
-        Iterator<ZoneStore> zoneStateIterator = new ZoneStore.ZoneStoreIterator(getContext());
+        Iterator<ZoneStore> zoneStateIterator = new ZoneStore.ZoneStoreIterator(getContext(), GameType.TEST);
 
         assertEquals(true, zoneStateIterator.hasNext());
         assertEquals(zoneState, zoneStateIterator.next().loadState());
@@ -45,12 +45,12 @@ public class ZoneStoreTest extends AndroidTestCase {
                         zoneId,
                         Zone.apply(
                                 "Dave's zone",
-                                "test"
+                                 GameType.TEST.typeName
                         )
                 );
-        new ZoneStore(getContext(), zoneId).saveState(zoneState);
+        new ZoneStore(getContext(), GameType.TEST.typeName, zoneId).saveState(zoneState);
 
-        ZoneState loadedZoneState = new ZoneStore(getContext(), zoneId).loadState();
+        ZoneState loadedZoneState = new ZoneStore(getContext(), GameType.TEST.typeName, zoneId).loadState();
 
         assertEquals(zoneState, loadedZoneState);
 

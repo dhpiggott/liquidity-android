@@ -26,23 +26,28 @@ public class ZoneStore {
 
     private static final String ZONES_DIRECTORY_NAME = "zones";
 
+    // TODO: Sorting
     public static class ZoneStoreIterator implements Iterator<ZoneStore> {
 
         private final Context context;
+        private final GameType gameType;
         private final String[] storedZoneIds;
         private int i;
 
-        public ZoneStoreIterator(Context context) {
+        public ZoneStoreIterator(Context context, GameType gameType) {
             this.context = context;
+            this.gameType = gameType;
             this.storedZoneIds = new File(
-                    context.getFilesDir(),
-                    ZONES_DIRECTORY_NAME
+                    new File(
+                            context.getFilesDir(),
+                            ZONES_DIRECTORY_NAME),
+                    gameType.typeName
             ).list();
         }
 
         @Override
         public boolean hasNext() {
-            return i < storedZoneIds.length;
+            return storedZoneIds != null && i < storedZoneIds.length;
         }
 
         @Override
@@ -53,6 +58,7 @@ public class ZoneStore {
             String nextZoneIdString = storedZoneIds[i++];
             return new ZoneStore(
                     context,
+                    gameType.typeName,
                     new ZoneId(
                             UUID.fromString(nextZoneIdString)
                     )
@@ -81,33 +87,37 @@ public class ZoneStore {
         }
     }
 
-    private final File zonesDirectory;
+    private final ZoneId zoneId;
+    private final File zoneDirectory;
     private final File zoneStateFile;
 
-    public ZoneStore(Context context, ZoneId zoneId) {
-        this.zonesDirectory = new File(
+    public ZoneStore(Context context, String zoneType, ZoneId zoneId) {
+        this.zoneId = zoneId;
+        this.zoneDirectory = new File(
                 new File(
-                        context.getFilesDir(),
-                        ZONES_DIRECTORY_NAME
-                ),
+                        new File(
+                                context.getFilesDir(),
+                                ZONES_DIRECTORY_NAME
+                        ),
+                        zoneType),
                 zoneId.id().toString()
         );
         this.zoneStateFile = new File(
-                zonesDirectory,
+                zoneDirectory,
                 "zoneState.json"
         );
     }
 
     public void delete() {
         try {
-            FileUtils.forceDelete(zonesDirectory);
+            FileUtils.forceDelete(zoneDirectory);
         } catch (IOException e) {
             throw new Error(e);
         }
     }
 
-    public boolean hasState() {
-        return zoneStateFile.exists();
+    public ZoneId getZoneId() {
+        return zoneId;
     }
 
     // TODO: Versioning?
@@ -135,7 +145,7 @@ public class ZoneStore {
     // TODO: Versioning?
     public void saveState(ZoneState zoneState) {
         try {
-            FileUtils.forceMkdir(zoneStateFile.getParentFile());
+            FileUtils.forceMkdir(zoneDirectory);
         } catch (IOException e) {
             throw new Error(e);
         }
@@ -158,6 +168,11 @@ public class ZoneStore {
         } catch (FileNotFoundException e) {
             throw new Error(e);
         }
+    }
+
+    @Override
+    public String toString() {
+        return loadState().zone().name();
     }
 
 }

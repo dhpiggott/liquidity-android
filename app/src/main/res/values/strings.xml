@@ -1,6 +1,18 @@
 <resources>
-    <string name="app_name">Liquidity</string>
 
-    <string name="hello_world">Hello world!</string>
+    <string name="app_name">Liquidity</string>
     <string name="action_settings">Settings</string>
+    <string name="title_activity_game_types">Game Types</string>
+    <string name="title_activity_games_activity">Games</string>
+    <string name="title_activity_monopoly_game">Monopoly Game</string>
+
+    <string name="cancel">Cancel</string>
+    <string name="enter_starting_capital">Enter Starting Capital</string>
+    <string name="join_game">Join game</string>
+    <string name="new_game">New game</string>
+    <string name="ok">OK</string>
+    <string name="monopoly">Monopoly</string>
+    <string name="no_previous_games">No previous games</string>
+    <string name="previous_games">Previous games</string>
+
 </resources>
