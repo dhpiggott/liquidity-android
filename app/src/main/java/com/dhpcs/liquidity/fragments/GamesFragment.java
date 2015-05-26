@@ -14,6 +14,7 @@ import android.widget.ListAdapter;
 import com.dhpcs.liquidity.GameType;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.ZoneStore;
+import com.dhpcs.liquidity.models.ZoneId;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -25,7 +26,7 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
 
     public interface Listener {
 
-        void onGameClicked(String gameZoneId);
+        void onGameClicked(ZoneId zoneId);
 
     }
 
@@ -97,7 +98,7 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         if (null != listener) {
             listener.onGameClicked(
-                    zoneStores.get(position).getZoneId().id().toString()
+                    zoneStores.get(position).getZoneId()
             );
         }
     }

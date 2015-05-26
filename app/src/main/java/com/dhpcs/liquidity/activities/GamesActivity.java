@@ -5,16 +5,20 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
 import com.dhpcs.liquidity.GameType;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.fragments.GamesFragment;
+import com.dhpcs.liquidity.fragments.JoinGameDialogFragment;
 import com.dhpcs.liquidity.fragments.NewMonopolyGameDialogFragment;
+import com.dhpcs.liquidity.models.ZoneId;
 
 import java.math.BigDecimal;
 
 public class GamesActivity extends AppCompatActivity
-        implements NewMonopolyGameDialogFragment.Listener, GamesFragment.Listener {
+        implements NewMonopolyGameDialogFragment.Listener,
+        JoinGameDialogFragment.Listener, GamesFragment.Listener {
 
     public static final String GAME_TYPE = GamesFragment.GAME_TYPE;
 
@@ -37,7 +41,11 @@ public class GamesActivity extends AppCompatActivity
         findViewById(R.id.button_join_game).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // TODO: https://github.com/journeyapps/zxing-android-embedded
+                JoinGameDialogFragment.newInstance()
+                        .show(
+                                getFragmentManager(),
+                                "joinGameDialogFragment"
+                        );
             }
         });
 
@@ -57,8 +65,9 @@ public class GamesActivity extends AppCompatActivity
     }
 
     @Override
-    public void onGameClicked(String id) {
+    public void onGameClicked(ZoneId zoneId) {
         // TODO
+        Toast.makeText(this, "onGameClicked: " + zoneId, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -81,6 +90,12 @@ public class GamesActivity extends AppCompatActivity
     public void onStartingCapitalEntered(BigDecimal startingCapital) {
         // TODO
         // MonopolyGame.getCreateZoneCommand("Dave's zone");
+    }
+
+    @Override
+    public void onGameZoneIdScanned(ZoneId zoneId) {
+        // TODO
+        Toast.makeText(this, "onGameZoneIdScanned: " + zoneId, Toast.LENGTH_SHORT).show();
     }
 
 }
