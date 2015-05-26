@@ -1,5 +1,6 @@
 package com.dhpcs.liquidity.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
@@ -21,6 +22,18 @@ public class GamesActivity extends AppCompatActivity
         JoinGameDialogFragment.Listener, GamesFragment.Listener {
 
     public static final String GAME_TYPE = GamesFragment.GAME_TYPE;
+
+    private void joinGame(ZoneId zoneId) {
+        startActivity(
+                new Intent(
+                        this,
+                        MonopolyGameActivity.class
+                ).putExtra(
+                        MonopolyGameActivity.EXTRA_ZONE_ID,
+                        zoneId
+                )
+        );
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,8 +79,12 @@ public class GamesActivity extends AppCompatActivity
 
     @Override
     public void onGameClicked(ZoneId zoneId) {
-        // TODO
-        Toast.makeText(this, "onGameClicked: " + zoneId, Toast.LENGTH_SHORT).show();
+        joinGame(zoneId);
+    }
+
+    @Override
+    public void onGameZoneIdScanned(ZoneId zoneId) {
+        joinGame(zoneId);
     }
 
     @Override
@@ -89,13 +106,8 @@ public class GamesActivity extends AppCompatActivity
     @Override
     public void onStartingCapitalEntered(BigDecimal startingCapital) {
         // TODO
+        Toast.makeText(this, "onStartingCapitalEntered: " + startingCapital, Toast.LENGTH_SHORT).show();
         // MonopolyGame.getCreateZoneCommand("Dave's zone");
-    }
-
-    @Override
-    public void onGameZoneIdScanned(ZoneId zoneId) {
-        // TODO
-        Toast.makeText(this, "onGameZoneIdScanned: " + zoneId, Toast.LENGTH_SHORT).show();
     }
 
 }

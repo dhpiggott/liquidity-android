@@ -3,6 +3,8 @@ package com.dhpcs.liquidity;
 import android.content.Context;
 import android.provider.Settings;
 
+import com.dhpcs.liquidity.models.PublicKey;
+
 import org.spongycastle.asn1.x500.X500Name;
 import org.spongycastle.asn1.x500.X500NameBuilder;
 import org.spongycastle.asn1.x500.style.BCStyle;
@@ -30,7 +32,6 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.SignatureException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
@@ -167,12 +168,16 @@ public class ClientKey {
                             context.getContentResolver(),
                             Settings.Secure.ANDROID_ID
                     );
-                    PublicKey publicKey = certificate.getPublicKey();
                     try {
-                        PrivateKey privateKey = (PrivateKey) keyStore.getKey(ENTRY_ALIAS, null);
                         keyStore = saveKeyStore(
                                 keyStoreFile,
-                                generate(androidId, new KeyPair(publicKey, privateKey))
+                                generate(
+                                        androidId,
+                                        new KeyPair(
+                                                certificate.getPublicKey(),
+                                                (PrivateKey) keyStore.getKey(ENTRY_ALIAS, null)
+                                        )
+                                )
                         );
                     } catch (KeyStoreException
                             | NoSuchAlgorithmException
@@ -245,6 +250,16 @@ public class ClientKey {
                 throw new Error(e);
             }
         } catch (NoSuchAlgorithmException e) {
+            throw new Error(e);
+        }
+    }
+
+    public PublicKey getPublicKey() {
+        try {
+            return new PublicKey(
+                    keyStore.getCertificateChain(ENTRY_ALIAS)[0].getPublicKey().getEncoded()
+            );
+        } catch (KeyStoreException e) {
             throw new Error(e);
         }
     }

@@ -11,56 +11,48 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListAdapter;
 
-import com.dhpcs.liquidity.GameType;
+import com.dhpcs.liquidity.ClientKey;
 import com.dhpcs.liquidity.R;
-import com.dhpcs.liquidity.ZoneStore;
-import com.dhpcs.liquidity.models.ZoneId;
+import com.dhpcs.liquidity.models.Member;
+import com.dhpcs.liquidity.models.MemberId;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 // TODO: Extend ListFragment?
-public class GamesFragment extends Fragment implements AdapterView.OnItemClickListener {
-
-    public static final String GAME_TYPE = "gameType";
+public class PlayersFragment extends Fragment implements AdapterView.OnItemClickListener {
 
     public interface Listener {
 
-        void onGameClicked(ZoneId zoneId);
+        void onPlayerClicked(Member member);
 
-    }
-
-    public static GamesFragment newInstance(GameType gameType) {
-        GamesFragment fragment = new GamesFragment();
-        Bundle args = new Bundle();
-        args.putSerializable(GAME_TYPE, gameType);
-        fragment.setArguments(args);
-        return fragment;
     }
 
     private Listener listener;
 
-    private List<ZoneStore> zoneStores;
+    private List<Member> members;
     private ListAdapter listAdapter;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        GameType gameType = (GameType) getArguments().getSerializable(GAME_TYPE);
-        zoneStores = new ArrayList<>();
-        Iterator<ZoneStore> iterator = new ZoneStore.ZoneStoreIterator(getActivity(), gameType);
-        while (iterator.hasNext()) {
-            zoneStores.add(iterator.next());
-        }
+        members = new ArrayList<>();
+        // TODO
+//        Iterator<ZoneStore> iterator = new ZoneStore.ZoneStoreIterator(getActivity(), gameType);
+//        while (iterator.hasNext()) {
+//            members.add(iterator.next());
+//        }
+        members.add(new Member("Player 1", ClientKey.getInstance(getActivity()).getPublicKey()));
+        members.add(new Member("Player 2", ClientKey.getInstance(getActivity()).getPublicKey()));
+        members.add(new Member("Player 3", ClientKey.getInstance(getActivity()).getPublicKey()));
 
         listAdapter = new ArrayAdapter<>(
                 getActivity(),
                 // TODO
                 android.R.layout.simple_list_item_1,
                 android.R.id.text1,
-                zoneStores
+                members
         );
     }
 
@@ -68,7 +60,7 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
     public View onCreateView(LayoutInflater inflater,
                              ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_games, container, false);
+        View view = inflater.inflate(R.layout.fragment_player_list, container, false);
 
         AbsListView absListView = (AbsListView) view.findViewById(android.R.id.list);
         absListView.setAdapter(listAdapter);
@@ -85,7 +77,7 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
             listener = (Listener) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
-                    + " must implement GamesFragment.Listener");
+                    + " must implement PlayersFragment.Listener");
         }
     }
 
@@ -98,8 +90,8 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         if (listener != null) {
-            listener.onGameClicked(
-                    zoneStores.get(position).getZoneId()
+            listener.onPlayerClicked(
+                    members.get(position)
             );
         }
     }

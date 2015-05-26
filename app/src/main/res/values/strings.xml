@@ -11,7 +11,8 @@
     <string name="join_game">Join game</string>
     <string name="new_game">New game</string>
     <string name="monopoly">Monopoly</string>
-    <string name="no_previous_games">No previous games</string>
+    <string name="no_other_players_present">No other players present</string>
+    <string name="no_previous_games_available">No previous games available</string>
     <string name="ok">OK</string>
     <string name="previous_games">Previous games</string>
     <string name="qr_code_is_not_a_liquidity_game">"QR code is not a Liquidity game!"</string>

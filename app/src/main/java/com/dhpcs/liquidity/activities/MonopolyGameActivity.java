@@ -4,15 +4,25 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.dhpcs.liquidity.R;
+import com.dhpcs.liquidity.fragments.PlayersFragment;
+import com.dhpcs.liquidity.models.Member;
+import com.dhpcs.liquidity.models.ZoneId;
 
-public class MonopolyGameActivity extends AppCompatActivity {
+public class MonopolyGameActivity extends AppCompatActivity
+        implements PlayersFragment.Listener {
+
+    public static final String EXTRA_ZONE_ID = "zoneId";
+
+    private ZoneId zoneId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_monopoly_game);
+        zoneId = (ZoneId) getIntent().getSerializableExtra(EXTRA_ZONE_ID);
     }
 
     @Override
@@ -29,6 +39,7 @@ public class MonopolyGameActivity extends AppCompatActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
+        // TODO
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
@@ -36,4 +47,11 @@ public class MonopolyGameActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
+    @Override
+    public void onPlayerClicked(Member member) {
+        // TODO
+        Toast.makeText(this, "onPlayerClicked: " + member, Toast.LENGTH_SHORT).show();
+    }
+
 }

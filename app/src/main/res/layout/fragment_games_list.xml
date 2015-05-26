@@ -5,17 +5,16 @@
     android:layout_height="match_parent"
     tools:context="com.dhpcs.liquidity.fragments.GamesFragment">
 
-    <GridView
+    <ListView
         android:id="@android:id/list"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:numColumns="2" />
+        android:layout_height="match_parent" />
 
     <TextView
         android:id="@android:id/empty"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
-        android:text="@string/no_previous_games" />
+        android:text="@string/no_previous_games_available" />
 
 </FrameLayout>

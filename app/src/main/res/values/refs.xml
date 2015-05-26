@@ -7,6 +7,6 @@
     For more on layout aliases, see:
     http://developer.android.com/training/multiscreen/screensizes.html#TaskUseAliasFilters
     -->
-    <item name="fragment_game" type="layout">@layout/fragment_game_list</item>
+    <item name="fragment_games" type="layout">@layout/fragment_games_list</item>
 
 </resources>
