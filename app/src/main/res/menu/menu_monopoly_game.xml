@@ -3,8 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.dhpcs.liquidity.activities.MonopolyGameActivity">
     <item
-        android:id="@+id/action_settings"
+        android:id="@+id/action_add_players"
         android:orderInCategory="100"
-        android:title="@string/action_settings"
+        android:title="@string/add_players"
         app:showAsAction="never" />
 </menu>

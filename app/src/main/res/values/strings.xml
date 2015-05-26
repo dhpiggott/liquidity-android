@@ -6,6 +6,7 @@
     <string name="title_activity_games_activity">Games</string>
     <string name="title_activity_monopoly_game">Monopoly Game</string>
 
+    <string name="add_players">Add players</string>
     <string name="cancel">Cancel</string>
     <string name="enter_starting_capital">Enter starting capital</string>
     <string name="join_game">Join game</string>

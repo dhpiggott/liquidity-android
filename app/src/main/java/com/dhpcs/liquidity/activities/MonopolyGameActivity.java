@@ -7,6 +7,7 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.dhpcs.liquidity.R;
+import com.dhpcs.liquidity.fragments.AddPlayersDialogFragment;
 import com.dhpcs.liquidity.fragments.PlayersFragment;
 import com.dhpcs.liquidity.models.Member;
 import com.dhpcs.liquidity.models.ZoneId;
@@ -41,7 +42,12 @@ public class MonopolyGameActivity extends AppCompatActivity
 
         // TODO
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_add_players) {
+            AddPlayersDialogFragment.newInstance(zoneId)
+                    .show(
+                            getFragmentManager(),
+                            "addPlayersDialogFragment"
+                    );
             return true;
         }
 
