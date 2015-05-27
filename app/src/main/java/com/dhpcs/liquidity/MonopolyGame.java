@@ -3,12 +3,8 @@ package com.dhpcs.liquidity;
 import android.content.Context;
 
 import com.dhpcs.liquidity.models.CreateZone;
-import com.dhpcs.liquidity.models.JoinZone;
-import com.dhpcs.liquidity.models.QuitZone;
 import com.dhpcs.liquidity.models.ZoneCreated;
 import com.dhpcs.liquidity.models.ZoneId;
-
-import de.greenrobot.event.EventBus;
 
 public class MonopolyGame {
 
@@ -34,13 +30,12 @@ public class MonopolyGame {
 
     private final ServerConnection serverConnection;
     private final ZoneStore zoneStore;
-    private final EventBus eventBus = EventBus.getDefault();
     private final ZoneId zoneId;
 
     private MonopolyGame(
             ServerConnection serverConnection,
             Context context,
-                         ZoneId zoneId) {
+            ZoneId zoneId) {
         this.serverConnection = serverConnection;
         this.zoneId = zoneId;
         this.zoneStore = new ZoneStore(context, ZONE_TYPE.typeName, zoneId);

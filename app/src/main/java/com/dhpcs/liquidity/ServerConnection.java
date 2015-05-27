@@ -21,17 +21,26 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 
-import de.greenrobot.event.EventBus;
 import okio.Buffer;
 import okio.BufferedSource;
 import play.api.libs.json.JsResultException;
 import play.api.libs.json.Json;
 
 public class ServerConnection implements WebSocketListener {
+
+    public interface Listener {
+
+        void onEventReceived(Event event);
+
+        void onStateChanged(ServerConnectionState serverConnectionState);
+
+    }
 
     public enum ServerConnectionState {
         CONNECTING,
@@ -75,8 +84,13 @@ public class ServerConnection implements WebSocketListener {
 
     private final Logger log = LoggerFactory.getLogger(ServerConnection.class);
 
+    // TODO: Do we need to support multiple listeners? Or should we support multiple instances but
+    // only allow one listener per instance?
+    private final Set<Listener> listeners = new HashSet<>();
+
     private final OkHttpClient client;
 
+    private ServerConnectionState serverConnectionState;
     private Handler handler;
     private WebSocketCall webSocketCall;
     private WebSocket webSocket;
@@ -101,6 +115,13 @@ public class ServerConnection implements WebSocketListener {
         this.client.setSslSocketFactory(getSslSocketFactory(context));
     }
 
+    public void addListener(Listener listener) {
+        if (serverConnectionState != null) {
+            listener.onStateChanged(serverConnectionState);
+        }
+        listeners.add(listener);
+    }
+
     public void connect() {
         log.debug("Creating websocket call");
         if (handler != null) {
@@ -113,7 +134,7 @@ public class ServerConnection implements WebSocketListener {
 
             @Override
             public void run() {
-                EventBus.getDefault().postSticky(ServerConnectionState.CONNECTING);
+                setState(ServerConnectionState.CONNECTING);
                 webSocketCall = WebSocketCall.create(
                         client, new Request.Builder()
                                 .url(SERVER_ENDPOINT)
@@ -137,7 +158,7 @@ public class ServerConnection implements WebSocketListener {
 
             @Override
             public void run() {
-                EventBus.getDefault().postSticky(ServerConnectionState.DISCONNECTING);
+                setState(ServerConnectionState.DISCONNECTING);
                 if (webSocket == null) {
                     log.debug("Cancelling websocket call");
                     webSocketCall.cancel();
@@ -156,30 +177,6 @@ public class ServerConnection implements WebSocketListener {
         });
     }
 
-    private void execute(final Command command) {
-        log.debug("Sending command message: {}", command);
-        handler.post(new Runnable() {
-
-            @Override
-            public void run() {
-                if (webSocket == null) {
-                    throw new IllegalStateException("Not connected");
-                }
-                try {
-                    webSocket.sendMessage(
-                            WebSocket.PayloadType.TEXT,
-                            new Buffer().writeUtf8(Json.stringify(Json.toJson(
-                                    command,
-                                    Command$.MODULE$.commandWrites()
-                            ))));
-                } catch (IOException e) {
-                    log.warn(e.getMessage(), e);
-                }
-            }
-
-        });
-    }
-
     @Override
     public void onClose(int code, String reason) {
         log.debug("WebSocket closed. Code: {}, reason: {}", code, reason);
@@ -187,8 +184,7 @@ public class ServerConnection implements WebSocketListener {
 
             @Override
             public void run() {
-                EventBus.getDefault().postSticky(ServerConnectionState.DISCONNECTED);
-                EventBus.getDefault().unregister(ServerConnection.this);
+                setState(ServerConnectionState.DISCONNECTED);
                 webSocketCall = null;
                 webSocket = null;
                 handler.getLooper().quit();
@@ -196,29 +192,11 @@ public class ServerConnection implements WebSocketListener {
             }
 
         });
-    }
-
-    // TODO
-    public void onEvent(Command command) {
-        execute(command);
     }
 
     @Override
     public void onFailure(IOException e) {
         log.warn(e.getMessage(), e);
-        handler.post(new Runnable() {
-
-            @Override
-            public void run() {
-                EventBus.getDefault().postSticky(ServerConnectionState.DISCONNECTED);
-                EventBus.getDefault().unregister(ServerConnection.this);
-                webSocketCall = null;
-                webSocket = null;
-                handler.getLooper().quit();
-                handler = null;
-            }
-
-        });
     }
 
     @Override
@@ -230,13 +208,15 @@ public class ServerConnection implements WebSocketListener {
                     final Event event = Json.parse(payload.readUtf8())
                             .as(Event$.MODULE$.eventReads());
 
-                    log.debug("Event message received: {}", event);
+                    log.debug("Received event: {}", event);
 
                     handler.post(new Runnable() {
 
                         @Override
                         public void run() {
-                            EventBus.getDefault().post(event);
+                            for (Listener listener : listeners) {
+                                listener.onEventReceived(event);
+                            }
                         }
 
                     });
@@ -270,8 +250,7 @@ public class ServerConnection implements WebSocketListener {
             public void run() {
                 ServerConnection.this.webSocketCall = null;
                 ServerConnection.this.webSocket = webSocket;
-                EventBus.getDefault().register(ServerConnection.this);
-                EventBus.getDefault().postSticky(ServerConnectionState.CONNECTED);
+                setState(ServerConnectionState.CONNECTED);
             }
 
         });
@@ -296,6 +275,41 @@ public class ServerConnection implements WebSocketListener {
             }
 
         });
+    }
+
+    public void removeListener(Listener listener) {
+        listeners.remove(listener);
+    }
+
+    public void sendCommand(final Command command) {
+        log.debug("Sending command: {}", command);
+        handler.post(new Runnable() {
+
+            @Override
+            public void run() {
+                if (webSocket == null) {
+                    throw new IllegalStateException("Not connected");
+                }
+                try {
+                    webSocket.sendMessage(
+                            WebSocket.PayloadType.TEXT,
+                            new Buffer().writeUtf8(Json.stringify(Json.toJson(
+                                    command,
+                                    Command$.MODULE$.commandWrites()
+                            ))));
+                } catch (IOException e) {
+                    log.warn(e.getMessage(), e);
+                }
+            }
+
+        });
+    }
+
+    private void setState(ServerConnectionState serverConnectionState) {
+        this.serverConnectionState = serverConnectionState;
+        for (Listener listener : listeners) {
+            listener.onStateChanged(serverConnectionState);
+        }
     }
 
 }

@@ -15,9 +15,7 @@ import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import de.greenrobot.event.EventBus;
-
-public class ServerConnectionTest extends AndroidTestCase {
+public class ServerConnectionTest extends AndroidTestCase implements ServerConnection.Listener {
 
     private final Logger log = LoggerFactory.getLogger(ServerConnectionTest.class);
 
@@ -29,33 +27,34 @@ public class ServerConnectionTest extends AndroidTestCase {
     private Event event;
     private ServerConnection.ServerConnectionState serverConnectionState;
 
-    public void onEvent(Event event) throws InterruptedException, BrokenBarrierException {
-        log.debug("event={}", event);
-        eventReadBarrier.await();
-        this.event = event;
-        eventSetBarrier.await();
-    }
-
-    public void onEvent(ServerConnection.ServerConnectionState serverConnectionState) throws BrokenBarrierException, InterruptedException {
-        log.debug("serverConnectionState={}", serverConnectionState);
-        serverConnectionStateReadBarrier.await();
-        this.serverConnectionState = serverConnectionState;
-        serverConnectionStateSetBarrier.await();
+    @Override
+    public void onEventReceived(Event event) {
+        try {
+            log.debug("event={}", event);
+            eventReadBarrier.await();
+            this.event = event;
+            eventSetBarrier.await();
+        } catch (InterruptedException
+                | BrokenBarrierException e) {
+            throw new Error(e);
+        }
     }
 
     @Override
-    public void setUp() throws Exception {
-        super.setUp();
-        EventBus.getDefault().registerSticky(this);
-    }
-
-    @Override
-    public void tearDown() throws Exception {
-        EventBus.getDefault().unregister(this);
-        super.tearDown();
+    public void onStateChanged(ServerConnection.ServerConnectionState serverConnectionState) {
+        try {
+            log.debug("serverConnectionState={}", serverConnectionState);
+            serverConnectionStateReadBarrier.await();
+            this.serverConnectionState = serverConnectionState;
+            serverConnectionStateSetBarrier.await();
+        } catch (InterruptedException
+                | BrokenBarrierException e) {
+            throw new Error(e);
+        }
     }
 
     public void testStream() throws InterruptedException, BrokenBarrierException, TimeoutException {
+        ServerConnection.getInstance(getContext()).addListener(this);
 
         ServerConnection.getInstance(getContext()).connect();
         serverConnectionStateReadBarrier.await(15, TimeUnit.SECONDS);
@@ -65,7 +64,7 @@ public class ServerConnectionTest extends AndroidTestCase {
         serverConnectionStateSetBarrier.await(15, TimeUnit.SECONDS);
         assertEquals(ServerConnection.ServerConnectionState.CONNECTED, serverConnectionState);
 
-        EventBus.getDefault().post(new CreateZone("Dave's zone", GameType.TEST.typeName));
+        ServerConnection.getInstance(getContext()).sendCommand(new CreateZone("Dave's zone", GameType.TEST.typeName));
         eventReadBarrier.await(15, TimeUnit.SECONDS);
         eventSetBarrier.await(15, TimeUnit.SECONDS);
         assertTrue(event instanceof ZoneCreated);
@@ -82,6 +81,7 @@ public class ServerConnectionTest extends AndroidTestCase {
         serverConnectionStateSetBarrier.await(15, TimeUnit.SECONDS);
         assertEquals(ServerConnection.ServerConnectionState.DISCONNECTED, serverConnectionState);
 
+        ServerConnection.getInstance(getContext()).removeListener(this);
     }
 
 }
