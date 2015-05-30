@@ -2,8 +2,9 @@ package com.dhpcs.liquidity;
 
 import android.test.AndroidTestCase;
 
+import com.dhpcs.liquidity.models.CommandResponse;
 import com.dhpcs.liquidity.models.CreateZone;
-import com.dhpcs.liquidity.models.Event;
+import com.dhpcs.liquidity.models.Notification;
 import com.dhpcs.liquidity.models.ZoneCreated;
 import com.dhpcs.liquidity.models.ZoneState;
 
@@ -19,21 +20,24 @@ public class ServerConnectionTest extends AndroidTestCase implements ServerConne
 
     private final Logger log = LoggerFactory.getLogger(ServerConnectionTest.class);
 
-    private final CyclicBarrier eventSetBarrier = new CyclicBarrier(2);
-    private final CyclicBarrier eventReadBarrier = new CyclicBarrier(2);
+    private final CyclicBarrier commandResponseSetBarrier = new CyclicBarrier(2);
+    private final CyclicBarrier commandResponseReadBarrier = new CyclicBarrier(2);
+    private final CyclicBarrier notificationSetBarrier = new CyclicBarrier(2);
+    private final CyclicBarrier notificationReadBarrier = new CyclicBarrier(2);
     private final CyclicBarrier serverConnectionStateSetBarrier = new CyclicBarrier(2);
     private final CyclicBarrier serverConnectionStateReadBarrier = new CyclicBarrier(2);
 
-    private Event event;
+    private CommandResponse commandResponse;
+    private Notification notification;
     private ServerConnection.ServerConnectionState serverConnectionState;
 
     @Override
-    public void onEventReceived(Event event) {
+    public void onNotificationReceived(Notification notification) {
         try {
-            log.debug("event={}", event);
-            eventReadBarrier.await();
-            this.event = event;
-            eventSetBarrier.await();
+            log.debug("notification={}", notification);
+            notificationReadBarrier.await();
+            this.notification = notification;
+            notificationSetBarrier.await();
         } catch (InterruptedException
                 | BrokenBarrierException e) {
             throw new Error(e);
@@ -64,14 +68,27 @@ public class ServerConnectionTest extends AndroidTestCase implements ServerConne
         serverConnectionStateSetBarrier.await(15, TimeUnit.SECONDS);
         assertEquals(ServerConnection.ServerConnectionState.CONNECTED, serverConnectionState);
 
-        ServerConnection.getInstance(getContext()).sendCommand(new CreateZone("Dave's zone", GameType.TEST.typeName));
-        eventReadBarrier.await(15, TimeUnit.SECONDS);
-        eventSetBarrier.await(15, TimeUnit.SECONDS);
-        assertTrue(event instanceof ZoneCreated);
-        eventReadBarrier.await(15, TimeUnit.SECONDS);
-        eventSetBarrier.await(15, TimeUnit.SECONDS);
-        assertTrue(event instanceof ZoneState);
-        assertEquals(GameType.TEST.typeName, ((ZoneState) event).zone().zoneType());
+        ServerConnection.getInstance(getContext()).sendCommand(new CreateZone("Dave's zone", GameType.TEST.typeName), new ServerConnection.CommandResponseCallback() {
+            @Override
+            public void onCommandResponseReceived(CommandResponse commandResponse) {
+                try {
+                    log.debug("commandResponse={}", commandResponse);
+                    commandResponseReadBarrier.await();
+                    ServerConnectionTest.this.commandResponse = commandResponse;
+                    commandResponseSetBarrier.await();
+                } catch (InterruptedException
+                        | BrokenBarrierException e) {
+                    throw new Error(e);
+                }
+            }
+        });
+        commandResponseReadBarrier.await(15, TimeUnit.SECONDS);
+        commandResponseSetBarrier.await(15, TimeUnit.SECONDS);
+        assertTrue(commandResponse instanceof ZoneCreated);
+        notificationReadBarrier.await(15, TimeUnit.SECONDS);
+        notificationSetBarrier.await(15, TimeUnit.SECONDS);
+        assertTrue(notification instanceof ZoneState);
+        assertEquals(GameType.TEST.typeName, ((ZoneState) notification).zone().zoneType());
 
         ServerConnection.getInstance(getContext()).disconnect();
         serverConnectionStateReadBarrier.await(15, TimeUnit.SECONDS);

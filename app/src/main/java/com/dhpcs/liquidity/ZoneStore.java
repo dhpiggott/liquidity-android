@@ -2,10 +2,8 @@ package com.dhpcs.liquidity;
 
 import android.content.Context;
 
-import com.dhpcs.liquidity.models.Event;
-import com.dhpcs.liquidity.models.Event$;
+import com.dhpcs.liquidity.models.Zone;
 import com.dhpcs.liquidity.models.ZoneId;
-import com.dhpcs.liquidity.models.ZoneState;
 
 import org.apache.commons.io.FileUtils;
 
@@ -89,7 +87,7 @@ public class ZoneStore {
 
     private final ZoneId zoneId;
     private final File zoneDirectory;
-    private final File zoneStateFile;
+    private final File zoneFile;
 
     public ZoneStore(Context context, String zoneType, ZoneId zoneId) {
         this.zoneId = zoneId;
@@ -102,9 +100,9 @@ public class ZoneStore {
                         zoneType),
                 zoneId.id().toString()
         );
-        this.zoneStateFile = new File(
+        this.zoneFile = new File(
                 zoneDirectory,
-                "zoneState.json"
+                "zone.json"
         );
     }
 
@@ -121,16 +119,16 @@ public class ZoneStore {
     }
 
     // TODO: Versioning?
-    public ZoneState loadState() {
+    public Zone load() {
         try {
-            BufferedSource bufferedSource = Okio.buffer(Okio.source(zoneStateFile));
+            BufferedSource bufferedSource = Okio.buffer(Okio.source(zoneFile));
             try {
                 try {
-                    JsResult<Event> jsResult = Json.fromJson(
+                    JsResult<Zone> jsResult = Json.fromJson(
                             Json.parse(bufferedSource.readUtf8()),
-                            Event$.MODULE$.eventReads()
+                            Zone.ZoneFormat()
                     );
-                    return (ZoneState) jsResult.get();
+                    return jsResult.get();
                 } finally {
                     bufferedSource.close();
                 }
@@ -143,20 +141,20 @@ public class ZoneStore {
     }
 
     // TODO: Versioning?
-    public void saveState(ZoneState zoneState) {
+    public void save(Zone zone) {
         try {
             FileUtils.forceMkdir(zoneDirectory);
         } catch (IOException e) {
             throw new Error(e);
         }
         try {
-            BufferedSink bufferedSink = Okio.buffer(Okio.sink(zoneStateFile));
+            BufferedSink bufferedSink = Okio.buffer(Okio.sink(zoneFile));
             try {
                 try {
                     bufferedSink.writeUtf8(Json.prettyPrint(
                             Json.toJson(
-                                    zoneState,
-                                    Event$.MODULE$.eventWrites()
+                                    zone,
+                                    Zone.ZoneFormat()
                             )
                     ));
                 } finally {
@@ -172,7 +170,7 @@ public class ZoneStore {
 
     @Override
     public String toString() {
-        return loadState().zone().name();
+        return load().name();
     }
 
 }

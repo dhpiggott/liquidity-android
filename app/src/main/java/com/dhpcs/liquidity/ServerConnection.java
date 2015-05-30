@@ -3,11 +3,19 @@ package com.dhpcs.liquidity;
 import android.content.Context;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.util.SparseArray;
 
+import com.dhpcs.jsonrpc.JsonRpcMessage;
+import com.dhpcs.jsonrpc.JsonRpcMessage$;
+import com.dhpcs.jsonrpc.JsonRpcNotificationMessage;
+import com.dhpcs.jsonrpc.JsonRpcRequestMessage;
+import com.dhpcs.jsonrpc.JsonRpcResponseMessage;
 import com.dhpcs.liquidity.models.Command;
 import com.dhpcs.liquidity.models.Command$;
-import com.dhpcs.liquidity.models.Event;
-import com.dhpcs.liquidity.models.Event$;
+import com.dhpcs.liquidity.models.CommandResponse;
+import com.dhpcs.liquidity.models.CommandResponse$;
+import com.dhpcs.liquidity.models.Notification;
+import com.dhpcs.liquidity.models.Notification$;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
@@ -31,12 +39,22 @@ import okio.Buffer;
 import okio.BufferedSource;
 import play.api.libs.json.JsResultException;
 import play.api.libs.json.Json;
+import scala.Int;
+import scala.util.Right;
 
 public class ServerConnection implements WebSocketListener {
 
+    public interface CommandResponseCallback {
+
+        void onCommandResponseReceived(CommandResponse commandResponse);
+
+        // TODO: Timeout
+
+    }
+
     public interface Listener {
 
-        void onEventReceived(Event event);
+        void onNotificationReceived(Notification notification);
 
         void onStateChanged(ServerConnectionState serverConnectionState);
 
@@ -94,6 +112,11 @@ public class ServerConnection implements WebSocketListener {
     private Handler handler;
     private WebSocketCall webSocketCall;
     private WebSocket webSocket;
+
+    // TODO
+    private final SparseArray<JsonRpcRequestMessage> pendingRequests = new SparseArray<>();
+    private final SparseArray<CommandResponseCallback> pendingCommandResponseCallbacks = new SparseArray<>();
+    private int lastCommandIdentifier;
 
     private ServerConnection(Context context) {
 
@@ -205,21 +228,46 @@ public class ServerConnection implements WebSocketListener {
             case TEXT:
 
                 try {
-                    final Event event = Json.parse(payload.readUtf8())
-                            .as(Event$.MODULE$.eventReads());
+                    final JsonRpcMessage jsonRpcMessage = Json.parse(payload.readUtf8())
+                            .as(JsonRpcMessage$.MODULE$.JsonRpcMessageFormat());
 
-                    log.debug("Received event: {}", event);
+                    log.debug("Received JSON-RPC message: {}", jsonRpcMessage);
 
-                    handler.post(new Runnable() {
+                    if (jsonRpcMessage instanceof JsonRpcResponseMessage) {
+                        handler.post(new Runnable() {
 
-                        @Override
-                        public void run() {
-                            for (Listener listener : listeners) {
-                                listener.onEventReceived(event);
+                            @Override
+                            public void run() {
+                                int commandIdentifier = Int.unbox(((JsonRpcResponseMessage) jsonRpcMessage).id().right().get());
+                                JsonRpcRequestMessage jsonRpcRequestMessage = pendingRequests.get(commandIdentifier);
+                                pendingRequests.remove(commandIdentifier);
+                                CommandResponseCallback commandResponseCallback = pendingCommandResponseCallbacks.get(commandIdentifier);
+                                pendingCommandResponseCallbacks.remove(commandIdentifier);
+                                commandResponseCallback.onCommandResponseReceived(
+                                        CommandResponse$.MODULE$.readCommandResponse(
+                                                (JsonRpcResponseMessage) jsonRpcMessage,
+                                                jsonRpcRequestMessage.method()
+                                        )
+                                );
                             }
-                        }
 
-                    });
+                        });
+                    } else if (jsonRpcMessage instanceof JsonRpcNotificationMessage) {
+                        handler.post(new Runnable() {
+
+                            @Override
+                            public void run() {
+                                for (Listener listener : listeners) {
+                                    listener.onNotificationReceived(
+                                            Notification$.MODULE$.readNotification(
+                                                    (JsonRpcNotificationMessage) jsonRpcMessage
+                                            )
+                                    );
+                                }
+                            }
+
+                        });
+                    }
 
                 } catch (JsResultException e) {
                     throw new IOException(e);
@@ -281,7 +329,7 @@ public class ServerConnection implements WebSocketListener {
         listeners.remove(listener);
     }
 
-    public void sendCommand(final Command command) {
+    public void sendCommand(final Command command, final CommandResponseCallback commandResponseCallback) {
         log.debug("Sending command: {}", command);
         handler.post(new Runnable() {
 
@@ -291,12 +339,19 @@ public class ServerConnection implements WebSocketListener {
                     throw new IllegalStateException("Not connected");
                 }
                 try {
+                    final int commandIdentifier = lastCommandIdentifier++;
+                    final JsonRpcRequestMessage jsonRpcRequestMessage = Command$.MODULE$.writeCommand(
+                            command,
+                            Right.<String, Object>apply(Int.box(commandIdentifier))
+                    );
                     webSocket.sendMessage(
                             WebSocket.PayloadType.TEXT,
                             new Buffer().writeUtf8(Json.stringify(Json.toJson(
-                                    command,
-                                    Command$.MODULE$.commandWrites()
+                                    jsonRpcRequestMessage,
+                                    JsonRpcRequestMessage.JsonRpcRequestMessageFormat()
                             ))));
+                    pendingRequests.append(commandIdentifier, jsonRpcRequestMessage);
+                    pendingCommandResponseCallbacks.append(commandIdentifier, commandResponseCallback);
                 } catch (IOException e) {
                     log.warn(e.getMessage(), e);
                 }

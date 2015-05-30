@@ -4,7 +4,6 @@ import android.test.AndroidTestCase;
 
 import com.dhpcs.liquidity.models.Zone;
 import com.dhpcs.liquidity.models.ZoneId;
-import com.dhpcs.liquidity.models.ZoneState;
 
 import java.util.Iterator;
 
@@ -18,41 +17,33 @@ public class ZoneStoreTest extends AndroidTestCase {
 
     public void testIterator() {
 
-        ZoneId zoneId = ZoneId.apply();
-        ZoneState zoneState =
-                new ZoneState(
-                        zoneId,
-                        Zone.apply(
-                                "Dave's zone",
-                                GameType.TEST.typeName
-                        )
-                );
-        new ZoneStore(getContext(), GameType.TEST.typeName, zoneId).saveState(zoneState);
+        ZoneId zoneId = (ZoneId) ZoneId.generate();
+        Zone zone = Zone.apply(
+                "Dave's zone",
+                GameType.TEST.typeName
+        );
+        new ZoneStore(getContext(), GameType.TEST.typeName, zoneId).save(zone);
 
         Iterator<ZoneStore> zoneStateIterator = new ZoneStore.ZoneStoreIterator(getContext(), GameType.TEST);
 
         assertEquals(true, zoneStateIterator.hasNext());
-        assertEquals(zoneState, zoneStateIterator.next().loadState());
+        assertEquals(zone, zoneStateIterator.next().load());
         assertEquals(false, zoneStateIterator.hasNext());
 
     }
 
-    public void testLoadState() {
+    public void testLoad() {
 
-        ZoneId zoneId = ZoneId.apply();
-        ZoneState zoneState =
-                new ZoneState(
-                        zoneId,
-                        Zone.apply(
-                                "Dave's zone",
-                                 GameType.TEST.typeName
-                        )
-                );
-        new ZoneStore(getContext(), GameType.TEST.typeName, zoneId).saveState(zoneState);
+        ZoneId zoneId = (ZoneId) ZoneId.generate();
+        Zone zone = Zone.apply(
+                "Dave's zone",
+                GameType.TEST.typeName
+        );
+        new ZoneStore(getContext(), GameType.TEST.typeName, zoneId).save(zone);
 
-        ZoneState loadedZoneState = new ZoneStore(getContext(), GameType.TEST.typeName, zoneId).loadState();
+        Zone loadedZone = new ZoneStore(getContext(), GameType.TEST.typeName, zoneId).load();
 
-        assertEquals(zoneState, loadedZoneState);
+        assertEquals(zone, loadedZone);
 
     }
 

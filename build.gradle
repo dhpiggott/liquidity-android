@@ -13,9 +13,6 @@ allprojects {
         jcenter()
         mavenLocal()
         maven {
-            url 'https://dl.bintray.com/pellucid/maven'
-        }
-        maven {
             url 'http://repo.typesafe.com/typesafe/releases'
         }
     }
