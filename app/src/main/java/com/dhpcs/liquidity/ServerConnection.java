@@ -37,9 +37,11 @@ import javax.net.ssl.SSLSocketFactory;
 
 import okio.Buffer;
 import okio.BufferedSource;
+import play.api.libs.json.JsResult;
 import play.api.libs.json.JsResultException;
 import play.api.libs.json.Json;
 import scala.Int;
+import scala.Option;
 import scala.util.Right;
 
 public class ServerConnection implements WebSocketListener {
@@ -243,12 +245,16 @@ public class ServerConnection implements WebSocketListener {
                                 pendingRequests.remove(commandIdentifier);
                                 CommandResponseCallback commandResponseCallback = pendingCommandResponseCallbacks.get(commandIdentifier);
                                 pendingCommandResponseCallbacks.remove(commandIdentifier);
-                                commandResponseCallback.onCommandResponseReceived(
-                                        CommandResponse$.MODULE$.readCommandResponse(
-                                                (JsonRpcResponseMessage) jsonRpcMessage,
-                                                jsonRpcRequestMessage.method()
-                                        )
+                                JsResult<CommandResponse> jsResultCommandResponse = CommandResponse$.MODULE$.readCommandResponse(
+                                        (JsonRpcResponseMessage) jsonRpcMessage,
+                                        jsonRpcRequestMessage.method()
                                 );
+                                // TODO: Be more idiomatic, handle failure somehow
+                                if (jsResultCommandResponse.isSuccess()) {
+                                    commandResponseCallback.onCommandResponseReceived(
+                                            jsResultCommandResponse.get()
+                                    );
+                                }
                             }
 
                         });
@@ -258,11 +264,18 @@ public class ServerConnection implements WebSocketListener {
                             @Override
                             public void run() {
                                 for (Listener listener : listeners) {
-                                    listener.onNotificationReceived(
-                                            Notification$.MODULE$.readNotification(
-                                                    (JsonRpcNotificationMessage) jsonRpcMessage
-                                            )
+                                    Option<JsResult<Notification>> maybeJsResultNotification = Notification$.MODULE$.readNotification(
+                                            (JsonRpcNotificationMessage) jsonRpcMessage
                                     );
+                                    // TODO: Be more idiomatic, handle failure somehow
+                                    if (maybeJsResultNotification.isDefined()) {
+                                        JsResult<Notification> jsResultNotification = maybeJsResultNotification.get();
+                                        if (jsResultNotification.isSuccess()) {
+                                            listener.onNotificationReceived(
+                                                    jsResultNotification.get()
+                                            );
+                                        }
+                                    }
                                 }
                             }
 
