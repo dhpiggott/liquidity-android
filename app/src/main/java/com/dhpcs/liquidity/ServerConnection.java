@@ -69,7 +69,7 @@ public class ServerConnection implements WebSocketListener {
         DISCONNECTED
     }
 
-    private static final String SERVER_ENDPOINT = "https://liquidity.dhpcs.com/socket";
+    private static final String SERVER_ENDPOINT = "https://liquidity.dhpcs.com/ws";
 
     private static volatile ServerConnection instance;
 
