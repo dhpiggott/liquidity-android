@@ -57,7 +57,7 @@ public class JoinGameDialogFragment extends DialogFragment
             listener = (Listener) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
-                    + " must implement GameCodeScannerDialogFragment.Listener");
+                    + " must implement JoinGameDialogFragment.Listener");
         }
     }
 

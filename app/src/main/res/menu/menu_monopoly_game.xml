@@ -6,5 +6,6 @@
         android:id="@+id/action_add_players"
         android:orderInCategory="100"
         android:title="@string/add_players"
+        android:visible="false"
         app:showAsAction="never" />
 </menu>

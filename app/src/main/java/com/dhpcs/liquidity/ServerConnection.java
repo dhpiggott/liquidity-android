@@ -16,6 +16,7 @@ import com.dhpcs.liquidity.models.Command$;
 import com.dhpcs.liquidity.models.CommandErrorResponse;
 import com.dhpcs.liquidity.models.CommandResponse;
 import com.dhpcs.liquidity.models.CommandResponse$;
+import com.dhpcs.liquidity.models.CommandResultResponse;
 import com.dhpcs.liquidity.models.Notification;
 import com.dhpcs.liquidity.models.Notification$;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -32,8 +33,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
@@ -48,45 +47,38 @@ import scala.util.Right;
 
 public class ServerConnection implements WebSocketListener {
 
-    public interface CommandResponseCallback<T extends CommandResponse> {
-
-        void onResponseReceived(T commandResponse);
-
-        void onErrorReceived(CommandErrorResponse commandErrorResponse);
-
-        // TODO: Timeouts?
-
-    }
-
-    public interface Listener {
-
-        void onNotificationReceived(Notification notification);
-
-        void onStateChanged(ServerConnectionState serverConnectionState);
-
-    }
-
-    public enum ServerConnectionState {
+    public enum ConnectionState {
         CONNECTING,
         CONNECTED,
         DISCONNECTING,
         DISCONNECTED
     }
 
-    private static final String SERVER_ENDPOINT = "https://liquidity.dhpcs.com/ws";
+    public interface ConnectionStateListener {
 
-    private static volatile ServerConnection instance;
+        void onStateChanged(ConnectionState connectionState);
 
-    public static ServerConnection getInstance(Context context) {
-        if (instance == null) {
-            synchronized (ServerConnection.class) {
-                if (instance == null) {
-                    instance = new ServerConnection(context);
-                }
-            }
-        }
-        return instance;
     }
+
+    public interface NotificationListener {
+
+        void onNotificationReceived(Notification notification);
+
+    }
+
+    public static abstract class CommandResponseCallback {
+
+        void onErrorReceived(CommandErrorResponse commandErrorResponse) {
+            throw new RuntimeException(commandErrorResponse.toString());
+        }
+
+        abstract void onResultReceived(CommandResultResponse commandResultResponse);
+
+        // TODO: Timeouts?
+
+    }
+
+    private static final String SERVER_ENDPOINT = "https://liquidity.dhpcs.com/ws";
 
     private static SSLSocketFactory getSslSocketFactory(Context context) {
         try {
@@ -106,24 +98,24 @@ public class ServerConnection implements WebSocketListener {
         }
     }
 
-    private final Logger log = LoggerFactory.getLogger(ServerConnection.class);
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
-    // TODO: Do we need to support multiple listeners? Or should we support multiple instances but
-    // only allow one listener per instance?
-    private final Set<Listener> listeners = new HashSet<>();
-
+    private final ConnectionStateListener connectionStateListener;
+    private final NotificationListener notificationListener;
     private final OkHttpClient client;
 
-    private ServerConnectionState serverConnectionState;
     private Handler handler;
     private WebSocketCall webSocketCall;
     private WebSocket webSocket;
 
     private final SparseArray<JsonRpcRequestMessage> pendingRequests = new SparseArray<>();
     private final SparseArray<CommandResponseCallback> pendingRequestCommandResponseCallbacks = new SparseArray<>();
+
     private int lastCommandIdentifier;
 
-    private ServerConnection(Context context) {
+    public ServerConnection(Context context,
+                            ConnectionStateListener connectionStateListener,
+                            NotificationListener notificationListener) {
 
         // TODO
 //        try {
@@ -138,16 +130,11 @@ public class ServerConnection implements WebSocketListener {
 //            throw new IOException(e);
 //        }
 
+        this.connectionStateListener = connectionStateListener;
+        this.notificationListener = notificationListener;
         this.client = new OkHttpClient();
         this.client.setHostnameVerifier(ServerTrust.getInstance(context).getHostnameVerifier());
         this.client.setSslSocketFactory(getSslSocketFactory(context));
-    }
-
-    public void addListener(Listener listener) {
-        if (serverConnectionState != null) {
-            listener.onStateChanged(serverConnectionState);
-        }
-        listeners.add(listener);
     }
 
     public void connect() {
@@ -162,7 +149,7 @@ public class ServerConnection implements WebSocketListener {
 
             @Override
             public void run() {
-                setState(ServerConnectionState.CONNECTING);
+                connectionStateListener.onStateChanged(ConnectionState.CONNECTING);
                 webSocketCall = WebSocketCall.create(
                         client, new Request.Builder()
                                 .url(SERVER_ENDPOINT)
@@ -186,7 +173,7 @@ public class ServerConnection implements WebSocketListener {
 
             @Override
             public void run() {
-                setState(ServerConnectionState.DISCONNECTING);
+                connectionStateListener.onStateChanged(ConnectionState.DISCONNECTING);
                 if (webSocket == null) {
                     log.debug("Cancelling websocket call");
                     webSocketCall.cancel();
@@ -212,7 +199,7 @@ public class ServerConnection implements WebSocketListener {
 
             @Override
             public void run() {
-                setState(ServerConnectionState.DISCONNECTED);
+                connectionStateListener.onStateChanged(ConnectionState.DISCONNECTED);
                 webSocketCall = null;
                 webSocket = null;
                 handler.getLooper().quit();
@@ -272,7 +259,7 @@ public class ServerConnection implements WebSocketListener {
                                         CommandResponseCallback commandResponseCallback = pendingRequestCommandResponseCallbacks.get(commandIdentifier);
                                         pendingRequestCommandResponseCallbacks.remove(commandIdentifier);
 
-                                        JsResult<CommandResponse> jsResultCommandResponse = CommandResponse$.MODULE$.readCommandResponse(
+                                        JsResult<CommandResponse> jsResultCommandResponse = CommandResponse$.MODULE$.read(
                                                 jsonRpcResponseMessage,
                                                 jsonRpcRequestMessage.method()
                                         );
@@ -295,8 +282,8 @@ public class ServerConnection implements WebSocketListener {
 
                                             } else {
 
-                                                commandResponseCallback.onResponseReceived(
-                                                        commandResponse
+                                                commandResponseCallback.onResultReceived(
+                                                        (CommandResultResponse) commandResponse
                                                 );
 
                                             }
@@ -314,7 +301,7 @@ public class ServerConnection implements WebSocketListener {
 
                             log.debug("Received JSON-RPC notification message: {}", jsonRpcNotificationMessage);
 
-                            Option<JsResult<Notification>> maybeJsResultNotification = Notification$.MODULE$.readNotification(
+                            Option<JsResult<Notification>> maybeJsResultNotification = Notification$.MODULE$.read(
                                     jsonRpcNotificationMessage
                             );
 
@@ -336,11 +323,9 @@ public class ServerConnection implements WebSocketListener {
 
                                         @Override
                                         public void run() {
-                                            for (Listener listener : listeners) {
-                                                listener.onNotificationReceived(
-                                                        jsResultNotification.get()
-                                                );
-                                            }
+                                            notificationListener.onNotificationReceived(
+                                                    jsResultNotification.get()
+                                            );
                                         }
 
                                     });
@@ -382,7 +367,7 @@ public class ServerConnection implements WebSocketListener {
             public void run() {
                 ServerConnection.this.webSocketCall = null;
                 ServerConnection.this.webSocket = webSocket;
-                setState(ServerConnectionState.CONNECTED);
+                connectionStateListener.onStateChanged(ConnectionState.CONNECTED);
             }
 
         });
@@ -391,10 +376,6 @@ public class ServerConnection implements WebSocketListener {
     @Override
     public void onPong(Buffer payload) {
         log.debug("Received pong: {}", payload.readUtf8());
-    }
-
-    public void removeListener(Listener listener) {
-        listeners.remove(listener);
     }
 
     public void sendCommand(final Command command, final CommandResponseCallback commandResponseCallback) {
@@ -408,7 +389,7 @@ public class ServerConnection implements WebSocketListener {
                 }
                 try {
                     final int commandIdentifier = lastCommandIdentifier++;
-                    final JsonRpcRequestMessage jsonRpcRequestMessage = Command$.MODULE$.writeCommand(
+                    final JsonRpcRequestMessage jsonRpcRequestMessage = Command$.MODULE$.write(
                             command,
                             Right.<String, Object>apply(Int.box(commandIdentifier))
                     );
@@ -431,13 +412,6 @@ public class ServerConnection implements WebSocketListener {
             }
 
         });
-    }
-
-    private void setState(ServerConnectionState serverConnectionState) {
-        this.serverConnectionState = serverConnectionState;
-        for (Listener listener : listeners) {
-            listener.onStateChanged(serverConnectionState);
-        }
     }
 
 }

@@ -14,16 +14,19 @@ import android.widget.ListAdapter;
 import com.dhpcs.liquidity.GameType;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.ZoneStore;
+import com.dhpcs.liquidity.models.Zone;
 import com.dhpcs.liquidity.models.ZoneId;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
 // TODO: Extend ListFragment?
 public class GamesFragment extends Fragment implements AdapterView.OnItemClickListener {
 
-    public static final String GAME_TYPE = "gameType";
+    public static final String GAME_TYPE = "game_type";
 
     public interface Listener {
 
@@ -54,6 +57,23 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
         while (iterator.hasNext()) {
             zoneStores.add(iterator.next());
         }
+
+        Collections.sort(zoneStores, new Comparator<ZoneStore>() {
+
+            @Override
+            public int compare(ZoneStore lhs, ZoneStore rhs) {
+                Zone lhsZone = lhs.load();
+                Zone rhsZone = rhs.load();
+                if (lhsZone.lastModified() > rhsZone.lastModified()) {
+                    return 1;
+                } else if (lhsZone.lastModified() < rhsZone.lastModified()) {
+                    return -1;
+                } else {
+                    return 0;
+                }
+            }
+
+        });
 
         listAdapter = new ArrayAdapter<>(
                 getActivity(),

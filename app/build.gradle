@@ -6,8 +6,7 @@ android {
 
     defaultConfig {
         applicationId "com.dhpcs.liquidity"
-        // TODO: To reduce compilation time
-        minSdkVersion 22
+        minSdkVersion 15
         targetSdkVersion 22
         versionCode 1
         versionName "1.0"
@@ -41,6 +40,7 @@ dependencies {
     compile 'com.squareup.okhttp:okhttp:2.3.0'
     compile 'com.squareup.okhttp:okhttp-ws:2.3.0'
     compile 'com.android.support:appcompat-v7:22.1.1'
+    compile 'com.android.support:support-v13:22.1.1'
     compile 'commons-io:commons-io:2.4'
     compile 'me.dm7.barcodescanner:zxing:1.7.1'
     compile 'net.glxn.qrgen:android:2.0'

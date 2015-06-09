@@ -3,10 +3,7 @@ package com.dhpcs.liquidity.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
-import android.widget.Toast;
 
 import com.dhpcs.liquidity.GameType;
 import com.dhpcs.liquidity.R;
@@ -22,6 +19,18 @@ public class GamesActivity extends AppCompatActivity
         JoinGameDialogFragment.Listener, GamesFragment.Listener {
 
     public static final String GAME_TYPE = GamesFragment.GAME_TYPE;
+
+    private void createGame(BigDecimal startingCapital) {
+        startActivity(
+                new Intent(
+                        this,
+                        MonopolyGameActivity.class
+                ).putExtra(
+                        MonopolyGameActivity.EXTRA_STARTING_CAPITAL,
+                        startingCapital
+                )
+        );
+    }
 
     private void joinGame(ZoneId zoneId) {
         startActivity(
@@ -46,7 +55,7 @@ public class GamesActivity extends AppCompatActivity
                 NewMonopolyGameDialogFragment.newInstance()
                         .show(
                                 getFragmentManager(),
-                                "newMonopolyGameDialogFragment"
+                                "new_monopoly_game_dialog_fragment"
                         );
             }
         });
@@ -57,7 +66,7 @@ public class GamesActivity extends AppCompatActivity
                 JoinGameDialogFragment.newInstance()
                         .show(
                                 getFragmentManager(),
-                                "joinGameDialogFragment"
+                                "join_game_dialog_fragment"
                         );
             }
         });
@@ -71,13 +80,6 @@ public class GamesActivity extends AppCompatActivity
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_games, menu);
-        return true;
-    }
-
-    @Override
     public void onGameClicked(ZoneId zoneId) {
         joinGame(zoneId);
     }
@@ -88,26 +90,8 @@ public class GamesActivity extends AppCompatActivity
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        // TODO
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
     public void onStartingCapitalEntered(BigDecimal startingCapital) {
-        // TODO
-        Toast.makeText(this, "onStartingCapitalEntered: " + startingCapital, Toast.LENGTH_SHORT).show();
-        // MonopolyGame.getCreateZoneCommand("Dave's zone");
+        createGame(startingCapital);
     }
 
 }

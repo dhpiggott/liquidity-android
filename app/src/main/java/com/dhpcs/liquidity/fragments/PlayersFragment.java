@@ -9,51 +9,64 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.ListAdapter;
 
-import com.dhpcs.liquidity.ClientKey;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.models.Member;
 import com.dhpcs.liquidity.models.MemberId;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Comparator;
+import java.util.Map;
 
 // TODO: Extend ListFragment?
 public class PlayersFragment extends Fragment implements AdapterView.OnItemClickListener {
 
     public interface Listener {
 
-        void onPlayerClicked(Member member);
+        void onPlayerClicked(MemberId memberId);
 
     }
 
-    private Listener listener;
+    private static class PlayerItem {
 
-    private List<Member> members;
-    private ListAdapter listAdapter;
+        public final String name;
+        public final MemberId memberId;
+
+        public PlayerItem(String name, MemberId memberId) {
+            this.name = name;
+            this.memberId = memberId;
+        }
+
+        @Override
+        public String toString() {
+            return this.name;
+        }
+
+    }
+
+    private final Comparator<PlayerItem> playerItemComparator = new Comparator<PlayerItem>() {
+
+        @Override
+        public int compare(PlayerItem lhs, PlayerItem rhs) {
+            return lhs.name.compareTo(rhs.name);
+        }
+
+    };
+
+    private ArrayAdapter<PlayerItem> listAdapter;
+
+    private Listener listener;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        members = new ArrayList<>();
-        // TODO
-//        Iterator<ZoneStore> iterator = new ZoneStore.ZoneStoreIterator(getActivity(), gameType);
-//        while (iterator.hasNext()) {
-//            members.add(iterator.next());
-//        }
-        members.add(new Member("Player 1", ClientKey.getInstance(getActivity()).getPublicKey()));
-        members.add(new Member("Player 2", ClientKey.getInstance(getActivity()).getPublicKey()));
-        members.add(new Member("Player 3", ClientKey.getInstance(getActivity()).getPublicKey()));
-
         listAdapter = new ArrayAdapter<>(
                 getActivity(),
-                // TODO
                 android.R.layout.simple_list_item_1,
-                android.R.id.text1,
-                members
+                android.R.id.text1
         );
+        listAdapter.setNotifyOnChange(false);
+
     }
 
     @Override
@@ -91,9 +104,23 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         if (listener != null) {
             listener.onPlayerClicked(
-                    members.get(position)
+                    listAdapter.getItem(position).memberId
             );
         }
+    }
+
+    public void onPlayersChanged(Map<MemberId, Member> players) {
+        listAdapter.clear();
+        for (Map.Entry<MemberId, Member> memberIdMemberEntry : players.entrySet()) {
+            listAdapter.add(
+                    new PlayerItem(
+                            memberIdMemberEntry.getValue().name(),
+                            memberIdMemberEntry.getKey()
+                    )
+            );
+        }
+        listAdapter.sort(playerItemComparator);
+        listAdapter.notifyDataSetChanged();
     }
 
 }

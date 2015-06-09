@@ -24,7 +24,6 @@ public class ZoneStore {
 
     private static final String ZONES_DIRECTORY_NAME = "zones";
 
-    // TODO: Sorting
     public static class ZoneStoreIterator implements Iterator<ZoneStore> {
 
         private final Context context;
@@ -118,7 +117,7 @@ public class ZoneStore {
         return zoneId;
     }
 
-    // TODO: Versioning?
+    // TODO: Caching? Versioning?
     public Zone load() {
         try {
             BufferedSource bufferedSource = Okio.buffer(Okio.source(zoneFile));
@@ -140,7 +139,7 @@ public class ZoneStore {
         }
     }
 
-    // TODO: Versioning?
+    // TODO: Caching? Versioning?
     public void save(Zone zone) {
         try {
             FileUtils.forceMkdir(zoneDirectory);
