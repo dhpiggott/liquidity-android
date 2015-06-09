@@ -2,6 +2,7 @@ package com.dhpcs.liquidity;
 
 import android.test.AndroidTestCase;
 
+import com.dhpcs.liquidity.models.CommandErrorResponse;
 import com.dhpcs.liquidity.models.CommandResponse;
 import com.dhpcs.liquidity.models.CreateZone;
 import com.dhpcs.liquidity.models.Notification;
@@ -68,19 +69,26 @@ public class ServerConnectionTest extends AndroidTestCase implements ServerConne
         serverConnectionStateSetBarrier.await(15, TimeUnit.SECONDS);
         assertEquals(ServerConnection.ServerConnectionState.CONNECTED, serverConnectionState);
 
-        ServerConnection.getInstance(getContext()).sendCommand(new CreateZone("Dave's zone", GameType.TEST.typeName), new ServerConnection.CommandResponseCallback() {
+        ServerConnection.getInstance(getContext()).sendCommand(new CreateZone("Dave's zone", GameType.TEST.typeName), new ServerConnection.CommandResponseCallback<ZoneCreated>() {
+
             @Override
-            public void onCommandResponseReceived(CommandResponse commandResponse) {
+            public void onResponseReceived(ZoneCreated zoneCreated) {
                 try {
-                    log.debug("commandResponse={}", commandResponse);
+                    log.debug("zoneCreated={}", zoneCreated);
                     commandResponseReadBarrier.await();
-                    ServerConnectionTest.this.commandResponse = commandResponse;
+                    ServerConnectionTest.this.commandResponse = zoneCreated;
                     commandResponseSetBarrier.await();
                 } catch (InterruptedException
                         | BrokenBarrierException e) {
                     throw new Error(e);
                 }
             }
+
+            @Override
+            public void onErrorReceived(CommandErrorResponse commandErrorResponse) {
+
+            }
+
         });
         commandResponseReadBarrier.await(15, TimeUnit.SECONDS);
         commandResponseSetBarrier.await(15, TimeUnit.SECONDS);

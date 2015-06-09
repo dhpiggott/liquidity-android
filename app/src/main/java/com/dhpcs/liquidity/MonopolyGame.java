@@ -3,6 +3,7 @@ package com.dhpcs.liquidity;
 import android.content.Context;
 
 import com.dhpcs.liquidity.models.Account;
+import com.dhpcs.liquidity.models.CommandErrorResponse;
 import com.dhpcs.liquidity.models.CommandResponse;
 import com.dhpcs.liquidity.models.CreateAccount;
 import com.dhpcs.liquidity.models.CreateMember;
@@ -37,7 +38,7 @@ public class MonopolyGame {
                 new ServerConnection.CommandResponseCallback() {
 
                     @Override
-                    public void onCommandResponseReceived(CommandResponse commandResponse) {
+                    public void onResponseReceived(CommandResponse commandResponse) {
 
                         // TODO: Need member ID from above call
                         serverConnection.sendCommand(
@@ -53,7 +54,7 @@ public class MonopolyGame {
                                 new ServerConnection.CommandResponseCallback() {
 
                                     @Override
-                                    public void onCommandResponseReceived(CommandResponse commandResponse) {
+                                    public void onResponseReceived(CommandResponse commandResponse) {
                                         // TODO: Reliability
                                         serverConnection.sendCommand(
                                                 new CreateMember(
@@ -66,7 +67,7 @@ public class MonopolyGame {
                                                 ),
                                                 new ServerConnection.CommandResponseCallback() {
                                                     @Override
-                                                    public void onCommandResponseReceived(CommandResponse commandResponse) {
+                                                    public void onResponseReceived(CommandResponse commandResponse) {
 
                                                         // TODO: Need member ID from above call
                                                         serverConnection.sendCommand(
@@ -81,18 +82,40 @@ public class MonopolyGame {
                                                                 ),
                                                                 new ServerConnection.CommandResponseCallback() {
                                                                     @Override
-                                                                    public void onCommandResponseReceived(CommandResponse commandResponse) {
+                                                                    public void onResponseReceived(CommandResponse commandResponse) {
 
                                                                     }
+
+                                                                    @Override
+                                                                    public void onErrorReceived(CommandErrorResponse commandErrorResponse) {
+
+                                                                    }
+
                                                                 }
                                                         );
                                                     }
+
+                                                    @Override
+                                                    public void onErrorReceived(CommandErrorResponse commandErrorResponse) {
+
+                                                    }
+
                                                 }
                                         );
                                     }
 
+                                    @Override
+                                    public void onErrorReceived(CommandErrorResponse commandErrorResponse) {
+
+                                    }
+
                                 }
                         );
+                    }
+
+                    @Override
+                    public void onErrorReceived(CommandErrorResponse commandErrorResponse) {
+
                     }
 
                 }

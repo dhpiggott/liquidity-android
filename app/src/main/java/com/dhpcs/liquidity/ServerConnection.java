@@ -9,13 +9,16 @@ import com.dhpcs.jsonrpc.JsonRpcMessage;
 import com.dhpcs.jsonrpc.JsonRpcMessage$;
 import com.dhpcs.jsonrpc.JsonRpcNotificationMessage;
 import com.dhpcs.jsonrpc.JsonRpcRequestMessage;
+import com.dhpcs.jsonrpc.JsonRpcResponseError;
 import com.dhpcs.jsonrpc.JsonRpcResponseMessage;
 import com.dhpcs.liquidity.models.Command;
 import com.dhpcs.liquidity.models.Command$;
+import com.dhpcs.liquidity.models.CommandErrorResponse;
 import com.dhpcs.liquidity.models.CommandResponse;
 import com.dhpcs.liquidity.models.CommandResponse$;
 import com.dhpcs.liquidity.models.Notification;
 import com.dhpcs.liquidity.models.Notification$;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
@@ -38,7 +41,6 @@ import javax.net.ssl.SSLSocketFactory;
 import okio.Buffer;
 import okio.BufferedSource;
 import play.api.libs.json.JsResult;
-import play.api.libs.json.JsResultException;
 import play.api.libs.json.Json;
 import scala.Int;
 import scala.Option;
@@ -46,11 +48,13 @@ import scala.util.Right;
 
 public class ServerConnection implements WebSocketListener {
 
-    public interface CommandResponseCallback {
+    public interface CommandResponseCallback<T extends CommandResponse> {
 
-        void onCommandResponseReceived(CommandResponse commandResponse);
+        void onResponseReceived(T commandResponse);
 
-        // TODO: Timeout
+        void onErrorReceived(CommandErrorResponse commandErrorResponse);
+
+        // TODO: Timeouts?
 
     }
 
@@ -115,9 +119,8 @@ public class ServerConnection implements WebSocketListener {
     private WebSocketCall webSocketCall;
     private WebSocket webSocket;
 
-    // TODO
     private final SparseArray<JsonRpcRequestMessage> pendingRequests = new SparseArray<>();
-    private final SparseArray<CommandResponseCallback> pendingCommandResponseCallbacks = new SparseArray<>();
+    private final SparseArray<CommandResponseCallback> pendingRequestCommandResponseCallbacks = new SparseArray<>();
     private int lastCommandIdentifier;
 
     private ServerConnection(Context context) {
@@ -230,60 +233,128 @@ public class ServerConnection implements WebSocketListener {
             case TEXT:
 
                 try {
-                    final JsonRpcMessage jsonRpcMessage = Json.parse(payload.readUtf8())
-                            .as(JsonRpcMessage$.MODULE$.JsonRpcMessageFormat());
 
-                    log.debug("Received JSON-RPC message: {}", jsonRpcMessage);
+                    JsResult<JsonRpcMessage> jsonRpcMessageJsResult = Json.fromJson(
+                            Json.parse(payload.readUtf8()),
+                            JsonRpcMessage$.MODULE$.JsonRpcMessageFormat()
+                    );
 
-                    if (jsonRpcMessage instanceof JsonRpcResponseMessage) {
-                        handler.post(new Runnable() {
+                    if (jsonRpcMessageJsResult.isError()) {
 
-                            @Override
-                            public void run() {
-                                int commandIdentifier = Int.unbox(((JsonRpcResponseMessage) jsonRpcMessage).id().right().get());
-                                JsonRpcRequestMessage jsonRpcRequestMessage = pendingRequests.get(commandIdentifier);
-                                pendingRequests.remove(commandIdentifier);
-                                CommandResponseCallback commandResponseCallback = pendingCommandResponseCallbacks.get(commandIdentifier);
-                                pendingCommandResponseCallbacks.remove(commandIdentifier);
-                                JsResult<CommandResponse> jsResultCommandResponse = CommandResponse$.MODULE$.readCommandResponse(
-                                        (JsonRpcResponseMessage) jsonRpcMessage,
-                                        jsonRpcRequestMessage.method()
-                                );
-                                // TODO: Be more idiomatic, handle failure somehow
-                                if (jsResultCommandResponse.isSuccess()) {
-                                    commandResponseCallback.onCommandResponseReceived(
-                                            jsResultCommandResponse.get()
-                                    );
-                                }
-                            }
+                        log.warn("Invalid JSON-RPC message: {}", jsonRpcMessageJsResult);
 
-                        });
-                    } else if (jsonRpcMessage instanceof JsonRpcNotificationMessage) {
-                        handler.post(new Runnable() {
+                    } else {
 
-                            @Override
-                            public void run() {
-                                for (Listener listener : listeners) {
-                                    Option<JsResult<Notification>> maybeJsResultNotification = Notification$.MODULE$.readNotification(
-                                            (JsonRpcNotificationMessage) jsonRpcMessage
-                                    );
-                                    // TODO: Be more idiomatic, handle failure somehow
-                                    if (maybeJsResultNotification.isDefined()) {
-                                        JsResult<Notification> jsResultNotification = maybeJsResultNotification.get();
-                                        if (jsResultNotification.isSuccess()) {
-                                            listener.onNotificationReceived(
-                                                    jsResultNotification.get()
-                                            );
+                        JsonRpcMessage jsonRpcMessage = jsonRpcMessageJsResult.get();
+
+                        if (jsonRpcMessage instanceof JsonRpcResponseMessage) {
+
+                            final JsonRpcResponseMessage jsonRpcResponseMessage = (JsonRpcResponseMessage) jsonRpcMessage;
+
+                            log.debug("Received JSON-RPC response message: {}", jsonRpcResponseMessage);
+
+                            if (jsonRpcResponseMessage.id().isEmpty()) {
+
+                                JsonRpcResponseError jsonRpcResponseError = jsonRpcResponseMessage.eitherErrorOrResult().left().get();
+
+                                log.warn("Received JSON-RPC response error: {}", jsonRpcResponseError);
+
+                            } else {
+
+                                handler.post(new Runnable() {
+
+                                    @Override
+                                    public void run() {
+
+                                        int commandIdentifier = Int.unbox((jsonRpcResponseMessage.id().get().right().get()));
+                                        JsonRpcRequestMessage jsonRpcRequestMessage = pendingRequests.get(commandIdentifier);
+                                        pendingRequests.remove(commandIdentifier);
+                                        CommandResponseCallback commandResponseCallback = pendingRequestCommandResponseCallbacks.get(commandIdentifier);
+                                        pendingRequestCommandResponseCallbacks.remove(commandIdentifier);
+
+                                        JsResult<CommandResponse> jsResultCommandResponse = CommandResponse$.MODULE$.readCommandResponse(
+                                                jsonRpcResponseMessage,
+                                                jsonRpcRequestMessage.method()
+                                        );
+
+                                        if (jsResultCommandResponse.isError()) {
+
+                                            log.warn("Invalid CommandResponse: {}", jsResultCommandResponse);
+
+                                        } else {
+
+                                            CommandResponse commandResponse = jsResultCommandResponse.get();
+
+                                            if (commandResponse instanceof CommandErrorResponse) {
+
+                                                log.warn("Received command response error: {}", jsResultCommandResponse.get());
+
+                                                commandResponseCallback.onErrorReceived(
+                                                        (CommandErrorResponse) commandResponse
+                                                );
+
+                                            } else {
+
+                                                commandResponseCallback.onResponseReceived(
+                                                        commandResponse
+                                                );
+
+                                            }
+
                                         }
                                     }
-                                }
+
+                                });
+
                             }
 
-                        });
+                        } else if (jsonRpcMessage instanceof JsonRpcNotificationMessage) {
+
+                            JsonRpcNotificationMessage jsonRpcNotificationMessage = (JsonRpcNotificationMessage) jsonRpcMessage;
+
+                            log.debug("Received JSON-RPC notification message: {}", jsonRpcNotificationMessage);
+
+                            Option<JsResult<Notification>> maybeJsResultNotification = Notification$.MODULE$.readNotification(
+                                    jsonRpcNotificationMessage
+                            );
+
+                            if (maybeJsResultNotification.isEmpty()) {
+
+                                log.warn("Received notification for unimplemented method");
+
+                            } else {
+
+                                final JsResult<Notification> jsResultNotification = maybeJsResultNotification.get();
+
+                                if (jsResultNotification.isError()) {
+
+                                    log.warn("Invalid Notification: {}", jsResultNotification);
+
+                                } else {
+
+                                    handler.post(new Runnable() {
+
+                                        @Override
+                                        public void run() {
+                                            for (Listener listener : listeners) {
+                                                listener.onNotificationReceived(
+                                                        jsResultNotification.get()
+                                                );
+                                            }
+                                        }
+
+                                    });
+
+                                }
+
+                            }
+
+                        }
+
                     }
 
-                } catch (JsResultException e) {
-                    throw new IOException(e);
+                } catch (JsonParseException e) {
+                    log.warn("Invalid JSON: {}", e);
                 }
 
                 break;
@@ -322,22 +393,6 @@ public class ServerConnection implements WebSocketListener {
         log.debug("Received pong: {}", payload.readUtf8());
     }
 
-    // TODO
-    private void ping() {
-        handler.post(new Runnable() {
-
-            @Override
-            public void run() {
-                try {
-                    webSocket.sendPing(null);
-                } catch (IOException e) {
-                    log.warn(e.getMessage(), e);
-                }
-            }
-
-        });
-    }
-
     public void removeListener(Listener listener) {
         listeners.remove(listener);
     }
@@ -359,12 +414,17 @@ public class ServerConnection implements WebSocketListener {
                     );
                     webSocket.sendMessage(
                             WebSocket.PayloadType.TEXT,
-                            new Buffer().writeUtf8(Json.stringify(Json.toJson(
-                                    jsonRpcRequestMessage,
-                                    JsonRpcRequestMessage.JsonRpcRequestMessageFormat()
-                            ))));
+                            new Buffer().writeUtf8(
+                                    Json.stringify(
+                                            Json.toJson(
+                                                    jsonRpcRequestMessage,
+                                                    JsonRpcRequestMessage.JsonRpcRequestMessageFormat()
+                                            )
+                                    )
+                            )
+                    );
                     pendingRequests.append(commandIdentifier, jsonRpcRequestMessage);
-                    pendingCommandResponseCallbacks.append(commandIdentifier, commandResponseCallback);
+                    pendingRequestCommandResponseCallbacks.append(commandIdentifier, commandResponseCallback);
                 } catch (IOException e) {
                     log.warn(e.getMessage(), e);
                 }
