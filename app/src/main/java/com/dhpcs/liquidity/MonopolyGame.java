@@ -7,30 +7,36 @@ import android.os.Looper;
 import android.provider.ContactsContract;
 
 import com.dhpcs.liquidity.models.Account;
-import com.dhpcs.liquidity.models.AccountCreated;
+import com.dhpcs.liquidity.models.AccountCreatedNotification;
+import com.dhpcs.liquidity.models.AccountDeletedNotification;
 import com.dhpcs.liquidity.models.AccountId;
-import com.dhpcs.liquidity.models.ClientJoinedZone;
-import com.dhpcs.liquidity.models.ClientQuitZone;
-import com.dhpcs.liquidity.models.CommandResultResponse;
-import com.dhpcs.liquidity.models.CreateAccount;
-import com.dhpcs.liquidity.models.CreateMember;
-import com.dhpcs.liquidity.models.CreateZone;
-import com.dhpcs.liquidity.models.JoinZone;
+import com.dhpcs.liquidity.models.AccountUpdatedNotification;
+import com.dhpcs.liquidity.models.ClientJoinedZoneNotification;
+import com.dhpcs.liquidity.models.ClientQuitZoneNotification;
+import com.dhpcs.liquidity.models.CreateAccountCommand;
+import com.dhpcs.liquidity.models.CreateAccountResponse;
+import com.dhpcs.liquidity.models.CreateMemberCommand;
+import com.dhpcs.liquidity.models.CreateMemberResponse;
+import com.dhpcs.liquidity.models.CreateZoneCommand;
+import com.dhpcs.liquidity.models.CreateZoneResponse;
+import com.dhpcs.liquidity.models.JoinZoneCommand;
+import com.dhpcs.liquidity.models.JoinZoneResponse;
 import com.dhpcs.liquidity.models.Member;
-import com.dhpcs.liquidity.models.MemberCreated;
+import com.dhpcs.liquidity.models.MemberCreatedNotification;
+import com.dhpcs.liquidity.models.MemberDeletedNotification;
 import com.dhpcs.liquidity.models.MemberId;
+import com.dhpcs.liquidity.models.MemberUpdatedNotification;
 import com.dhpcs.liquidity.models.Notification;
 import com.dhpcs.liquidity.models.PublicKey;
-import com.dhpcs.liquidity.models.QuitZone;
+import com.dhpcs.liquidity.models.ResultResponse;
+import com.dhpcs.liquidity.models.TransactionAddedNotification;
 import com.dhpcs.liquidity.models.Zone;
 import com.dhpcs.liquidity.models.Zone$;
-import com.dhpcs.liquidity.models.ZoneCreated;
 import com.dhpcs.liquidity.models.ZoneId;
-import com.dhpcs.liquidity.models.ZoneJoined;
+import com.dhpcs.liquidity.models.ZoneNameSetNotification;
 import com.dhpcs.liquidity.models.ZoneNotification;
-import com.dhpcs.liquidity.models.ZoneQuit$;
-import com.dhpcs.liquidity.models.ZoneState;
-import com.dhpcs.liquidity.models.ZoneTerminated;
+import com.dhpcs.liquidity.models.ZoneStateNotification;
+import com.dhpcs.liquidity.models.ZoneTerminatedNotification;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,9 +62,11 @@ public class MonopolyGame implements ServerConnection.ConnectionStateListener,
 
         void onConnected();
 
-        void onCreated(ZoneId zoneId);
-
         void onDisconnected();
+
+        void onJoined(ZoneId zoneId);
+
+        void onQuit();
 
         void onMemberBalanceChanged(MemberId memberId, BigDecimal balance);
 
@@ -96,18 +104,21 @@ public class MonopolyGame implements ServerConnection.ConnectionStateListener,
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    // TODO: Only one?
-    private final Set<Listener> listeners = new HashSet<>();
     private final Context context;
     private final Handler mainHandler;
     private final ServerConnection serverConnection;
 
-    private ZoneStore zoneStore;
-    private Set<PublicKey> connectedClients;
-    private Map<MemberId, Member> connectedMembers;
-    private Map<MemberId, Member> otherMembers;
-    private Map<MemberId, Member> userMembers;
-    private Map<AccountId, BigDecimal> memberBalances;
+    private final Set<PublicKey> connectedClients = new HashSet<>();
+    private final Map<MemberId, Member> connectedMembers = new HashMap<>();
+    private final Map<MemberId, Member> otherMembers = new HashMap<>();
+    private final Map<MemberId, Member> userMembers = new HashMap<>();
+    private final Map<AccountId, BigDecimal> memberBalances = new HashMap<>();
+
+    // TODO:
+    private ZoneId zoneId;
+    private BigDecimal capitalToStartWith;
+
+    private Listener listener;
 
     public MonopolyGame(Context context) {
         this.context = context;
@@ -115,54 +126,59 @@ public class MonopolyGame implements ServerConnection.ConnectionStateListener,
         this.serverConnection = new ServerConnection(context, this, this);
     }
 
-    public void addListener(Listener listener) {
-        // TODO: Call them if we're connected etc.
-        this.listeners.add(listener);
-    }
-
     public void connect() {
         serverConnection.connect();
     }
 
-    public void createBanker() {
+    private void createBankerAndThenJoinZone(final ZoneId zoneId) {
 
         serverConnection.sendCommand(
-                new CreateMember(
-                        zoneStore.getZoneId(),
+                new CreateMemberCommand(
+                        zoneId,
                         new Member(
                                 BANK_MEMBER_NAME,
                                 ClientKey.getInstance(context).getPublicKey()
                         )
                 ),
-                new ServerConnection.CommandResponseCallback() {
+                new ServerConnection.ResponseCallback() {
 
                     @Override
-                    public void onResultReceived(CommandResultResponse commandResultResponse) {
-                        final MemberCreated memberCreated = (MemberCreated) commandResultResponse;
+                    public void onResultReceived(ResultResponse resultResponse) {
+                        final CreateMemberResponse createMemberResponse = (CreateMemberResponse) resultResponse;
 
-                        log.debug("memberCreated={}", memberCreated);
+                        log.debug("createMemberResponse={}", createMemberResponse);
 
                         mainHandler.post(new Runnable() {
 
                             @Override
                             public void run() {
                                 serverConnection.sendCommand(
-                                        new CreateAccount(
-                                                zoneStore.getZoneId(),
+                                        new CreateAccountCommand(
+                                                zoneId,
                                                 new Account(
                                                         BANK_ACCOUNT_NAME,
                                                         JavaConversions.asScalaSet(
-                                                                Collections.singleton(memberCreated.memberId())
+                                                                Collections.singleton(createMemberResponse.memberId())
                                                         ).<MemberId>toSet()
                                                 )
                                         ),
-                                        new ServerConnection.CommandResponseCallback() {
+                                        new ServerConnection.ResponseCallback() {
 
                                             @Override
-                                            public void onResultReceived(CommandResultResponse commandResultResponse) {
-                                                AccountCreated accountCreated = (AccountCreated) commandResultResponse;
+                                            public void onResultReceived(ResultResponse resultResponse) {
+                                                CreateAccountResponse createAccountResponse = (CreateAccountResponse) resultResponse;
 
-                                                log.debug("accountCreated={}", accountCreated);
+                                                log.debug("createAccountResponse={}", createAccountResponse);
+
+                                                mainHandler.post(new Runnable() {
+
+                                                    @Override
+                                                    public void run() {
+                                                        setZoneId(zoneId);
+                                                        join(zoneId);
+                                                    }
+
+                                                });
 
                                             }
 
@@ -179,7 +195,7 @@ public class MonopolyGame implements ServerConnection.ConnectionStateListener,
 
     }
 
-    public void createPlayer() {
+    private void createPlayer(final ZoneId zoneId) {
 
         final String playerName = getUserName(
                 context,
@@ -189,42 +205,42 @@ public class MonopolyGame implements ServerConnection.ConnectionStateListener,
         log.debug("playerName={}", playerName);
 
         serverConnection.sendCommand(
-                new CreateMember(
-                        zoneStore.getZoneId(),
+                new CreateMemberCommand(
+                        zoneId,
                         new Member(
                                 playerName,
                                 ClientKey.getInstance(context).getPublicKey()
                         )
                 ),
-                new ServerConnection.CommandResponseCallback() {
+                new ServerConnection.ResponseCallback() {
 
                     @Override
-                    public void onResultReceived(CommandResultResponse commandResultResponse) {
-                        final MemberCreated memberCreated = (MemberCreated) commandResultResponse;
+                    public void onResultReceived(ResultResponse resultResponse) {
+                        final CreateMemberResponse createMemberResponse = (CreateMemberResponse) resultResponse;
 
-                        log.debug("memberCreated={}", memberCreated);
+                        log.debug("createMemberResponse={}", createMemberResponse);
 
                         mainHandler.post(new Runnable() {
 
                             @Override
                             public void run() {
                                 serverConnection.sendCommand(
-                                        new CreateAccount(
-                                                zoneStore.getZoneId(),
+                                        new CreateAccountCommand(
+                                                zoneId,
                                                 new Account(
                                                         playerName + ACCOUNT_NAME_SUFFIX,
                                                         JavaConversions.asScalaSet(
-                                                                Collections.singleton(memberCreated.memberId())
+                                                                Collections.singleton(createMemberResponse.memberId())
                                                         ).<MemberId>toSet()
                                                 )
                                         ),
-                                        new ServerConnection.CommandResponseCallback() {
+                                        new ServerConnection.ResponseCallback() {
 
                                             @Override
-                                            public void onResultReceived(CommandResultResponse commandResultResponse) {
-                                                AccountCreated accountCreated = (AccountCreated) commandResultResponse;
+                                            public void onResultReceived(ResultResponse resultResponse) {
+                                                CreateAccountResponse createAccountResponse = (CreateAccountResponse) resultResponse;
 
-                                                log.debug("accountCreated={}", accountCreated);
+                                                log.debug("createAccountResponse={}", createAccountResponse);
 
                                             }
 
@@ -241,7 +257,7 @@ public class MonopolyGame implements ServerConnection.ConnectionStateListener,
 
     }
 
-    public void createAndJoinZone() {
+    private void createAndThenJoinZone() {
 
         final String playerName = getUserName(
                 context,
@@ -251,31 +267,22 @@ public class MonopolyGame implements ServerConnection.ConnectionStateListener,
         log.debug("playerName={}", playerName);
 
         serverConnection.sendCommand(
-                new CreateZone(
+                new CreateZoneCommand(
                         GAME_NAME_PREFIX + playerName,
                         ZONE_TYPE.typeName),
-                new ServerConnection.CommandResponseCallback() {
+                new ServerConnection.ResponseCallback() {
 
                     @Override
-                    public void onResultReceived(CommandResultResponse commandResultResponse) {
-                        final ZoneCreated zoneCreated = (ZoneCreated) commandResultResponse;
+                    public void onResultReceived(ResultResponse resultResponse) {
+                        final CreateZoneResponse createZoneResponse = (CreateZoneResponse) resultResponse;
+
+                        log.debug("createZoneResponse={}", createZoneResponse);
 
                         mainHandler.post(new Runnable() {
 
                             @Override
                             public void run() {
-                                zoneStore = new ZoneStore(context, ZONE_TYPE.typeName, zoneCreated.zoneId());
-                                connectedClients = new HashSet<>();
-                                connectedMembers = new HashMap<>();
-                                otherMembers = new HashMap<>();
-                                userMembers = new HashMap<>();
-                                memberBalances = new HashMap<>();
-
-                                for (Listener listener : listeners) {
-                                    listener.onCreated(zoneCreated.zoneId());
-                                }
-
-                                join(zoneCreated.zoneId());
+                                createBankerAndThenJoinZone(createZoneResponse.zoneId());
                             }
 
                         });
@@ -290,39 +297,72 @@ public class MonopolyGame implements ServerConnection.ConnectionStateListener,
         serverConnection.disconnect();
     }
 
-    public void join(ZoneId zoneId) {
-        zoneStore = new ZoneStore(context, ZONE_TYPE.typeName, zoneId);
-        connectedClients = new HashSet<>();
-        connectedMembers = new HashMap<>();
-        otherMembers = new HashMap<>();
-        userMembers = new HashMap<>();
-        memberBalances = new HashMap<>();
+    private void join(final ZoneId zoneId) {
         serverConnection.sendCommand(
-                new JoinZone(zoneStore.getZoneId()),
-                new ServerConnection.CommandResponseCallback() {
+                new JoinZoneCommand(zoneId),
+                new ServerConnection.ResponseCallback() {
 
                     @Override
-                    void onResultReceived(CommandResultResponse commandResultResponse) {
-                        final ZoneJoined zoneJoined = (ZoneJoined) commandResultResponse;
+                    void onResultReceived(ResultResponse resultResponse) {
+                        final JoinZoneResponse joinZoneResponse = (JoinZoneResponse) resultResponse;
 
                         mainHandler.post(new Runnable() {
 
                             @Override
                             public void run() {
 
-                                zoneStore.save(zoneJoined.zone());
+                                if (listener != null) {
+                                    listener.onJoined(zoneId);
+                                }
 
                                 connectedClients.addAll(
                                         JavaConverters.setAsJavaSetConverter(
-                                                zoneJoined.connectedClients()
+                                                joinZoneResponse.connectedClients()
                                         ).asJava()
                                 );
 
+                                Zone zone = joinZoneResponse.zone();
+
                                 // TODO: Name
 
-                                notifyMembersChanged(zoneJoined.zone());
+                                PublicKey userPublicKey =
+                                        ClientKey.getInstance(context).getPublicKey();
+
+                                userMembers.putAll(
+                                        Zone$.MODULE$.userMembersAsJavaMap(
+                                                zone,
+                                                userPublicKey
+                                        )
+                                );
+                                otherMembers.putAll(
+                                        Zone$.MODULE$.otherMembersAsJavaMap(
+                                                zone,
+                                                userPublicKey
+                                        )
+                                );
+                                connectedMembers.putAll(
+                                        Zone$.MODULE$.connectedMembersAsJavaMap(
+                                                otherMembers,
+                                                connectedClients
+                                        )
+                                );
+
+                                if (listener != null) {
+                                    listener.onUserMembersChanged(userMembers);
+                                    listener.onOtherMembersChanged(otherMembers);
+                                    listener.onConnectedMembersChanged(connectedMembers);
+                                }
 
                                 // TODO: Balances
+
+                                if (userMembers.isEmpty()
+                                        || (userMembers.size() == 1 && userMembers.values().iterator().next().name().equals(BANK_MEMBER_NAME))) {
+
+                                    log.debug("No identities for user, must have disconnected after create - creating player now");
+
+                                    createPlayer(zoneId);
+
+                                }
 
                             }
 
@@ -334,46 +374,6 @@ public class MonopolyGame implements ServerConnection.ConnectionStateListener,
         );
     }
 
-    private void notifyMembersChanged(Zone nextZone) {
-
-        userMembers.clear();
-        userMembers.putAll(
-                Zone$.MODULE$.userMembersAsJavaMap(
-                        nextZone,
-                        ClientKey.getInstance(context).getPublicKey()
-                )
-        );
-
-        for (Listener listener : listeners) {
-            listener.onUserMembersChanged(userMembers);
-        }
-
-        otherMembers.clear();
-        otherMembers.putAll(
-                Zone$.MODULE$.otherMembersAsJavaMap(
-                        nextZone,
-                        ClientKey.getInstance(context).getPublicKey()
-                )
-        );
-
-        for (Listener listener : listeners) {
-            listener.onOtherMembersChanged(otherMembers);
-        }
-
-        connectedMembers.clear();
-        connectedMembers.putAll(
-                Zone$.MODULE$.connectedMembersAsJavaMap(
-                        otherMembers,
-                        connectedClients
-                )
-        );
-
-        for (Listener listener : listeners) {
-            listener.onConnectedMembersChanged(connectedMembers);
-        }
-
-    }
-
     @Override
     public void onNotificationReceived(final Notification notification) {
 
@@ -382,92 +382,260 @@ public class MonopolyGame implements ServerConnection.ConnectionStateListener,
         if (notification instanceof ZoneNotification) {
             final ZoneNotification zoneNotification = (ZoneNotification) notification;
 
+            if (!zoneNotification.zoneId().equals(zoneId)) {
+                throw new RuntimeException(
+                        "zoneNotification.zoneId() != zoneId ("
+                                + zoneNotification.zoneId() + " != " + zoneId
+                                + ")"
+                );
+            }
+
             mainHandler.post(new Runnable() {
 
                 @Override
                 public void run() {
-                    if (zoneNotification.zoneId() == zoneStore.getZoneId()) {
 
-                        if (notification instanceof ZoneState) {
-                            ZoneState zoneState = (ZoneState) zoneNotification;
+                    if (zoneNotification instanceof ClientJoinedZoneNotification) {
+                        ClientJoinedZoneNotification clientJoinedZoneNotification =
+                                (ClientJoinedZoneNotification) zoneNotification;
 
-                            Zone previousZone = zoneStore.load();
-                            Zone nextZone = zoneState.zone();
+                        log.debug("clientJoinedZoneNotification={}", clientJoinedZoneNotification);
 
-                            zoneStore.save(nextZone);
+                        connectedClients.add(clientJoinedZoneNotification.publicKey());
 
-                            if (!previousZone.name().equals(nextZone.name())) {
-                                // TODO
+                        connectedMembers.putAll(
+                                Zone$.MODULE$.connectedMembersAsJavaMap(
+                                        otherMembers,
+                                        Collections.singleton(
+                                                clientJoinedZoneNotification.publicKey()
+                                        )
+                                )
+                        );
+
+                        if (listener != null) {
+                            listener.onConnectedMembersChanged(connectedMembers);
+                        }
+
+                    } else if (zoneNotification instanceof ClientQuitZoneNotification) {
+                        ClientQuitZoneNotification clientQuitZoneNotification =
+                                (ClientQuitZoneNotification) zoneNotification;
+
+                        log.debug("clientQuitZoneNotification={}", clientQuitZoneNotification);
+
+                        connectedClients.remove(clientQuitZoneNotification.publicKey());
+
+                        connectedMembers.keySet().removeAll(
+                                Zone$.MODULE$.connectedMembersAsJavaMap(
+                                        otherMembers,
+                                        Collections.singleton(
+                                                clientQuitZoneNotification.publicKey()
+                                        )
+                                ).keySet()
+                        );
+
+                        if (listener != null) {
+                            listener.onConnectedMembersChanged(connectedMembers);
+                        }
+
+                    } else if (zoneNotification instanceof ZoneTerminatedNotification) {
+
+                        connectedClients.clear();
+                        connectedMembers.clear();
+                        otherMembers.clear();
+                        userMembers.clear();
+                        memberBalances.clear();
+                        serverConnection.sendCommand(
+                                new JoinZoneCommand(
+                                        zoneId
+                                ),
+                                new ServerConnection.ResponseCallback() {
+
+                                    @Override
+                                    void onResultReceived(ResultResponse resultResponse) {
+                                        JoinZoneResponse joinZoneResponse = (JoinZoneResponse) resultResponse;
+                                        // TODO:
+                                    }
+
+                                });
+
+                    } else if (zoneNotification instanceof ZoneStateNotification) {
+                        final ZoneStateNotification zoneStateNotification = (ZoneStateNotification) zoneNotification;
+
+                        // TODO: lastModified
+
+                        if (zoneStateNotification instanceof ZoneNameSetNotification) {
+                            ZoneNameSetNotification zoneNameSetNotification =
+                                    (ZoneNameSetNotification) zoneStateNotification;
+
+                            log.debug("zoneNameSetNotification={}", zoneNameSetNotification);
+
+                            // TODO
+
+                        } else if (zoneStateNotification instanceof MemberCreatedNotification) {
+                            MemberCreatedNotification memberCreatedNotification =
+                                    (MemberCreatedNotification) zoneStateNotification;
+
+                            log.debug("memberCreatedNotification={}", memberCreatedNotification);
+
+                            MemberId createdMemberId = memberCreatedNotification.memberId();
+                            Member createdMember = memberCreatedNotification.member();
+
+                            PublicKey userPublicKey = ClientKey.getInstance(context).getPublicKey();
+
+                            if (createdMember.publicKey().equals(userPublicKey)) {
+                                userMembers.put(createdMemberId, createdMember);
+                                if (listener != null) {
+                                    listener.onUserMembersChanged(userMembers);
+                                }
+                            } else {
+                                otherMembers.put(createdMemberId, createdMember);
+                                if (connectedClients.contains(createdMember.publicKey())) {
+                                    connectedMembers.put(createdMemberId, createdMember);
+                                    if (listener != null) {
+                                        listener.onOtherMembersChanged(otherMembers);
+                                        listener.onConnectedMembersChanged(connectedMembers);
+                                    }
+                                } else {
+                                    if (listener != null) {
+                                        listener.onOtherMembersChanged(otherMembers);
+                                    }
+                                }
                             }
 
-                            if (!previousZone.members().equals(nextZone.members())) {
+                        } else if (zoneStateNotification instanceof MemberUpdatedNotification) {
+                            MemberUpdatedNotification memberUpdatedNotification =
+                                    (MemberUpdatedNotification) zoneStateNotification;
 
-                                notifyMembersChanged(nextZone);
+                            log.debug("memberUpdatedNotification={}", memberUpdatedNotification);
 
-                            }
+                            MemberId updatedMemberId = memberUpdatedNotification.memberId();
+                            Member updatedMember = memberUpdatedNotification.member();
 
-                            if (!previousZone.transactions().equals(nextZone.transactions())) {
-                                // TODO: Balances
-                            }
+                            PublicKey userPublicKey = ClientKey.getInstance(context).getPublicKey();
 
-                            zoneStore.save(zoneState.zone());
+                            if (userMembers.containsKey(updatedMemberId)) {
 
-                        } else if (notification instanceof ZoneTerminated) {
-
-                            connectedClients= null;
-                            connectedMembers = null;
-                            otherMembers = null;
-                            userMembers = null;
-                            memberBalances = null;
-                            serverConnection.sendCommand(
-                                    new JoinZone(
-                                            zoneStore.getZoneId()
-                                    ),
-                                    new ServerConnection.CommandResponseCallback() {
-
-                                        @Override
-                                        void onResultReceived(CommandResultResponse commandResultResponse) {
-                                            ZoneJoined zoneJoined = (ZoneJoined) commandResultResponse;
-                                            // TODO:
+                                if (!updatedMember.publicKey().equals(userPublicKey)) {
+                                    userMembers.remove(updatedMemberId);
+                                    otherMembers.put(updatedMemberId, updatedMember);
+                                    if (connectedClients.contains(updatedMember.publicKey())) {
+                                        connectedMembers.put(updatedMemberId, updatedMember);
+                                        if (listener != null) {
+                                            listener.onUserMembersChanged(userMembers);
+                                            listener.onOtherMembersChanged(otherMembers);
+                                            listener.onConnectedMembersChanged(connectedMembers);
                                         }
+                                    } else {
+                                        if (listener != null) {
+                                            listener.onUserMembersChanged(userMembers);
+                                            listener.onOtherMembersChanged(otherMembers);
+                                        }
+                                    }
+                                } else {
+                                    userMembers.put(updatedMemberId, updatedMember);
+                                    if (listener != null) {
+                                        listener.onUserMembersChanged(userMembers);
+                                    }
+                                }
 
-                                    });
+                            } else if (otherMembers.containsKey(updatedMemberId)) {
 
-                        } else if (notification instanceof ClientJoinedZone) {
-                            ClientJoinedZone clientJoinedZone = (ClientJoinedZone) zoneNotification;
+                                if (updatedMember.publicKey().equals(userPublicKey)) {
+                                    otherMembers.remove(updatedMemberId);
+                                    userMembers.put(updatedMemberId, updatedMember);
+                                    if (connectedClients.contains(updatedMember.publicKey())) {
+                                        connectedMembers.remove(updatedMemberId);
+                                        if (listener != null) {
+                                            listener.onUserMembersChanged(userMembers);
+                                            listener.onOtherMembersChanged(otherMembers);
+                                            listener.onConnectedMembersChanged(connectedMembers);
+                                        }
+                                    } else {
+                                        if (listener != null) {
+                                            listener.onUserMembersChanged(userMembers);
+                                            listener.onOtherMembersChanged(otherMembers);
+                                        }
+                                    }
+                                } else {
+                                    otherMembers.put(updatedMemberId, updatedMember);
+                                    if (listener != null) {
+                                        listener.onOtherMembersChanged(otherMembers);
+                                    }
+                                }
 
-                            connectedClients.add(clientJoinedZone.publicKey());
-
-                            connectedMembers.putAll(
-                                    Zone$.MODULE$.connectedMembersAsJavaMap(
-                                            otherMembers,
-                                            Collections.singleton(clientJoinedZone.publicKey())
-                                    )
-                            );
-
-                            for (Listener listener : listeners) {
-                                listener.onConnectedMembersChanged(connectedMembers);
+                            } else {
+                                throw new RuntimeException(
+                                        "Received update of non-existent memberId" + updatedMemberId
+                                );
                             }
 
-                        } else if (notification instanceof ClientQuitZone) {
-                            ClientQuitZone clientQuitZone = (ClientQuitZone) zoneNotification;
+                        } else if (zoneStateNotification instanceof MemberDeletedNotification) {
+                            MemberDeletedNotification memberDeletedNotification =
+                                    (MemberDeletedNotification) zoneStateNotification;
 
-                            connectedClients.remove(clientQuitZone.publicKey());
+                            log.debug("memberDeletedNotification={}", memberDeletedNotification);
 
-                            connectedMembers.keySet().removeAll(
-                                    Zone$.MODULE$.connectedMembersAsJavaMap(
-                                            otherMembers,
-                                            Collections.singleton(clientQuitZone.publicKey())
-                                    ).keySet()
-                            );
+                            MemberId deletedMemberId = memberDeletedNotification.memberId();
 
-                            for (Listener listener : listeners) {
-                                listener.onConnectedMembersChanged(connectedMembers);
+                            if (userMembers.remove(deletedMemberId) != null) {
+
+                                if (listener != null) {
+                                    listener.onUserMembersChanged(userMembers);
+                                }
+
+                            } else if (otherMembers.remove(deletedMemberId) != null) {
+
+                                if (listener != null) {
+                                    listener.onOtherMembersChanged(otherMembers);
+                                }
+                                if (connectedMembers.remove(deletedMemberId) != null) {
+                                    if (listener != null) {
+                                        listener.onConnectedMembersChanged(connectedMembers);
+                                    }
+                                }
+
+                            } else {
+                                throw new RuntimeException(
+                                        "Received delete of non-existent memberId" + deletedMemberId
+                                );
                             }
+
+                        } else if (zoneStateNotification instanceof AccountCreatedNotification) {
+                            AccountCreatedNotification accountCreatedNotification =
+                                    (AccountCreatedNotification) zoneStateNotification;
+
+                            log.debug("accountCreatedNotification={}", accountCreatedNotification);
+
+                            // TODO
+
+                        } else if (zoneStateNotification instanceof AccountUpdatedNotification) {
+                            AccountUpdatedNotification accountUpdatedNotification =
+                                    (AccountUpdatedNotification) zoneStateNotification;
+
+                            log.debug("accountUpdatedNotification={}", accountUpdatedNotification);
+
+                            // TODO
+
+                        } else if (zoneStateNotification instanceof AccountDeletedNotification) {
+                            AccountDeletedNotification accountDeletedNotification =
+                                    (AccountDeletedNotification) zoneStateNotification;
+
+                            log.debug("accountDeletedNotification={}", accountDeletedNotification);
+
+                            // TODO
+
+                        } else if (zoneStateNotification instanceof TransactionAddedNotification) {
+                            TransactionAddedNotification transactionAddedNotification =
+                                    (TransactionAddedNotification) zoneStateNotification;
+
+                            log.debug("transactionAddedNotification={}", transactionAddedNotification);
+
+                            // TODO: Balances
 
                         }
 
                     }
+
                 }
 
             });
@@ -489,9 +657,21 @@ public class MonopolyGame implements ServerConnection.ConnectionStateListener,
 
                     @Override
                     public void run() {
-                        for (Listener listener : listeners) {
+
+                        if (listener != null) {
                             listener.onConnected();
                         }
+
+                        if (zoneId != null) {
+                            join(zoneId);
+                        } else if (capitalToStartWith != null) {
+                            createAndThenJoinZone();
+                        } else {
+                            throw new RuntimeException(
+                                    "Neither zoneId nor capitalToStartWith were set"
+                            );
+                        }
+
                     }
 
                 });
@@ -505,9 +685,11 @@ public class MonopolyGame implements ServerConnection.ConnectionStateListener,
 
                     @Override
                     public void run() {
-                        for (Listener listener : listeners) {
+
+                        if (listener != null) {
                             listener.onDisconnected();
                         }
+
                     }
 
                 });
@@ -518,24 +700,37 @@ public class MonopolyGame implements ServerConnection.ConnectionStateListener,
     }
 
     public void quit() {
-        serverConnection.sendCommand(
-                new QuitZone(zoneStore.getZoneId()),
-                new ServerConnection.CommandResponseCallback() {
-
-                    @Override
-                    void onResultReceived(CommandResultResponse commandResultResponse) {
-                        ZoneQuit$ zoneQuit = (ZoneQuit$) commandResultResponse;
-
-                        log.debug("zoneQuit={}", zoneQuit);
-
-                    }
-
-                }
-        );
+        // TODO
+//        serverConnection.sendCommand(
+//                new QuitZoneCommand(zoneStore.getZoneId()),
+//                new ServerConnection.ResponseCallback() {
+//
+//                    @Override
+//                    void onResultReceived(ResultResponse resultResponse) {
+//                        QuitZoneResponse$ quitZoneResponse = (QuitZoneResponse$) resultResponse;
+//
+//        if(listener != null) {
+//            listener.onQuit();
+//        }
+//
+//                        log.debug("zoneQuit={}", quitZoneResponse);
+//
+//                    }
+//
+//                }
+//        );
     }
 
-    public void removeListener(Listener listener) {
-        this.listeners.remove(listener);
+    public void setCapitalToStartWith(BigDecimal capitalToStartWith) {
+        this.capitalToStartWith = capitalToStartWith;
+    }
+
+    public void setListener(Listener listener) {
+        this.listener = listener;
+    }
+
+    public void setZoneId(ZoneId zoneId) {
+        this.zoneId = zoneId;
     }
 
 }

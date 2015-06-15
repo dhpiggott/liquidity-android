@@ -13,16 +13,14 @@ import com.dhpcs.jsonrpc.JsonRpcResponseError;
 import com.dhpcs.jsonrpc.JsonRpcResponseMessage;
 import com.dhpcs.liquidity.models.Command;
 import com.dhpcs.liquidity.models.Command$;
-import com.dhpcs.liquidity.models.CommandErrorResponse;
-import com.dhpcs.liquidity.models.CommandResponse;
-import com.dhpcs.liquidity.models.CommandResponse$;
-import com.dhpcs.liquidity.models.CommandResultResponse;
+import com.dhpcs.liquidity.models.ErrorResponse;
 import com.dhpcs.liquidity.models.Notification;
 import com.dhpcs.liquidity.models.Notification$;
+import com.dhpcs.liquidity.models.Response;
+import com.dhpcs.liquidity.models.Response$;
+import com.dhpcs.liquidity.models.ResultResponse;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
 import com.squareup.okhttp.ws.WebSocket;
 import com.squareup.okhttp.ws.WebSocketCall;
 import com.squareup.okhttp.ws.WebSocketListener;
@@ -66,19 +64,21 @@ public class ServerConnection implements WebSocketListener {
 
     }
 
-    public static abstract class CommandResponseCallback {
+    public static abstract class ResponseCallback {
 
-        void onErrorReceived(CommandErrorResponse commandErrorResponse) {
-            throw new RuntimeException(commandErrorResponse.toString());
+        void onErrorReceived(ErrorResponse errorResponse) {
+            throw new RuntimeException(errorResponse.toString());
         }
 
-        abstract void onResultReceived(CommandResultResponse commandResultResponse);
+        abstract void onResultReceived(ResultResponse resultResponse);
 
         // TODO: Timeouts?
 
     }
 
     private static final String SERVER_ENDPOINT = "https://liquidity.dhpcs.com/ws";
+    // TODO
+    private static final long PING_PERIOD = 5000;
 
     private static SSLSocketFactory getSslSocketFactory(Context context) {
         try {
@@ -100,6 +100,20 @@ public class ServerConnection implements WebSocketListener {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    private final Runnable pingRunnable = new Runnable() {
+
+        @Override
+        public void run() {
+            try {
+                webSocket.sendPing(null);
+                handler.postDelayed(this, PING_PERIOD);
+            } catch (IOException e) {
+                log.warn(e.getMessage(), e);
+            }
+        }
+
+    };
+
     private final ConnectionStateListener connectionStateListener;
     private final NotificationListener notificationListener;
     private final OkHttpClient client;
@@ -109,7 +123,7 @@ public class ServerConnection implements WebSocketListener {
     private WebSocket webSocket;
 
     private final SparseArray<JsonRpcRequestMessage> pendingRequests = new SparseArray<>();
-    private final SparseArray<CommandResponseCallback> pendingRequestCommandResponseCallbacks = new SparseArray<>();
+    private final SparseArray<ResponseCallback> pendingRequestResponseCallbacks = new SparseArray<>();
 
     private int lastCommandIdentifier;
 
@@ -151,7 +165,8 @@ public class ServerConnection implements WebSocketListener {
             public void run() {
                 connectionStateListener.onStateChanged(ConnectionState.CONNECTING);
                 webSocketCall = WebSocketCall.create(
-                        client, new Request.Builder()
+                        client,
+                        new com.squareup.okhttp.Request.Builder()
                                 .url(SERVER_ENDPOINT)
                                 .build()
                 );
@@ -199,6 +214,7 @@ public class ServerConnection implements WebSocketListener {
 
             @Override
             public void run() {
+                handler.removeCallbacks(pingRunnable);
                 connectionStateListener.onStateChanged(ConnectionState.DISCONNECTED);
                 webSocketCall = null;
                 webSocket = null;
@@ -256,34 +272,34 @@ public class ServerConnection implements WebSocketListener {
                                         int commandIdentifier = Int.unbox((jsonRpcResponseMessage.id().get().right().get()));
                                         JsonRpcRequestMessage jsonRpcRequestMessage = pendingRequests.get(commandIdentifier);
                                         pendingRequests.remove(commandIdentifier);
-                                        CommandResponseCallback commandResponseCallback = pendingRequestCommandResponseCallbacks.get(commandIdentifier);
-                                        pendingRequestCommandResponseCallbacks.remove(commandIdentifier);
+                                        ResponseCallback responseCallback = pendingRequestResponseCallbacks.get(commandIdentifier);
+                                        pendingRequestResponseCallbacks.remove(commandIdentifier);
 
-                                        JsResult<CommandResponse> jsResultCommandResponse = CommandResponse$.MODULE$.read(
+                                        JsResult<Response> responseJsResult = Response$.MODULE$.read(
                                                 jsonRpcResponseMessage,
                                                 jsonRpcRequestMessage.method()
                                         );
 
-                                        if (jsResultCommandResponse.isError()) {
+                                        if (responseJsResult.isError()) {
 
-                                            log.warn("Invalid CommandResponse: {}", jsResultCommandResponse);
+                                            log.warn("Invalid Response: {}", responseJsResult);
 
                                         } else {
 
-                                            CommandResponse commandResponse = jsResultCommandResponse.get();
+                                            Response response = responseJsResult.get();
 
-                                            if (commandResponse instanceof CommandErrorResponse) {
+                                            if (response instanceof ErrorResponse) {
 
-                                                log.warn("Received command response error: {}", jsResultCommandResponse.get());
+                                                log.warn("Received response error: {}", response);
 
-                                                commandResponseCallback.onErrorReceived(
-                                                        (CommandErrorResponse) commandResponse
+                                                responseCallback.onErrorReceived(
+                                                        (ErrorResponse) response
                                                 );
 
                                             } else {
 
-                                                commandResponseCallback.onResultReceived(
-                                                        (CommandResultResponse) commandResponse
+                                                responseCallback.onResultReceived(
+                                                        (ResultResponse) response
                                                 );
 
                                             }
@@ -358,8 +374,9 @@ public class ServerConnection implements WebSocketListener {
     }
 
     @Override
-    public void onOpen(final WebSocket webSocket, Request request, Response response)
-            throws IOException {
+    public void onOpen(final WebSocket webSocket,
+                       com.squareup.okhttp.Request request,
+                       com.squareup.okhttp.Response response) throws IOException {
         log.debug("WebSocket opened");
         handler.post(new Runnable() {
 
@@ -368,6 +385,7 @@ public class ServerConnection implements WebSocketListener {
                 ServerConnection.this.webSocketCall = null;
                 ServerConnection.this.webSocket = webSocket;
                 connectionStateListener.onStateChanged(ConnectionState.CONNECTED);
+                handler.postDelayed(pingRunnable, PING_PERIOD);
             }
 
         });
@@ -375,10 +393,15 @@ public class ServerConnection implements WebSocketListener {
 
     @Override
     public void onPong(Buffer payload) {
-        log.debug("Received pong: {}", payload.readUtf8());
+        String payloadString = null;
+        if (payload != null) {
+            payloadString = payload.readUtf8();
+            payload.close();
+        }
+        log.debug("Received pong: {}", payloadString);
     }
 
-    public void sendCommand(final Command command, final CommandResponseCallback commandResponseCallback) {
+    public void sendCommand(final Command command, final ResponseCallback responseCallback) {
         log.debug("Sending command: {}", command);
         handler.post(new Runnable() {
 
@@ -405,7 +428,7 @@ public class ServerConnection implements WebSocketListener {
                             )
                     );
                     pendingRequests.append(commandIdentifier, jsonRpcRequestMessage);
-                    pendingRequestCommandResponseCallbacks.append(commandIdentifier, commandResponseCallback);
+                    pendingRequestResponseCallbacks.append(commandIdentifier, responseCallback);
                 } catch (IOException e) {
                     log.warn(e.getMessage(), e);
                 }

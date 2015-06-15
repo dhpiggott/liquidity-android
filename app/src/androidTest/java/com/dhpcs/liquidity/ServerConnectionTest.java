@@ -2,13 +2,13 @@ package com.dhpcs.liquidity;
 
 import android.test.AndroidTestCase;
 
-import com.dhpcs.liquidity.models.ClientJoinedZone;
-import com.dhpcs.liquidity.models.CommandResultResponse;
-import com.dhpcs.liquidity.models.CreateZone;
-import com.dhpcs.liquidity.models.JoinZone;
+import com.dhpcs.liquidity.models.ClientJoinedZoneNotification;
+import com.dhpcs.liquidity.models.CreateZoneCommand;
+import com.dhpcs.liquidity.models.CreateZoneResponse;
+import com.dhpcs.liquidity.models.JoinZoneCommand;
+import com.dhpcs.liquidity.models.JoinZoneResponse;
 import com.dhpcs.liquidity.models.Notification;
-import com.dhpcs.liquidity.models.ZoneCreated;
-import com.dhpcs.liquidity.models.ZoneJoined;
+import com.dhpcs.liquidity.models.ResultResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +31,7 @@ public class ServerConnectionTest extends AndroidTestCase
     private final CyclicBarrier serverConnectionStateSetBarrier = new CyclicBarrier(2);
     private final CyclicBarrier serverConnectionStateReadBarrier = new CyclicBarrier(2);
 
-    private CommandResultResponse commandResultResponse;
+    private ResultResponse resultResponse;
     private Notification notification;
     private ServerConnection.ConnectionState connectionState;
 
@@ -72,14 +72,14 @@ public class ServerConnectionTest extends AndroidTestCase
         serverConnectionStateSetBarrier.await(15, TimeUnit.SECONDS);
         assertEquals(ServerConnection.ConnectionState.CONNECTED, connectionState);
 
-        serverConnection.sendCommand(new CreateZone("Dave's zone", GameType.TEST.typeName), new ServerConnection.CommandResponseCallback() {
+        serverConnection.sendCommand(new CreateZoneCommand("Dave's zone", GameType.TEST.typeName), new ServerConnection.ResponseCallback() {
 
             @Override
-            public void onResultReceived(CommandResultResponse commandResultResponse) {
+            public void onResultReceived(ResultResponse resultResponse) {
                 try {
-                    log.debug("commandResultResponse={}", commandResultResponse);
+                    log.debug("resultResponse={}", resultResponse);
                     commandResultResponseReadBarrier.await();
-                    ServerConnectionTest.this.commandResultResponse = commandResultResponse;
+                    ServerConnectionTest.this.resultResponse = resultResponse;
                     commandResultResponseSetBarrier.await();
                 } catch (InterruptedException
                         | BrokenBarrierException e) {
@@ -90,16 +90,16 @@ public class ServerConnectionTest extends AndroidTestCase
         });
         commandResultResponseReadBarrier.await(15, TimeUnit.SECONDS);
         commandResultResponseSetBarrier.await(15, TimeUnit.SECONDS);
-        assertTrue(commandResultResponse instanceof ZoneCreated);
+        assertTrue(resultResponse instanceof CreateZoneResponse);
 
-        serverConnection.sendCommand(new JoinZone(((ZoneCreated) commandResultResponse).zoneId()), new ServerConnection.CommandResponseCallback() {
+        serverConnection.sendCommand(new JoinZoneCommand(((CreateZoneResponse) resultResponse).zoneId()), new ServerConnection.ResponseCallback() {
 
             @Override
-            public void onResultReceived(CommandResultResponse commandResultResponse) {
+            public void onResultReceived(ResultResponse resultResponse) {
                 try {
-                    log.debug("commandResultResponse={}", commandResultResponse);
+                    log.debug("resultResponse={}", resultResponse);
                     commandResultResponseReadBarrier.await();
-                    ServerConnectionTest.this.commandResultResponse = commandResultResponse;
+                    ServerConnectionTest.this.resultResponse = resultResponse;
                     commandResultResponseSetBarrier.await();
                 } catch (InterruptedException
                         | BrokenBarrierException e) {
@@ -110,10 +110,10 @@ public class ServerConnectionTest extends AndroidTestCase
         });
         commandResultResponseReadBarrier.await(15, TimeUnit.SECONDS);
         commandResultResponseSetBarrier.await(15, TimeUnit.SECONDS);
-        assertTrue(commandResultResponse instanceof ZoneJoined);
+        assertTrue(resultResponse instanceof JoinZoneResponse);
         notificationReadBarrier.await(15, TimeUnit.SECONDS);
         notificationSetBarrier.await(15, TimeUnit.SECONDS);
-        assertTrue(notification instanceof ClientJoinedZone);
+        assertTrue(notification instanceof ClientJoinedZoneNotification);
 
         serverConnection.disconnect();
         serverConnectionStateReadBarrier.await(15, TimeUnit.SECONDS);

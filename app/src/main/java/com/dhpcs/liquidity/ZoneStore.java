@@ -20,6 +20,7 @@ import okio.Okio;
 import play.api.libs.json.JsResult;
 import play.api.libs.json.Json;
 
+// TODO: Rewrite using database and only storing subset of info
 public class ZoneStore {
 
     private static final String ZONES_DIRECTORY_NAME = "zones";
@@ -117,7 +118,6 @@ public class ZoneStore {
         return zoneId;
     }
 
-    // TODO: Caching? Versioning?
     public Zone load() {
         try {
             BufferedSource bufferedSource = Okio.buffer(Okio.source(zoneFile));
@@ -139,7 +139,6 @@ public class ZoneStore {
         }
     }
 
-    // TODO: Caching? Versioning?
     public void save(Zone zone) {
         try {
             FileUtils.forceMkdir(zoneDirectory);
