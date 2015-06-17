@@ -8,7 +8,6 @@ import android.provider.ContactsContract;
 
 import com.dhpcs.liquidity.models.Account;
 import com.dhpcs.liquidity.models.AccountCreatedNotification;
-import com.dhpcs.liquidity.models.AccountDeletedNotification;
 import com.dhpcs.liquidity.models.AccountId;
 import com.dhpcs.liquidity.models.AccountUpdatedNotification;
 import com.dhpcs.liquidity.models.ClientJoinedZoneNotification;
@@ -23,7 +22,6 @@ import com.dhpcs.liquidity.models.JoinZoneCommand;
 import com.dhpcs.liquidity.models.JoinZoneResponse;
 import com.dhpcs.liquidity.models.Member;
 import com.dhpcs.liquidity.models.MemberCreatedNotification;
-import com.dhpcs.liquidity.models.MemberDeletedNotification;
 import com.dhpcs.liquidity.models.MemberId;
 import com.dhpcs.liquidity.models.MemberUpdatedNotification;
 import com.dhpcs.liquidity.models.Notification;
@@ -114,7 +112,6 @@ public class MonopolyGame implements ServerConnection.ConnectionStateListener,
     private final Map<MemberId, Member> userMembers = new HashMap<>();
     private final Map<AccountId, BigDecimal> memberBalances = new HashMap<>();
 
-    // TODO:
     private ZoneId zoneId;
     private BigDecimal capitalToStartWith;
 
@@ -128,71 +125,6 @@ public class MonopolyGame implements ServerConnection.ConnectionStateListener,
 
     public void connect() {
         serverConnection.connect();
-    }
-
-    private void createBankerAndThenJoinZone(final ZoneId zoneId) {
-
-        serverConnection.sendCommand(
-                new CreateMemberCommand(
-                        zoneId,
-                        new Member(
-                                BANK_MEMBER_NAME,
-                                ClientKey.getInstance(context).getPublicKey()
-                        )
-                ),
-                new ServerConnection.ResponseCallback() {
-
-                    @Override
-                    public void onResultReceived(ResultResponse resultResponse) {
-                        final CreateMemberResponse createMemberResponse = (CreateMemberResponse) resultResponse;
-
-                        log.debug("createMemberResponse={}", createMemberResponse);
-
-                        mainHandler.post(new Runnable() {
-
-                            @Override
-                            public void run() {
-                                serverConnection.sendCommand(
-                                        new CreateAccountCommand(
-                                                zoneId,
-                                                new Account(
-                                                        BANK_ACCOUNT_NAME,
-                                                        JavaConversions.asScalaSet(
-                                                                Collections.singleton(createMemberResponse.memberId())
-                                                        ).<MemberId>toSet()
-                                                )
-                                        ),
-                                        new ServerConnection.ResponseCallback() {
-
-                                            @Override
-                                            public void onResultReceived(ResultResponse resultResponse) {
-                                                CreateAccountResponse createAccountResponse = (CreateAccountResponse) resultResponse;
-
-                                                log.debug("createAccountResponse={}", createAccountResponse);
-
-                                                mainHandler.post(new Runnable() {
-
-                                                    @Override
-                                                    public void run() {
-                                                        setZoneId(zoneId);
-                                                        join(zoneId);
-                                                    }
-
-                                                });
-
-                                            }
-
-                                        }
-                                );
-                            }
-
-                        });
-
-                    }
-
-                }
-        );
-
     }
 
     private void createPlayer(final ZoneId zoneId) {
@@ -269,7 +201,17 @@ public class MonopolyGame implements ServerConnection.ConnectionStateListener,
         serverConnection.sendCommand(
                 new CreateZoneCommand(
                         GAME_NAME_PREFIX + playerName,
-                        ZONE_TYPE.typeName),
+                        ZONE_TYPE.typeName,
+                        new Member(
+                                BANK_MEMBER_NAME,
+                                ClientKey.getInstance(context).getPublicKey()
+                        ),
+                        new Account(
+                                BANK_ACCOUNT_NAME,
+                                JavaConversions.asScalaSet(
+                                        Collections.emptySet()
+                                ).<MemberId>toSet()
+                        )),
                 new ServerConnection.ResponseCallback() {
 
                     @Override
@@ -282,7 +224,8 @@ public class MonopolyGame implements ServerConnection.ConnectionStateListener,
 
                             @Override
                             public void run() {
-                                createBankerAndThenJoinZone(createZoneResponse.zoneId());
+                                setZoneId(createZoneResponse.zoneId());
+                                join();
                             }
 
                         });
@@ -297,7 +240,7 @@ public class MonopolyGame implements ServerConnection.ConnectionStateListener,
         serverConnection.disconnect();
     }
 
-    private void join(final ZoneId zoneId) {
+    private void join() {
         serverConnection.sendCommand(
                 new JoinZoneCommand(zoneId),
                 new ServerConnection.ResponseCallback() {
@@ -355,10 +298,9 @@ public class MonopolyGame implements ServerConnection.ConnectionStateListener,
 
                                 // TODO: Balances
 
-                                if (userMembers.isEmpty()
-                                        || (userMembers.size() == 1 && userMembers.values().iterator().next().name().equals(BANK_MEMBER_NAME))) {
+                                if (userMembers.isEmpty()) {
 
-                                    log.debug("No identities for user, must have disconnected after create - creating player now");
+                                    log.debug("No identities for user, must have disconnected after create/join - creating player now");
 
                                     createPlayer(zoneId);
 
@@ -569,37 +511,6 @@ public class MonopolyGame implements ServerConnection.ConnectionStateListener,
                                 );
                             }
 
-                        } else if (zoneStateNotification instanceof MemberDeletedNotification) {
-                            MemberDeletedNotification memberDeletedNotification =
-                                    (MemberDeletedNotification) zoneStateNotification;
-
-                            log.debug("memberDeletedNotification={}", memberDeletedNotification);
-
-                            MemberId deletedMemberId = memberDeletedNotification.memberId();
-
-                            if (userMembers.remove(deletedMemberId) != null) {
-
-                                if (listener != null) {
-                                    listener.onUserMembersChanged(userMembers);
-                                }
-
-                            } else if (otherMembers.remove(deletedMemberId) != null) {
-
-                                if (listener != null) {
-                                    listener.onOtherMembersChanged(otherMembers);
-                                }
-                                if (connectedMembers.remove(deletedMemberId) != null) {
-                                    if (listener != null) {
-                                        listener.onConnectedMembersChanged(connectedMembers);
-                                    }
-                                }
-
-                            } else {
-                                throw new RuntimeException(
-                                        "Received delete of non-existent memberId" + deletedMemberId
-                                );
-                            }
-
                         } else if (zoneStateNotification instanceof AccountCreatedNotification) {
                             AccountCreatedNotification accountCreatedNotification =
                                     (AccountCreatedNotification) zoneStateNotification;
@@ -613,14 +524,6 @@ public class MonopolyGame implements ServerConnection.ConnectionStateListener,
                                     (AccountUpdatedNotification) zoneStateNotification;
 
                             log.debug("accountUpdatedNotification={}", accountUpdatedNotification);
-
-                            // TODO
-
-                        } else if (zoneStateNotification instanceof AccountDeletedNotification) {
-                            AccountDeletedNotification accountDeletedNotification =
-                                    (AccountDeletedNotification) zoneStateNotification;
-
-                            log.debug("accountDeletedNotification={}", accountDeletedNotification);
 
                             // TODO
 
@@ -663,7 +566,7 @@ public class MonopolyGame implements ServerConnection.ConnectionStateListener,
                         }
 
                         if (zoneId != null) {
-                            join(zoneId);
+                            join();
                         } else if (capitalToStartWith != null) {
                             createAndThenJoinZone();
                         } else {

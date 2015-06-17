@@ -2,21 +2,27 @@ package com.dhpcs.liquidity;
 
 import android.test.AndroidTestCase;
 
+import com.dhpcs.liquidity.models.Account;
 import com.dhpcs.liquidity.models.ClientJoinedZoneNotification;
 import com.dhpcs.liquidity.models.CreateZoneCommand;
 import com.dhpcs.liquidity.models.CreateZoneResponse;
 import com.dhpcs.liquidity.models.JoinZoneCommand;
 import com.dhpcs.liquidity.models.JoinZoneResponse;
+import com.dhpcs.liquidity.models.Member;
+import com.dhpcs.liquidity.models.MemberId;
 import com.dhpcs.liquidity.models.Notification;
 import com.dhpcs.liquidity.models.ResultResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import scala.collection.JavaConversions;
 
 public class ServerConnectionTest extends AndroidTestCase
         implements ServerConnection.ConnectionStateListener,
@@ -72,22 +78,37 @@ public class ServerConnectionTest extends AndroidTestCase
         serverConnectionStateSetBarrier.await(15, TimeUnit.SECONDS);
         assertEquals(ServerConnection.ConnectionState.CONNECTED, connectionState);
 
-        serverConnection.sendCommand(new CreateZoneCommand("Dave's zone", GameType.TEST.typeName), new ServerConnection.ResponseCallback() {
+        serverConnection.sendCommand(
+                new CreateZoneCommand(
+                        "Dave's zone",
+                        GameType.TEST.typeName,
+                        new Member(
+                                "Banker",
+                                ClientKey.getInstance(getContext()).getPublicKey()
+                        ),
+                        new Account(
+                                "Bank",
+                                JavaConversions.asScalaSet(
+                                        Collections.emptySet()
+                                ).<MemberId>toSet()
+                        )
+                ),
+                new ServerConnection.ResponseCallback() {
 
-            @Override
-            public void onResultReceived(ResultResponse resultResponse) {
-                try {
-                    log.debug("resultResponse={}", resultResponse);
-                    commandResultResponseReadBarrier.await();
-                    ServerConnectionTest.this.resultResponse = resultResponse;
-                    commandResultResponseSetBarrier.await();
-                } catch (InterruptedException
-                        | BrokenBarrierException e) {
-                    throw new Error(e);
-                }
-            }
+                    @Override
+                    public void onResultReceived(ResultResponse resultResponse) {
+                        try {
+                            log.debug("resultResponse={}", resultResponse);
+                            commandResultResponseReadBarrier.await();
+                            ServerConnectionTest.this.resultResponse = resultResponse;
+                            commandResultResponseSetBarrier.await();
+                        } catch (InterruptedException
+                                | BrokenBarrierException e) {
+                            throw new Error(e);
+                        }
+                    }
 
-        });
+                });
         commandResultResponseReadBarrier.await(15, TimeUnit.SECONDS);
         commandResultResponseSetBarrier.await(15, TimeUnit.SECONDS);
         assertTrue(resultResponse instanceof CreateZoneResponse);
