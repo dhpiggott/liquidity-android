@@ -27,7 +27,7 @@ object ZoneHelper {
         }
         val membersAccountBalances = membersAccounts.map {
           case (accountId, _) =>
-            accountId -> accountBalances(accountId)
+            accountId -> accountBalances.getOrElse(accountId, BigDecimal(0))
         }
         memberId -> membersAccountBalances.values.sum
     }

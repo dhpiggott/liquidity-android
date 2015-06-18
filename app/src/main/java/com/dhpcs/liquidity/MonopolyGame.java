@@ -270,6 +270,8 @@ public class MonopolyGame implements ServerConnection.ConnectionStateListener,
                                 )
                         );
 
+                        accountBalances = scala.collection.immutable.Map$.MODULE$.empty();
+
                         Iterator<Transaction> iterator = zone.transactions().valuesIterator();
                         while (iterator.hasNext()) {
                             accountBalances = Zone.checkAndUpdateBalances(

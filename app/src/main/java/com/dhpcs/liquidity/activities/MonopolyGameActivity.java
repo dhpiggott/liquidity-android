@@ -20,6 +20,7 @@ import com.dhpcs.liquidity.models.ZoneId;
 import java.math.BigDecimal;
 import java.util.Map;
 
+// TODO: Why AppCompat?
 public class MonopolyGameActivity extends AppCompatActivity
         implements MonopolyGame.Listener, PlayersFragment.Listener {
 
@@ -31,7 +32,6 @@ public class MonopolyGameActivity extends AppCompatActivity
     private PlayersFragment playersFragment;
 
     private ZoneId zoneId;
-    private MenuItem addPlayers;
 
     @Override
     public void onConnectedPlayersChanged(Map<MemberId, Member> connectedPlayers) {
@@ -41,7 +41,6 @@ public class MonopolyGameActivity extends AppCompatActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_monopoly_game, menu);
-        addPlayers = menu.findItem(R.id.action_add_players);
         return true;
     }
 
@@ -95,7 +94,7 @@ public class MonopolyGameActivity extends AppCompatActivity
     @Override
     public void onJoined(ZoneId zoneId) {
         this.zoneId = zoneId;
-        addPlayers.setVisible(true);
+        supportInvalidateOptionsMenu();
     }
 
     @Override
@@ -129,9 +128,15 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        menu.findItem(R.id.action_add_players).setVisible(zoneId != null);
+        return true;
+    }
+
+    @Override
     public void onQuit() {
         this.zoneId = null;
-        addPlayers.setVisible(false);
+        supportInvalidateOptionsMenu();
     }
 
     @Override
