@@ -1,5 +1,7 @@
 package com.dhpcs.liquidity;
 
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.test.AndroidTestCase;
 
 import com.dhpcs.liquidity.models.Account;
@@ -68,7 +70,16 @@ public class ServerConnectionTest extends AndroidTestCase
     }
 
     public void testStream() throws InterruptedException, BrokenBarrierException, TimeoutException {
-        ServerConnection serverConnection = new ServerConnection(getContext(), this, this);
+        HandlerThread handlerThread = new HandlerThread("ConnectionTest");
+        handlerThread.start();
+        Handler connectionTestHandler = new Handler(handlerThread.getLooper());
+        ServerConnection serverConnection = new ServerConnection(
+                getContext(),
+                this,
+                connectionTestHandler,
+                this,
+                connectionTestHandler
+        );
 
         serverConnection.connect();
         serverConnectionStateReadBarrier.await(15, TimeUnit.SECONDS);
@@ -108,27 +119,33 @@ public class ServerConnectionTest extends AndroidTestCase
                         }
                     }
 
-                });
+                },
+                connectionTestHandler
+        );
         commandResultResponseReadBarrier.await(15, TimeUnit.SECONDS);
         commandResultResponseSetBarrier.await(15, TimeUnit.SECONDS);
         assertTrue(resultResponse instanceof CreateZoneResponse);
 
-        serverConnection.sendCommand(new JoinZoneCommand(((CreateZoneResponse) resultResponse).zoneId()), new ServerConnection.ResponseCallback() {
+        serverConnection.sendCommand(
+                new JoinZoneCommand(((CreateZoneResponse) resultResponse).zoneId()),
+                new ServerConnection.ResponseCallback() {
 
-            @Override
-            public void onResultReceived(ResultResponse resultResponse) {
-                try {
-                    log.debug("resultResponse={}", resultResponse);
-                    commandResultResponseReadBarrier.await();
-                    ServerConnectionTest.this.resultResponse = resultResponse;
-                    commandResultResponseSetBarrier.await();
-                } catch (InterruptedException
-                        | BrokenBarrierException e) {
-                    throw new Error(e);
-                }
-            }
+                    @Override
+                    public void onResultReceived(ResultResponse resultResponse) {
+                        try {
+                            log.debug("resultResponse={}", resultResponse);
+                            commandResultResponseReadBarrier.await();
+                            ServerConnectionTest.this.resultResponse = resultResponse;
+                            commandResultResponseSetBarrier.await();
+                        } catch (InterruptedException
+                                | BrokenBarrierException e) {
+                            throw new Error(e);
+                        }
+                    }
 
-        });
+                },
+                connectionTestHandler
+        );
         commandResultResponseReadBarrier.await(15, TimeUnit.SECONDS);
         commandResultResponseSetBarrier.await(15, TimeUnit.SECONDS);
         assertTrue(resultResponse instanceof JoinZoneResponse);

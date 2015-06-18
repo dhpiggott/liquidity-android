@@ -86,8 +86,10 @@ public class MonopolyGameActivity extends AppCompatActivity
                     .commit();
         }
 
-        identitiesFragment = (IdentitiesFragment) fragmentManager.findFragmentById(R.id.fragment_identities);
-        playersFragment = (PlayersFragment) fragmentManager.findFragmentById(R.id.fragment_players);
+        identitiesFragment = (IdentitiesFragment)
+                fragmentManager.findFragmentById(R.id.fragment_identities);
+        playersFragment = (PlayersFragment)
+                fragmentManager.findFragmentById(R.id.fragment_players);
     }
 
     @Override
