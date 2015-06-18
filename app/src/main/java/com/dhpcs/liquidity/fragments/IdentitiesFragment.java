@@ -22,17 +22,17 @@ public class IdentitiesFragment extends Fragment {
 
     private static class IdentityItem {
 
-        public final String name;
         public final MemberId memberId;
+        public final Member member;
 
-        public IdentityItem(String name, MemberId memberId) {
-            this.name = name;
+        public IdentityItem(MemberId memberId, Member member) {
             this.memberId = memberId;
+            this.member = member;
         }
 
         @Override
         public String toString() {
-            return this.name;
+            return this.member.name();
         }
 
     }
@@ -41,7 +41,7 @@ public class IdentitiesFragment extends Fragment {
 
         @Override
         public int compare(IdentityItem lhs, IdentityItem rhs) {
-            return lhs.name.compareTo(rhs.name);
+            return lhs.member.name().compareTo(rhs.member.name());
         }
 
     };
@@ -73,7 +73,7 @@ public class IdentitiesFragment extends Fragment {
 
         @Override
         public Fragment getItem(int position) {
-            return IdentityFragment.newInstance(identityItems.get(position).memberId);
+            return IdentityFragment.newInstance(identityItems.get(position).member);
         }
 
     }
@@ -103,8 +103,8 @@ public class IdentitiesFragment extends Fragment {
         for (Map.Entry<MemberId, Member> memberIdMemberEntry : identities.entrySet()) {
             playersFragmentStatePagerAdapter.add(
                     new IdentityItem(
-                            memberIdMemberEntry.getValue().name(),
-                            memberIdMemberEntry.getKey()
+                            memberIdMemberEntry.getKey(),
+                            memberIdMemberEntry.getValue()
                     )
             );
         }

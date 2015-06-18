@@ -8,26 +8,26 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.dhpcs.liquidity.R;
-import com.dhpcs.liquidity.models.MemberId;
+import com.dhpcs.liquidity.models.Member;
 
 public class IdentityFragment extends Fragment {
 
-    private static final String ARG_MEMBER_ID = "member_id";
+    private static final String ARG_MEMBER = "member";
 
-    public static IdentityFragment newInstance(MemberId memberId) {
+    public static IdentityFragment newInstance(Member member) {
         IdentityFragment identityFragment = new IdentityFragment();
         Bundle args = new Bundle();
-        args.putSerializable(ARG_MEMBER_ID, memberId);
+        args.putSerializable(ARG_MEMBER, member);
         identityFragment.setArguments(args);
         return identityFragment;
     }
 
-    private MemberId memberId;
+    private Member member;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        memberId = (MemberId) getArguments().getSerializable(ARG_MEMBER_ID);
+        member = (Member) getArguments().getSerializable(ARG_MEMBER);
     }
 
     @Override
@@ -39,8 +39,8 @@ public class IdentityFragment extends Fragment {
         TextView textViewPlayerName = (TextView) view.findViewById(R.id.textview_player_name);
         TextView textViewPlayerBalance = (TextView) view.findViewById(R.id.textview_player_balance);
 
+        textViewPlayerName.setText(member.name());
         // TODO
-        textViewPlayerName.setText(memberId.id().toString());
         textViewPlayerBalance.setText("15, 000");
 
         return view;

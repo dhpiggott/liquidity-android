@@ -28,17 +28,17 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
 
     private static class PlayerItem {
 
-        public final String name;
         public final MemberId memberId;
+        public final Member member;
 
-        public PlayerItem(String name, MemberId memberId) {
-            this.name = name;
+        public PlayerItem(MemberId memberId, Member member) {
             this.memberId = memberId;
+            this.member = member;
         }
 
         @Override
         public String toString() {
-            return this.name;
+            return this.member.name();
         }
 
     }
@@ -47,7 +47,7 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
 
         @Override
         public int compare(PlayerItem lhs, PlayerItem rhs) {
-            return lhs.name.compareTo(rhs.name);
+            return lhs.member.name().compareTo(rhs.member.name());
         }
 
     };
@@ -114,8 +114,8 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
         for (Map.Entry<MemberId, Member> memberIdMemberEntry : players.entrySet()) {
             listAdapter.add(
                     new PlayerItem(
-                            memberIdMemberEntry.getValue().name(),
-                            memberIdMemberEntry.getKey()
+                            memberIdMemberEntry.getKey(),
+                            memberIdMemberEntry.getValue()
                     )
             );
         }
