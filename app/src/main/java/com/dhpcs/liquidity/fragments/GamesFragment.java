@@ -64,9 +64,9 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
             public int compare(ZoneStore lhs, ZoneStore rhs) {
                 Zone lhsZone = lhs.load();
                 Zone rhsZone = rhs.load();
-                if (lhsZone.lastModified() > rhsZone.lastModified()) {
+                if (lhsZone.created() > rhsZone.created()) {
                     return 1;
-                } else if (lhsZone.lastModified() < rhsZone.lastModified()) {
+                } else if (lhsZone.created() < rhsZone.created()) {
                     return -1;
                 } else {
                     return 0;

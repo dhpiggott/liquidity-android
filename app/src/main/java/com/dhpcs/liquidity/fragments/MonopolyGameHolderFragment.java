@@ -24,12 +24,12 @@ public class MonopolyGameHolderFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-        monopolyGame.connect();
+        monopolyGame.connectCreateAndOrJoinZone();
     }
 
     @Override
     public void onDestroy() {
-        monopolyGame.disconnect();
+        monopolyGame.quitAndOrDisconnect();
         super.onDestroy();
     }
 

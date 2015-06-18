@@ -26,7 +26,7 @@ public class GamesActivity extends AppCompatActivity
                         this,
                         MonopolyGameActivity.class
                 ).putExtra(
-                        MonopolyGameActivity.EXTRA_STARTING_CAPITAL,
+                        MonopolyGameActivity.EXTRA_INITIAL_CAPITAL,
                         startingCapital
                 )
         );

@@ -23,7 +23,7 @@ import java.util.Map;
 public class MonopolyGameActivity extends AppCompatActivity
         implements MonopolyGame.Listener, PlayersFragment.Listener {
 
-    public static final String EXTRA_STARTING_CAPITAL = "starting_capital";
+    public static final String EXTRA_INITIAL_CAPITAL = "initial_capital";
     public static final String EXTRA_ZONE_ID = "zone_id";
 
     private MonopolyGameHolderFragment monopolyGameHolderFragment;
@@ -34,15 +34,15 @@ public class MonopolyGameActivity extends AppCompatActivity
     private MenuItem addPlayers;
 
     @Override
-    public void onConnectedMembersChanged(Map<MemberId, Member> connectedMembers) {
+    public void onConnectedPlayersChanged(Map<MemberId, Member> connectedPlayers) {
         // TODO
     }
 
     @Override
-    public void onConnected() {
-
-        // TODO
-
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_monopoly_game, menu);
+        addPlayers = menu.findItem(R.id.action_add_players);
+        return true;
     }
 
     @Override
@@ -59,10 +59,10 @@ public class MonopolyGameActivity extends AppCompatActivity
 
             MonopolyGame monopolyGame = new MonopolyGame(this);
 
-            if (getIntent().hasExtra(EXTRA_STARTING_CAPITAL)) {
+            if (getIntent().hasExtra(EXTRA_INITIAL_CAPITAL)) {
 
-                monopolyGame.setCapitalToStartWith(
-                        (BigDecimal) getIntent().getSerializableExtra(EXTRA_STARTING_CAPITAL)
+                monopolyGame.setInitialCapital(
+                        (BigDecimal) getIntent().getSerializableExtra(EXTRA_INITIAL_CAPITAL)
                 );
 
             } else if (getIntent().hasExtra(EXTRA_ZONE_ID)) {
@@ -73,7 +73,7 @@ public class MonopolyGameActivity extends AppCompatActivity
 
             } else {
                 throw new RuntimeException(
-                        "Neither EXTRA_STARTING_CAPITAL nor EXTRA_ZONE_ID was provided"
+                        "Neither EXTRA_INITIAL_CAPITAL nor EXTRA_ZONE_ID was provided"
                 );
             }
 
@@ -88,58 +88,12 @@ public class MonopolyGameActivity extends AppCompatActivity
 
         identitiesFragment = (IdentitiesFragment) fragmentManager.findFragmentById(R.id.fragment_identities);
         playersFragment = (PlayersFragment) fragmentManager.findFragmentById(R.id.fragment_players);
-
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_monopoly_game, menu);
-        addPlayers = menu.findItem(R.id.action_add_players);
-        return true;
     }
 
     @Override
     public void onJoined(ZoneId zoneId) {
         this.zoneId = zoneId;
         addPlayers.setVisible(true);
-    }
-
-    @Override
-    public void onQuit() {
-        this.zoneId = null;
-        addPlayers.setVisible(false);
-    }
-
-    @Override
-    protected void onDestroy() {
-        // TODO
-        if (isFinishing()) {
-            monopolyGameHolderFragment.getMonopolyGame().quit();
-        }
-
-        super.onDestroy();
-    }
-
-    @Override
-    public void onDisconnected() {
-
-        // TODO
-
-    }
-
-    @Override
-    public void onMemberBalanceChanged(MemberId memberId, BigDecimal balance) {
-        // TODO
-    }
-
-    @Override
-    public void onOtherMembersChanged(Map<MemberId, Member> otherMembers) {
-        playersFragment.onPlayersChanged(otherMembers);
-    }
-
-    @Override
-    public void onUserMembersChanged(Map<MemberId, Member> userMembers) {
-            identitiesFragment.onIdentitiesChanged(userMembers);
     }
 
     @Override
@@ -157,9 +111,13 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
-        monopolyGameHolderFragment.getMonopolyGame().setListener(null);
+    public void onOtherPlayersChanged(Map<MemberId, Member> otherPlayers) {
+        playersFragment.onPlayersChanged(otherPlayers);
+    }
+
+    @Override
+    public void onPlayerBalancesChanged(Map<MemberId, BigDecimal> playerBalances) {
+        // TODO
     }
 
     @Override
@@ -169,9 +127,26 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
+    public void onQuit() {
+        this.zoneId = null;
+        addPlayers.setVisible(false);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
         monopolyGameHolderFragment.getMonopolyGame().setListener(this);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        monopolyGameHolderFragment.getMonopolyGame().setListener(null);
+    }
+
+    @Override
+    public void onUserIdentitiesChanged(Map<MemberId, Member> userIdentities) {
+        identitiesFragment.onIdentitiesChanged(userIdentities);
     }
 
 }

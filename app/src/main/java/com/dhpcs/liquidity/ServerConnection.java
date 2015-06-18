@@ -20,6 +20,10 @@ import com.dhpcs.liquidity.models.Response;
 import com.dhpcs.liquidity.models.Response$;
 import com.dhpcs.liquidity.models.ResultResponse;
 import com.fasterxml.jackson.core.JsonParseException;
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
+import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.security.ProviderInstaller;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.ws.WebSocket;
 import com.squareup.okhttp.ws.WebSocketCall;
@@ -51,6 +55,8 @@ public class ServerConnection implements WebSocketListener {
         DISCONNECTING,
         DISCONNECTED
     }
+
+    // TODO: Always call listeners back on main thread.
 
     public interface ConnectionStateListener {
 
@@ -131,18 +137,17 @@ public class ServerConnection implements WebSocketListener {
                             ConnectionStateListener connectionStateListener,
                             NotificationListener notificationListener) {
 
-        // TODO
-//        try {
-//            ProviderInstaller.installIfNeeded(context);
-//        } catch (GooglePlayServicesRepairableException e) {
-//            GooglePlayServicesUtil.showErrorNotification(
-//                    e.getConnectionStatusCode(),
-//                    context
-//            );
-//            throw new IOException(e);
-//        } catch (GooglePlayServicesNotAvailableException e) {
-//            throw new IOException(e);
-//        }
+        try {
+            ProviderInstaller.installIfNeeded(context);
+        } catch (GooglePlayServicesRepairableException e) {
+            log.warn("GooglePlayServicesRepairableException", e);
+            GooglePlayServicesUtil.showErrorNotification(
+                    e.getConnectionStatusCode(),
+                    context
+            );
+        } catch (GooglePlayServicesNotAvailableException e) {
+            log.warn("GooglePlayServicesNotAvailableException", e);
+        }
 
         this.connectionStateListener = connectionStateListener;
         this.notificationListener = notificationListener;
