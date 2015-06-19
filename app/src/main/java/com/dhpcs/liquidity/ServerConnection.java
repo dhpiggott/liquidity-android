@@ -50,6 +50,7 @@ import scala.util.Right;
 
 public class ServerConnection implements WebSocketListener {
 
+    // TODO: Can this just be boolean?
     public enum ConnectionState {
         CONNECTING,
         CONNECTED,
@@ -411,18 +412,27 @@ public class ServerConnection implements WebSocketListener {
 
                                 } else {
 
-                                    notificationHandler.post(new Runnable() {
+                                    connectionHandler.post(new Runnable() {
 
                                         @Override
                                         public void run() {
-                                            notificationListener.onNotificationReceived(
-                                                    jsResultNotification.get()
-                                            );
+
+                                            notificationHandler.post(new Runnable() {
+
+                                                @Override
+                                                public void run() {
+                                                    notificationListener.onNotificationReceived(
+                                                            jsResultNotification.get()
+                                                    );
+                                                }
+
+                                            });
+
                                         }
 
                                     });
 
-                                }
+                                };
 
                             }
 

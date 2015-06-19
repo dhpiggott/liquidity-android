@@ -5,20 +5,21 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
 
 import com.dhpcs.liquidity.MonopolyGame;
+import com.dhpcs.liquidity.MonopolyGame.IdentityWithBalance;
+import com.dhpcs.liquidity.MonopolyGame.PlayerWithBalanceAndConnectionState;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.fragments.AddPlayersDialogFragment;
 import com.dhpcs.liquidity.fragments.IdentitiesFragment;
 import com.dhpcs.liquidity.fragments.MonopolyGameHolderFragment;
 import com.dhpcs.liquidity.fragments.PlayersFragment;
-import com.dhpcs.liquidity.models.Member;
 import com.dhpcs.liquidity.models.MemberId;
 import com.dhpcs.liquidity.models.ZoneId;
 
 import java.math.BigDecimal;
-import java.util.Map;
+
+import scala.Tuple2;
 
 // TODO: Why AppCompat?
 public class MonopolyGameActivity extends AppCompatActivity
@@ -32,11 +33,6 @@ public class MonopolyGameActivity extends AppCompatActivity
     private PlayersFragment playersFragment;
 
     private ZoneId zoneId;
-
-    @Override
-    public void onConnectedPlayersChanged(Map<MemberId, Member> connectedPlayers) {
-        // TODO
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -61,7 +57,9 @@ public class MonopolyGameActivity extends AppCompatActivity
             if (getIntent().hasExtra(EXTRA_INITIAL_CAPITAL)) {
 
                 monopolyGame.setInitialCapital(
-                        (BigDecimal) getIntent().getSerializableExtra(EXTRA_INITIAL_CAPITAL)
+                        scala.math.BigDecimal.javaBigDecimal2bigDecimal(
+                                (BigDecimal) getIntent().getSerializableExtra(EXTRA_INITIAL_CAPITAL)
+                        )
                 );
 
             } else if (getIntent().hasExtra(EXTRA_ZONE_ID)) {
@@ -92,6 +90,31 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
+    public void onIdentitiesChanged(scala.collection.immutable
+                                            .Map<MemberId, IdentityWithBalance>
+                                            identities) {
+        identitiesFragment.onIdentitiesChanged(identities);
+    }
+
+    @Override
+    public void onIdentityAdded(
+            Tuple2<MemberId, IdentityWithBalance> addedIdentity) {
+        identitiesFragment.onIdentityAdded(addedIdentity);
+    }
+
+    @Override
+    public void onIdentityRemoved(
+            Tuple2<MemberId, IdentityWithBalance> removedIdentity) {
+        identitiesFragment.onIdentityRemoved(removedIdentity);
+    }
+
+    @Override
+    public void onIdentityUpdated(Tuple2<MemberId, IdentityWithBalance> removedIdentity,
+                                  Tuple2<MemberId, IdentityWithBalance> addedIdentity) {
+        identitiesFragment.onIdentityUpdated(removedIdentity, addedIdentity);
+    }
+
+    @Override
     public void onJoined(ZoneId zoneId) {
         this.zoneId = zoneId;
         supportInvalidateOptionsMenu();
@@ -112,19 +135,37 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onOtherPlayersChanged(Map<MemberId, Member> otherPlayers) {
-        playersFragment.onPlayersChanged(otherPlayers);
+    public void onPlayersChanged(scala.collection.immutable
+                                         .Map<MemberId, PlayerWithBalanceAndConnectionState>
+                                         players) {
+        playersFragment.onPlayersChanged(players);
     }
 
     @Override
-    public void onPlayerBalancesChanged(Map<MemberId, BigDecimal> playerBalances) {
-        // TODO
+    public void onPlayerAdded(
+            Tuple2<MemberId, PlayerWithBalanceAndConnectionState> addedPlayer) {
+        playersFragment.onPlayerAdded(addedPlayer);
     }
 
     @Override
     public void onPlayerClicked(MemberId memberId) {
-        // TODO
-        Toast.makeText(this, "onPlayerClicked: " + memberId, Toast.LENGTH_SHORT).show();
+        // TODO: Current identity, amount
+        monopolyGameHolderFragment.getMonopolyGame().transfer(
+                memberId,
+                scala.math.BigDecimal.javaBigDecimal2bigDecimal(BigDecimal.TEN)
+        );
+    }
+
+    @Override
+    public void onPlayerRemoved(
+            Tuple2<MemberId, PlayerWithBalanceAndConnectionState> removedPlayer) {
+        playersFragment.onPlayerRemoved(removedPlayer);
+    }
+
+    @Override
+    public void onPlayerUpdated(Tuple2<MemberId, PlayerWithBalanceAndConnectionState> removedPlayer,
+                                Tuple2<MemberId, PlayerWithBalanceAndConnectionState> addedPlayer) {
+        playersFragment.onPlayerUpdated(removedPlayer, addedPlayer);
     }
 
     @Override
@@ -149,11 +190,6 @@ public class MonopolyGameActivity extends AppCompatActivity
     public void onStop() {
         super.onStop();
         monopolyGameHolderFragment.getMonopolyGame().setListener(null);
-    }
-
-    @Override
-    public void onUserIdentitiesChanged(Map<MemberId, Member> userIdentities) {
-        identitiesFragment.onIdentitiesChanged(userIdentities);
     }
 
 }

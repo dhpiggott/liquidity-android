@@ -2,6 +2,7 @@ package com.dhpcs.liquidity.fragments;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,15 +10,18 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.TextView;
 
+import com.dhpcs.liquidity.MonopolyGame.PlayerWithBalanceAndConnectionState;
 import com.dhpcs.liquidity.R;
-import com.dhpcs.liquidity.models.Member;
 import com.dhpcs.liquidity.models.MemberId;
 
 import java.util.Comparator;
-import java.util.Map;
 
-// TODO: Extend ListFragment?
+import scala.Tuple2;
+import scala.collection.Iterator;
+
+// TODO: Extend ListFragment? http://developer.android.com/reference/android/app/ListFragment.html
 public class PlayersFragment extends Fragment implements AdapterView.OnItemClickListener {
 
     public interface Listener {
@@ -26,33 +30,49 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
 
     }
 
-    private static class PlayerItem {
+    private static final Comparator<Tuple2<MemberId, PlayerWithBalanceAndConnectionState>>
+            playerComparator =
+            new Comparator<Tuple2<MemberId, PlayerWithBalanceAndConnectionState>>() {
 
-        public final MemberId memberId;
-        public final Member member;
+                @Override
+                public int compare(Tuple2<MemberId, PlayerWithBalanceAndConnectionState> lhs,
+                                   Tuple2<MemberId, PlayerWithBalanceAndConnectionState> rhs) {
+                    return lhs._2().member().name().compareTo(rhs._2().member().name());
+                }
 
-        public PlayerItem(MemberId memberId, Member member) {
-            this.memberId = memberId;
-            this.member = member;
+            };
+
+    private static class PlayersAdapter
+            extends ArrayAdapter<Tuple2<MemberId, PlayerWithBalanceAndConnectionState>> {
+
+        public PlayersAdapter(Context context) {
+            super(context,
+                    android.R.layout.simple_list_item_2,
+                    android.R.id.text1);
         }
 
+        // TODO
         @Override
-        public String toString() {
-            return this.member.name();
+        public View getView(int position, View convertView, ViewGroup parent) {
+            View view = super.getView(position, convertView, parent);
+            TextView text1 = (TextView) view.findViewById(android.R.id.text1);
+            TextView text2 = (TextView) view.findViewById(android.R.id.text2);
+
+            Tuple2<MemberId, PlayerWithBalanceAndConnectionState> player = getItem(position);
+            text1.setText(
+                    player._2().member().name()
+                            + (player._2().isConnected() ? " (Connected)" : " (Disconnected)")
+            );
+            text2.setText(
+                    player._2().balance().bigDecimal().toPlainString()
+            );
+
+            return view;
         }
 
     }
 
-    private final Comparator<PlayerItem> playerItemComparator = new Comparator<PlayerItem>() {
-
-        @Override
-        public int compare(PlayerItem lhs, PlayerItem rhs) {
-            return lhs.member.name().compareTo(rhs.member.name());
-        }
-
-    };
-
-    private ArrayAdapter<PlayerItem> listAdapter;
+    private ArrayAdapter<Tuple2<MemberId, PlayerWithBalanceAndConnectionState>> listAdapter;
 
     private Listener listener;
 
@@ -60,12 +80,9 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        listAdapter = new ArrayAdapter<>(
-                getActivity(),
-                android.R.layout.simple_list_item_1,
-                android.R.id.text1
+        listAdapter = new PlayersAdapter(
+                getActivity()
         );
-        listAdapter.setNotifyOnChange(false);
 
     }
 
@@ -104,22 +121,48 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         if (listener != null) {
             listener.onPlayerClicked(
-                    listAdapter.getItem(position).memberId
+                    listAdapter.getItem(position)._1()
             );
         }
     }
 
-    public void onPlayersChanged(Map<MemberId, Member> players) {
+    public void onPlayersChanged(scala.collection.immutable
+                                         .Map<MemberId, PlayerWithBalanceAndConnectionState>
+                                         players) {
+        listAdapter.setNotifyOnChange(false);
         listAdapter.clear();
-        for (Map.Entry<MemberId, Member> memberIdMemberEntry : players.entrySet()) {
-            listAdapter.add(
-                    new PlayerItem(
-                            memberIdMemberEntry.getKey(),
-                            memberIdMemberEntry.getValue()
-                    )
-            );
+        Iterator<Tuple2<MemberId, PlayerWithBalanceAndConnectionState>> iterator = players
+                .iterator();
+        while (iterator.hasNext()) {
+            Tuple2<MemberId, PlayerWithBalanceAndConnectionState> changedPlayer = iterator.next();
+            listAdapter.add(changedPlayer);
         }
-        listAdapter.sort(playerItemComparator);
+        listAdapter.sort(playerComparator);
+        listAdapter.notifyDataSetChanged();
+    }
+
+    public void onPlayerAdded(
+            Tuple2<MemberId, PlayerWithBalanceAndConnectionState> addedPlayer) {
+        listAdapter.setNotifyOnChange(false);
+        listAdapter.add(addedPlayer);
+        listAdapter.sort(playerComparator);
+        listAdapter.notifyDataSetChanged();
+    }
+
+    public void onPlayerRemoved(
+            Tuple2<MemberId, PlayerWithBalanceAndConnectionState> removedPlayer) {
+        listAdapter.setNotifyOnChange(false);
+        listAdapter.remove(removedPlayer);
+        listAdapter.sort(playerComparator);
+        listAdapter.notifyDataSetChanged();
+    }
+
+    public void onPlayerUpdated(Tuple2<MemberId, PlayerWithBalanceAndConnectionState> removedPlayer,
+                                Tuple2<MemberId, PlayerWithBalanceAndConnectionState> addedPlayer) {
+        listAdapter.setNotifyOnChange(false);
+        listAdapter.remove(removedPlayer);
+        listAdapter.add(addedPlayer);
+        listAdapter.sort(playerComparator);
         listAdapter.notifyDataSetChanged();
     }
 
