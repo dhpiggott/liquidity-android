@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import com.dhpcs.liquidity.MonopolyGame.PlayerWithBalanceAndConnectionState;
 import com.dhpcs.liquidity.R;
+import com.dhpcs.liquidity.activities.MonopolyGameActivity;
 import com.dhpcs.liquidity.models.MemberId;
 
 import java.util.Comparator;
@@ -51,7 +52,6 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
                     android.R.id.text1);
         }
 
-        // TODO
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             View view = super.getView(position, convertView, parent);
@@ -59,13 +59,22 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
             TextView text2 = (TextView) view.findViewById(android.R.id.text2);
 
             Tuple2<MemberId, PlayerWithBalanceAndConnectionState> player = getItem(position);
+
+            String name = player._2().member().name();
+            String balance = MonopolyGameActivity.formatBalance(
+                    player._2().balanceWithCurrencyCode()
+            );
+
             text1.setText(
-                    player._2().member().name()
-                            + (player._2().isConnected() ? " (Connected)" : " (Disconnected)")
+                    getContext().getString(
+                            R.string.player_format_string,
+                            name,
+                            player._2().isConnected() ?
+                                    getContext().getString(R.string.player_connected) :
+                                    getContext().getString(R.string.player_disconnected)
+                    )
             );
-            text2.setText(
-                    player._2().balance().bigDecimal().toPlainString()
-            );
+            text2.setText(balance);
 
             return view;
         }
@@ -75,30 +84,6 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
     private ArrayAdapter<Tuple2<MemberId, PlayerWithBalanceAndConnectionState>> listAdapter;
 
     private Listener listener;
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        listAdapter = new PlayersAdapter(
-                getActivity()
-        );
-
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater,
-                             ViewGroup container,
-                             Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_player_list, container, false);
-
-        AbsListView absListView = (AbsListView) view.findViewById(android.R.id.list);
-        absListView.setAdapter(listAdapter);
-        absListView.setEmptyView(view.findViewById(android.R.id.empty));
-        absListView.setOnItemClickListener(this);
-
-        return view;
-    }
 
     @Override
     public void onAttach(Activity activity) {
@@ -112,6 +97,22 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
     }
 
     @Override
+    public View onCreateView(LayoutInflater inflater,
+                             ViewGroup container,
+                             Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_player_list, container, false);
+
+        listAdapter = new PlayersAdapter(getActivity());
+
+        AbsListView absListView = (AbsListView) view.findViewById(android.R.id.list);
+        absListView.setAdapter(listAdapter);
+        absListView.setEmptyView(view.findViewById(android.R.id.empty));
+        absListView.setOnItemClickListener(this);
+
+        return view;
+    }
+
+    @Override
     public void onDetach() {
         super.onDetach();
         listener = null;
@@ -120,9 +121,7 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         if (listener != null) {
-            listener.onPlayerClicked(
-                    listAdapter.getItem(position)._1()
-            );
+            listener.onPlayerClicked(listAdapter.getItem(position)._1());
         }
     }
 

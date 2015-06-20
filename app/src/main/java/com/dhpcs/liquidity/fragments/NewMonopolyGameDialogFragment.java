@@ -16,7 +16,7 @@ public class NewMonopolyGameDialogFragment extends DialogFragment {
 
     public interface Listener {
 
-        void onStartingCapitalEntered(BigDecimal startingCapital);
+        void onInitialCapitalEntered(BigDecimal initialCapital);
 
     }
 
@@ -47,12 +47,13 @@ public class NewMonopolyGameDialogFragment extends DialogFragment {
                         R.string.ok,
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int whichButton) {
-                                String startingCapitalString = ((EditText) getDialog().findViewById(
-                                        R.id.edittext_starting_capital
-                                )).getText().toString();
                                 if (listener != null) {
-                                    listener.onStartingCapitalEntered(
-                                            new BigDecimal(startingCapitalString)
+                                    listener.onInitialCapitalEntered(
+                                            new BigDecimal(
+                                                    ((EditText) getDialog().findViewById(
+                                                            R.id.edittext_starting_capital
+                                                    )).getText().toString()
+                                            )
                                     );
                                 }
                                 getDialog().dismiss();

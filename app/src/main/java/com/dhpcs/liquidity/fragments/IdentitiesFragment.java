@@ -56,6 +56,11 @@ public class IdentitiesFragment extends Fragment {
         }
 
         @Override
+        public Fragment getItem(int position) {
+            return IdentityFragment.newInstance(identities.get(position));
+        }
+
+        @Override
         public int getItemPosition(Object item) {
             IdentityFragment identityFragment = (IdentityFragment) item;
             Tuple2<MemberId, IdentityWithBalance> identity = identityFragment.getIdentity();
@@ -66,11 +71,6 @@ public class IdentitiesFragment extends Fragment {
             } else {
                 return POSITION_NONE;
             }
-        }
-
-        @Override
-        public Fragment getItem(int position) {
-            return IdentityFragment.newInstance(identities.get(position));
         }
 
         public void remove(Tuple2<MemberId, IdentityWithBalance> identity) {

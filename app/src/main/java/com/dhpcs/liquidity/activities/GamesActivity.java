@@ -20,14 +20,14 @@ public class GamesActivity extends AppCompatActivity
 
     public static final String GAME_TYPE = GamesFragment.GAME_TYPE;
 
-    private void createGame(BigDecimal startingCapital) {
+    private void createGame(BigDecimal initialCapital) {
         startActivity(
                 new Intent(
                         this,
                         MonopolyGameActivity.class
                 ).putExtra(
                         MonopolyGameActivity.EXTRA_INITIAL_CAPITAL,
-                        startingCapital
+                        initialCapital
                 )
         );
     }
@@ -42,6 +42,11 @@ public class GamesActivity extends AppCompatActivity
                         zoneId
                 )
         );
+    }
+
+    @Override
+    public void onInitialCapitalEntered(BigDecimal initialCapital) {
+        createGame(initialCapital);
     }
 
     @Override
@@ -87,11 +92,6 @@ public class GamesActivity extends AppCompatActivity
     @Override
     public void onGameZoneIdScanned(ZoneId zoneId) {
         joinGame(zoneId);
-    }
-
-    @Override
-    public void onStartingCapitalEntered(BigDecimal startingCapital) {
-        createGame(startingCapital);
     }
 
 }

@@ -9,6 +9,7 @@ import android.widget.TextView;
 
 import com.dhpcs.liquidity.MonopolyGame.IdentityWithBalance;
 import com.dhpcs.liquidity.R;
+import com.dhpcs.liquidity.activities.MonopolyGameActivity;
 import com.dhpcs.liquidity.models.MemberId;
 
 import scala.Tuple2;
@@ -48,8 +49,13 @@ public class IdentityFragment extends Fragment {
         TextView textViewPlayerName = (TextView) view.findViewById(R.id.textview_player_name);
         TextView textViewPlayerBalance = (TextView) view.findViewById(R.id.textview_player_balance);
 
-        textViewPlayerName.setText(identity._2().member().name());
-        textViewPlayerBalance.setText(identity._2().balance().bigDecimal().toPlainString());
+        String name = identity._2().member().name();
+        String balance = MonopolyGameActivity.formatBalance(
+                identity._2().balanceWithCurrencyCode()
+        );
+
+        textViewPlayerName.setText(name);
+        textViewPlayerBalance.setText(balance);
 
         return view;
     }

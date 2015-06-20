@@ -10,10 +10,10 @@ import org.slf4j.LoggerFactory
 object MonopolyGame {
 
   case class IdentityWithBalance(member: Member,
-                                 balance: BigDecimal)
+                                 balanceWithCurrencyCode: (BigDecimal, String))
 
   case class PlayerWithBalanceAndConnectionState(member: Member,
-                                                 balance: BigDecimal,
+                                                 balanceWithCurrencyCode: (BigDecimal, String),
                                                  isConnected: Boolean)
 
   trait Listener {
@@ -93,7 +93,8 @@ object MonopolyGame {
       case (memberId, member) =>
         memberId -> IdentityWithBalance(
           member,
-          balances.getOrElse(memberId, BigDecimal(0)).bigDecimal
+          // TODO: Get from zone, and have zone creator set it
+          (balances.getOrElse(memberId, BigDecimal(0)).bigDecimal, "GBP")
         )
     }
 
@@ -121,7 +122,8 @@ object MonopolyGame {
       case (memberId, member) =>
         memberId -> PlayerWithBalanceAndConnectionState(
           member,
-          balances.getOrElse(memberId, BigDecimal(0)).bigDecimal,
+          // TODO: Get from zone, and have zone creator set it
+          (balances.getOrElse(memberId, BigDecimal(0)).bigDecimal, "GBP"),
           connectedPublicKeys.contains(member.publicKey)
         )
     }

@@ -18,6 +18,8 @@ import com.dhpcs.liquidity.models.MemberId;
 import com.dhpcs.liquidity.models.ZoneId;
 
 import java.math.BigDecimal;
+import java.text.NumberFormat;
+import java.util.Currency;
 
 import scala.Tuple2;
 
@@ -27,6 +29,26 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     public static final String EXTRA_INITIAL_CAPITAL = "initial_capital";
     public static final String EXTRA_ZONE_ID = "zone_id";
+
+    public static String formatBalance(Tuple2<scala.math.BigDecimal, String>
+                                               balanceWithCurrencyCode) {
+        BigDecimal balance = balanceWithCurrencyCode._1().bigDecimal();
+        String currencyCode = balanceWithCurrencyCode._2();
+
+        String balanceString;
+        try {
+            Currency currency = Currency.getInstance(currencyCode);
+
+            NumberFormat currencyFormat = NumberFormat.getCurrencyInstance();
+            currencyFormat.setCurrency(currency);
+            balanceString = currencyFormat.format(balance);
+        } catch (IllegalArgumentException e) {
+            NumberFormat numberFormat = NumberFormat.getNumberInstance();
+            balanceString = currencyCode + " " + numberFormat.format(balance);
+        }
+
+        return balanceString;
+    }
 
     private MonopolyGameHolderFragment monopolyGameHolderFragment;
     private IdentitiesFragment identitiesFragment;
