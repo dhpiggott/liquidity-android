@@ -86,15 +86,20 @@ public class IdentitiesFragment extends Fragment {
     private IdentitiesFragmentStatePagerAdapter playersFragmentStatePagerAdapter;
 
     @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        playersFragmentStatePagerAdapter = new IdentitiesFragmentStatePagerAdapter(
+                getFragmentManager()
+        );
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater,
                              ViewGroup container,
                              Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_identities, container, false);
-
-        playersFragmentStatePagerAdapter = new IdentitiesFragmentStatePagerAdapter(
-                getFragmentManager()
-        );
 
         ((ViewPager) view.findViewById(R.id.viewpager_identities)).setAdapter(
                 playersFragmentStatePagerAdapter

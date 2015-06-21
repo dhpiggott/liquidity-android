@@ -14,6 +14,7 @@ import com.dhpcs.liquidity.fragments.AddPlayersDialogFragment;
 import com.dhpcs.liquidity.fragments.IdentitiesFragment;
 import com.dhpcs.liquidity.fragments.MonopolyGameHolderFragment;
 import com.dhpcs.liquidity.fragments.PlayersFragment;
+import com.dhpcs.liquidity.fragments.TransferToPlayerDialogFragment;
 import com.dhpcs.liquidity.models.MemberId;
 import com.dhpcs.liquidity.models.ZoneId;
 
@@ -25,7 +26,8 @@ import scala.Tuple2;
 
 // TODO: Why AppCompat?
 public class MonopolyGameActivity extends AppCompatActivity
-        implements MonopolyGame.Listener, PlayersFragment.Listener {
+        implements MonopolyGame.Listener, PlayersFragment.Listener,
+        TransferToPlayerDialogFragment.Listener {
 
     public static final String EXTRA_INITIAL_CAPITAL = "initial_capital";
     public static final String EXTRA_ZONE_ID = "zone_id";
@@ -171,11 +173,12 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public void onPlayerClicked(MemberId memberId) {
-        // TODO: Current identity, amount
-        monopolyGameHolderFragment.getMonopolyGame().transfer(
-                memberId,
-                scala.math.BigDecimal.javaBigDecimal2bigDecimal(BigDecimal.TEN)
-        );
+        // TODO: Be from current identity
+        TransferToPlayerDialogFragment.newInstance(memberId)
+                .show(
+                        getFragmentManager(),
+                        "transfer_to_player_dialog_fragment"
+                );
     }
 
     @Override
@@ -212,6 +215,14 @@ public class MonopolyGameActivity extends AppCompatActivity
     public void onStop() {
         super.onStop();
         monopolyGameHolderFragment.getMonopolyGame().setListener(null);
+    }
+
+    @Override
+    public void onTransferValueEntered(MemberId memberId, BigDecimal transferValue) {
+        monopolyGameHolderFragment.getMonopolyGame().transfer(
+                memberId,
+                scala.math.BigDecimal.javaBigDecimal2bigDecimal(transferValue)
+        );
     }
 
 }

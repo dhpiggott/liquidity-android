@@ -97,12 +97,17 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
     }
 
     @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        listAdapter = new PlayersAdapter(getActivity());
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater,
                              ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_player_list, container, false);
-
-        listAdapter = new PlayersAdapter(getActivity());
 
         AbsListView absListView = (AbsListView) view.findViewById(android.R.id.list);
         absListView.setAdapter(listAdapter);

@@ -14,7 +14,7 @@ import net.glxn.qrgen.android.QRCode;
 
 public class AddPlayersDialogFragment extends DialogFragment {
 
-    private static final String ARG_ZONE_ID = "getZoneId";
+    private static final String ARG_ZONE_ID = "zone_id";
 
     public static AddPlayersDialogFragment newInstance(ZoneId zoneId) {
         AddPlayersDialogFragment addPlayersDialogFragment = new AddPlayersDialogFragment();
