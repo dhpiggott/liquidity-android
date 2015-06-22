@@ -2,15 +2,28 @@ package com.dhpcs.liquidity
 
 import android.content.Context
 import android.provider.ContactsContract
-import com.dhpcs.liquidity.MonopolyGame.{IdentityWithBalance, Listener, PlayerWithBalanceAndConnectionState}
+import com.dhpcs.liquidity.MonopolyGame.{PlayerWithBalance, IdentityWithBalance, Listener, PlayerWithBalanceAndConnectionState}
 import com.dhpcs.liquidity.ServerConnection.{ConnectionStateListener, NotificationListener, ResponseCallback}
 import com.dhpcs.liquidity.models._
 import org.slf4j.LoggerFactory
 
 object MonopolyGame {
 
-  case class IdentityWithBalance(member: Member,
-                                 balanceWithCurrencyCode: (BigDecimal, String))
+  trait IdentityWithBalance {
+
+    def member: Member
+
+    def balanceWithCurrencyCode: (BigDecimal, String)
+
+  }
+
+  case class BankerWithBalance(member: Member,
+                               balanceWithCurrencyCode: (BigDecimal, String))
+    extends IdentityWithBalance
+
+  case class PlayerWithBalance(member: Member,
+                               balanceWithCurrencyCode: (BigDecimal, String))
+    extends IdentityWithBalance
 
   case class PlayerWithBalanceAndConnectionState(member: Member,
                                                  balanceWithCurrencyCode: (BigDecimal, String),
@@ -88,10 +101,16 @@ object MonopolyGame {
                             equityHolderMemberId: MemberId) =
     members.filter {
       case (memberId, member) =>
-        memberId != equityHolderMemberId && member.publicKey == clientPublicKey
+        member.publicKey == clientPublicKey
     }.map {
+      case (memberId, member) if memberId != equityHolderMemberId =>
+        memberId -> PlayerWithBalance(
+          member,
+          // TODO: Get from zone, and have zone creator set it
+          (balances.getOrElse(memberId, BigDecimal(0)).bigDecimal, "GBP")
+        )
       case (memberId, member) =>
-        memberId -> IdentityWithBalance(
+        memberId -> BankerWithBalance(
           member,
           // TODO: Get from zone, and have zone creator set it
           (balances.getOrElse(memberId, BigDecimal(0)).bigDecimal, "GBP")
@@ -312,7 +331,8 @@ class MonopolyGame(val context: Context)
             listener.onPlayersChanged(players)
           }
 
-          if (identities.isEmpty) {
+          // TODO
+          if (!identities.values.exists(_.isInstanceOf[PlayerWithBalance])) {
             createPlayer(zoneId)
           }
 
