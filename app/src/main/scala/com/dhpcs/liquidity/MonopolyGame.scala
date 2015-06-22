@@ -750,12 +750,6 @@ class MonopolyGame(val context: Context)
     this.zoneId = zoneId
   }
 
-  def transfer(toMember: MemberId, amount: BigDecimal) {
-    identities.keys.headOption.foreach(
-      transfer(_, toMember, amount)
-    )
-  }
-
   def transfer(fromMember: MemberId, toMember: MemberId, amount: BigDecimal) {
     val maybeFromMemberId = identities.headOption.map {
       case (memberId, _) => memberId

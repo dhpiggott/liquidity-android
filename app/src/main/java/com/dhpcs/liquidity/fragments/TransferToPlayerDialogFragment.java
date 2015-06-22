@@ -17,17 +17,22 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
 
     public interface Listener {
 
-        void onTransferValueEntered(MemberId memberId, BigDecimal transferValue);
+        void onTransferValueEntered(MemberId fromMemberId,
+                                    MemberId toMemberId,
+                                    BigDecimal transferValue);
 
     }
 
-    private static final String ARG_MEMBER_ID = "member_id";
+    private static final String ARG_FROM_MEMBER_ID = "from_member_id";
+    private static final String ARG_TO_MEMBER_ID = "to_member_id";
 
-    public static TransferToPlayerDialogFragment newInstance(MemberId memberId) {
+    public static TransferToPlayerDialogFragment newInstance(MemberId fromMemberId,
+                                                             MemberId toMemberId) {
         TransferToPlayerDialogFragment transferToPlayerDialogFragment =
                 new TransferToPlayerDialogFragment();
         Bundle args = new Bundle();
-        args.putSerializable(ARG_MEMBER_ID, memberId);
+        args.putSerializable(ARG_FROM_MEMBER_ID, fromMemberId);
+        args.putSerializable(ARG_TO_MEMBER_ID, toMemberId);
         transferToPlayerDialogFragment.setArguments(args);
         return transferToPlayerDialogFragment;
     }
@@ -59,7 +64,9 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
                                 if (listener != null) {
                                     listener.onTransferValueEntered(
                                             (MemberId) getArguments()
-                                                    .getSerializable(ARG_MEMBER_ID),
+                                                    .getSerializable(ARG_FROM_MEMBER_ID),
+                                            (MemberId) getArguments()
+                                                    .getSerializable(ARG_TO_MEMBER_ID),
                                             new BigDecimal(
                                                     ((EditText) getDialog().findViewById(
                                                             R.id.edittext_transfer_value

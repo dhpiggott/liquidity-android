@@ -50,6 +50,10 @@ public class IdentitiesFragment extends Fragment {
             identities.clear();
         }
 
+        public Tuple2<MemberId, IdentityWithBalance> get(int position) {
+            return identities.get(position);
+        }
+
         @Override
         public int getCount() {
             return identities.size();
@@ -84,6 +88,15 @@ public class IdentitiesFragment extends Fragment {
     }
 
     private IdentitiesFragmentStatePagerAdapter playersFragmentStatePagerAdapter;
+    private ViewPager viewPagerIdentities;
+
+    public MemberId getIdentityId() {
+        if (playersFragmentStatePagerAdapter.getCount() == 0) {
+            return null;
+        } else {
+            return playersFragmentStatePagerAdapter.get(viewPagerIdentities.getCurrentItem())._1();
+        }
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -101,9 +114,8 @@ public class IdentitiesFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_identities, container, false);
 
-        ((ViewPager) view.findViewById(R.id.viewpager_identities)).setAdapter(
-                playersFragmentStatePagerAdapter
-        );
+        viewPagerIdentities = (ViewPager) view.findViewById(R.id.viewpager_identities);
+        viewPagerIdentities.setAdapter(playersFragmentStatePagerAdapter);
 
         return view;
     }

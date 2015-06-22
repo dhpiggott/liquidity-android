@@ -90,10 +90,10 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_games, container, false);
 
-        AbsListView absListView = (AbsListView) view.findViewById(android.R.id.list);
-        absListView.setAdapter(listAdapter);
-        absListView.setEmptyView(view.findViewById(android.R.id.empty));
-        absListView.setOnItemClickListener(this);
+        AbsListView absListViewGames = (AbsListView) view.findViewById(android.R.id.list);
+        absListViewGames.setAdapter(listAdapter);
+        absListViewGames.setEmptyView(view.findViewById(android.R.id.empty));
+        absListViewGames.setOnItemClickListener(this);
 
         return view;
     }

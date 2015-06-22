@@ -172,13 +172,17 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onPlayerClicked(MemberId memberId) {
-        // TODO: Be from current identity
-        TransferToPlayerDialogFragment.newInstance(memberId)
-                .show(
-                        getFragmentManager(),
-                        "transfer_to_player_dialog_fragment"
-                );
+    public void onPlayerClicked(MemberId playerId) {
+        MemberId identityId = identitiesFragment.getIdentityId();
+        if (identityId == null) {
+            // TODO
+        } else {
+            TransferToPlayerDialogFragment.newInstance(identityId, playerId)
+                    .show(
+                            getFragmentManager(),
+                            "transfer_to_player_dialog_fragment"
+                    );
+        }
     }
 
     @Override
@@ -218,9 +222,12 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onTransferValueEntered(MemberId memberId, BigDecimal transferValue) {
+    public void onTransferValueEntered(MemberId fromMemberId,
+                                       MemberId toMemberId,
+                                       BigDecimal transferValue) {
         monopolyGameHolderFragment.getMonopolyGame().transfer(
-                memberId,
+                fromMemberId,
+                toMemberId,
                 scala.math.BigDecimal.javaBigDecimal2bigDecimal(transferValue)
         );
     }

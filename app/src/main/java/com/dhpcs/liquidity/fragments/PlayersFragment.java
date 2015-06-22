@@ -27,7 +27,7 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
 
     public interface Listener {
 
-        void onPlayerClicked(MemberId memberId);
+        void onPlayerClicked(MemberId playerId);
 
     }
 
@@ -109,10 +109,10 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_player_list, container, false);
 
-        AbsListView absListView = (AbsListView) view.findViewById(android.R.id.list);
-        absListView.setAdapter(listAdapter);
-        absListView.setEmptyView(view.findViewById(android.R.id.empty));
-        absListView.setOnItemClickListener(this);
+        AbsListView absListViewPlayers = (AbsListView) view.findViewById(android.R.id.list);
+        absListViewPlayers.setAdapter(listAdapter);
+        absListViewPlayers.setEmptyView(view.findViewById(android.R.id.empty));
+        absListViewPlayers.setOnItemClickListener(this);
 
         return view;
     }
