@@ -41,6 +41,11 @@
                 android:value="com.dhpcs.liquidity.activities.GamesActivity" />
         </activity>
 
+        <provider
+            android:name=".provider.LiquidityProvider"
+            android:authorities="com.dhpcs.liquidity.provider"
+            android:exported="false" />
+
     </application>
 
 </manifest>

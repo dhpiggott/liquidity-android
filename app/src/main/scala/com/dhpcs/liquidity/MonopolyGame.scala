@@ -1,10 +1,12 @@
 package com.dhpcs.liquidity
 
-import android.content.Context
+import android.content.{ContentUris, ContentValues, Context}
 import android.provider.ContactsContract
-import com.dhpcs.liquidity.MonopolyGame.{PlayerWithBalance, IdentityWithBalance, Listener, PlayerWithBalanceAndConnectionState}
+import com.dhpcs.liquidity.MonopolyGame.{IdentityWithBalance, Listener, PlayerWithBalance, PlayerWithBalanceAndConnectionState}
 import com.dhpcs.liquidity.ServerConnection.{ConnectionStateListener, NotificationListener, ResponseCallback}
 import com.dhpcs.liquidity.models._
+import com.dhpcs.liquidity.provider.LiquidityContract
+import com.dhpcs.liquidity.provider.LiquidityContract.Games
 import org.slf4j.LoggerFactory
 
 object MonopolyGame {
@@ -172,6 +174,8 @@ class MonopolyGame(val context: Context)
 
   var initialCapital: BigDecimal = _
   var zoneId: ZoneId = _
+  // TODO
+  var gameId: Long = _
 
   private var zone: Zone = _
   private var connectedClients: Set[PublicKey] = _
@@ -287,11 +291,30 @@ class MonopolyGame(val context: Context)
             listener.onJoined(zoneId)
           }
 
-          // TODO: Persist name?
-
           zone = joinZoneResponse.zone
           connectedClients = joinZoneResponse.connectedClients
           accountBalances = Map.empty
+
+          // TODO: Do off main thread
+          val contentValues = new ContentValues
+          contentValues.put(LiquidityContract.Games.GAME_TYPE, GameType.MONOPOLY.typeName)
+          contentValues.put(LiquidityContract.Games.ZONE_ID, zoneId.id.toString)
+          contentValues.put(LiquidityContract.Games.NAME, zone.name)
+          contentValues.put(LiquidityContract.Games.CREATED, zone.created: java.lang.Long)
+
+          if (gameId == 0) {
+            context.getContentResolver.insert(
+              LiquidityContract.Games.CONTENT_URI,
+              contentValues
+            )
+          } else {
+            context.getContentResolver.update(
+              ContentUris.withAppendedId(Games.CONTENT_URI, gameId),
+              contentValues,
+              null,
+              null
+            )
+          }
 
           val iterator = zone.transactions.valuesIterator
           while (iterator.hasNext) {
@@ -436,7 +459,17 @@ class MonopolyGame(val context: Context)
 
           case zoneNameSetNotification: ZoneNameSetNotification =>
 
-            // TODO: Persist name?
+            // TODO: Do off main thread
+            val contentValues = new ContentValues
+            contentValues.put(LiquidityContract.Games.ZONE_ID, zoneId.id.toString)
+            contentValues.put(LiquidityContract.Games.NAME, zoneNameSetNotification.name)
+
+            context.getContentResolver.update(
+              ContentUris.withAppendedId(Games.CONTENT_URI, gameId),
+              contentValues,
+              null,
+              null
+            )
 
             zone = zone.copy(name = zoneNameSetNotification.name)
 
@@ -746,6 +779,43 @@ class MonopolyGame(val context: Context)
 
         })
     }
+  }
+
+  def getGameName =
+    if (zone == null) {
+      null
+    } else {
+      zone.name
+    }
+
+  def setGameName(gameName: String) {
+    serverConnection.sendCommand(
+      SetZoneNameCommand(
+        zoneId,
+        gameName
+      ),
+      new ServerConnection.ResponseCallback {
+
+        override def onErrorReceived(errorResponse: ErrorResponse) {
+          log.debug("errorResponse={}", errorResponse)
+
+          // TODO
+
+        }
+
+        def onResultReceived(resultResponse: ResultResponse) {
+          log.debug("resultResponse={}", resultResponse)
+
+          // TODO
+          val setZoneName = resultResponse.asInstanceOf[SetZoneNameResponse.type]
+
+        }
+
+      })
+  }
+
+  def setGameId(gameId: Long) {
+    this.gameId = gameId
   }
 
   def setInitialCapital(initialCapital: BigDecimal) {

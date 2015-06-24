@@ -11,6 +11,7 @@ import com.dhpcs.liquidity.MonopolyGame.IdentityWithBalance;
 import com.dhpcs.liquidity.MonopolyGame.PlayerWithBalanceAndConnectionState;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.fragments.AddPlayersDialogFragment;
+import com.dhpcs.liquidity.fragments.ChangeGameNameDialogFragment;
 import com.dhpcs.liquidity.fragments.IdentitiesFragment;
 import com.dhpcs.liquidity.fragments.MonopolyGameHolderFragment;
 import com.dhpcs.liquidity.fragments.PlayersFragment;
@@ -27,8 +28,10 @@ import scala.Tuple2;
 // TODO: Why AppCompat?
 public class MonopolyGameActivity extends AppCompatActivity
         implements MonopolyGame.Listener, PlayersFragment.Listener,
+        ChangeGameNameDialogFragment.Listener,
         TransferToPlayerDialogFragment.Listener {
 
+    public static final String EXTRA_GAME_ID = "game_id";
     public static final String EXTRA_INITIAL_CAPITAL = "initial_capital";
     public static final String EXTRA_ZONE_ID = "zone_id";
 
@@ -78,19 +81,27 @@ public class MonopolyGameActivity extends AppCompatActivity
 
             MonopolyGame monopolyGame = new MonopolyGame(this);
 
-            if (getIntent().hasExtra(EXTRA_INITIAL_CAPITAL)) {
+            if (getIntent().getExtras().containsKey(EXTRA_INITIAL_CAPITAL)) {
 
                 monopolyGame.setInitialCapital(
                         scala.math.BigDecimal.javaBigDecimal2bigDecimal(
-                                (BigDecimal) getIntent().getSerializableExtra(EXTRA_INITIAL_CAPITAL)
+                                (BigDecimal) getIntent().getExtras().getSerializable(EXTRA_INITIAL_CAPITAL)
                         )
                 );
 
-            } else if (getIntent().hasExtra(EXTRA_ZONE_ID)) {
+            } else if (getIntent().getExtras().containsKey(EXTRA_ZONE_ID)) {
 
                 monopolyGame.setZoneId(
-                        (ZoneId) getIntent().getSerializableExtra(EXTRA_ZONE_ID)
+                        (ZoneId) getIntent().getExtras().getSerializable(EXTRA_ZONE_ID)
                 );
+
+                if (getIntent().getExtras().containsKey(EXTRA_GAME_ID)) {
+
+                    monopolyGame.setGameId(
+                            getIntent().getExtras().getLong(EXTRA_GAME_ID)
+                    );
+
+                }
 
             } else {
                 throw new RuntimeException(
@@ -111,6 +122,11 @@ public class MonopolyGameActivity extends AppCompatActivity
                 fragmentManager.findFragmentById(R.id.fragment_identities);
         playersFragment = (PlayersFragment)
                 fragmentManager.findFragmentById(R.id.fragment_players);
+    }
+
+    @Override
+    public void onGameNameEntered(String name) {
+        monopolyGameHolderFragment.getMonopolyGame().setGameName(name);
     }
 
     @Override
@@ -148,12 +164,20 @@ public class MonopolyGameActivity extends AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.action_add_players) {
-            AddPlayersDialogFragment.newInstance(zoneId)
-                    .show(
-                            getFragmentManager(),
-                            "addPlayersDialogFragment"
-                    );
+            AddPlayersDialogFragment.newInstance(
+                    zoneId
+            ).show(
+                    getFragmentManager(),
+                    "add_players_dialog_fragment"
+            );
             return true;
+        } else if (id == R.id.action_change_game_name) {
+            ChangeGameNameDialogFragment.newInstance(
+                    monopolyGameHolderFragment.getMonopolyGame().getGameName()
+            ).show(
+                    getFragmentManager(),
+                    "change_game_name_dialog_fragment"
+            );
         }
         return super.onOptionsItemSelected(item);
     }
@@ -200,6 +224,7 @@ public class MonopolyGameActivity extends AppCompatActivity
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         menu.findItem(R.id.action_add_players).setVisible(zoneId != null);
+        menu.findItem(R.id.action_change_game_name).setVisible(zoneId != null);
         return true;
     }
 

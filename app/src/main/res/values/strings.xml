@@ -8,6 +8,8 @@
 
     <string name="add_players">Add players</string>
     <string name="cancel">Cancel</string>
+    <string name="change_game_name">Change game name</string>
+    <string name="enter_game_name">Enter game name</string>
     <string name="enter_starting_capital">Enter starting capital</string>
     <string name="enter_transfer_amount">Enter transfer amount</string>
     <string name="join_game">Join game</string>

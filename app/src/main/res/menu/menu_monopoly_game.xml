@@ -7,5 +7,11 @@
         android:orderInCategory="100"
         android:title="@string/add_players"
         android:visible="false"
+        app:showAsAction="never" />]
+    <item
+        android:id="@+id/action_change_game_name"
+        android:orderInCategory="100"
+        android:title="@string/change_game_name"
+        android:visible="false"
         app:showAsAction="never" />
 </menu>

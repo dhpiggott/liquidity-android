@@ -85,13 +85,28 @@ public class GamesActivity extends AppCompatActivity
     }
 
     @Override
-    public void onGameClicked(ZoneId zoneId) {
-        joinGame(zoneId);
+    public void onGameClicked(long gameId, ZoneId zoneId) {
+        rejoinGame(gameId, zoneId);
     }
 
     @Override
     public void onGameZoneIdScanned(ZoneId zoneId) {
         joinGame(zoneId);
+    }
+
+    private void rejoinGame(long gameId, ZoneId zoneId) {
+        startActivity(
+                new Intent(
+                        this,
+                        MonopolyGameActivity.class
+                ).putExtra(
+                        MonopolyGameActivity.EXTRA_GAME_ID,
+                        gameId
+                ).putExtra(
+                        MonopolyGameActivity.EXTRA_ZONE_ID,
+                        zoneId
+                )
+        );
     }
 
 }
