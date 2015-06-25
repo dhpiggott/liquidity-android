@@ -42,12 +42,10 @@ public class ChangeGameNameDialogFragment extends DialogFragment {
         }
     }
 
-    // TODO: Improve using http://stackoverflow.com/questions/5107901/better-way-to-format-currency-input-edittext?
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        Dialog dialog =  new AlertDialog.Builder(getActivity())
+        Dialog dialog = new AlertDialog.Builder(getActivity())
                 .setTitle(R.string.enter_game_name)
-                        // TODO: suffixes, destination
                 .setView(R.layout.fragment_change_game_name_dialog)
                 .setPositiveButton(
                         R.string.ok,
@@ -74,6 +72,7 @@ public class ChangeGameNameDialogFragment extends DialogFragment {
                 )
                 .create();
         // TODO: Make assignment of args to fields consistent across all fragments.
+        // TODO
 //        ((EditText)dialog.findViewById(R.id.edittext_game_name)).setText(getArguments().getString(ARG_NAME));
         return dialog;
     }
