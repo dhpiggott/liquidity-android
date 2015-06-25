@@ -51,24 +51,22 @@ public class LiquidityProvider extends ContentProvider {
 
     }
 
-    private enum UriType {
-        GAMES,
-        GAME_ID
-    }
-
     private static final UriMatcher URI_MATCHER;
+
+    private static final int URI_TYPE_GAMES = 0;
+    private static final int URI_TYPE_GAME_ID = 1;
 
     static {
         URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
         URI_MATCHER.addURI(
                 LiquidityContract.AUTHORITY,
                 LiquidityContract.Games.BASE_PATH,
-                UriType.GAMES.ordinal()
+                URI_TYPE_GAMES
         );
         URI_MATCHER.addURI(
                 LiquidityContract.AUTHORITY,
                 LiquidityContract.Games.BASE_PATH + "/#",
-                UriType.GAME_ID.ordinal()
+                URI_TYPE_GAME_ID
         );
     }
 
@@ -77,14 +75,9 @@ public class LiquidityProvider extends ContentProvider {
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
 
-        int uriTypeOrdinal = URI_MATCHER.match(uri);
-        if (uriTypeOrdinal == -1) {
-            throw new IllegalArgumentException("Unsupported URI: " + uri);
-        }
-
         int rowsAffected;
-        switch (UriType.values()[(uriTypeOrdinal)]) {
-            case GAMES:
+        switch (URI_MATCHER.match(uri)) {
+            case URI_TYPE_GAMES:
 
                 rowsAffected = databaseHelper.getWritableDatabase().delete(
                         LiquidityDatabaseHelper.GAMES_TABLE_NAME,
@@ -93,7 +86,7 @@ public class LiquidityProvider extends ContentProvider {
                 );
 
                 break;
-            case GAME_ID:
+            case URI_TYPE_GAME_ID:
 
                 String where = LiquidityContract.Games._ID + " = " + uri.getLastPathSegment();
                 if (!TextUtils.isEmpty(selection)) {
@@ -119,14 +112,10 @@ public class LiquidityProvider extends ContentProvider {
 
     @Override
     public String getType(Uri uri) {
-        int uriTypeOrdinal = URI_MATCHER.match(uri);
-        if (uriTypeOrdinal == -1) {
-            throw new IllegalArgumentException("Unsupported URI: " + uri);
-        }
-        switch (UriType.values()[(uriTypeOrdinal)]) {
-            case GAMES:
+        switch (URI_MATCHER.match(uri)) {
+            case URI_TYPE_GAMES:
                 return LiquidityContract.Games.CONTENT_TYPE;
-            case GAME_ID:
+            case URI_TYPE_GAME_ID:
                 return LiquidityContract.Games.CONTENT_ITEM_TYPE;
             default:
                 throw new IllegalArgumentException("Unsupported URI: " + uri);
@@ -136,14 +125,9 @@ public class LiquidityProvider extends ContentProvider {
     @Override
     public Uri insert(Uri uri, ContentValues values) {
 
-        int uriTypeOrdinal = URI_MATCHER.match(uri);
-        if (uriTypeOrdinal == -1) {
-            throw new IllegalArgumentException("Unsupported URI: " + uri);
-        }
-
         long id;
-        switch (UriType.values()[(uriTypeOrdinal)]) {
-            case GAMES:
+        switch (URI_MATCHER.match(uri)) {
+            case URI_TYPE_GAMES:
 
                 id = databaseHelper.getWritableDatabase().insert(
                         LiquidityDatabaseHelper.GAMES_TABLE_NAME,
@@ -174,20 +158,15 @@ public class LiquidityProvider extends ContentProvider {
                         String[] selectionArgs,
                         String sortOrder) {
 
-        int uriTypeOrdinal = URI_MATCHER.match(uri);
-        if (uriTypeOrdinal == -1) {
-            throw new IllegalArgumentException("Unsupported URI: " + uri);
-        }
-
         SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
         queryBuilder.setTables(LiquidityDatabaseHelper.GAMES_TABLE_NAME);
         if (TextUtils.isEmpty(sortOrder)) {
             sortOrder = LiquidityContract.Games.SORT_ORDER_DEFAULT;
         }
-        switch (UriType.values()[(uriTypeOrdinal)]) {
-            case GAMES:
+        switch (URI_MATCHER.match(uri)) {
+            case URI_TYPE_GAMES:
                 break;
-            case GAME_ID:
+            case URI_TYPE_GAME_ID:
 
                 queryBuilder.appendWhere(
                         LiquidityContract.Games._ID + " = " + uri.getLastPathSegment()
@@ -215,14 +194,9 @@ public class LiquidityProvider extends ContentProvider {
     @Override
     public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
 
-        int uriTypeOrdinal = URI_MATCHER.match(uri);
-        if (uriTypeOrdinal == -1) {
-            throw new IllegalArgumentException("Unsupported URI: " + uri);
-        }
-
         int rowsAffected;
-        switch (UriType.values()[(uriTypeOrdinal)]) {
-            case GAMES:
+        switch (URI_MATCHER.match(uri)) {
+            case URI_TYPE_GAMES:
 
                 rowsAffected = databaseHelper.getWritableDatabase().update(
                         LiquidityDatabaseHelper.GAMES_TABLE_NAME,
@@ -232,7 +206,7 @@ public class LiquidityProvider extends ContentProvider {
                 );
 
                 break;
-            case GAME_ID:
+            case URI_TYPE_GAME_ID:
 
                 String where = LiquidityContract.Games._ID + " = " + uri.getLastPathSegment();
                 if (!TextUtils.isEmpty(selection)) {

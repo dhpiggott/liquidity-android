@@ -433,7 +433,7 @@ public class ServerConnection implements WebSocketListener {
 
                                     });
 
-                                };
+                                }
 
                             }
 
