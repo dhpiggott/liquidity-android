@@ -14,22 +14,26 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.SimpleCursorAdapter;
+import android.widget.TextView;
 
 import com.dhpcs.liquidity.GameType;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.models.ZoneId;
 import com.dhpcs.liquidity.provider.LiquidityContract;
 
+import java.text.DateFormat;
 import java.util.UUID;
 
 // TODO: Extend ListFragment?
-public class GamesFragment extends Fragment implements AdapterView.OnItemClickListener,
+// Example: http://developer.android.com/guide/components/loaders.html
+public class GamesFragment extends Fragment
+        implements AdapterView.OnItemClickListener,
         AdapterView.OnItemLongClickListener,
         LoaderManager.LoaderCallbacks<Cursor> {
 
     public static final String GAME_TYPE = "game_type";
 
-    private static final int GAME_LOADER = 0;
+    private static final int GAMES_LOADER = 0;
 
     public interface Listener {
 
@@ -64,32 +68,50 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        getLoaderManager().initLoader(GAME_LOADER, null, this);
+        getLoaderManager().initLoader(GAMES_LOADER, null, this);
 
         simpleCursorAdapter = new SimpleCursorAdapter(
                 getActivity(),
-                // TODO
                 android.R.layout.simple_list_item_2,
                 null,
                 new String[]{
                         LiquidityContract.Games.NAME,
-                        LiquidityContract.Games.GAME_TYPE
+                        LiquidityContract.Games.CREATED
                 },
                 new int[]{
                         android.R.id.text1,
                         android.R.id.text2
                 },
-                // TODO
                 0
         );
+        simpleCursorAdapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
+
+            private final DateFormat dateFormat = DateFormat.getDateTimeInstance();
+
+            @Override
+            public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
+                boolean bound = false;
+                if (columnIndex == cursor
+                        .getColumnIndexOrThrow(LiquidityContract.Games.CREATED)) {
+                    bound = true;
+                    ((TextView) view).setText(
+                            getActivity().getString(
+                                    R.string.created_format_string,
+                                    dateFormat.format(cursor.getLong(columnIndex))
+                            )
+                    );
+                }
+                return bound;
+            }
+
+        });
     }
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         switch (id) {
-            case GAME_LOADER:
+            case GAMES_LOADER:
 
-                // TODO
                 return new CursorLoader(
                         getActivity(),
                         LiquidityContract.Games.CONTENT_URI,
@@ -97,7 +119,7 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
                                 LiquidityContract.Games._ID,
                                 LiquidityContract.Games.ZONE_ID,
                                 LiquidityContract.Games.NAME,
-                                LiquidityContract.Games.GAME_TYPE
+                                LiquidityContract.Games.CREATED
                         },
                         LiquidityContract.Games.GAME_TYPE + " = ?",
                         new String[]{
@@ -159,13 +181,13 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
     }
 
     @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        simpleCursorAdapter.changeCursor(data);
+    public void onLoaderReset(Loader<Cursor> loader) {
+        simpleCursorAdapter.changeCursor(null);
     }
 
     @Override
-    public void onLoaderReset(Loader<Cursor> loader) {
-        simpleCursorAdapter.changeCursor(null);
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        simpleCursorAdapter.changeCursor(data);
     }
 
 }

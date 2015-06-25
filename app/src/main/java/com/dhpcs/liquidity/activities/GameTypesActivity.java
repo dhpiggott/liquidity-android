@@ -1,5 +1,6 @@
 package com.dhpcs.liquidity.activities;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -10,6 +11,18 @@ import com.dhpcs.liquidity.R;
 
 public class GameTypesActivity extends AppCompatActivity {
 
+    private static void startGamesActivity(Context context, GameType gameType) {
+        context.startActivity(
+                new Intent(
+                        context,
+                        GamesActivity.class
+                ).putExtra(
+                        GamesActivity.GAME_TYPE,
+                        gameType
+                )
+        );
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -18,13 +31,7 @@ public class GameTypesActivity extends AppCompatActivity {
         findViewById(R.id.button_monopoly).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(
-                        new Intent(GameTypesActivity.this, GamesActivity.class)
-                                .putExtra(
-                                        GamesActivity.GAME_TYPE,
-                                        GameType.MONOPOLY
-                                )
-                );
+                startGamesActivity(GameTypesActivity.this, GameType.MONOPOLY);
             }
         });
     }

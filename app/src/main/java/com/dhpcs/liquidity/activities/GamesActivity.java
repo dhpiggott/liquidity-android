@@ -1,5 +1,6 @@
 package com.dhpcs.liquidity.activities;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -15,15 +16,16 @@ import com.dhpcs.liquidity.models.ZoneId;
 import java.math.BigDecimal;
 
 public class GamesActivity extends AppCompatActivity
-        implements NewMonopolyGameDialogFragment.Listener,
-        JoinGameDialogFragment.Listener, GamesFragment.Listener {
+        implements GamesFragment.Listener,
+        JoinGameDialogFragment.Listener,
+        NewMonopolyGameDialogFragment.Listener {
 
     public static final String GAME_TYPE = GamesFragment.GAME_TYPE;
 
-    private void createGame(BigDecimal initialCapital) {
-        startActivity(
+    private static void createGame(Context context, BigDecimal initialCapital) {
+        context.startActivity(
                 new Intent(
-                        this,
+                        context,
                         MonopolyGameActivity.class
                 ).putExtra(
                         MonopolyGameActivity.EXTRA_INITIAL_CAPITAL,
@@ -32,10 +34,10 @@ public class GamesActivity extends AppCompatActivity
         );
     }
 
-    private void joinGame(ZoneId zoneId) {
-        startActivity(
+    private static void joinGame(Context context, ZoneId zoneId) {
+        context.startActivity(
                 new Intent(
-                        this,
+                        context,
                         MonopolyGameActivity.class
                 ).putExtra(
                         MonopolyGameActivity.EXTRA_ZONE_ID,
@@ -44,9 +46,19 @@ public class GamesActivity extends AppCompatActivity
         );
     }
 
-    @Override
-    public void onInitialCapitalEntered(BigDecimal initialCapital) {
-        createGame(initialCapital);
+    private static void rejoinGame(Context context, long gameId, ZoneId zoneId) {
+        context.startActivity(
+                new Intent(
+                        context,
+                        MonopolyGameActivity.class
+                ).putExtra(
+                        MonopolyGameActivity.EXTRA_GAME_ID,
+                        gameId
+                ).putExtra(
+                        MonopolyGameActivity.EXTRA_ZONE_ID,
+                        zoneId
+                )
+        );
     }
 
     @Override
@@ -86,27 +98,17 @@ public class GamesActivity extends AppCompatActivity
 
     @Override
     public void onGameClicked(long gameId, ZoneId zoneId) {
-        rejoinGame(gameId, zoneId);
+        rejoinGame(this, gameId, zoneId);
     }
 
     @Override
     public void onGameZoneIdScanned(ZoneId zoneId) {
-        joinGame(zoneId);
+        joinGame(this, zoneId);
     }
 
-    private void rejoinGame(long gameId, ZoneId zoneId) {
-        startActivity(
-                new Intent(
-                        this,
-                        MonopolyGameActivity.class
-                ).putExtra(
-                        MonopolyGameActivity.EXTRA_GAME_ID,
-                        gameId
-                ).putExtra(
-                        MonopolyGameActivity.EXTRA_ZONE_ID,
-                        zoneId
-                )
-        );
+    @Override
+    public void onInitialCapitalEntered(BigDecimal initialCapital) {
+        createGame(this, initialCapital);
     }
 
 }

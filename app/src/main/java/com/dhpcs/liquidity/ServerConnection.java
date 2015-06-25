@@ -51,6 +51,7 @@ import scala.util.Right;
 public class ServerConnection implements WebSocketListener {
 
     // TODO: Can this just be boolean?
+    // TODO: Check NetworkUtils.isNetworkAvailable somewhere
     public enum ConnectionState {
         CONNECTING,
         CONNECTED,

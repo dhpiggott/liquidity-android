@@ -25,10 +25,10 @@ import java.util.Currency;
 
 import scala.Tuple2;
 
-// TODO: Why AppCompat?
 public class MonopolyGameActivity extends AppCompatActivity
-        implements MonopolyGame.Listener, PlayersFragment.Listener,
-        ChangeGameNameDialogFragment.Listener,
+        implements ChangeGameNameDialogFragment.Listener,
+        MonopolyGame.Listener,
+        PlayersFragment.Listener,
         TransferToPlayerDialogFragment.Listener {
 
     public static final String EXTRA_GAME_ID = "game_id";
@@ -62,15 +62,8 @@ public class MonopolyGameActivity extends AppCompatActivity
     private ZoneId zoneId;
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_monopoly_game, menu);
-        return true;
-    }
-
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_monopoly_game);
 
         FragmentManager fragmentManager = getFragmentManager();
@@ -109,9 +102,7 @@ public class MonopolyGameActivity extends AppCompatActivity
                 );
             }
 
-            monopolyGameHolderFragment = new MonopolyGameHolderFragment(
-                    monopolyGame
-            );
+            monopolyGameHolderFragment = new MonopolyGameHolderFragment(monopolyGame);
 
             fragmentManager.beginTransaction()
                     .add(monopolyGameHolderFragment, "monopoly_game_holder")
@@ -122,6 +113,12 @@ public class MonopolyGameActivity extends AppCompatActivity
                 fragmentManager.findFragmentById(R.id.fragment_identities);
         playersFragment = (PlayersFragment)
                 fragmentManager.findFragmentById(R.id.fragment_players);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_monopoly_game, menu);
+        return true;
     }
 
     @Override
@@ -162,22 +159,23 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == R.id.action_add_players) {
-            AddPlayersDialogFragment.newInstance(
-                    zoneId
-            ).show(
-                    getFragmentManager(),
-                    "add_players_dialog_fragment"
-            );
-            return true;
-        } else if (id == R.id.action_change_game_name) {
-            ChangeGameNameDialogFragment.newInstance(
-                    monopolyGameHolderFragment.getMonopolyGame().getGameName()
-            ).show(
-                    getFragmentManager(),
-                    "change_game_name_dialog_fragment"
-            );
+        switch (item.getItemId()) {
+            case R.id.action_add_players:
+                AddPlayersDialogFragment.newInstance(
+                        zoneId
+                ).show(
+                        getFragmentManager(),
+                        "add_players_dialog_fragment"
+                );
+                return true;
+            case R.id.action_change_game_name:
+                ChangeGameNameDialogFragment.newInstance(
+                        monopolyGameHolderFragment.getMonopolyGame().getGameName()
+                ).show(
+                        getFragmentManager(),
+                        "change_game_name_dialog_fragment"
+                );
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -198,9 +196,7 @@ public class MonopolyGameActivity extends AppCompatActivity
     @Override
     public void onPlayerClicked(MemberId playerId) {
         MemberId identityId = identitiesFragment.getIdentityId();
-        if (identityId == null) {
-            // TODO
-        } else {
+        if (identityId != null) {
             TransferToPlayerDialogFragment.newInstance(identityId, playerId)
                     .show(
                             getFragmentManager(),

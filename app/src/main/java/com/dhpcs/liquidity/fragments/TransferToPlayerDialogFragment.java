@@ -50,12 +50,16 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
         }
     }
 
-    // TODO: Improve using http://stackoverflow.com/questions/5107901/better-way-to-format-currency-input-edittext?
+    // TODO:
+    // Improve:
+    // Using http://stackoverflow.com/questions/5107901/better-way-to-format-currency-input-edittext
+    // Add buttons with quantity suffixes
+    // Show source with spinner
+    // Show destination
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         return new AlertDialog.Builder(getActivity())
                 .setTitle(R.string.enter_transfer_amount)
-                        // TODO: suffixes, destination
                 .setView(R.layout.fragment_transfer_to_player_dialog)
                 .setPositiveButton(
                         R.string.ok,
