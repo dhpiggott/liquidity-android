@@ -57,17 +57,19 @@ object MonopolyGame {
 
   }
 
-  val ZONE_TYPE = GameType.MONOPOLY
-  val BANK_MEMBER_NAME = "Banker"
-  val BANK_ACCOUNT_NAME = "Bank"
-  val GAME_NAME_PREFIX = "Bank of "
-  val ACCOUNT_NAME_SUFFIX = "'s account"
+  // TODO
+  val ZoneType = GameType.MONOPOLY
+  val BankMemberName = "Banker"
+  val BankAccountName = "Bank"
+  val GameNamePrefix = "Bank of "
+  val AccountNameSuffix = "'s account"
 
-  def aggregateMembersAccountBalances(zone: Zone,
+  def aggregateMembersAccountBalances(members: Map[MemberId, Member],
+                                      accounts: Map[AccountId, Account],
                                       accountBalances: Map[AccountId, BigDecimal]) =
-    zone.members.map {
+    members.map {
       case (memberId, _) =>
-        val membersAccounts = zone.accounts.filter {
+        val membersAccounts = accounts.filter {
           case (_, account) =>
             account.owners.contains(memberId)
         }
@@ -78,7 +80,7 @@ object MonopolyGame {
         memberId -> membersAccountBalances.values.sum
     }
 
-  def getUserName(context: Context, aliasConstant: String): String = {
+  def getUserName(context: Context, aliasConstant: String) = {
     val cursor = context.getContentResolver.query(
       ContactsContract.Profile.CONTENT_URI,
       Array(aliasConstant),
@@ -200,14 +202,14 @@ class MonopolyGame(val context: Context)
 
     serverConnection.sendCommand(
       CreateZoneCommand(
-        MonopolyGame.GAME_NAME_PREFIX + playerName,
-        MonopolyGame.ZONE_TYPE.typeName,
+        MonopolyGame.GameNamePrefix + playerName,
+        MonopolyGame.ZoneType.typeName,
         Member(
-          MonopolyGame.BANK_MEMBER_NAME,
+          MonopolyGame.BankMemberName,
           ClientKey.getInstance(context).getPublicKey
         ),
         Account(
-          MonopolyGame.BANK_ACCOUNT_NAME,
+          MonopolyGame.BankAccountName,
           Set.empty
         )
       ),
@@ -252,7 +254,7 @@ class MonopolyGame(val context: Context)
             CreateAccountCommand(
               zoneId,
               Account(
-                playerName + MonopolyGame.ACCOUNT_NAME_SUFFIX,
+                playerName + MonopolyGame.AccountNameSuffix,
                 Set(createMemberResponse.memberId)
               )
             ),
@@ -329,7 +331,8 @@ class MonopolyGame(val context: Context)
           }
 
           memberBalances = MonopolyGame.aggregateMembersAccountBalances(
-            zone,
+            zone.members,
+            zone.accounts,
             accountBalances
           )
 
@@ -391,14 +394,14 @@ class MonopolyGame(val context: Context)
               zone.equityHolderMemberId
             )
 
-            if (joinedPlayers.nonEmpty) {
-              val previousPlayers = players
-              players = players ++ joinedPlayers
-              if (listener != null) {
-                joinedPlayers.foreach { joinedPlayer =>
-                  val removedPlayer = previousPlayers(joinedPlayer._1)
-                  listener.onPlayerUpdated(joinedPlayer._1 -> removedPlayer, joinedPlayer)
-                }
+            val previousPlayers = players
+            players = players ++ joinedPlayers
+            if (listener != null) {
+              joinedPlayers.foreach { joinedPlayer =>
+                listener.onPlayerUpdated(
+                  joinedPlayer._1 -> previousPlayers(joinedPlayer._1),
+                  joinedPlayer
+                )
               }
             }
 
@@ -416,14 +419,14 @@ class MonopolyGame(val context: Context)
               zone.equityHolderMemberId
             )
 
-            if (quitPlayers.nonEmpty) {
-              val previousPlayers = players
-              players = players ++ quitPlayers
-              if (listener != null) {
-                quitPlayers.foreach { quitPlayer =>
-                  val removedPlayer = previousPlayers(quitPlayer._1)
-                  listener.onPlayerUpdated(quitPlayer._1 -> removedPlayer, quitPlayer)
-                }
+            val previousPlayers = players
+            players = players ++ quitPlayers
+            if (listener != null) {
+              quitPlayers.foreach { quitPlayer =>
+                listener.onPlayerUpdated(
+                  quitPlayer._1 -> previousPlayers(quitPlayer._1),
+                  quitPlayer
+                )
               }
             }
 
@@ -572,7 +575,10 @@ class MonopolyGame(val context: Context)
                 val removedPlayer = players(updatedPlayer._1)
                 players = players + updatedPlayer
                 if (listener != null) {
-                  listener.onPlayerUpdated(updatedPlayer._1 -> removedPlayer, updatedPlayer)
+                  listener.onPlayerUpdated(
+                    updatedPlayer._1 -> removedPlayer,
+                    updatedPlayer
+                  )
                 }
               }
             }
@@ -621,44 +627,49 @@ class MonopolyGame(val context: Context)
             )
 
             val updatedMemberBalances = MonopolyGame.aggregateMembersAccountBalances(
-              zone,
+              zone.members,
+              zone.accounts,
               accountBalances
+            ).filterNot {
+              case (memberId, balance) => memberBalances(memberId) == balance
+            }
+
+            memberBalances = memberBalances ++ updatedMemberBalances
+
+            val updatedIdentities = MonopolyGame.identitiesFromMembers(
+              zone.members.filterKeys(updatedMemberBalances.contains),
+              updatedMemberBalances,
+              ClientKey.getInstance(context).getPublicKey,
+              zone.equityHolderMemberId
+            )
+            val updatedPlayers = MonopolyGame.playersFromMembers(
+              zone.members.filterKeys(updatedMemberBalances.contains),
+              updatedMemberBalances,
+              connectedClients,
+              ClientKey.getInstance(context).getPublicKey,
+              zone.equityHolderMemberId
             )
 
-            if (updatedMemberBalances != memberBalances) {
-
-              memberBalances = updatedMemberBalances
-
-              val updatedIdentities = MonopolyGame.identitiesFromMembers(
-                zone.members,
-                memberBalances,
-                ClientKey.getInstance(context).getPublicKey,
-                zone.equityHolderMemberId
-              )
-              val updatedPlayers = MonopolyGame.playersFromMembers(
-                zone.members,
-                memberBalances,
-                connectedClients,
-                ClientKey.getInstance(context).getPublicKey,
-                zone.equityHolderMemberId
-              )
-
-              if (updatedIdentities != identities) {
-                identities = updatedIdentities
-                if (listener != null) {
-                  // TODO
-                  listener.onIdentitiesChanged(identities)
-                }
+            val previousIdentities = identities
+            identities = identities ++ updatedIdentities
+            if (listener != null) {
+              updatedIdentities.foreach { updatedIdentity =>
+                listener.onIdentityUpdated(
+                  updatedIdentity._1 -> previousIdentities(updatedIdentity._1),
+                  updatedIdentity
+                )
               }
+            }
 
-              if (updatedPlayers != players) {
-                players = updatedPlayers
-                if (listener != null) {
-                  // TODO
-                  listener.onPlayersChanged(players)
-                }
+            val previousPlayers = players
+            players = players ++ updatedPlayers
+            if (listener != null) {
+              updatedPlayers.foreach { updatedPlayer =>
+                listener.onPlayerUpdated(
+                  updatedPlayer._1 -> previousPlayers(updatedPlayer._1),
+                  updatedPlayer
+                )
               }
-
             }
 
           case transactionAddedNotification: TransactionAddedNotification =>
@@ -679,45 +690,49 @@ class MonopolyGame(val context: Context)
               (transaction.to -> newDestinationBalance)
 
             val updatedMemberBalances = MonopolyGame.aggregateMembersAccountBalances(
-              zone,
+              zone.members,
+              zone.accounts,
               accountBalances
+            ).filterNot {
+              case (memberId, balance) => memberBalances(memberId) == balance
+            }
+
+            memberBalances = memberBalances ++ updatedMemberBalances
+
+            val updatedIdentities = MonopolyGame.identitiesFromMembers(
+              zone.members.filterKeys(updatedMemberBalances.contains),
+              updatedMemberBalances,
+              ClientKey.getInstance(context).getPublicKey,
+              zone.equityHolderMemberId
+            )
+            val updatedPlayers = MonopolyGame.playersFromMembers(
+              zone.members.filterKeys(updatedMemberBalances.contains),
+              updatedMemberBalances,
+              connectedClients,
+              ClientKey.getInstance(context).getPublicKey,
+              zone.equityHolderMemberId
             )
 
-            if (updatedMemberBalances != memberBalances) {
-
-              memberBalances = updatedMemberBalances
-
-              val updatedIdentities = MonopolyGame.identitiesFromMembers(
-                zone.members,
-                memberBalances,
-                ClientKey.getInstance(context).getPublicKey,
-                zone.equityHolderMemberId
-              )
-
-              val updatedPlayers = MonopolyGame.playersFromMembers(
-                zone.members,
-                memberBalances,
-                connectedClients,
-                ClientKey.getInstance(context).getPublicKey,
-                zone.equityHolderMemberId
-              )
-
-              if (updatedIdentities != identities) {
-                identities = updatedIdentities
-                if (listener != null) {
-                  // TODO
-                  listener.onIdentitiesChanged(identities)
-                }
+            val previousIdentities = identities
+            identities = identities ++ updatedIdentities
+            if (listener != null) {
+              updatedIdentities.foreach { updatedIdentity =>
+                listener.onIdentityUpdated(
+                  updatedIdentity._1 -> previousIdentities(updatedIdentity._1),
+                  updatedIdentity
+                )
               }
+            }
 
-              if (updatedPlayers != players) {
-                players = updatedPlayers
-                if (listener != null) {
-                  // TODO
-                  listener.onPlayersChanged(players)
-                }
+            val previousPlayers = players
+            players = players ++ updatedPlayers
+            if (listener != null) {
+              updatedPlayers.foreach { updatedPlayer =>
+                listener.onPlayerUpdated(
+                  updatedPlayer._1 -> previousPlayers(updatedPlayer._1),
+                  updatedPlayer
+                )
               }
-
             }
 
         }
