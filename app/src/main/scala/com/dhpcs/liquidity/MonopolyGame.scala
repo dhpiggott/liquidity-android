@@ -39,7 +39,7 @@ object MonopolyGame {
 
     def onIdentityRemoved(removedIdentity: (MemberId, IdentityWithBalance))
 
-    def onIdentityUpdated(removedIdentity: (MemberId, IdentityWithBalance),
+    def onIdentitySwapped(removedIdentity: (MemberId, IdentityWithBalance),
                           addedIdentity: (MemberId, IdentityWithBalance))
 
     def onJoined(zoneId: ZoneId)
@@ -50,7 +50,7 @@ object MonopolyGame {
 
     def onPlayerRemoved(removedPlayer: (MemberId, PlayerWithBalanceAndConnectionState))
 
-    def onPlayerUpdated(removedPlayer: (MemberId, PlayerWithBalanceAndConnectionState),
+    def onPlayerSwapped(removedPlayer: (MemberId, PlayerWithBalanceAndConnectionState),
                         addedPlayer: (MemberId, PlayerWithBalanceAndConnectionState))
 
     def onQuit()
@@ -138,11 +138,10 @@ object MonopolyGame {
   def playersFromMembers(members: Map[MemberId, Member],
                          balances: Map[MemberId, BigDecimal],
                          connectedPublicKeys: Set[PublicKey],
-                         clientPublicKey: PublicKey,
-                         equityHolderMemberId: MemberId) =
-    members.filter {
+                         selectedIdentityId: Option[MemberId]) =
+    members.filterNot {
       case (memberId, member) =>
-        memberId != equityHolderMemberId && member.publicKey != clientPublicKey
+        selectedIdentityId.contains(memberId)
     }.map {
       case (memberId, member) =>
         memberId -> PlayerWithBalanceAndConnectionState(
@@ -157,14 +156,12 @@ object MonopolyGame {
                        member: Member,
                        balances: Map[MemberId, BigDecimal],
                        connectedPublicKeys: Set[PublicKey],
-                       clientPublicKey: PublicKey,
-                       equityHolderMemberId: MemberId) =
+                       selectedIdentityId: Option[MemberId]) =
     playersFromMembers(
       Map(memberId -> member),
       balances,
       connectedPublicKeys,
-      clientPublicKey,
-      equityHolderMemberId
+      selectedIdentityId
     ).headOption
 
 }
@@ -182,6 +179,7 @@ class MonopolyGame(context: Context)
   private var zoneId = Option.empty[ZoneId]
   // TODO: Need to persist this
   private var initialCapital = Option.empty[BigDecimal]
+  private var selectedIdentityId = Option.empty[MemberId]
 
   // TODO
   private var zone: Zone = _
@@ -189,6 +187,7 @@ class MonopolyGame(context: Context)
   private var accountBalances: Map[AccountId, BigDecimal] = _
   private var memberBalances: Map[MemberId, BigDecimal] = _
   private var identities: Map[MemberId, IdentityWithBalance] = _
+  // TODO: Maintain a version with the selectedIdentityId and then just filter it for listeners?
   private var players: Map[MemberId, PlayerWithBalanceAndConnectionState] = _
 
   private var listener = Option.empty[Listener]
@@ -351,9 +350,7 @@ class MonopolyGame(context: Context)
             zone.members,
             memberBalances,
             connectedClients,
-            ClientKey.getInstance(context).getPublicKey,
-            zone.equityHolderMemberId
-
+            selectedIdentityId
           )
 
           listener.foreach { listener =>
@@ -396,15 +393,14 @@ class MonopolyGame(context: Context)
               },
               memberBalances,
               Set(clientJoinedZoneNotification.publicKey),
-              ClientKey.getInstance(context).getPublicKey,
-              zone.equityHolderMemberId
+              selectedIdentityId
             )
 
             val previousPlayers = players
             players = players ++ joinedPlayers
             listener.foreach { listener =>
               joinedPlayers.foreach { joinedPlayer =>
-                listener.onPlayerUpdated(
+                listener.onPlayerSwapped(
                   joinedPlayer._1 -> previousPlayers(joinedPlayer._1),
                   joinedPlayer
                 )
@@ -421,15 +417,14 @@ class MonopolyGame(context: Context)
               },
               memberBalances,
               Set.empty,
-              ClientKey.getInstance(context).getPublicKey,
-              zone.equityHolderMemberId
+              selectedIdentityId
             )
 
             val previousPlayers = players
             players = players ++ quitPlayers
             listener.foreach { listener =>
               quitPlayers.foreach { quitPlayer =>
-                listener.onPlayerUpdated(
+                listener.onPlayerSwapped(
                   quitPlayer._1 -> previousPlayers(quitPlayer._1),
                   quitPlayer
                 )
@@ -504,8 +499,7 @@ class MonopolyGame(context: Context)
               memberCreatedNotification.member,
               memberBalances,
               connectedClients,
-              ClientKey.getInstance(context).getPublicKey,
-              zone.equityHolderMemberId
+              selectedIdentityId
             )
 
             createdPlayer.foreach { createdPlayer =>
@@ -541,7 +535,7 @@ class MonopolyGame(context: Context)
               } else {
                 val removedIdentity = identities(updatedIdentity._1)
                 identities = identities + updatedIdentity
-                listener.foreach(_.onIdentityUpdated(
+                listener.foreach(_.onIdentitySwapped(
                   updatedIdentity._1 -> removedIdentity,
                   updatedIdentity
                 ))
@@ -553,8 +547,7 @@ class MonopolyGame(context: Context)
               memberUpdatedNotification.member,
               memberBalances,
               connectedClients,
-              ClientKey.getInstance(context).getPublicKey,
-              zone.equityHolderMemberId
+              selectedIdentityId
             )
 
             updatedPlayer.foreach { updatedPlayer =>
@@ -569,7 +562,7 @@ class MonopolyGame(context: Context)
               } else {
                 val removedPlayer = players(updatedPlayer._1)
                 players = players + updatedPlayer
-                listener.foreach(_.onPlayerUpdated(
+                listener.foreach(_.onPlayerSwapped(
                   updatedPlayer._1 -> removedPlayer,
                   updatedPlayer
                 ))
@@ -640,15 +633,14 @@ class MonopolyGame(context: Context)
               zone.members.filterKeys(updatedMemberBalances.contains),
               updatedMemberBalances,
               connectedClients,
-              ClientKey.getInstance(context).getPublicKey,
-              zone.equityHolderMemberId
+              selectedIdentityId
             )
 
             val previousIdentities = identities
             identities = identities ++ updatedIdentities
             listener.foreach { listener =>
               updatedIdentities.foreach { updatedIdentity =>
-                listener.onIdentityUpdated(
+                listener.onIdentitySwapped(
                   updatedIdentity._1 -> previousIdentities(updatedIdentity._1),
                   updatedIdentity
                 )
@@ -659,7 +651,7 @@ class MonopolyGame(context: Context)
             players = players ++ updatedPlayers
             listener.foreach { listener =>
               updatedPlayers.foreach { updatedPlayer =>
-                listener.onPlayerUpdated(
+                listener.onPlayerSwapped(
                   updatedPlayer._1 -> previousPlayers(updatedPlayer._1),
                   updatedPlayer
                 )
@@ -703,15 +695,14 @@ class MonopolyGame(context: Context)
               zone.members.filterKeys(updatedMemberBalances.contains),
               updatedMemberBalances,
               connectedClients,
-              ClientKey.getInstance(context).getPublicKey,
-              zone.equityHolderMemberId
+              selectedIdentityId
             )
 
             val previousIdentities = identities
             identities = identities ++ updatedIdentities
             listener.foreach { listener =>
               updatedIdentities.foreach { updatedIdentity =>
-                listener.onIdentityUpdated(
+                listener.onIdentitySwapped(
                   updatedIdentity._1 -> previousIdentities(updatedIdentity._1),
                   updatedIdentity
                 )
@@ -722,7 +713,7 @@ class MonopolyGame(context: Context)
             players = players ++ updatedPlayers
             listener.foreach { listener =>
               updatedPlayers.foreach { updatedPlayer =>
-                listener.onPlayerUpdated(
+                listener.onPlayerSwapped(
                   updatedPlayer._1 -> previousPlayers(updatedPlayer._1),
                   updatedPlayer
                 )
@@ -821,6 +812,26 @@ class MonopolyGame(context: Context)
         listener.onIdentitiesChanged(identities)
         listener.onPlayersChanged(players)
       }
+    }
+  }
+
+  def setSelectedIdentity(selectedIdentityId: MemberId) {
+    this.selectedIdentityId = Option(selectedIdentityId)
+    val updatedPlayers = MonopolyGame.playersFromMembers(
+      zone.members,
+      memberBalances,
+      connectedClients,
+      this.selectedIdentityId
+    )
+    val addedPlayer = updatedPlayers -- players.keys
+    val removedPlayer = players -- updatedPlayers.keys
+    players = updatedPlayers
+    if(addedPlayer.nonEmpty && removedPlayer.nonEmpty) {
+      listener.foreach(_.onPlayerSwapped(removedPlayer.head, addedPlayer.head))
+    } else if (addedPlayer.nonEmpty) {
+      listener.foreach(_.onPlayerAdded(addedPlayer.head))
+    } else if (removedPlayer.nonEmpty) {
+      listener.foreach(_.onPlayerRemoved(removedPlayer.head))
     }
   }
 

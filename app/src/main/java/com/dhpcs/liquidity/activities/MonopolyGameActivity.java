@@ -27,6 +27,7 @@ import scala.Tuple2;
 
 public class MonopolyGameActivity extends AppCompatActivity
         implements ChangeGameNameDialogFragment.Listener,
+        IdentitiesFragment.Listener,
         MonopolyGame.Listener,
         PlayersFragment.Listener,
         TransferToPlayerDialogFragment.Listener {
@@ -131,24 +132,40 @@ public class MonopolyGameActivity extends AppCompatActivity
                                             .Map<MemberId, IdentityWithBalance>
                                             identities) {
         identitiesFragment.onIdentitiesChanged(identities);
+        monopolyGameHolderFragment.getMonopolyGame().setSelectedIdentity(
+                identitiesFragment.getIdentityId(identitiesFragment.getSelectedIdentityPage())
+        );
     }
 
     @Override
     public void onIdentityAdded(
             Tuple2<MemberId, IdentityWithBalance> addedIdentity) {
         identitiesFragment.onIdentityAdded(addedIdentity);
+        monopolyGameHolderFragment.getMonopolyGame().setSelectedIdentity(
+                identitiesFragment.getIdentityId(identitiesFragment.getSelectedIdentityPage())
+        );
+    }
+
+    @Override
+    public void onIdentityPageSelected(int page) {
+        monopolyGameHolderFragment.getMonopolyGame().setSelectedIdentity(
+                identitiesFragment.getIdentityId(page)
+        );
     }
 
     @Override
     public void onIdentityRemoved(
             Tuple2<MemberId, IdentityWithBalance> removedIdentity) {
         identitiesFragment.onIdentityRemoved(removedIdentity);
+        monopolyGameHolderFragment.getMonopolyGame().setSelectedIdentity(
+                identitiesFragment.getIdentityId(identitiesFragment.getSelectedIdentityPage())
+        );
     }
 
     @Override
-    public void onIdentityUpdated(Tuple2<MemberId, IdentityWithBalance> removedIdentity,
+    public void onIdentitySwapped(Tuple2<MemberId, IdentityWithBalance> removedIdentity,
                                   Tuple2<MemberId, IdentityWithBalance> addedIdentity) {
-        identitiesFragment.onIdentityUpdated(removedIdentity, addedIdentity);
+        identitiesFragment.onIdentitySwapped(removedIdentity, addedIdentity);
     }
 
     @Override
@@ -195,7 +212,9 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public void onPlayerClicked(MemberId playerId) {
-        MemberId identityId = identitiesFragment.getIdentityId();
+        MemberId identityId = identitiesFragment.getIdentityId(
+                identitiesFragment.getSelectedIdentityPage()
+        );
         if (identityId != null) {
             TransferToPlayerDialogFragment.newInstance(identityId, playerId)
                     .show(
@@ -212,9 +231,9 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onPlayerUpdated(Tuple2<MemberId, PlayerWithBalanceAndConnectionState> removedPlayer,
+    public void onPlayerSwapped(Tuple2<MemberId, PlayerWithBalanceAndConnectionState> removedPlayer,
                                 Tuple2<MemberId, PlayerWithBalanceAndConnectionState> addedPlayer) {
-        playersFragment.onPlayerUpdated(removedPlayer, addedPlayer);
+        playersFragment.onPlayerSwapped(removedPlayer, addedPlayer);
     }
 
     @Override

@@ -161,7 +161,7 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
         listAdapter.notifyDataSetChanged();
     }
 
-    public void onPlayerUpdated(Tuple2<MemberId, PlayerWithBalanceAndConnectionState> removedPlayer,
+    public void onPlayerSwapped(Tuple2<MemberId, PlayerWithBalanceAndConnectionState> removedPlayer,
                                 Tuple2<MemberId, PlayerWithBalanceAndConnectionState> addedPlayer) {
         listAdapter.setNotifyOnChange(false);
         listAdapter.remove(removedPlayer);

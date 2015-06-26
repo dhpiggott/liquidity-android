@@ -1,5 +1,6 @@
 package com.dhpcs.liquidity.fragments;
 
+import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.os.Bundle;
@@ -21,6 +22,12 @@ import scala.Tuple2;
 import scala.collection.Iterator;
 
 public class IdentitiesFragment extends Fragment {
+
+    public interface Listener {
+
+        void onIdentityPageSelected(int page);
+
+    }
 
     private static final Comparator<Tuple2<MemberId, IdentityWithBalance>> identityComparator =
             new Comparator<Tuple2<MemberId, IdentityWithBalance>>() {
@@ -90,12 +97,29 @@ public class IdentitiesFragment extends Fragment {
     private IdentitiesFragmentStatePagerAdapter playersFragmentStatePagerAdapter;
     private ViewPager viewPagerIdentities;
 
-    public MemberId getIdentityId() {
+    private Listener listener;
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        try {
+            listener = (Listener) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString()
+                    + " must implement IdentitiesFragment.Listener");
+        }
+    }
+
+    public MemberId getIdentityId(int page) {
         if (playersFragmentStatePagerAdapter.getCount() == 0) {
             return null;
         } else {
-            return playersFragmentStatePagerAdapter.get(viewPagerIdentities.getCurrentItem())._1();
+            return playersFragmentStatePagerAdapter.get(page)._1();
         }
+    }
+
+    public int getSelectedIdentityPage() {
+        return viewPagerIdentities.getCurrentItem();
     }
 
     @Override
@@ -116,8 +140,24 @@ public class IdentitiesFragment extends Fragment {
 
         viewPagerIdentities = (ViewPager) view.findViewById(R.id.viewpager_identities);
         viewPagerIdentities.setAdapter(playersFragmentStatePagerAdapter);
+        viewPagerIdentities.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
+
+            @Override
+            public void onPageSelected(int position) {
+                if (listener != null) {
+                    listener.onIdentityPageSelected(position);
+                }
+            }
+
+        });
 
         return view;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        listener = null;
     }
 
     public void onIdentitiesChanged(scala.collection.immutable
@@ -148,7 +188,7 @@ public class IdentitiesFragment extends Fragment {
         playersFragmentStatePagerAdapter.notifyDataSetChanged();
     }
 
-    public void onIdentityUpdated(Tuple2<MemberId, IdentityWithBalance> removedIdentity,
+    public void onIdentitySwapped(Tuple2<MemberId, IdentityWithBalance> removedIdentity,
                                   Tuple2<MemberId, IdentityWithBalance> addedIdentity) {
         playersFragmentStatePagerAdapter.remove(removedIdentity);
         playersFragmentStatePagerAdapter.add(addedIdentity);
