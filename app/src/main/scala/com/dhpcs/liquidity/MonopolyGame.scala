@@ -169,7 +169,7 @@ object MonopolyGame {
 
 }
 
-class MonopolyGame(val context: Context)
+class MonopolyGame(context: Context)
   extends ConnectionStateListener with NotificationListener {
 
   // TODO: Review all other project Scala classes for non-private fields
@@ -739,15 +739,15 @@ class MonopolyGame(val context: Context)
     log.debug("connectionState={}", connectionState)
     connectionState match {
 
-      case ServerConnection.ConnectionState.CONNECTING =>
+      case ServerConnection.CONNECTING =>
 
-      case ServerConnection.ConnectionState.CONNECTED =>
+      case ServerConnection.CONNECTED =>
 
         zoneId.fold(createAndThenJoinZone())(join)
 
-      case ServerConnection.ConnectionState.DISCONNECTING =>
+      case ServerConnection.DISCONNECTING =>
 
-      case ServerConnection.ConnectionState.DISCONNECTED =>
+      case ServerConnection.DISCONNECTED =>
 
       // TODO
 

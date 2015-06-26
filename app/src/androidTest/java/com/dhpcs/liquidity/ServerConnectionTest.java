@@ -8,6 +8,7 @@ import com.dhpcs.liquidity.models.Account;
 import com.dhpcs.liquidity.models.ClientJoinedZoneNotification;
 import com.dhpcs.liquidity.models.CreateZoneCommand;
 import com.dhpcs.liquidity.models.CreateZoneResponse;
+import com.dhpcs.liquidity.models.ErrorResponse;
 import com.dhpcs.liquidity.models.JoinZoneCommand;
 import com.dhpcs.liquidity.models.JoinZoneResponse;
 import com.dhpcs.liquidity.models.Member;
@@ -84,10 +85,10 @@ public class ServerConnectionTest extends AndroidTestCase
         serverConnection.connect();
         serverConnectionStateReadBarrier.await(15, TimeUnit.SECONDS);
         serverConnectionStateSetBarrier.await(15, TimeUnit.SECONDS);
-        assertEquals(ServerConnection.ConnectionState.CONNECTING, connectionState);
+        assertEquals(ServerConnection.CONNECTING$.MODULE$, connectionState);
         serverConnectionStateReadBarrier.await(15, TimeUnit.SECONDS);
         serverConnectionStateSetBarrier.await(15, TimeUnit.SECONDS);
-        assertEquals(ServerConnection.ConnectionState.CONNECTED, connectionState);
+        assertEquals(ServerConnection.CONNECTED$.MODULE$, connectionState);
 
         serverConnection.sendCommand(
                 new CreateZoneCommand(
@@ -105,6 +106,11 @@ public class ServerConnectionTest extends AndroidTestCase
                         )
                 ),
                 new ServerConnection.ResponseCallback() {
+
+                    @Override
+                    public void onErrorReceived(ErrorResponse errorResponse) {
+                        throw new RuntimeException("Got errorResponse: " + errorResponse);
+                    }
 
                     @Override
                     public void onResultReceived(ResultResponse resultResponse) {
@@ -129,6 +135,11 @@ public class ServerConnectionTest extends AndroidTestCase
         serverConnection.sendCommand(
                 new JoinZoneCommand(((CreateZoneResponse) resultResponse).zoneId()),
                 new ServerConnection.ResponseCallback() {
+
+                    @Override
+                    public void onErrorReceived(ErrorResponse errorResponse) {
+                        throw new RuntimeException("Got errorResponse: " + errorResponse);
+                    }
 
                     @Override
                     public void onResultReceived(ResultResponse resultResponse) {
@@ -156,10 +167,10 @@ public class ServerConnectionTest extends AndroidTestCase
         serverConnection.disconnect();
         serverConnectionStateReadBarrier.await(15, TimeUnit.SECONDS);
         serverConnectionStateSetBarrier.await(15, TimeUnit.SECONDS);
-        assertEquals(ServerConnection.ConnectionState.DISCONNECTING, connectionState);
+        assertEquals(ServerConnection.DISCONNECTING$.MODULE$, connectionState);
         serverConnectionStateReadBarrier.await(15, TimeUnit.SECONDS);
         serverConnectionStateSetBarrier.await(15, TimeUnit.SECONDS);
-        assertEquals(ServerConnection.ConnectionState.DISCONNECTED, connectionState);
+        assertEquals(ServerConnection.DISCONNECTED$.MODULE$, connectionState);
     }
 
 }
