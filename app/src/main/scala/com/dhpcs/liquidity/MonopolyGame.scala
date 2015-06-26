@@ -64,6 +64,7 @@ object MonopolyGame {
   val GameNamePrefix = "Bank of "
   val AccountNameSuffix = "'s account"
 
+  // TODO
   def aggregateMembersAccountBalances(members: Map[MemberId, Member],
                                       accounts: Map[AccountId, Account],
                                       accountBalances: Map[AccountId, BigDecimal]) =
@@ -91,7 +92,8 @@ object MonopolyGame {
     val userName = if (cursor.moveToNext) {
       cursor.getString(cursor.getColumnIndex(aliasConstant))
     } else {
-      "null"
+      // TODO
+      "Unnamed"
     }
     cursor.close()
     userName
@@ -170,15 +172,18 @@ object MonopolyGame {
 class MonopolyGame(val context: Context)
   extends ConnectionStateListener with NotificationListener {
 
+  // TODO: Review all other project Scala classes for non-private fields
+
   private val log = LoggerFactory.getLogger(getClass)
 
-  val serverConnection = new ServerConnection(context, this, this)
+  private val serverConnection = new ServerConnection(context, this, this)
 
-  var initialCapital: BigDecimal = _
-  var zoneId: ZoneId = _
+  private var gameId = Option.empty[Long]
+  private var zoneId = Option.empty[ZoneId]
+  // TODO: Need to persist this
+  private var initialCapital = Option.empty[BigDecimal]
+
   // TODO
-  var gameId: Long = _
-
   private var zone: Zone = _
   private var connectedClients: Set[PublicKey] = _
   private var accountBalances: Map[AccountId, BigDecimal] = _
@@ -220,8 +225,8 @@ class MonopolyGame(val context: Context)
 
           val createZoneResponse = resultResponse.asInstanceOf[CreateZoneResponse]
 
-          setZoneId(createZoneResponse.zoneId)
-          join()
+          zoneId = Some(createZoneResponse.zoneId)
+          join(createZoneResponse.zoneId)
 
         }
 
@@ -263,8 +268,6 @@ class MonopolyGame(val context: Context)
               def onResultReceived(resultResponse: ResultResponse) {
                 log.debug("resultResponse={}", resultResponse)
 
-                val createAccountResponse = resultResponse.asInstanceOf[CreateAccountResponse]
-
               }
 
             })
@@ -277,7 +280,7 @@ class MonopolyGame(val context: Context)
     serverConnection.disconnect()
   }
 
-  private def join() {
+  private def join(zoneId: ZoneId) {
     serverConnection.sendCommand(
       JoinZoneCommand(
         zoneId
@@ -302,19 +305,22 @@ class MonopolyGame(val context: Context)
           contentValues.put(LiquidityContract.Games.NAME, zone.name)
           contentValues.put(LiquidityContract.Games.CREATED, zone.created: java.lang.Long)
 
-          if (gameId == 0) {
-            context.getContentResolver.insert(
-              LiquidityContract.Games.CONTENT_URI,
-              contentValues
+          gameId = Some(gameId.fold(
+            ContentUris.parseId(
+              context.getContentResolver.insert(
+                LiquidityContract.Games.CONTENT_URI,
+                contentValues
+              )
             )
-          } else {
+          ) { gameId =>
             context.getContentResolver.update(
               ContentUris.withAppendedId(Games.CONTENT_URI, gameId),
               contentValues,
               null,
               null
             )
-          }
+            gameId
+          })
 
           val iterator = zone.transactions.valuesIterator
           while (iterator.hasNext) {
@@ -355,7 +361,6 @@ class MonopolyGame(val context: Context)
             listener.onPlayersChanged(players)
           }
 
-          // TODO
           if (!identities.values.exists(_.isInstanceOf[PlayerWithBalance])) {
             createPlayer(zoneId)
           }
@@ -372,8 +377,11 @@ class MonopolyGame(val context: Context)
 
       case zoneNotification: ZoneNotification =>
 
-        if (zoneNotification.zoneId != zoneId) {
-          sys.error(s"zoneNotification.zoneId != zoneId (${zoneNotification.zoneId} != $zoneId)")
+        val gameId = this.gameId.get
+        val zoneId = this.zoneId.get
+
+        if (zoneId != zoneNotification.zoneId) {
+          sys.error(s"zoneId != zoneNotification.zoneId (${zoneNotification.zoneId} != $zoneId)")
         }
 
         zoneNotification match {
@@ -447,8 +455,6 @@ class MonopolyGame(val context: Context)
 
                 def onResultReceived(resultResponse: ResultResponse) {
                   log.debug("resultResponse={}", resultResponse)
-
-                  val joinZoneResponse = resultResponse.asInstanceOf[JoinZoneResponse]
 
                   // TODO
 
@@ -596,7 +602,8 @@ class MonopolyGame(val context: Context)
                   transfer(
                     zone.equityHolderMemberId,
                     accountCreatedNotification.account.owners.head,
-                    initialCapital
+                    // TODO
+                    initialCapital.get
                   )
 
                 }
@@ -618,7 +625,7 @@ class MonopolyGame(val context: Context)
               zone.accounts,
               accountBalances
             ).filterNot {
-              case (memberId, balance) => memberBalances(memberId) == balance
+              case (memberId, balance) => memberBalances.get(memberId).contains(balance)
             }
 
             memberBalances = memberBalances ++ updatedMemberBalances
@@ -681,7 +688,7 @@ class MonopolyGame(val context: Context)
               zone.accounts,
               accountBalances
             ).filterNot {
-              case (memberId, balance) => memberBalances(memberId) == balance
+              case (memberId, balance) => memberBalances.get(memberId).contains(balance)
             }
 
             memberBalances = memberBalances ++ updatedMemberBalances
@@ -736,13 +743,7 @@ class MonopolyGame(val context: Context)
 
       case ServerConnection.ConnectionState.CONNECTED =>
 
-        if (zoneId != null) {
-          join()
-        } else if (initialCapital != null) {
-          createAndThenJoinZone()
-        } else {
-          sys.error("Neither zoneId nor initialCapital were set")
-        }
+        zoneId.fold(createAndThenJoinZone())(join)
 
       case ServerConnection.ConnectionState.DISCONNECTING =>
 
@@ -756,19 +757,15 @@ class MonopolyGame(val context: Context)
   def quitAndOrDisconnect() {
     if (zone == null) {
       disconnect()
-    }
-    else {
+    } else {
       serverConnection.sendCommand(
         QuitZoneCommand(
-          zoneId
+          zoneId.get
         ),
         new ServerConnection.ResponseCallback {
 
           def onResultReceived(resultResponse: ResultResponse) {
             log.debug("resultResponse={}", resultResponse)
-
-            // TODO
-            val quitZoneResponse = resultResponse.asInstanceOf[QuitZoneResponse.type]
 
             listener.foreach(_.onQuit())
 
@@ -791,23 +788,15 @@ class MonopolyGame(val context: Context)
   def setGameName(gameName: String) {
     serverConnection.sendCommand(
       SetZoneNameCommand(
-        zoneId,
+        zoneId.get,
         gameName
       ),
       new ServerConnection.ResponseCallback {
-
-        override def onErrorReceived(errorResponse: ErrorResponse) {
-          log.debug("errorResponse={}", errorResponse)
-
-          // TODO
-
-        }
 
         def onResultReceived(resultResponse: ResultResponse) {
           log.debug("resultResponse={}", resultResponse)
 
           // TODO
-          val setZoneName = resultResponse.asInstanceOf[SetZoneNameResponse.type]
 
         }
 
@@ -815,11 +804,11 @@ class MonopolyGame(val context: Context)
   }
 
   def setGameId(gameId: Long) {
-    this.gameId = gameId
+    this.gameId = Option(gameId)
   }
 
   def setInitialCapital(initialCapital: BigDecimal) {
-    this.initialCapital = initialCapital
+    this.initialCapital = Option(initialCapital)
   }
 
   def setListener(listener: MonopolyGame.Listener) {
@@ -827,9 +816,8 @@ class MonopolyGame(val context: Context)
     this.listener.foreach { listener =>
       if (zone == null) {
         listener.onQuit()
-      }
-      else {
-        listener.onJoined(zoneId)
+      } else {
+        listener.onJoined(zoneId.get)
         listener.onIdentitiesChanged(identities)
         listener.onPlayersChanged(players)
       }
@@ -837,7 +825,7 @@ class MonopolyGame(val context: Context)
   }
 
   def setZoneId(zoneId: ZoneId) {
-    this.zoneId = zoneId
+    this.zoneId = Option(zoneId)
   }
 
   def transfer(fromMember: MemberId, toMember: MemberId, amount: BigDecimal) {
@@ -858,7 +846,7 @@ class MonopolyGame(val context: Context)
     } else {
       serverConnection.sendCommand(
         AddTransactionCommand(
-          zoneId,
+          zoneId.get,
           // TODO
           "",
           fromAccountId.get,
@@ -878,7 +866,6 @@ class MonopolyGame(val context: Context)
             log.debug("resultResponse={}", resultResponse)
 
             // TODO
-            val addTransactionResponse = resultResponse.asInstanceOf[AddTransactionResponse]
 
           }
 
