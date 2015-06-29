@@ -46,18 +46,16 @@ object ServerConnection {
 
   trait ResponseCallback {
 
-    def onErrorReceived(errorResponse: ErrorResponse) {
-      sys.error(errorResponse.toString)
-    }
+    def onErrorReceived(errorResponse: ErrorResponse)
 
-    def onResultReceived(resultResponse: ResultResponse)
+    def onResultReceived(resultResponse: ResultResponse) = ()
 
     // TODO: Timeouts?
 
   }
 
-  private case class PendingRequest(callback: ResponseCallback,
-                                    requestMessage: JsonRpcRequestMessage,
+  private case class PendingRequest(requestMessage: JsonRpcRequestMessage,
+                                    callback: ResponseCallback,
                                     handler: Handler)
 
   private val ServerEndpoint = "https://liquidity.dhpcs.com/ws"
@@ -335,7 +333,7 @@ class ServerConnection(context: Context,
         )
         pendingRequests = pendingRequests +
           (jsonRpcRequestMessage.id.right.get ->
-            PendingRequest(responseCallback, jsonRpcRequestMessage, responseHandler))
+            PendingRequest(jsonRpcRequestMessage, responseCallback, responseHandler))
       } match {
         case Failure(e) =>
           log.warn(s"Failed to send: $jsonRpcRequestMessage", e)

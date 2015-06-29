@@ -12,10 +12,12 @@ import com.dhpcs.liquidity.MonopolyGame.PlayerWithBalanceAndConnectionState;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.fragments.AddPlayersDialogFragment;
 import com.dhpcs.liquidity.fragments.ChangeGameNameDialogFragment;
+import com.dhpcs.liquidity.fragments.ErrorResponseDialogFragment;
 import com.dhpcs.liquidity.fragments.IdentitiesFragment;
 import com.dhpcs.liquidity.fragments.MonopolyGameHolderFragment;
 import com.dhpcs.liquidity.fragments.PlayersFragment;
 import com.dhpcs.liquidity.fragments.TransferToPlayerDialogFragment;
+import com.dhpcs.liquidity.models.ErrorResponse;
 import com.dhpcs.liquidity.models.MemberId;
 import com.dhpcs.liquidity.models.ZoneId;
 
@@ -120,6 +122,14 @@ public class MonopolyGameActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_monopoly_game, menu);
         return true;
+    }
+
+    @Override
+    public void onErrorResponse(ErrorResponse errorResponse) {
+        ErrorResponseDialogFragment.newInstance(errorResponse).show(
+                getFragmentManager(),
+                "error_dialog_fragment"
+        );
     }
 
     @Override

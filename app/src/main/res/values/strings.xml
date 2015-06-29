@@ -7,8 +7,7 @@
     <string name="title_activity_monopoly_game">Monopoly Game</string>
 
     <string name="add_players">Add players</string>
-    <string name="bank_account_name">Bank</string>
-    <string name="bank_member_name">Banker</string>
+    <string name="bank_member_name">Bank</string>
     <string name="cancel">Cancel</string>
     <string name="change_game_name">Change game name</string>
     <string name="created_format_string">Created %1$s</string>

@@ -9,6 +9,9 @@ import com.dhpcs.liquidity.provider.LiquidityContract
 import com.dhpcs.liquidity.provider.LiquidityContract.Games
 import org.slf4j.LoggerFactory
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
 object MonopolyGame {
 
   trait IdentityWithBalance {
@@ -32,6 +35,8 @@ object MonopolyGame {
                                                  isConnected: Boolean)
 
   trait Listener {
+
+    def onErrorResponse(errorResponse: ErrorResponse)
 
     def onIdentitiesChanged(identities: Map[MemberId, IdentityWithBalance])
 
@@ -57,24 +62,24 @@ object MonopolyGame {
 
   }
 
-  val ZoneType = GameType.MONOPOLY
+  private val ZoneType = GameType.MONOPOLY
 
-  def aggregateMembersAccountBalances(memberIds: Set[MemberId],
-                                      accounts: Map[AccountId, Account],
-                                      accountBalances: Map[AccountId, BigDecimal]) =
+  private def aggregateMembersAccountBalances(memberIds: Set[MemberId],
+                                              accounts: Map[AccountId, Account],
+                                              accountBalances: Map[AccountId, BigDecimal]) =
     memberIds.map {
       memberId =>
         val membersAccountIds = accounts.filter {
           case (_, account) =>
             account.owners.contains(memberId)
         }.keys
-        val membersAccountBalances = membersAccountIds.map (
-            accountBalances.getOrElse(_, BigDecimal(0))
+        val membersAccountBalances = membersAccountIds.map(
+          accountBalances.getOrElse(_, BigDecimal(0))
         )
         memberId -> membersAccountBalances.sum
     }.toMap
 
-  def getUserName(context: Context, aliasConstant: String) = {
+  private def getUserName(context: Context, aliasConstant: String) = {
     val cursor = context.getContentResolver.query(
       ContactsContract.Profile.CONTENT_URI,
       Array(aliasConstant),
@@ -91,10 +96,10 @@ object MonopolyGame {
     userName
   }
 
-  def identitiesFromMembers(members: Map[MemberId, Member],
-                            balances: Map[MemberId, BigDecimal],
-                            clientPublicKey: PublicKey,
-                            equityHolderMemberId: MemberId) =
+  private def identitiesFromMembers(members: Map[MemberId, Member],
+                                    balances: Map[MemberId, BigDecimal],
+                                    clientPublicKey: PublicKey,
+                                    equityHolderMemberId: MemberId) =
     members.filter {
       case (memberId, member) =>
         member.publicKey == clientPublicKey
@@ -113,11 +118,11 @@ object MonopolyGame {
         )
     }
 
-  def identityFromMember(memberId: MemberId,
-                         member: Member,
-                         balances: Map[MemberId, BigDecimal],
-                         clientPublicKey: PublicKey,
-                         equityHolderMemberId: MemberId) =
+  private def identityFromMember(memberId: MemberId,
+                                 member: Member,
+                                 balances: Map[MemberId, BigDecimal],
+                                 clientPublicKey: PublicKey,
+                                 equityHolderMemberId: MemberId) =
     identitiesFromMembers(
       Map(memberId -> member),
       balances,
@@ -125,10 +130,10 @@ object MonopolyGame {
       equityHolderMemberId
     ).headOption
 
-  def playersFromMembers(members: Map[MemberId, Member],
-                         balances: Map[MemberId, BigDecimal],
-                         connectedPublicKeys: Set[PublicKey],
-                         selectedIdentityId: Option[MemberId]) =
+  private def playersFromMembers(members: Map[MemberId, Member],
+                                 balances: Map[MemberId, BigDecimal],
+                                 connectedPublicKeys: Set[PublicKey],
+                                 selectedIdentityId: Option[MemberId]) =
     members.filterNot {
       case (memberId, member) =>
         selectedIdentityId.contains(memberId)
@@ -142,11 +147,11 @@ object MonopolyGame {
         )
     }
 
-  def playerFromMember(memberId: MemberId,
-                       member: Member,
-                       balances: Map[MemberId, BigDecimal],
-                       connectedPublicKeys: Set[PublicKey],
-                       selectedIdentityId: Option[MemberId]) =
+  private def playerFromMember(memberId: MemberId,
+                               member: Member,
+                               balances: Map[MemberId, BigDecimal],
+                               connectedPublicKeys: Set[PublicKey],
+                               selectedIdentityId: Option[MemberId]) =
     playersFromMembers(
       Map(memberId -> member),
       balances,
@@ -159,13 +164,21 @@ object MonopolyGame {
 class MonopolyGame(context: Context)
   extends ConnectionStateListener with NotificationListener {
 
+  private trait ResponseCallbackWithErrorForwarding extends ServerConnection.ResponseCallback {
+
+    override def onErrorReceived(errorResponse: ErrorResponse) =
+      listener.foreach(_.onErrorResponse(errorResponse))
+
+  }
+
   // TODO: Review all other project Scala classes for non-private fields
 
   private val log = LoggerFactory.getLogger(getClass)
 
   private val serverConnection = new ServerConnection(context, this, this)
+  private val noopResponseCallback = new ResponseCallback with ResponseCallbackWithErrorForwarding
 
-  private var gameId = Option.empty[Long]
+  private var gameId = Option.empty[Future[Long]]
   private var zoneId = Option.empty[ZoneId]
   // TODO: Need to persist this
   private var initialCapital = Option.empty[BigDecimal]
@@ -182,9 +195,8 @@ class MonopolyGame(context: Context)
 
   private var listener = Option.empty[Listener]
 
-  def connectCreateAndOrJoinZone() {
+  def connectCreateAndOrJoinZone() =
     serverConnection.connect()
-  }
 
   private def createAndThenJoinZone() {
     val playerName = MonopolyGame.getUserName(
@@ -203,13 +215,13 @@ class MonopolyGame(context: Context)
           ClientKey.getInstance(context).getPublicKey
         ),
         Account(
-          context.getString(R.string.bank_account_name),
+          context.getString(R.string.bank_member_name),
           Set.empty
         )
       ),
-      new ResponseCallback {
+      new ResponseCallbackWithErrorForwarding {
 
-        def onResultReceived(resultResponse: ResultResponse) {
+        override def onResultReceived(resultResponse: ResultResponse) {
           log.debug("resultResponse={}", resultResponse)
 
           val createZoneResponse = resultResponse.asInstanceOf[CreateZoneResponse]
@@ -219,7 +231,8 @@ class MonopolyGame(context: Context)
 
         }
 
-      })
+      }
+    )
   }
 
   private def createPlayer(zoneId: ZoneId) {
@@ -237,9 +250,9 @@ class MonopolyGame(context: Context)
           playerName,
           ClientKey.getInstance(context).getPublicKey)
       ),
-      new ResponseCallback {
+      new ResponseCallbackWithErrorForwarding {
 
-        def onResultReceived(resultResponse: ResultResponse) {
+        override def onResultReceived(resultResponse: ResultResponse) {
           log.debug("resultResponse={}", resultResponse)
 
           val createMemberResponse = resultResponse.asInstanceOf[CreateMemberResponse]
@@ -248,36 +261,29 @@ class MonopolyGame(context: Context)
             CreateAccountCommand(
               zoneId,
               Account(
-                // TODO
-                "",
+                playerName,
                 Set(createMemberResponse.memberId)
               )
             ),
-            new ResponseCallback() {
-
-              def onResultReceived(resultResponse: ResultResponse) {
-                log.debug("resultResponse={}", resultResponse)
-
-              }
-
-            })
+            noopResponseCallback
+          )
         }
 
-      })
+      }
+    )
   }
 
-  private def disconnect() {
+  private def disconnect() =
     serverConnection.disconnect()
-  }
 
   private def join(zoneId: ZoneId) {
     serverConnection.sendCommand(
       JoinZoneCommand(
         zoneId
       ),
-      new ResponseCallback {
+      new ResponseCallbackWithErrorForwarding {
 
-        def onResultReceived(resultResponse: ResultResponse) {
+        override def onResultReceived(resultResponse: ResultResponse) {
           log.debug("resultResponse={}", resultResponse)
 
           val joinZoneResponse = resultResponse.asInstanceOf[JoinZoneResponse]
@@ -288,29 +294,35 @@ class MonopolyGame(context: Context)
           connectedClients = joinZoneResponse.connectedClients
           accountBalances = Map.empty
 
-          // TODO: Do off main thread
           val contentValues = new ContentValues
           contentValues.put(LiquidityContract.Games.GAME_TYPE, GameType.MONOPOLY.typeName)
           contentValues.put(LiquidityContract.Games.ZONE_ID, zoneId.id.toString)
           contentValues.put(LiquidityContract.Games.NAME, zone.name)
           contentValues.put(LiquidityContract.Games.CREATED, zone.created: java.lang.Long)
-
-          gameId = Some(gameId.fold(
-            ContentUris.parseId(
-              context.getContentResolver.insert(
-                LiquidityContract.Games.CONTENT_URI,
-                contentValues
+          gameId = gameId.fold(
+            Some(
+              Future(
+                ContentUris.parseId(
+                  context.getContentResolver.insert(
+                    LiquidityContract.Games.CONTENT_URI,
+                    contentValues
+                  )
+                )
               )
             )
           ) { gameId =>
-            context.getContentResolver.update(
-              ContentUris.withAppendedId(Games.CONTENT_URI, gameId),
-              contentValues,
-              null,
-              null
-            )
-            gameId
-          })
+            gameId.onSuccess { case id =>
+              Future(
+                context.getContentResolver.update(
+                  ContentUris.withAppendedId(Games.CONTENT_URI, id),
+                  contentValues,
+                  null,
+                  null
+                )
+              )
+            }
+            Some(gameId)
+          }
 
           val iterator = zone.transactions.valuesIterator
           while (iterator.hasNext) {
@@ -355,7 +367,8 @@ class MonopolyGame(context: Context)
 
         }
 
-      })
+      }
+    )
   }
 
   def onNotificationReceived(notification: Notification) {
@@ -365,7 +378,6 @@ class MonopolyGame(context: Context)
 
       case zoneNotification: ZoneNotification =>
 
-        val gameId = this.gameId.get
         val zoneId = this.zoneId.get
 
         if (zoneId != zoneNotification.zoneId) {
@@ -389,14 +401,14 @@ class MonopolyGame(context: Context)
 
             val previousPlayers = players
             players = players ++ joinedPlayers
-            listener.foreach { listener =>
-              joinedPlayers.foreach { joinedPlayer =>
+            listener.foreach(listener =>
+              joinedPlayers.foreach(joinedPlayer =>
                 listener.onPlayerSwapped(
                   joinedPlayer._1 -> previousPlayers(joinedPlayer._1),
                   joinedPlayer
                 )
-              }
-            }
+              )
+            )
 
           case clientQuitZoneNotification: ClientQuitZoneNotification =>
 
@@ -413,14 +425,14 @@ class MonopolyGame(context: Context)
 
             val previousPlayers = players
             players = players ++ quitPlayers
-            listener.foreach { listener =>
-              quitPlayers.foreach { quitPlayer =>
+            listener.foreach(listener =>
+              quitPlayers.foreach(quitPlayer =>
                 listener.onPlayerSwapped(
                   quitPlayer._1 -> previousPlayers(quitPlayer._1),
                   quitPlayer
                 )
-              }
-            }
+              )
+            )
 
           case zoneTerminatedNotification: ZoneTerminatedNotification =>
 
@@ -433,34 +445,23 @@ class MonopolyGame(context: Context)
 
             listener.foreach(_.onQuit())
 
-            serverConnection.sendCommand(
-              JoinZoneCommand(
-                zoneId
-              ),
-              new ResponseCallback {
-
-                def onResultReceived(resultResponse: ResultResponse) {
-                  log.debug("resultResponse={}", resultResponse)
-
-                  // TODO
-
-                }
-
-              })
+            join(zoneId)
 
           case zoneNameSetNotification: ZoneNameSetNotification =>
 
-            // TODO: Do off main thread
             val contentValues = new ContentValues
             contentValues.put(LiquidityContract.Games.ZONE_ID, zoneId.id.toString)
             contentValues.put(LiquidityContract.Games.NAME, zoneNameSetNotification.name)
-
-            context.getContentResolver.update(
-              ContentUris.withAppendedId(Games.CONTENT_URI, gameId),
-              contentValues,
-              null,
-              null
-            )
+            gameId.foreach(_.onSuccess { case id =>
+              Future(
+                context.getContentResolver.update(
+                  ContentUris.withAppendedId(Games.CONTENT_URI, id),
+                  contentValues,
+                  null,
+                  null
+                )
+              )
+            })
 
             zone = zone.copy(name = zoneNameSetNotification.name)
 
@@ -471,6 +472,8 @@ class MonopolyGame(context: Context)
                 + (memberCreatedNotification.memberId ->
                 memberCreatedNotification.member)
             )
+
+            memberBalances = memberBalances + (memberCreatedNotification.memberId -> BigDecimal(0))
 
             val createdIdentity = MonopolyGame.identityFromMember(
               memberCreatedNotification.memberId,
@@ -609,7 +612,7 @@ class MonopolyGame(context: Context)
               zone.accounts,
               accountBalances
             ).filterNot {
-              case (memberId, balance) => memberBalances.get(memberId).contains(balance)
+              case (memberId, balance) => memberBalances(memberId) == balance
             }
 
             memberBalances = memberBalances ++ updatedMemberBalances
@@ -629,25 +632,25 @@ class MonopolyGame(context: Context)
 
             val previousIdentities = identities
             identities = identities ++ updatedIdentities
-            listener.foreach { listener =>
-              updatedIdentities.foreach { updatedIdentity =>
+            listener.foreach(listener =>
+              updatedIdentities.foreach(updatedIdentity =>
                 listener.onIdentitySwapped(
                   updatedIdentity._1 -> previousIdentities(updatedIdentity._1),
                   updatedIdentity
                 )
-              }
-            }
+              )
+            )
 
             val previousPlayers = players
             players = players ++ updatedPlayers
-            listener.foreach { listener =>
-              updatedPlayers.foreach { updatedPlayer =>
+            listener.foreach(listener =>
+              updatedPlayers.foreach(updatedPlayer =>
                 listener.onPlayerSwapped(
                   updatedPlayer._1 -> previousPlayers(updatedPlayer._1),
                   updatedPlayer
                 )
-              }
-            }
+              )
+            )
 
           case transactionAddedNotification: TransactionAddedNotification =>
 
@@ -671,7 +674,7 @@ class MonopolyGame(context: Context)
               zone.accounts,
               accountBalances
             ).filterNot {
-              case (memberId, balance) => memberBalances.get(memberId).contains(balance)
+              case (memberId, balance) => memberBalances(memberId) == balance
             }
 
             memberBalances = memberBalances ++ updatedMemberBalances
@@ -691,25 +694,25 @@ class MonopolyGame(context: Context)
 
             val previousIdentities = identities
             identities = identities ++ updatedIdentities
-            listener.foreach { listener =>
-              updatedIdentities.foreach { updatedIdentity =>
+            listener.foreach(listener =>
+              updatedIdentities.foreach(updatedIdentity =>
                 listener.onIdentitySwapped(
                   updatedIdentity._1 -> previousIdentities(updatedIdentity._1),
                   updatedIdentity
                 )
-              }
-            }
+              )
+            )
 
             val previousPlayers = players
             players = players ++ updatedPlayers
-            listener.foreach { listener =>
-              updatedPlayers.foreach { updatedPlayer =>
+            listener.foreach(listener =>
+              updatedPlayers.foreach(updatedPlayer =>
                 listener.onPlayerSwapped(
                   updatedPlayer._1 -> previousPlayers(updatedPlayer._1),
                   updatedPlayer
                 )
-              }
-            }
+              )
+            )
 
         }
 
@@ -736,7 +739,7 @@ class MonopolyGame(context: Context)
     }
   }
 
-  def quitAndOrDisconnect() {
+  def quitAndOrDisconnect() =
     if (zone == null) {
       disconnect()
     } else {
@@ -744,9 +747,9 @@ class MonopolyGame(context: Context)
         QuitZoneCommand(
           zoneId.get
         ),
-        new ServerConnection.ResponseCallback {
+        new ResponseCallbackWithErrorForwarding {
 
-          def onResultReceived(resultResponse: ResultResponse) {
+          override def onResultReceived(resultResponse: ResultResponse) {
             log.debug("resultResponse={}", resultResponse)
 
             listener.foreach(_.onQuit())
@@ -756,9 +759,9 @@ class MonopolyGame(context: Context)
 
           }
 
-        })
+        }
+      )
     }
-  }
 
   def getGameName =
     if (zone == null) {
@@ -767,26 +770,21 @@ class MonopolyGame(context: Context)
       zone.name
     }
 
-  def setGameName(gameName: String) {
+  def setGameName(gameName: String) =
     serverConnection.sendCommand(
       SetZoneNameCommand(
         zoneId.get,
         gameName
       ),
-      new ServerConnection.ResponseCallback {
-
-        def onResultReceived(resultResponse: ResultResponse) {
-          log.debug("resultResponse={}", resultResponse)
-
-          // TODO
-
-        }
-
-      })
-  }
+      noopResponseCallback
+    )
 
   def setGameId(gameId: Long) {
-    this.gameId = Option(gameId)
+    this.gameId = Option(gameId).fold[Option[Future[Long]]](
+      None
+    )(gameId =>
+      Some(Future(gameId))
+      )
   }
 
   def setInitialCapital(initialCapital: BigDecimal) {
@@ -795,7 +793,7 @@ class MonopolyGame(context: Context)
 
   def setListener(listener: MonopolyGame.Listener) {
     this.listener = Option(listener)
-    this.listener.foreach { listener =>
+    this.listener.foreach(listener =>
       if (zone == null) {
         listener.onQuit()
       } else {
@@ -803,7 +801,7 @@ class MonopolyGame(context: Context)
         listener.onIdentitiesChanged(identities)
         listener.onPlayersChanged(players)
       }
-    }
+    )
   }
 
   def setSelectedIdentity(selectedIdentityId: MemberId) {
@@ -855,23 +853,8 @@ class MonopolyGame(context: Context)
           toAccountId.get,
           amount
         ),
-        new ServerConnection.ResponseCallback {
-
-          override def onErrorReceived(errorResponse: ErrorResponse) {
-            log.debug("errorResponse={}", errorResponse)
-
-            // TODO
-
-          }
-
-          def onResultReceived(resultResponse: ResultResponse) {
-            log.debug("resultResponse={}", resultResponse)
-
-            // TODO
-
-          }
-
-        })
+        noopResponseCallback
+      )
     }
   }
 
