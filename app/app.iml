@@ -102,8 +102,8 @@
     <orderEntry type="library" exported="" name="okhttp-ws-2.3.0" level="project" />
     <orderEntry type="library" exported="" name="commons-io-2.4" level="project" />
     <orderEntry type="library" exported="" name="pkix-1.51.0.0" level="project" />
-    <orderEntry type="library" exported="" name="joda-convert-1.6" level="project" />
     <orderEntry type="library" exported="" name="okhttp-2.3.0" level="project" />
+    <orderEntry type="library" exported="" name="joda-convert-1.6" level="project" />
     <orderEntry type="library" exported="" name="support-annotations-22.1.1" level="project" />
     <orderEntry type="library" exported="" name="jsr305-3.0.0" level="project" />
     <orderEntry type="library" exported="" name="prov-1.51.0.0" level="project" />
@@ -113,8 +113,8 @@
     <orderEntry type="library" exported="" name="core-2.0" level="project" />
     <orderEntry type="library" exported="" name="config-1.2.1" level="project" />
     <orderEntry type="library" exported="" name="jackson-annotations-2.3.2" level="project" />
-    <orderEntry type="library" exported="" name="core-1.51.0.0" level="project" />
     <orderEntry type="library" exported="" name="core-3.2.0" level="project" />
+    <orderEntry type="library" exported="" name="core-1.51.0.0" level="project" />
     <orderEntry type="library" exported="" name="android-2.0" level="project" />
     <orderEntry type="library" exported="" name="scala-stm_2.11-0.7" level="project" />
     <orderEntry type="library" exported="" name="play-services-base-7.3.0" level="project" />

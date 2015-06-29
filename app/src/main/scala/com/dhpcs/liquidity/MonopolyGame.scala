@@ -57,29 +57,22 @@ object MonopolyGame {
 
   }
 
-  // TODO
   val ZoneType = GameType.MONOPOLY
-  val BankMemberName = "Banker"
-  val BankAccountName = "Bank"
-  val GameNamePrefix = "Bank of "
-  val AccountNameSuffix = "'s account"
 
-  // TODO
-  def aggregateMembersAccountBalances(members: Map[MemberId, Member],
+  def aggregateMembersAccountBalances(memberIds: Set[MemberId],
                                       accounts: Map[AccountId, Account],
                                       accountBalances: Map[AccountId, BigDecimal]) =
-    members.map {
-      case (memberId, _) =>
-        val membersAccounts = accounts.filter {
+    memberIds.map {
+      memberId =>
+        val membersAccountIds = accounts.filter {
           case (_, account) =>
             account.owners.contains(memberId)
-        }
-        val membersAccountBalances = membersAccounts.map {
-          case (accountId, _) =>
-            accountId -> accountBalances.getOrElse(accountId, BigDecimal(0))
-        }
-        memberId -> membersAccountBalances.values.sum
-    }
+        }.keys
+        val membersAccountBalances = membersAccountIds.map (
+            accountBalances.getOrElse(_, BigDecimal(0))
+        )
+        memberId -> membersAccountBalances.sum
+    }.toMap
 
   def getUserName(context: Context, aliasConstant: String) = {
     val cursor = context.getContentResolver.query(
@@ -92,14 +85,11 @@ object MonopolyGame {
     val userName = if (cursor.moveToNext) {
       cursor.getString(cursor.getColumnIndex(aliasConstant))
     } else {
-      // TODO
-      "Unnamed"
+      context.getString(R.string.unnamed)
     }
     cursor.close()
     userName
   }
-
-  // TODO: Partition?
 
   def identitiesFromMembers(members: Map[MemberId, Member],
                             balances: Map[MemberId, BigDecimal],
@@ -206,14 +196,14 @@ class MonopolyGame(context: Context)
 
     serverConnection.sendCommand(
       CreateZoneCommand(
-        MonopolyGame.GameNamePrefix + playerName,
+        context.getString(R.string.game_name_format_string, playerName),
         MonopolyGame.ZoneType.typeName,
         Member(
-          MonopolyGame.BankMemberName,
+          context.getString(R.string.bank_member_name),
           ClientKey.getInstance(context).getPublicKey
         ),
         Account(
-          MonopolyGame.BankAccountName,
+          context.getString(R.string.bank_account_name),
           Set.empty
         )
       ),
@@ -258,7 +248,8 @@ class MonopolyGame(context: Context)
             CreateAccountCommand(
               zoneId,
               Account(
-                playerName + MonopolyGame.AccountNameSuffix,
+                // TODO
+                "",
                 Set(createMemberResponse.memberId)
               )
             ),
@@ -334,7 +325,7 @@ class MonopolyGame(context: Context)
           }
 
           memberBalances = MonopolyGame.aggregateMembersAccountBalances(
-            zone.members,
+            zone.members.keySet,
             zone.accounts,
             accountBalances
           )
@@ -614,7 +605,7 @@ class MonopolyGame(context: Context)
             )
 
             val updatedMemberBalances = MonopolyGame.aggregateMembersAccountBalances(
-              zone.members,
+              zone.members.keySet,
               zone.accounts,
               accountBalances
             ).filterNot {
@@ -676,7 +667,7 @@ class MonopolyGame(context: Context)
               (transaction.to -> newDestinationBalance)
 
             val updatedMemberBalances = MonopolyGame.aggregateMembersAccountBalances(
-              zone.members,
+              zone.members.keySet,
               zone.accounts,
               accountBalances
             ).filterNot {
@@ -826,7 +817,7 @@ class MonopolyGame(context: Context)
     val addedPlayer = updatedPlayers -- players.keys
     val removedPlayer = players -- updatedPlayers.keys
     players = updatedPlayers
-    if(addedPlayer.nonEmpty && removedPlayer.nonEmpty) {
+    if (addedPlayer.nonEmpty && removedPlayer.nonEmpty) {
       listener.foreach(_.onPlayerSwapped(removedPlayer.head, addedPlayer.head))
     } else if (addedPlayer.nonEmpty) {
       listener.foreach(_.onPlayerAdded(addedPlayer.head))
