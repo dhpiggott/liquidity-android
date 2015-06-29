@@ -145,29 +145,4 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
         listAdapter.notifyDataSetChanged();
     }
 
-    public void onPlayerAdded(
-            Tuple2<MemberId, PlayerWithBalanceAndConnectionState> addedPlayer) {
-        listAdapter.setNotifyOnChange(false);
-        listAdapter.add(addedPlayer);
-        listAdapter.sort(playerComparator);
-        listAdapter.notifyDataSetChanged();
-    }
-
-    public void onPlayerRemoved(
-            Tuple2<MemberId, PlayerWithBalanceAndConnectionState> removedPlayer) {
-        listAdapter.setNotifyOnChange(false);
-        listAdapter.remove(removedPlayer);
-        listAdapter.sort(playerComparator);
-        listAdapter.notifyDataSetChanged();
-    }
-
-    public void onPlayerSwapped(Tuple2<MemberId, PlayerWithBalanceAndConnectionState> removedPlayer,
-                                Tuple2<MemberId, PlayerWithBalanceAndConnectionState> addedPlayer) {
-        listAdapter.setNotifyOnChange(false);
-        listAdapter.remove(removedPlayer);
-        listAdapter.add(addedPlayer);
-        listAdapter.sort(playerComparator);
-        listAdapter.notifyDataSetChanged();
-    }
-
 }
