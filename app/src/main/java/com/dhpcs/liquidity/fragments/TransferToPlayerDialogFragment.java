@@ -57,6 +57,8 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
     // Add buttons with quantity suffixes
     // Show source with spinner
     // Show destination
+    // Add support for multiple destinations (to speed up initial capital allocation etc.), with
+    // quantity presets
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         return new AlertDialog.Builder(getActivity())

@@ -10,18 +10,16 @@ import android.widget.EditText;
 
 import com.dhpcs.liquidity.R;
 
-import java.math.BigDecimal;
-
-public class NewMonopolyGameDialogFragment extends DialogFragment {
+public class CreateExtraIdentityDialogFragment extends DialogFragment {
 
     public interface Listener {
 
-        void onInitialCapitalEntered(BigDecimal initialCapital);
+        void onIdentityNameEntered(String name);
 
     }
 
-    public static NewMonopolyGameDialogFragment newInstance() {
-        return new NewMonopolyGameDialogFragment();
+    public static CreateExtraIdentityDialogFragment newInstance() {
+        return new CreateExtraIdentityDialogFragment();
     }
 
     private Listener listener;
@@ -33,27 +31,24 @@ public class NewMonopolyGameDialogFragment extends DialogFragment {
             listener = (Listener) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
-                    + " must implement NewMonopolyGameDialogFragment.Listener");
+                    + " must implement CreateExtraIdentityDialogFragment.Listener");
         }
     }
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         return new AlertDialog.Builder(getActivity())
-                .setTitle(R.string.enter_starting_capital)
-                        // TODO: Spinner, suffixes, memory
-                .setView(R.layout.fragment_new_monopoly_game_dialog)
+                .setTitle(R.string.enter_identity_name)
+                .setView(R.layout.fragment_create_extra_identity_dialog)
                 .setPositiveButton(
                         R.string.ok,
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int whichButton) {
                                 if (listener != null) {
-                                    listener.onInitialCapitalEntered(
-                                            new BigDecimal(
-                                                    ((EditText) getDialog().findViewById(
-                                                            R.id.edittext_starting_capital
-                                                    )).getText().toString()
-                                            )
+                                    listener.onIdentityNameEntered(
+                                            ((EditText) getDialog().findViewById(
+                                                    R.id.edittext_identity_name
+                                            )).getText().toString()
                                     );
                                 }
                                 getDialog().dismiss();

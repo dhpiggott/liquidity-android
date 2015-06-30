@@ -12,6 +12,7 @@ import com.dhpcs.liquidity.MonopolyGame.PlayerWithBalanceAndConnectionState;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.fragments.AddPlayersDialogFragment;
 import com.dhpcs.liquidity.fragments.ChangeGameNameDialogFragment;
+import com.dhpcs.liquidity.fragments.CreateExtraIdentityDialogFragment;
 import com.dhpcs.liquidity.fragments.ErrorResponseDialogFragment;
 import com.dhpcs.liquidity.fragments.IdentitiesFragment;
 import com.dhpcs.liquidity.fragments.MonopolyGameHolderFragment;
@@ -29,13 +30,13 @@ import scala.Tuple2;
 
 public class MonopolyGameActivity extends AppCompatActivity
         implements ChangeGameNameDialogFragment.Listener,
+        CreateExtraIdentityDialogFragment.Listener,
         IdentitiesFragment.Listener,
         MonopolyGame.Listener,
         PlayersFragment.Listener,
         TransferToPlayerDialogFragment.Listener {
 
     public static final String EXTRA_GAME_ID = "game_id";
-    public static final String EXTRA_INITIAL_CAPITAL = "initial_capital";
     public static final String EXTRA_ZONE_ID = "zone_id";
 
     public static String formatBalance(Tuple2<scala.math.BigDecimal, String>
@@ -77,15 +78,8 @@ public class MonopolyGameActivity extends AppCompatActivity
 
             MonopolyGame monopolyGame = new MonopolyGame(this);
 
-            if (getIntent().getExtras().containsKey(EXTRA_INITIAL_CAPITAL)) {
-
-                monopolyGame.setInitialCapital(
-                        scala.math.BigDecimal.javaBigDecimal2bigDecimal(
-                                (BigDecimal) getIntent().getExtras().getSerializable(EXTRA_INITIAL_CAPITAL)
-                        )
-                );
-
-            } else if (getIntent().getExtras().containsKey(EXTRA_ZONE_ID)) {
+            if (getIntent().getExtras() != null
+                    && getIntent().getExtras().containsKey(EXTRA_ZONE_ID)) {
 
                 monopolyGame.setZoneId(
                         (ZoneId) getIntent().getExtras().getSerializable(EXTRA_ZONE_ID)
@@ -99,10 +93,6 @@ public class MonopolyGameActivity extends AppCompatActivity
 
                 }
 
-            } else {
-                throw new RuntimeException(
-                        "Neither EXTRA_INITIAL_CAPITAL nor EXTRA_ZONE_ID was provided"
-                );
             }
 
             monopolyGameHolderFragment = new MonopolyGameHolderFragment(monopolyGame);
@@ -148,36 +138,14 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onIdentityAdded(
-            Tuple2<MemberId, IdentityWithBalance> addedIdentity) {
-        identitiesFragment.onIdentityAdded(addedIdentity);
-        monopolyGameHolderFragment.getMonopolyGame().setSelectedIdentity(
-                identitiesFragment.getIdentityId(identitiesFragment.getSelectedIdentityPage())
-        );
+    public void onIdentityNameEntered(String name) {
+        monopolyGameHolderFragment.getMonopolyGame().createIdentity(name);
     }
 
     @Override
     public void onIdentityPageSelected(int page) {
         monopolyGameHolderFragment.getMonopolyGame().setSelectedIdentity(
                 identitiesFragment.getIdentityId(page)
-        );
-    }
-
-    @Override
-    public void onIdentityRemoved(
-            Tuple2<MemberId, IdentityWithBalance> removedIdentity) {
-        identitiesFragment.onIdentityRemoved(removedIdentity);
-        monopolyGameHolderFragment.getMonopolyGame().setSelectedIdentity(
-                identitiesFragment.getIdentityId(identitiesFragment.getSelectedIdentityPage())
-        );
-    }
-
-    @Override
-    public void onIdentitySwapped(Tuple2<MemberId, IdentityWithBalance> removedIdentity,
-                                  Tuple2<MemberId, IdentityWithBalance> addedIdentity) {
-        identitiesFragment.onIdentitySwapped(removedIdentity, addedIdentity);
-        monopolyGameHolderFragment.getMonopolyGame().setSelectedIdentity(
-                identitiesFragment.getIdentityId(identitiesFragment.getSelectedIdentityPage())
         );
     }
 
@@ -204,6 +172,12 @@ public class MonopolyGameActivity extends AppCompatActivity
                 ).show(
                         getFragmentManager(),
                         "change_game_name_dialog_fragment"
+                );
+                return true;
+            case R.id.action_create_extra_identity:
+                CreateExtraIdentityDialogFragment.newInstance().show(
+                        getFragmentManager(),
+                        "create_extra_identity_dialog_fragment"
                 );
                 return true;
         }
@@ -235,6 +209,7 @@ public class MonopolyGameActivity extends AppCompatActivity
     public boolean onPrepareOptionsMenu(Menu menu) {
         menu.findItem(R.id.action_add_players).setVisible(zoneId != null);
         menu.findItem(R.id.action_change_game_name).setVisible(zoneId != null);
+        menu.findItem(R.id.action_create_extra_identity).setVisible(zoneId != null);
         return true;
     }
 

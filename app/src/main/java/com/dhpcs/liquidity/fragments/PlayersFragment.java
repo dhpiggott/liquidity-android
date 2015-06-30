@@ -38,7 +38,7 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
                 @Override
                 public int compare(Tuple2<MemberId, PlayerWithBalanceAndConnectionState> lhs,
                                    Tuple2<MemberId, PlayerWithBalanceAndConnectionState> rhs) {
-                    return lhs._2().member().name().compareTo(rhs._2().member().name());
+                    return lhs._2().member().name().compareToIgnoreCase(rhs._2().member().name());
                 }
 
             };

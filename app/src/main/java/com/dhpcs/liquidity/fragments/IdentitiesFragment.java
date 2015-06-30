@@ -35,7 +35,7 @@ public class IdentitiesFragment extends Fragment {
                 @Override
                 public int compare(Tuple2<MemberId, IdentityWithBalance> lhs,
                                    Tuple2<MemberId, IdentityWithBalance> rhs) {
-                    return lhs._2().member().name().compareTo(rhs._2().member().name());
+                    return lhs._2().member().name().compareToIgnoreCase(rhs._2().member().name());
                 }
 
             };
@@ -73,19 +73,7 @@ public class IdentitiesFragment extends Fragment {
 
         @Override
         public int getItemPosition(Object item) {
-            IdentityFragment identityFragment = (IdentityFragment) item;
-            Tuple2<MemberId, IdentityWithBalance> identity = identityFragment.getIdentity();
-            int position = identities.indexOf(identity);
-
-            if (position >= 0) {
-                return position;
-            } else {
-                return POSITION_NONE;
-            }
-        }
-
-        public void remove(Tuple2<MemberId, IdentityWithBalance> identity) {
-            identities.remove(identity);
+            return POSITION_NONE;
         }
 
         public void sort(Comparator<Tuple2<MemberId, IdentityWithBalance>> comparator) {
@@ -170,28 +158,6 @@ public class IdentitiesFragment extends Fragment {
             Tuple2<MemberId, IdentityWithBalance> changedIdentity = iterator.next();
             playersFragmentStatePagerAdapter.add(changedIdentity);
         }
-        playersFragmentStatePagerAdapter.sort(identityComparator);
-        playersFragmentStatePagerAdapter.notifyDataSetChanged();
-    }
-
-    public void onIdentityAdded(
-            Tuple2<MemberId, IdentityWithBalance> addedIdentity) {
-        playersFragmentStatePagerAdapter.add(addedIdentity);
-        playersFragmentStatePagerAdapter.sort(identityComparator);
-        playersFragmentStatePagerAdapter.notifyDataSetChanged();
-    }
-
-    public void onIdentityRemoved(
-            Tuple2<MemberId, IdentityWithBalance> removedIdentity) {
-        playersFragmentStatePagerAdapter.remove(removedIdentity);
-        playersFragmentStatePagerAdapter.sort(identityComparator);
-        playersFragmentStatePagerAdapter.notifyDataSetChanged();
-    }
-
-    public void onIdentitySwapped(Tuple2<MemberId, IdentityWithBalance> removedIdentity,
-                                  Tuple2<MemberId, IdentityWithBalance> addedIdentity) {
-        playersFragmentStatePagerAdapter.remove(removedIdentity);
-        playersFragmentStatePagerAdapter.add(addedIdentity);
         playersFragmentStatePagerAdapter.sort(identityComparator);
         playersFragmentStatePagerAdapter.notifyDataSetChanged();
     }

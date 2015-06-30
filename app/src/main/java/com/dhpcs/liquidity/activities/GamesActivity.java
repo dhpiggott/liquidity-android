@@ -10,26 +10,19 @@ import com.dhpcs.liquidity.GameType;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.fragments.GamesFragment;
 import com.dhpcs.liquidity.fragments.JoinGameDialogFragment;
-import com.dhpcs.liquidity.fragments.NewMonopolyGameDialogFragment;
 import com.dhpcs.liquidity.models.ZoneId;
-
-import java.math.BigDecimal;
 
 public class GamesActivity extends AppCompatActivity
         implements GamesFragment.Listener,
-        JoinGameDialogFragment.Listener,
-        NewMonopolyGameDialogFragment.Listener {
+        JoinGameDialogFragment.Listener {
 
     public static final String GAME_TYPE = GamesFragment.GAME_TYPE;
 
-    private static void createGame(Context context, BigDecimal initialCapital) {
+    private static void createGame(Context context) {
         context.startActivity(
                 new Intent(
                         context,
                         MonopolyGameActivity.class
-                ).putExtra(
-                        MonopolyGameActivity.EXTRA_INITIAL_CAPITAL,
-                        initialCapital
                 )
         );
     }
@@ -69,11 +62,7 @@ public class GamesActivity extends AppCompatActivity
         findViewById(R.id.button_new_game).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                NewMonopolyGameDialogFragment.newInstance()
-                        .show(
-                                getFragmentManager(),
-                                "new_monopoly_game_dialog_fragment"
-                        );
+                createGame(GamesActivity.this);
             }
         });
 
@@ -104,11 +93,6 @@ public class GamesActivity extends AppCompatActivity
     @Override
     public void onGameZoneIdScanned(ZoneId zoneId) {
         joinGame(this, zoneId);
-    }
-
-    @Override
-    public void onInitialCapitalEntered(BigDecimal initialCapital) {
-        createGame(this, initialCapital);
     }
 
 }
