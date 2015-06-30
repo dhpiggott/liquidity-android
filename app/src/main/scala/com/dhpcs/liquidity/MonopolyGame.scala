@@ -48,7 +48,7 @@ object MonopolyGame {
 
   }
 
-  private val ZoneType = GameType.MONOPOLY
+  private val ZoneType = MONOPOLY
 
   private def aggregateMembersAccountBalances(memberIds: Set[MemberId],
                                               accounts: Map[AccountId, Account],
@@ -186,7 +186,7 @@ class MonopolyGame(context: Context)
     serverConnection.sendCommand(
       CreateZoneCommand(
         context.getString(R.string.game_name_format_string, playerName),
-        MonopolyGame.ZoneType.typeName,
+        MonopolyGame.ZoneType.name,
         Member(
           context.getString(R.string.bank_member_name),
           ClientKey.getInstance(context).getPublicKey
@@ -286,7 +286,7 @@ class MonopolyGame(context: Context)
           accountBalances = Map.empty
 
           val contentValues = new ContentValues
-          contentValues.put(LiquidityContract.Games.GAME_TYPE, GameType.MONOPOLY.typeName)
+          contentValues.put(LiquidityContract.Games.GAME_TYPE, MONOPOLY.name)
           contentValues.put(LiquidityContract.Games.ZONE_ID, zoneId.id.toString)
           contentValues.put(LiquidityContract.Games.NAME, zone.name)
           contentValues.put(LiquidityContract.Games.CREATED, zone.created: java.lang.Long)

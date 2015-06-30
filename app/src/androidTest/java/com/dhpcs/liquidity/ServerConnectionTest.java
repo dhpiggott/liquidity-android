@@ -93,7 +93,7 @@ public class ServerConnectionTest extends AndroidTestCase
         serverConnection.sendCommand(
                 new CreateZoneCommand(
                         "Dave's zone",
-                        GameType.TEST.typeName,
+                        TEST$.MODULE$.name(),
                         new Member(
                                 "Banker",
                                 ClientKey.getInstance(getContext()).getPublicKey()

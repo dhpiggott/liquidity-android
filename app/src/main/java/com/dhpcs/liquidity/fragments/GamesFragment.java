@@ -123,7 +123,7 @@ public class GamesFragment extends Fragment
                         },
                         LiquidityContract.Games.GAME_TYPE + " = ?",
                         new String[]{
-                                ((GameType) getArguments().getSerializable(GAME_TYPE)).typeName
+                                ((GameType) getArguments().getSerializable(GAME_TYPE)).name()
                         },
                         LiquidityContract.Games.CREATED + " DESC"
                 );
