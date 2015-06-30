@@ -35,6 +35,7 @@ public class CreateExtraIdentityDialogFragment extends DialogFragment {
         }
     }
 
+    // TODO: Presets - e.g. Free Parking
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         return new AlertDialog.Builder(getActivity())
