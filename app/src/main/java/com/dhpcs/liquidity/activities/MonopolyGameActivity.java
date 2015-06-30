@@ -12,6 +12,7 @@ import com.dhpcs.liquidity.MonopolyGame.PlayerWithBalanceAndConnectionState;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.fragments.AddPlayersDialogFragment;
 import com.dhpcs.liquidity.fragments.ChangeGameNameDialogFragment;
+import com.dhpcs.liquidity.fragments.ChangeIdentityNameDialogFragment;
 import com.dhpcs.liquidity.fragments.CreateExtraIdentityDialogFragment;
 import com.dhpcs.liquidity.fragments.ErrorResponseDialogFragment;
 import com.dhpcs.liquidity.fragments.IdentitiesFragment;
@@ -30,6 +31,7 @@ import scala.Tuple2;
 
 public class MonopolyGameActivity extends AppCompatActivity
         implements ChangeGameNameDialogFragment.Listener,
+        ChangeIdentityNameDialogFragment.Listener,
         CreateExtraIdentityDialogFragment.Listener,
         IdentitiesFragment.Listener,
         MonopolyGame.Listener,
@@ -143,6 +145,11 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
+    public void onIdentityNameEntered(MemberId identityId, String name) {
+        monopolyGameHolderFragment.getMonopolyGame().setIdentityName(identityId, name);
+    }
+
+    @Override
     public void onIdentityPageSelected(int page) {
         monopolyGameHolderFragment.getMonopolyGame().setSelectedIdentity(
                 identitiesFragment.getIdentityId(page)
@@ -173,6 +180,20 @@ public class MonopolyGameActivity extends AppCompatActivity
                         getFragmentManager(),
                         "change_game_name_dialog_fragment"
                 );
+                return true;
+            case R.id.action_change_identity_name:
+                MemberId identityId = identitiesFragment.getIdentityId(
+                        identitiesFragment.getSelectedIdentityPage()
+                );
+                if (identityId != null) {
+                    ChangeIdentityNameDialogFragment.newInstance(
+                            identityId,
+                            monopolyGameHolderFragment.getMonopolyGame().getIdentityName(identityId)
+                    ).show(
+                            getFragmentManager(),
+                            "change_identity_name_dialog_fragment"
+                    );
+                }
                 return true;
             case R.id.action_create_extra_identity:
                 CreateExtraIdentityDialogFragment.newInstance().show(
@@ -209,6 +230,7 @@ public class MonopolyGameActivity extends AppCompatActivity
     public boolean onPrepareOptionsMenu(Menu menu) {
         menu.findItem(R.id.action_add_players).setVisible(zoneId != null);
         menu.findItem(R.id.action_change_game_name).setVisible(zoneId != null);
+        menu.findItem(R.id.action_change_identity_name).setVisible(zoneId != null);
         menu.findItem(R.id.action_create_extra_identity).setVisible(zoneId != null);
         return true;
     }

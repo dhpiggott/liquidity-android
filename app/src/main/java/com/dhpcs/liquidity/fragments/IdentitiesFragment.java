@@ -76,6 +76,10 @@ public class IdentitiesFragment extends Fragment {
             return POSITION_NONE;
         }
 
+        public int getPosition(Tuple2<MemberId, IdentityWithBalance> identity) {
+            return identities.indexOf(identity);
+        }
+
         public void sort(Comparator<Tuple2<MemberId, IdentityWithBalance>> comparator) {
             Collections.sort(identities, comparator);
         }
@@ -151,6 +155,7 @@ public class IdentitiesFragment extends Fragment {
     public void onIdentitiesChanged(scala.collection.immutable
                                             .Map<MemberId, IdentityWithBalance>
                                             identities) {
+        MemberId selectedIdentityId = getIdentityId(getSelectedIdentityPage());
         playersFragmentStatePagerAdapter.clear();
         Iterator<Tuple2<MemberId, IdentityWithBalance>> iterator = identities
                 .iterator();
@@ -160,6 +165,17 @@ public class IdentitiesFragment extends Fragment {
         }
         playersFragmentStatePagerAdapter.sort(identityComparator);
         playersFragmentStatePagerAdapter.notifyDataSetChanged();
+        if (selectedIdentityId != null) {
+            viewPagerIdentities.setCurrentItem(
+                    playersFragmentStatePagerAdapter.getPosition(
+                            Tuple2.apply(
+                                    selectedIdentityId,
+                                    identities.apply(selectedIdentityId)
+                            )
+                    ),
+                    false
+            );
+        }
     }
 
 }

@@ -10,6 +10,7 @@
     <string name="bank_member_name">Bank</string>
     <string name="cancel">Cancel</string>
     <string name="change_game_name">Change game name</string>
+    <string name="change_identity_name">Change identity name</string>
     <string name="create_extra_identity">Create extra identity</string>
     <string name="created_format_string">Created %1$s</string>
     <string name="enter_game_name">Enter game name</string>

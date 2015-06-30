@@ -257,6 +257,16 @@ class MonopolyGame(context: Context)
   private def disconnect() =
     serverConnection.disconnect()
 
+  def getGameName =
+    if (zone == null) {
+      null
+    } else {
+      zone.name
+    }
+
+  def getIdentityName(identityId: MemberId) =
+    zone.members(identityId).name
+
   private def join(zoneId: ZoneId) {
     serverConnection.sendCommand(
       JoinZoneCommand(
@@ -474,6 +484,10 @@ class MonopolyGame(context: Context)
                 memberUpdatedNotification.member)
             )
 
+            val removedIdentity = identities.get(memberUpdatedNotification.memberId).map(
+              memberUpdatedNotification.memberId -> _
+            )
+
             val updatedIdentity = MonopolyGame.identityFromMember(
               memberUpdatedNotification.memberId,
               memberUpdatedNotification.member,
@@ -482,13 +496,18 @@ class MonopolyGame(context: Context)
               zone.equityHolderMemberId
             )
 
-            updatedIdentity.foreach { updatedIdentity =>
-              if (players.contains(updatedIdentity._1)) {
-                players = players - updatedIdentity._1
-                listener.foreach(
-                  _.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)))
-                )
+            removedIdentity.fold(
+              updatedIdentity.foreach { updatedIdentity =>
+                identities = identities + updatedIdentity
+                listener.foreach(_.onIdentitiesChanged(identities))
               }
+            ) { case (removedIdentityId, _) =>
+              identities = identities - removedIdentityId
+              identities = identities ++ updatedIdentity
+              listener.foreach(_.onIdentitiesChanged(identities))
+            }
+
+            updatedIdentity.foreach { updatedIdentity =>
               identities = identities + updatedIdentity
               listener.foreach(_.onIdentitiesChanged(identities))
             }
@@ -501,10 +520,6 @@ class MonopolyGame(context: Context)
             )
 
             updatedPlayer.foreach { updatedPlayer =>
-              if (identities.contains(updatedPlayer._1)) {
-                identities = identities - updatedPlayer._1
-                listener.foreach(_.onIdentitiesChanged(identities))
-              }
               players = players + updatedPlayer
               listener.foreach(
                 _.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)))
@@ -653,13 +668,6 @@ class MonopolyGame(context: Context)
       )
     }
 
-  def getGameName =
-    if (zone == null) {
-      null
-    } else {
-      zone.name
-    }
-
   def setGameName(gameName: String) {
     serverConnection.sendCommand(
       SetZoneNameCommand(
@@ -676,6 +684,17 @@ class MonopolyGame(context: Context)
     )(gameId =>
       Some(Future(gameId))
       )
+  }
+
+  def setIdentityName(identityId: MemberId, name: String) {
+    serverConnection.sendCommand(
+      UpdateMemberCommand(
+        zoneId.get,
+        identityId,
+        zone.members(identityId).copy(name = name)
+      ),
+      noopResponseCallback
+    )
   }
 
   def setListener(listener: MonopolyGame.Listener) {
