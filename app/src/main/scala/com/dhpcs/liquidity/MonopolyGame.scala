@@ -197,9 +197,11 @@ class MonopolyGame(context: Context)
 
     log.debug("playerName={}", playerName)
 
+    val zoneName = context.getString(R.string.game_name_format_string, playerName)
+
     serverConnection.sendCommand(
       CreateZoneCommand(
-        context.getString(R.string.game_name_format_string, playerName),
+        zoneName,
         Member(
           context.getString(R.string.bank_member_name),
           ClientKey.getInstance(context).getPublicKey
@@ -221,7 +223,25 @@ class MonopolyGame(context: Context)
 
           val createZoneResponse = resultResponse.asInstanceOf[CreateZoneResponse]
 
+          gameId = Some(
+            Future {
+              val contentValues = new ContentValues
+              contentValues.put(Games.GAME_TYPE, MONOPOLY.name)
+              contentValues.put(Games.ZONE_ID, createZoneResponse.zoneId.id.toString)
+              contentValues.put(Games.NAME, zoneName)
+              // TODO: Add created to response
+              //              contentValues.put(Games.CREATED, createZoneResponse.created: java.lang.Long)
+              contentValues.put(Games.CREATED, System.currentTimeMillis: java.lang.Long)
+              ContentUris.parseId(
+                context.getContentResolver.insert(
+                  Games.CONTENT_URI,
+                  contentValues
+                )
+              )
+            }
+          )
           zoneId = Some(createZoneResponse.zoneId)
+
           join(createZoneResponse.zoneId)
 
         }
@@ -296,41 +316,46 @@ class MonopolyGame(context: Context)
             // TODO
           }
 
+          gameId = gameId.fold(
+            Some(
+              Future {
+                val zone = joinZoneResponse.zone
+                val contentValues = new ContentValues
+                contentValues.put(Games.GAME_TYPE, MONOPOLY.name)
+                contentValues.put(Games.ZONE_ID, zoneId.id.toString)
+                contentValues.put(Games.NAME, zone.name)
+                contentValues.put(Games.CREATED, zone.created: java.lang.Long)
+                ContentUris.parseId(
+                  context.getContentResolver.insert(
+                    Games.CONTENT_URI,
+                    contentValues
+                  )
+                )
+              }
+            )
+          ) { gameId =>
+            if (zone == null || zone.name != joinZoneResponse.zone.name) {
+              gameId.onSuccess { case id =>
+                Future {
+                  val contentValues = new ContentValues
+                  contentValues.put(Games.NAME, joinZoneResponse.zone.name)
+                  context.getContentResolver.update(
+                    ContentUris.withAppendedId(Games.CONTENT_URI, id),
+                    contentValues,
+                    null,
+                    null
+                  )
+                }
+              }
+            }
+            Some(gameId)
+          }
+
           listener.foreach(_.onJoined(zoneId))
 
           zone = joinZoneResponse.zone
           connectedClients = joinZoneResponse.connectedClients
           accountBalances = Map.empty
-
-          val contentValues = new ContentValues
-          contentValues.put(LiquidityContract.Games.GAME_TYPE, MONOPOLY.name)
-          contentValues.put(LiquidityContract.Games.ZONE_ID, zoneId.id.toString)
-          contentValues.put(LiquidityContract.Games.NAME, zone.name)
-          contentValues.put(LiquidityContract.Games.CREATED, zone.created: java.lang.Long)
-          gameId = gameId.fold(
-            Some(
-              Future(
-                ContentUris.parseId(
-                  context.getContentResolver.insert(
-                    LiquidityContract.Games.CONTENT_URI,
-                    contentValues
-                  )
-                )
-              )
-            )
-          ) { gameId =>
-            gameId.onSuccess { case id =>
-              Future(
-                context.getContentResolver.update(
-                  ContentUris.withAppendedId(Games.CONTENT_URI, id),
-                  contentValues,
-                  null,
-                  null
-                )
-              )
-            }
-            Some(gameId)
-          }
 
           val iterator = zone.transactions.valuesIterator
           while (iterator.hasNext) {
@@ -450,18 +475,17 @@ class MonopolyGame(context: Context)
 
           case zoneNameSetNotification: ZoneNameSetNotification =>
 
-            val contentValues = new ContentValues
-            contentValues.put(LiquidityContract.Games.ZONE_ID, zoneId.id.toString)
-            contentValues.put(LiquidityContract.Games.NAME, zoneNameSetNotification.name)
             gameId.foreach(_.onSuccess { case id =>
-              Future(
+              Future {
+                val contentValues = new ContentValues
+                contentValues.put(LiquidityContract.Games.NAME, zoneNameSetNotification.name)
                 context.getContentResolver.update(
                   ContentUris.withAppendedId(Games.CONTENT_URI, id),
                   contentValues,
                   null,
                   null
                 )
-              )
+              }
             })
 
             zone = zone.copy(name = zoneNameSetNotification.name)
