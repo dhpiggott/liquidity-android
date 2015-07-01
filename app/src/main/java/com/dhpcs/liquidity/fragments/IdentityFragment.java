@@ -28,10 +28,6 @@ public class IdentityFragment extends Fragment {
 
     private Tuple2<MemberId, IdentityWithBalance> identity;
 
-    public Tuple2<MemberId, IdentityWithBalance> getIdentity() {
-        return identity;
-    }
-
     @Override
     @SuppressWarnings("unchecked")
     public void onCreate(Bundle savedInstanceState) {
@@ -51,7 +47,7 @@ public class IdentityFragment extends Fragment {
 
         String name = identity._2().member().name();
         String balance = MonopolyGameActivity.formatBalance(
-                identity._2().balanceWithCurrencyCode()
+                identity._2().balanceWithCurrency()
         );
 
         textViewPlayerName.setText(name);

@@ -70,7 +70,7 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
 
             String name = player._2().member().name();
             String balance = MonopolyGameActivity.formatBalance(
-                    player._2().balanceWithCurrencyCode()
+                    player._2().balanceWithCurrency()
             );
 
             text1.setText(

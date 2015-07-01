@@ -28,7 +28,9 @@ import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.util.Currency;
 
+import scala.Option;
 import scala.Tuple2;
+import scala.util.Either;
 
 public class MonopolyGameActivity extends AppCompatActivity
         implements ChangeGameNameDialogFragment.Listener,
@@ -42,21 +44,26 @@ public class MonopolyGameActivity extends AppCompatActivity
     public static final String EXTRA_GAME_ID = "game_id";
     public static final String EXTRA_ZONE_ID = "zone_id";
 
-    public static String formatBalance(Tuple2<scala.math.BigDecimal, String>
-                                               balanceWithCurrencyCode) {
-        BigDecimal balance = balanceWithCurrencyCode._1().bigDecimal();
-        String currencyCode = balanceWithCurrencyCode._2();
+    public static String formatBalance(
+            Tuple2<scala.math.BigDecimal, Option<Either<String, Currency>>> balanceWithCurrency) {
+
+        BigDecimal balance = balanceWithCurrency._1().bigDecimal();
 
         String balanceString;
-        try {
-            Currency currency = Currency.getInstance(currencyCode);
+        if (!balanceWithCurrency._2().isDefined()) {
+            balanceString = NumberFormat.getNumberInstance().format(balance);
+        } else {
 
-            NumberFormat currencyFormat = NumberFormat.getCurrencyInstance();
-            currencyFormat.setCurrency(currency);
-            balanceString = currencyFormat.format(balance);
-        } catch (IllegalArgumentException e) {
-            NumberFormat numberFormat = NumberFormat.getNumberInstance();
-            balanceString = currencyCode + " " + numberFormat.format(balance);
+            Either<String, Currency> currency = balanceWithCurrency._2().get();
+            if (currency.isLeft()) {
+                String currencyCode = currency.left().get();
+                balanceString = currencyCode + " "
+                        + NumberFormat.getNumberInstance().format(balance);
+            } else {
+                NumberFormat currencyFormat = NumberFormat.getCurrencyInstance();
+                currencyFormat.setCurrency(currency.right().get());
+                balanceString = currencyFormat.format(balance);
+            }
         }
 
         return balanceString;
