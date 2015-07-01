@@ -14,6 +14,7 @@ import com.dhpcs.liquidity.MonopolyGame.IdentityWithBalance;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.models.MemberId;
 
+import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -32,10 +33,15 @@ public class IdentitiesFragment extends Fragment {
     private static final Comparator<Tuple2<MemberId, IdentityWithBalance>> identityComparator =
             new Comparator<Tuple2<MemberId, IdentityWithBalance>>() {
 
+                private final Collator collator = Collator.getInstance();
+
                 @Override
                 public int compare(Tuple2<MemberId, IdentityWithBalance> lhs,
                                    Tuple2<MemberId, IdentityWithBalance> rhs) {
-                    return lhs._2().member().name().compareToIgnoreCase(rhs._2().member().name());
+                    return collator.compare(
+                            lhs._2().member().name(),
+                            rhs._2().member().name()
+                    );
                 }
 
             };

@@ -18,6 +18,7 @@ import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activities.MonopolyGameActivity;
 import com.dhpcs.liquidity.models.MemberId;
 
+import java.text.Collator;
 import java.util.Comparator;
 
 import scala.Tuple2;
@@ -37,10 +38,15 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
             playerComparator =
             new Comparator<Tuple2<MemberId, PlayerWithBalanceAndConnectionState>>() {
 
+                private final Collator collator = Collator.getInstance();
+
                 @Override
                 public int compare(Tuple2<MemberId, PlayerWithBalanceAndConnectionState> lhs,
                                    Tuple2<MemberId, PlayerWithBalanceAndConnectionState> rhs) {
-                    return lhs._2().member().name().compareToIgnoreCase(rhs._2().member().name());
+                    return collator.compare(
+                            lhs._2().member().name(),
+                            rhs._2().member().name()
+                    );
                 }
 
             };
