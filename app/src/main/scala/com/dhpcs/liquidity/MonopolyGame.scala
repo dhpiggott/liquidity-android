@@ -368,12 +368,17 @@ class MonopolyGame(context: Context)
             listener.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)))
           }
 
+          val partiallyCreatedIdentities = zone.members.filter { case (memberId, member) =>
+            ClientKey.getInstance(context).getPublicKey == member.publicKey &&
+              !zone.accounts.values.exists(_.owners == Set(memberId))
+          }
+          partiallyCreatedIdentities.foreach { case (memberId, member) =>
+            createAccount(member.name, memberId)
+          }
+
           if (!identities.values.exists(_.isInstanceOf[PlayerWithBalance])) {
             createIdentity()
           }
-
-          // TODO: Check if there are any members we own but which do not have accounts,
-          // then create accounts on each
 
         }
 
@@ -741,8 +746,8 @@ class MonopolyGame(context: Context)
 
   def transfer(fromMemberId: MemberId, toMemberId: MemberId, value: BigDecimal) {
     val fromAccountId = zone.accounts.collectFirst {
-        case (accountId, account) if account.owners == Set(fromMemberId) => accountId
-      }
+      case (accountId, account) if account.owners == Set(fromMemberId) => accountId
+    }
     val toAccountId = zone.accounts.collectFirst {
       case (accountId, account) if account.owners == Set(toMemberId) => accountId
     }
