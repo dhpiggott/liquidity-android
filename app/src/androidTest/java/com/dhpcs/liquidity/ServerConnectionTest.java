@@ -25,6 +25,8 @@ import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import play.api.libs.json.JsObject;
+import scala.Option;
 import scala.collection.JavaConversions;
 
 public class ServerConnectionTest extends AndroidTestCase
@@ -93,17 +95,19 @@ public class ServerConnectionTest extends AndroidTestCase
         serverConnection.sendCommand(
                 new CreateZoneCommand(
                         "Dave's zone",
-                        TEST$.MODULE$.name(),
                         new Member(
-                                "Banker",
-                                ClientKey.getInstance(getContext()).getPublicKey()
+                                "Bank",
+                                ClientKey.getInstance(getContext()).getPublicKey(),
+                                Option.<JsObject>empty()
                         ),
                         new Account(
                                 "Bank",
                                 JavaConversions.asScalaSet(
                                         Collections.emptySet()
-                                ).<MemberId>toSet()
-                        )
+                                ).<MemberId>toSet(),
+                                Option.<JsObject>empty()
+                        ),
+                        Option.<JsObject>empty()
                 ),
                 new ServerConnection.ResponseCallback() {
 
