@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.widget.EditText;
 
 import com.dhpcs.liquidity.R;
+import com.dhpcs.liquidity.models.AccountId;
 import com.dhpcs.liquidity.models.MemberId;
 
 import java.math.BigDecimal;
@@ -17,22 +18,26 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
 
     public interface Listener {
 
-        void onTransferValueEntered(MemberId fromMemberId,
-                                    MemberId toMemberId,
+        void onTransferValueEntered(MemberId actingAs,
+                                    AccountId fromAccountId,
+                                    AccountId toAccountId,
                                     BigDecimal transferValue);
 
     }
 
-    private static final String ARG_FROM_MEMBER_ID = "from_member_id";
-    private static final String ARG_TO_MEMBER_ID = "to_member_id";
+    private static final String ARG_ACTING_AS = "acting_as";
+    private static final String ARG_FROM_ACCOUNT_ID = "from_account_id";
+    private static final String ARG_TO_ACCOUNT_ID = "to_account_id";
 
-    public static TransferToPlayerDialogFragment newInstance(MemberId fromMemberId,
-                                                             MemberId toMemberId) {
+    public static TransferToPlayerDialogFragment newInstance(MemberId actingAs,
+                                                             AccountId fromAccountId,
+                                                             AccountId toAccountId) {
         TransferToPlayerDialogFragment transferToPlayerDialogFragment =
                 new TransferToPlayerDialogFragment();
         Bundle args = new Bundle();
-        args.putSerializable(ARG_FROM_MEMBER_ID, fromMemberId);
-        args.putSerializable(ARG_TO_MEMBER_ID, toMemberId);
+        args.putSerializable(ARG_ACTING_AS, actingAs);
+        args.putSerializable(ARG_FROM_ACCOUNT_ID, fromAccountId);
+        args.putSerializable(ARG_TO_ACCOUNT_ID, toAccountId);
         transferToPlayerDialogFragment.setArguments(args);
         return transferToPlayerDialogFragment;
     }
@@ -71,9 +76,11 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
                                 if (listener != null) {
                                     listener.onTransferValueEntered(
                                             (MemberId) getArguments()
-                                                    .getSerializable(ARG_FROM_MEMBER_ID),
-                                            (MemberId) getArguments()
-                                                    .getSerializable(ARG_TO_MEMBER_ID),
+                                                    .getSerializable(ARG_ACTING_AS),
+                                            (AccountId) getArguments()
+                                                    .getSerializable(ARG_FROM_ACCOUNT_ID),
+                                            (AccountId) getArguments()
+                                                    .getSerializable(ARG_TO_ACCOUNT_ID),
                                             new BigDecimal(
                                                     ((EditText) getDialog().findViewById(
                                                             R.id.edittext_transfer_value

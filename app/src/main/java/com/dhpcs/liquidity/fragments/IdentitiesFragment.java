@@ -102,15 +102,15 @@ public class IdentitiesFragment extends Fragment {
         }
     }
 
-    public MemberId getIdentityId(int page) {
+    public Tuple2<MemberId, IdentityWithBalance> getIdentity(int page) {
         if (playersFragmentStatePagerAdapter.getCount() == 0) {
             return null;
         } else {
-            return playersFragmentStatePagerAdapter.get(page)._1();
+            return playersFragmentStatePagerAdapter.get(page);
         }
     }
 
-    public int getSelectedIdentityPage() {
+    public int getSelectedPage() {
         return viewPagerIdentities.getCurrentItem();
     }
 
@@ -155,7 +155,7 @@ public class IdentitiesFragment extends Fragment {
     public void onIdentitiesChanged(scala.collection.immutable
                                             .Map<MemberId, IdentityWithBalance>
                                             identities) {
-        MemberId selectedIdentityId = getIdentityId(getSelectedIdentityPage());
+        Tuple2<MemberId, IdentityWithBalance> selectedIdentity = getIdentity(getSelectedPage());
         playersFragmentStatePagerAdapter.clear();
         Iterator<Tuple2<MemberId, IdentityWithBalance>> iterator = identities
                 .iterator();
@@ -165,12 +165,12 @@ public class IdentitiesFragment extends Fragment {
         }
         playersFragmentStatePagerAdapter.sort(identityComparator);
         playersFragmentStatePagerAdapter.notifyDataSetChanged();
-        if (selectedIdentityId != null) {
+        if (selectedIdentity != null) {
             viewPagerIdentities.setCurrentItem(
                     playersFragmentStatePagerAdapter.getPosition(
                             Tuple2.apply(
-                                    selectedIdentityId,
-                                    identities.apply(selectedIdentityId)
+                                    selectedIdentity._1(),
+                                    identities.apply(selectedIdentity._1())
                             )
                     ),
                     false

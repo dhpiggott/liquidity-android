@@ -12,6 +12,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
+import com.dhpcs.liquidity.MonopolyGame;
 import com.dhpcs.liquidity.MonopolyGame.PlayerWithBalanceAndConnectionState;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activities.MonopolyGameActivity;
@@ -27,7 +28,8 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
 
     public interface Listener {
 
-        void onPlayerClicked(MemberId playerId);
+        void onPlayerClicked(Tuple2<MemberId, MonopolyGame.PlayerWithBalanceAndConnectionState>
+                                     player);
 
     }
 
@@ -126,7 +128,7 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         if (listener != null) {
-            listener.onPlayerClicked(listAdapter.getItem(position)._1());
+            listener.onPlayerClicked(listAdapter.getItem(position));
         }
     }
 

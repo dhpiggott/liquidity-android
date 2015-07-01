@@ -19,6 +19,7 @@ import com.dhpcs.liquidity.fragments.IdentitiesFragment;
 import com.dhpcs.liquidity.fragments.MonopolyGameHolderFragment;
 import com.dhpcs.liquidity.fragments.PlayersFragment;
 import com.dhpcs.liquidity.fragments.TransferToPlayerDialogFragment;
+import com.dhpcs.liquidity.models.AccountId;
 import com.dhpcs.liquidity.models.ErrorResponse;
 import com.dhpcs.liquidity.models.MemberId;
 import com.dhpcs.liquidity.models.ZoneId;
@@ -134,8 +135,11 @@ public class MonopolyGameActivity extends AppCompatActivity
                                             .Map<MemberId, IdentityWithBalance>
                                             identities) {
         identitiesFragment.onIdentitiesChanged(identities);
+        Tuple2<MemberId, IdentityWithBalance> selectedIdentity = identitiesFragment.getIdentity(
+                identitiesFragment.getSelectedPage()
+        );
         monopolyGameHolderFragment.getMonopolyGame().setSelectedIdentity(
-                identitiesFragment.getIdentityId(identitiesFragment.getSelectedIdentityPage())
+                selectedIdentity == null ? null : selectedIdentity._1()
         );
     }
 
@@ -151,8 +155,11 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public void onIdentityPageSelected(int page) {
+        Tuple2<MemberId, IdentityWithBalance> selectedIdentity = identitiesFragment.getIdentity(
+                page
+        );
         monopolyGameHolderFragment.getMonopolyGame().setSelectedIdentity(
-                identitiesFragment.getIdentityId(page)
+                selectedIdentity == null ? null : selectedIdentity._1()
         );
     }
 
@@ -182,13 +189,13 @@ public class MonopolyGameActivity extends AppCompatActivity
                 );
                 return true;
             case R.id.action_change_identity_name:
-                MemberId identityId = identitiesFragment.getIdentityId(
-                        identitiesFragment.getSelectedIdentityPage()
-                );
-                if (identityId != null) {
+                Tuple2<MemberId, IdentityWithBalance> selectedIdentity = identitiesFragment
+                        .getIdentity(identitiesFragment.getSelectedPage());
+                if (selectedIdentity != null) {
                     ChangeIdentityNameDialogFragment.newInstance(
-                            identityId,
-                            monopolyGameHolderFragment.getMonopolyGame().getIdentityName(identityId)
+                            selectedIdentity._1(),
+                            monopolyGameHolderFragment.getMonopolyGame()
+                                    .getIdentityName(selectedIdentity._1())
                     ).show(
                             getFragmentManager(),
                             "change_identity_name_dialog_fragment"
@@ -213,16 +220,20 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onPlayerClicked(MemberId playerId) {
-        MemberId identityId = identitiesFragment.getIdentityId(
-                identitiesFragment.getSelectedIdentityPage()
+    public void onPlayerClicked(Tuple2<MemberId, MonopolyGame.PlayerWithBalanceAndConnectionState>
+                                        player) {
+        Tuple2<MemberId, IdentityWithBalance> identity = identitiesFragment.getIdentity(
+                identitiesFragment.getSelectedPage()
         );
-        if (identityId != null) {
-            TransferToPlayerDialogFragment.newInstance(identityId, playerId)
-                    .show(
-                            getFragmentManager(),
-                            "transfer_to_player_dialog_fragment"
-                    );
+        if (identity != null) {
+            TransferToPlayerDialogFragment.newInstance(
+                    identity._1(),
+                    identity._2().accountId(),
+                    player._2().accountId()
+            ).show(
+                    getFragmentManager(),
+                    "transfer_to_player_dialog_fragment"
+            );
         }
     }
 
@@ -254,12 +265,14 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onTransferValueEntered(MemberId fromMemberId,
-                                       MemberId toMemberId,
+    public void onTransferValueEntered(MemberId actingAs,
+                                       AccountId fromAccountId,
+                                       AccountId toAccountId,
                                        BigDecimal transferValue) {
         monopolyGameHolderFragment.getMonopolyGame().transfer(
-                fromMemberId,
-                toMemberId,
+                actingAs,
+                fromAccountId,
+                toAccountId,
                 scala.math.BigDecimal.javaBigDecimal2bigDecimal(transferValue)
         );
     }
