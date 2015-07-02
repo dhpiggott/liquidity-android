@@ -71,16 +71,17 @@ object MonopolyGame {
       )
     )
 
-  private def getUserName(context: Context, aliasConstant: String) = {
+  // TODO: Not on the UI thread!
+  private def getUserName(context: Context) = {
     val cursor = context.getContentResolver.query(
       ContactsContract.Profile.CONTENT_URI,
-      Array(aliasConstant),
+      Array("display_name"),
       null,
       null,
       null
     )
     val userName = if (cursor.moveToNext) {
-      cursor.getString(cursor.getColumnIndex(aliasConstant))
+      cursor.getString(cursor.getColumnIndex("display_name"))
     } else {
       context.getString(R.string.unnamed)
     }
@@ -186,14 +187,11 @@ class MonopolyGame(context: Context)
   }
 
   private def createAndThenJoinZone() {
-    val playerName = MonopolyGame.getUserName(
-      context,
-      "display_name"
-    )
+    val identityName = MonopolyGame.getUserName(context)
 
-    log.debug("playerName={}", playerName)
+    log.debug("identityName={}", identityName)
 
-    val zoneName = context.getString(R.string.game_name_format_string, playerName)
+    val zoneName = context.getString(R.string.game_name_format_string, identityName)
 
     serverConnection.sendCommand(
       CreateZoneCommand(
@@ -253,7 +251,8 @@ class MonopolyGame(context: Context)
         zoneId.get,
         Member(
           name,
-          ClientKey.getInstance(context).getPublicKey)
+          ClientKey.getInstance(context).getPublicKey
+        )
       ),
       new ResponseCallbackWithErrorForwarding {
 
@@ -271,10 +270,7 @@ class MonopolyGame(context: Context)
   }
 
   private def createIdentity() {
-    val identityName = MonopolyGame.getUserName(
-      context,
-      "display_name"
-    )
+    val identityName = MonopolyGame.getUserName(context)
 
     log.debug("identityName={}", identityName)
 

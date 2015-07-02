@@ -91,8 +91,7 @@ public class GamesFragment extends Fragment
             @Override
             public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
                 boolean bound = false;
-                if (columnIndex == cursor
-                        .getColumnIndexOrThrow(LiquidityContract.Games.CREATED)) {
+                if (columnIndex == cursor.getColumnIndexOrThrow(LiquidityContract.Games.CREATED)) {
                     bound = true;
                     ((TextView) view).setText(
                             getActivity().getString(
