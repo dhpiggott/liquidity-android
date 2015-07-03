@@ -12,10 +12,12 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
+import com.dhpcs.liquidity.Identicon;
 import com.dhpcs.liquidity.MonopolyGame;
 import com.dhpcs.liquidity.MonopolyGame.PlayerWithBalanceAndConnectionState;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activities.MonopolyGameActivity;
+import com.dhpcs.liquidity.models.Identifier;
 import com.dhpcs.liquidity.models.MemberId;
 
 import java.text.Collator;
@@ -56,24 +58,27 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
 
         public PlayersAdapter(Context context) {
             super(context,
-                    android.R.layout.simple_list_item_2,
-                    android.R.id.text1);
+                    R.layout.relativelayout_player,
+                    R.id.textview_name);
         }
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             View view = super.getView(position, convertView, parent);
-            TextView text1 = (TextView) view.findViewById(android.R.id.text1);
-            TextView text2 = (TextView) view.findViewById(android.R.id.text2);
+            Identicon identiconId = (Identicon) view.findViewById(R.id.identicon_id);
+            TextView textViewName = (TextView) view.findViewById(R.id.textview_name);
+            TextView textViewBalance = (TextView) view.findViewById(R.id.textview_balance);
 
             Tuple2<MemberId, PlayerWithBalanceAndConnectionState> player = getItem(position);
 
+            Identifier identifier = player._1();
             String name = player._2().member().name();
             String balance = MonopolyGameActivity.formatBalance(
                     player._2().balanceWithCurrency()
             );
 
-            text1.setText(
+            identiconId.show(identifier);
+            textViewName.setText(
                     getContext().getString(
                             R.string.player_format_string,
                             name,
@@ -82,7 +87,7 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
                                     getContext().getString(R.string.player_disconnected)
                     )
             );
-            text2.setText(balance);
+            textViewBalance.setText(balance);
 
             return view;
         }

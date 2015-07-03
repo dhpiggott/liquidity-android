@@ -500,7 +500,7 @@ class MonopolyGame(context: Context)
               ),
               ClientKey.getInstance(context).getPublicKey,
               zone.accounts.get(zone.equityAccountId).fold[Set[MemberId]](Set.empty)(_.owners)
-            ).headOption
+            )
 
             val createdPlayer = MonopolyGame.playersFromAccounts(
               zone.accounts,
@@ -511,7 +511,7 @@ class MonopolyGame(context: Context)
                   memberCreatedNotification.member
               ),
               connectedClients
-            ).headOption
+            )
 
             createdIdentity.foreach { createdIdentity =>
               identities = identities + createdIdentity
@@ -573,7 +573,7 @@ class MonopolyGame(context: Context)
               zone.members,
               ClientKey.getInstance(context).getPublicKey,
               zone.accounts.get(zone.equityAccountId).fold[Set[MemberId]](Set.empty)(_.owners)
-            ).headOption
+            )
 
             val createdPlayer = MonopolyGame.playersFromAccounts(
               Map(
@@ -584,7 +584,7 @@ class MonopolyGame(context: Context)
               currency,
               zone.members,
               connectedClients
-            ).headOption
+            )
 
             createdIdentity.foreach { createdIdentity =>
               identities = identities + createdIdentity
