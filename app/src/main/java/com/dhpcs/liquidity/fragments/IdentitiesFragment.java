@@ -171,7 +171,7 @@ public class IdentitiesFragment extends Fragment {
         }
         playersFragmentStatePagerAdapter.sort(identityComparator);
         playersFragmentStatePagerAdapter.notifyDataSetChanged();
-        if (selectedIdentity != null) {
+        if (selectedIdentity != null && identities.contains(selectedIdentity._1())) {
             viewPagerIdentities.setCurrentItem(
                     playersFragmentStatePagerAdapter.getPosition(
                             Tuple2.apply(

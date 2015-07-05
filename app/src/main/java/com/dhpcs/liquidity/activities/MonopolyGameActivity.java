@@ -245,6 +245,20 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
+    public void onPlayerLongClicked(Tuple2<MemberId, PlayerWithBalanceAndConnectionState> player) {
+        Tuple2<MemberId, IdentityWithBalance> identity = identitiesFragment.getIdentity(
+                identitiesFragment.getSelectedPage()
+        );
+        if (identity != null) {
+            // TODO: Confirmation
+            monopolyGameHolderFragment.getMonopolyGame().transfer(
+                    identity._1(),
+                    player._2().member().publicKey()
+            );
+        }
+    }
+
+    @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         menu.findItem(R.id.action_add_players).setVisible(zoneId != null);
         menu.findItem(R.id.action_change_game_name).setVisible(zoneId != null);

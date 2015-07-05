@@ -173,12 +173,12 @@ class MonopolyGame(context: Context)
   def connectCreateAndOrJoinZone() =
     serverConnection.connect()
 
-  private def createAccount(name: String, owner: MemberId) {
+  private def createAccount(owner: MemberId) {
     serverConnection.sendCommand(
       CreateAccountCommand(
         zoneId.get,
         Account(
-          name,
+          "capital",
           Set(owner)
         )
       ),
@@ -261,7 +261,7 @@ class MonopolyGame(context: Context)
 
           val createMemberResponse = resultResponse.asInstanceOf[CreateMemberResponse]
 
-          createAccount(name, createMemberResponse.memberId)
+          createAccount(createMemberResponse.memberId)
 
         }
 
@@ -386,7 +386,7 @@ class MonopolyGame(context: Context)
               !zone.accounts.values.exists(_.owners == Set(memberId))
           }
           partiallyCreatedIdentities.foreach { case (memberId, member) =>
-            createAccount(member.name, memberId)
+            createAccount(memberId)
           }
 
           if (!identities.values.exists(_.isInstanceOf[PlayerWithBalance])) {
@@ -775,6 +775,18 @@ class MonopolyGame(context: Context)
 
   def setZoneId(zoneId: ZoneId) {
     this.zoneId = Option(zoneId)
+  }
+
+  def transfer(identityId: MemberId,
+               newOwnerPublicKey: PublicKey) {
+    serverConnection.sendCommand(
+      UpdateMemberCommand(
+        zoneId.get,
+        identityId,
+        identities(identityId).member.copy(publicKey = newOwnerPublicKey)
+      ),
+      noopResponseCallback
+    )
   }
 
   def transfer(actingAs: MemberId,
