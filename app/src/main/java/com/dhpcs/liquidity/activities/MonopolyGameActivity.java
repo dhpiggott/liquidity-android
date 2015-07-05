@@ -1,11 +1,14 @@
 package com.dhpcs.liquidity.activities;
 
+import android.app.DialogFragment;
 import android.app.FragmentManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
+import com.dhpcs.liquidity.ClientKey;
 import com.dhpcs.liquidity.MonopolyGame;
 import com.dhpcs.liquidity.MonopolyGame.IdentityWithBalance;
 import com.dhpcs.liquidity.MonopolyGame.PlayerWithBalanceAndConnectionState;
@@ -18,11 +21,16 @@ import com.dhpcs.liquidity.fragments.ErrorResponseDialogFragment;
 import com.dhpcs.liquidity.fragments.IdentitiesFragment;
 import com.dhpcs.liquidity.fragments.MonopolyGameHolderFragment;
 import com.dhpcs.liquidity.fragments.PlayersFragment;
+import com.dhpcs.liquidity.fragments.ReceiveIdentityDialogFragment;
+import com.dhpcs.liquidity.fragments.TransferIdentityDialogFragment;
 import com.dhpcs.liquidity.fragments.TransferToPlayerDialogFragment;
 import com.dhpcs.liquidity.models.AccountId;
 import com.dhpcs.liquidity.models.ErrorResponse;
 import com.dhpcs.liquidity.models.MemberId;
+import com.dhpcs.liquidity.models.PublicKey;
 import com.dhpcs.liquidity.models.ZoneId;
+import com.google.common.io.BaseEncoding;
+import com.google.zxing.Result;
 
 import java.math.BigDecimal;
 import java.text.NumberFormat;
@@ -39,6 +47,7 @@ public class MonopolyGameActivity extends AppCompatActivity
         IdentitiesFragment.Listener,
         MonopolyGame.Listener,
         PlayersFragment.Listener,
+        TransferIdentityDialogFragment.Listener,
         TransferToPlayerDialogFragment.Listener {
 
     public static final String EXTRA_GAME_ID = "game_id";
@@ -151,6 +160,11 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
+    public void onIdentityCreated(Tuple2<MemberId, IdentityWithBalance> identity) {
+        identitiesFragment.setSelectedPage(identitiesFragment.getPage(identity));
+    }
+
+    @Override
     public void onIdentityNameEntered(String name) {
         monopolyGameHolderFragment.getMonopolyGame().createIdentity(name);
     }
@@ -172,6 +186,11 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public void onIdentityReceived(Tuple2<MemberId, IdentityWithBalance> identity) {
+        DialogFragment receiveIdentityDialogFragment = (DialogFragment) getFragmentManager()
+                .findFragmentByTag("receive_identity_dialog_fragment");
+        if (receiveIdentityDialogFragment != null) {
+            receiveIdentityDialogFragment.dismiss();
+        }
         identitiesFragment.setSelectedPage(identitiesFragment.getPage(identity));
     }
 
@@ -220,6 +239,20 @@ public class MonopolyGameActivity extends AppCompatActivity
                         "create_extra_identity_dialog_fragment"
                 );
                 return true;
+            case R.id.action_receive_identity:
+                ReceiveIdentityDialogFragment.newInstance(
+                        ClientKey.getInstance(this).getPublicKey()
+                ).show(
+                        getFragmentManager(),
+                        "receive_identity_dialog_fragment"
+                );
+                return true;
+            case R.id.action_transfer_identity:
+                TransferIdentityDialogFragment.newInstance().show(
+                        getFragmentManager(),
+                        "transfer_identity_dialog_fragment"
+                );
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -250,26 +283,45 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onPlayerLongClicked(Tuple2<MemberId, PlayerWithBalanceAndConnectionState> player) {
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        menu.findItem(R.id.action_add_players).setVisible(zoneId != null);
+        menu.findItem(R.id.action_change_game_name).setVisible(zoneId != null);
+        menu.findItem(R.id.action_change_identity_name).setVisible(
+                zoneId != null &&
+                        identitiesFragment.getIdentity(identitiesFragment.getSelectedPage()) != null
+        );
+        menu.findItem(R.id.action_create_extra_identity).setVisible(zoneId != null);
+        menu.findItem(R.id.action_receive_identity).setVisible(zoneId != null &&
+                        identitiesFragment.getIdentity(identitiesFragment.getSelectedPage()) != null
+        );
+        menu.findItem(R.id.action_transfer_identity).setVisible(zoneId != null);
+        return true;
+    }
+
+    @Override
+    public void onPublicKeyScanned(Result rawResult) {
         Tuple2<MemberId, IdentityWithBalance> identity = identitiesFragment.getIdentity(
                 identitiesFragment.getSelectedPage()
         );
         if (identity != null) {
-            // TODO: Confirmation
-            monopolyGameHolderFragment.getMonopolyGame().transfer(
-                    identity._1(),
-                    player._2().member().publicKey()
+            PublicKey publicKey = new PublicKey(
+                    BaseEncoding.base64().decode(
+                            rawResult.getText()
+                    )
             );
+            if (!monopolyGameHolderFragment.getMonopolyGame().isPublicKeyConnectedAndImplicitlyValid(
+                    publicKey
+            )) {
+                // TODO
+                Toast.makeText(
+                        this,
+                        R.string.qr_code_is_not_a_public_key,
+                        Toast.LENGTH_LONG
+                ).show();
+            } else {
+                monopolyGameHolderFragment.getMonopolyGame().transfer(identity._1(), publicKey);
+            }
         }
-    }
-
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        menu.findItem(R.id.action_add_players).setVisible(zoneId != null);
-        menu.findItem(R.id.action_change_game_name).setVisible(zoneId != null);
-        menu.findItem(R.id.action_change_identity_name).setVisible(zoneId != null);
-        menu.findItem(R.id.action_create_extra_identity).setVisible(zoneId != null);
-        return true;
     }
 
     @Override

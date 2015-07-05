@@ -50,6 +50,8 @@ object MonopolyGame {
 
     def onIdentitiesChanged(identities: Map[MemberId, IdentityWithBalance])
 
+    def onIdentityCreated(identity: (MemberId, IdentityWithBalance))
+
     def onIdentityReceived(identity: (MemberId, IdentityWithBalance))
 
     def onJoined(zoneId: ZoneId)
@@ -292,6 +294,9 @@ class MonopolyGame(context: Context)
   def getIdentityName(identityId: MemberId) =
     zone.members(identityId).name
 
+  def isPublicKeyConnectedAndImplicitlyValid(publicKey: PublicKey) =
+    connectedClients.contains(publicKey)
+
   private def join(zoneId: ZoneId) {
     serverConnection.sendCommand(
       JoinZoneCommand(
@@ -492,6 +497,13 @@ class MonopolyGame(context: Context)
                 memberCreatedNotification.member)
             )
 
+            val isIdentityCreation = !identities.contains(memberCreatedNotification.memberId) &&
+              memberCreatedNotification.member.publicKey ==
+                ClientKey.getInstance(context).getPublicKey &&
+              zone.accounts.exists { case (_, account) =>
+                account.owners == Set(memberCreatedNotification.memberId)
+              }
+
             val createdIdentity = MonopolyGame.identitiesFromAccounts(
               zone.accounts,
               balances,
@@ -525,6 +537,12 @@ class MonopolyGame(context: Context)
               listener.foreach(
                 _.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)))
               )
+            }
+
+            if (isIdentityCreation) {
+              listener.foreach(_.onIdentityCreated(
+                (memberCreatedNotification.memberId, identities(memberCreatedNotification.memberId))
+              ))
             }
 
           case memberUpdatedNotification: MemberUpdatedNotification =>
@@ -575,6 +593,11 @@ class MonopolyGame(context: Context)
                 accountCreatedNotification.account)
             )
 
+            val isIdentityCreation = accountCreatedNotification.account.owners.size == 1 &&
+              zone.members.get(accountCreatedNotification.account.owners.head).fold(false)(
+                _.publicKey == ClientKey.getInstance(context).getPublicKey
+              )
+
             val createdIdentity = MonopolyGame.identitiesFromAccounts(
               Map(
                 accountCreatedNotification.accountId ->
@@ -608,6 +631,13 @@ class MonopolyGame(context: Context)
               listener.foreach(
                 _.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)))
               )
+            }
+
+            if (isIdentityCreation) {
+              listener.foreach(_.onIdentityCreated(
+                (accountCreatedNotification.account.owners.head,
+                  identities(accountCreatedNotification.account.owners.head))
+              ))
             }
 
           case accountUpdatedNotification: AccountUpdatedNotification =>

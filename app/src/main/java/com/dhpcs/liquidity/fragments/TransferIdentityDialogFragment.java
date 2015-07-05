@@ -12,17 +12,17 @@ import com.google.zxing.Result;
 
 import me.dm7.barcodescanner.zxing.ZXingScannerView;
 
-public class JoinGameDialogFragment extends DialogFragment
+public class TransferIdentityDialogFragment extends DialogFragment
         implements ZXingScannerView.ResultHandler {
 
     public interface Listener {
 
-        void onGameIdScanned(Result rawResult);
+        void onPublicKeyScanned(Result rawResult);
 
     }
 
-    public static JoinGameDialogFragment newInstance() {
-        return new JoinGameDialogFragment();
+    public static TransferIdentityDialogFragment newInstance() {
+        return new TransferIdentityDialogFragment();
     }
 
     private Listener listener;
@@ -31,7 +31,7 @@ public class JoinGameDialogFragment extends DialogFragment
     @Override
     public void handleResult(Result rawResult) {
         if (listener != null) {
-            listener.onGameIdScanned(rawResult);
+            listener.onPublicKeyScanned(rawResult);
             getDialog().dismiss();
         }
     }
@@ -43,7 +43,7 @@ public class JoinGameDialogFragment extends DialogFragment
             listener = (Listener) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
-                    + " must implement JoinGameDialogFragment.Listener");
+                    + " must implement TransferIdentityDialogFragment.Listener");
         }
     }
 
@@ -57,7 +57,7 @@ public class JoinGameDialogFragment extends DialogFragment
     public View onCreateView(LayoutInflater inflater,
                              ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_join_game_dialog, container, false);
+        View view = inflater.inflate(R.layout.fragment_transfer_identity_dialog, container, false);
 
         scannerView = (ZXingScannerView) view.findViewById(R.id.scannerview_scanner);
 
