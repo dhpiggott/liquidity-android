@@ -163,6 +163,7 @@ public class IdentitiesFragment extends Fragment {
         listener = null;
     }
 
+    // TODO: Add placeholder fragment with instruction to create identity
     public void onIdentitiesChanged(scala.collection.immutable.Map<MemberId, IdentityWithBalance>
                                             identities) {
         IdentityWithBalance selectedIdentity = getIdentity(getSelectedPage());
