@@ -171,6 +171,11 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
+    public void onIdentityReceived(Tuple2<MemberId, IdentityWithBalance> identity) {
+        identitiesFragment.setSelectedPage(identitiesFragment.getPage(identity));
+    }
+
+    @Override
     public void onJoined(ZoneId zoneId) {
         this.zoneId = zoneId;
         supportInvalidateOptionsMenu();

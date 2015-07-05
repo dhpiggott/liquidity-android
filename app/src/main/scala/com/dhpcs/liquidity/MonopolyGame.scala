@@ -50,6 +50,8 @@ object MonopolyGame {
 
     def onIdentitiesChanged(identities: Map[MemberId, IdentityWithBalance])
 
+    def onIdentityReceived(identity: (MemberId, IdentityWithBalance))
+
     def onJoined(zoneId: ZoneId)
 
     def onPlayersChanged(players: Map[MemberId, PlayerWithBalanceAndConnectionState])
@@ -533,6 +535,10 @@ class MonopolyGame(context: Context)
                 memberUpdatedNotification.member)
             )
 
+            val isIdentityReceipt = !identities.contains(memberUpdatedNotification.memberId) &&
+              memberUpdatedNotification.member.publicKey ==
+                ClientKey.getInstance(context).getPublicKey
+
             identities = MonopolyGame.identitiesFromAccounts(
               zone.accounts,
               balances,
@@ -553,6 +559,12 @@ class MonopolyGame(context: Context)
             listener.foreach { listener =>
               listener.onIdentitiesChanged(identities)
               listener.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)))
+            }
+
+            if (isIdentityReceipt) {
+              listener.foreach(_.onIdentityReceived(
+                (memberUpdatedNotification.memberId, identities(memberUpdatedNotification.memberId))
+              ))
             }
 
           case accountCreatedNotification: AccountCreatedNotification =>

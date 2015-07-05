@@ -116,6 +116,14 @@ public class IdentitiesFragment extends Fragment {
         }
     }
 
+    public int getPage(Tuple2<MemberId, IdentityWithBalance> identity) {
+        if (playersFragmentStatePagerAdapter.getCount() == 0) {
+            return 0;
+        } else {
+            return playersFragmentStatePagerAdapter.getPosition(identity);
+        }
+    }
+
     public int getSelectedPage() {
         return viewPagerIdentities.getCurrentItem();
     }
@@ -182,6 +190,10 @@ public class IdentitiesFragment extends Fragment {
                     false
             );
         }
+    }
+
+    public void setSelectedPage(int page) {
+        viewPagerIdentities.setCurrentItem(page);
     }
 
 }

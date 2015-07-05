@@ -254,6 +254,7 @@ public class ClientKey {
         }
     }
 
+    // TODO: Cache
     public PublicKey getPublicKey() {
         try {
             return new PublicKey(
