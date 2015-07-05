@@ -4,7 +4,7 @@ import java.util.{Currency, Locale}
 
 import android.content.{ContentUris, ContentValues, Context}
 import android.provider.ContactsContract
-import com.dhpcs.liquidity.MonopolyGame.{IdentityWithBalance, Listener, PlayerWithBalance, PlayerWithBalanceAndConnectionState}
+import com.dhpcs.liquidity.MonopolyGame._
 import com.dhpcs.liquidity.ServerConnection.{ConnectionStateListener, NotificationListener, ResponseCallback}
 import com.dhpcs.liquidity.models._
 import com.dhpcs.liquidity.provider.LiquidityContract
@@ -18,31 +18,34 @@ import scala.util.Try
 
 object MonopolyGame {
 
-  trait IdentityWithBalance {
+  sealed trait Player extends Serializable {
+
+    def memberId: MemberId
 
     def member: Member
 
     def accountId: AccountId
 
-    def balanceWithCurrency: (BigDecimal, Option[Either[String, Currency]])
+    def account: Account
 
   }
 
-  case class BankerWithBalance(member: Member,
-                               accountId: AccountId,
-                               balanceWithCurrency: (BigDecimal, Option[Either[String, Currency]]))
-    extends IdentityWithBalance
+  sealed trait Identity extends Player
 
-  case class PlayerWithBalance(member: Member,
-                               accountId: AccountId,
-                               balanceWithCurrency: (BigDecimal, Option[Either[String, Currency]]))
-    extends IdentityWithBalance
-
-  case class PlayerWithBalanceAndConnectionState(member: Member,
+  case class PlayerWithBalanceAndConnectionState(memberId: MemberId,
+                                                 member: Member,
                                                  accountId: AccountId,
+                                                 account: Account,
                                                  balanceWithCurrency:
                                                  (BigDecimal, Option[Either[String, Currency]]),
-                                                 isConnected: Boolean)
+                                                 isConnected: Boolean) extends Player
+
+  case class IdentityWithBalance(memberId: MemberId,
+                                 member: Member,
+                                 accountId: AccountId,
+                                 account: Account,
+                                 balanceWithCurrency: (BigDecimal, Option[Either[String, Currency]]))
+    extends Identity
 
   trait Listener {
 
@@ -105,19 +108,13 @@ object MonopolyGame {
 
         val ownerId = account.owners.head
         val owner = members(ownerId)
-        if (equityAccountOwners.contains(ownerId)) {
-          ownerId -> BankerWithBalance(
-            owner,
-            accountId,
-            (balances(accountId).bigDecimal, currency)
-          )
-        } else {
-          ownerId -> PlayerWithBalance(
-            owner,
-            accountId,
-            (balances(accountId).bigDecimal, currency)
-          )
-        }
+        ownerId -> IdentityWithBalance(
+          ownerId,
+          owner,
+          accountId,
+          account,
+          (balances(accountId).bigDecimal, currency)
+        )
 
     }
 
@@ -133,8 +130,10 @@ object MonopolyGame {
         val ownerId = account.owners.head
         val owner = members(ownerId)
         ownerId -> PlayerWithBalanceAndConnectionState(
-          members(ownerId),
+          ownerId,
+          owner,
           accountId,
+          account,
           (balances(accountId).bigDecimal, currency),
           connectedPublicKeys.contains(owner.publicKey)
         )
@@ -396,7 +395,7 @@ class MonopolyGame(context: Context)
             createAccount(memberId)
           }
 
-          if (!identities.values.exists(_.isInstanceOf[PlayerWithBalance])) {
+          if (!identities.values.exists(_.accountId != zone.equityAccountId)) {
             createIdentity()
           }
 
@@ -831,17 +830,17 @@ class MonopolyGame(context: Context)
     )
   }
 
-  def transfer(actingAs: MemberId,
-               fromAccountId: AccountId,
-               toAccountId: AccountId,
+  def transfer(actingAs: Identity,
+               from: Player,
+               to: Player,
                value: BigDecimal) {
     serverConnection.sendCommand(
       AddTransactionCommand(
         zoneId.get,
-        actingAs,
+        actingAs.memberId,
         "transfer",
-        fromAccountId,
-        toAccountId,
+        from.accountId,
+        to.accountId,
         value
       ),
       noopResponseCallback

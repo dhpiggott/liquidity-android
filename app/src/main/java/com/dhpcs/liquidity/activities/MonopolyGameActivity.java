@@ -10,7 +10,9 @@ import android.widget.Toast;
 
 import com.dhpcs.liquidity.ClientKey;
 import com.dhpcs.liquidity.MonopolyGame;
+import com.dhpcs.liquidity.MonopolyGame.Identity;
 import com.dhpcs.liquidity.MonopolyGame.IdentityWithBalance;
+import com.dhpcs.liquidity.MonopolyGame.Player;
 import com.dhpcs.liquidity.MonopolyGame.PlayerWithBalanceAndConnectionState;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.fragments.AddPlayersDialogFragment;
@@ -24,7 +26,6 @@ import com.dhpcs.liquidity.fragments.PlayersFragment;
 import com.dhpcs.liquidity.fragments.ReceiveIdentityDialogFragment;
 import com.dhpcs.liquidity.fragments.TransferIdentityDialogFragment;
 import com.dhpcs.liquidity.fragments.TransferToPlayerDialogFragment;
-import com.dhpcs.liquidity.models.AccountId;
 import com.dhpcs.liquidity.models.ErrorResponse;
 import com.dhpcs.liquidity.models.MemberId;
 import com.dhpcs.liquidity.models.PublicKey;
@@ -272,9 +273,9 @@ public class MonopolyGameActivity extends AppCompatActivity
         );
         if (identity != null) {
             TransferToPlayerDialogFragment.newInstance(
-                    identity._1(),
-                    identity._2().accountId(),
-                    player._2().accountId()
+                    identity._2(),
+                    identity._2(),
+                    player._2()
             ).show(
                     getFragmentManager(),
                     "transfer_to_player_dialog_fragment"
@@ -343,14 +344,14 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onTransferValueEntered(MemberId actingAs,
-                                       AccountId fromAccountId,
-                                       AccountId toAccountId,
+    public void onTransferValueEntered(Identity actingAs,
+                                       Player from,
+                                       Player to,
                                        BigDecimal transferValue) {
         monopolyGameHolderFragment.getMonopolyGame().transfer(
                 actingAs,
-                fromAccountId,
-                toAccountId,
+                from,
+                to,
                 scala.math.BigDecimal.javaBigDecimal2bigDecimal(transferValue)
         );
     }

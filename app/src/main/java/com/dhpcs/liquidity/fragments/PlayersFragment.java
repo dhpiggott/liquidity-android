@@ -12,13 +12,13 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-import com.dhpcs.liquidity.views.Identicon;
 import com.dhpcs.liquidity.MonopolyGame;
 import com.dhpcs.liquidity.MonopolyGame.PlayerWithBalanceAndConnectionState;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activities.MonopolyGameActivity;
 import com.dhpcs.liquidity.models.Identifier;
 import com.dhpcs.liquidity.models.MemberId;
+import com.dhpcs.liquidity.views.Identicon;
 
 import java.text.Collator;
 import java.util.Comparator;
@@ -35,23 +35,6 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
                                      player);
 
     }
-
-    private static final Comparator<Tuple2<MemberId, PlayerWithBalanceAndConnectionState>>
-            playerComparator =
-            new Comparator<Tuple2<MemberId, PlayerWithBalanceAndConnectionState>>() {
-
-                private final Collator collator = Collator.getInstance();
-
-                @Override
-                public int compare(Tuple2<MemberId, PlayerWithBalanceAndConnectionState> lhs,
-                                   Tuple2<MemberId, PlayerWithBalanceAndConnectionState> rhs) {
-                    return collator.compare(
-                            lhs._2().member().name(),
-                            rhs._2().member().name()
-                    );
-                }
-
-            };
 
     private static class PlayersAdapter
             extends ArrayAdapter<Tuple2<MemberId, PlayerWithBalanceAndConnectionState>> {
@@ -93,6 +76,23 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
         }
 
     }
+
+    private static final Comparator<Tuple2<MemberId, PlayerWithBalanceAndConnectionState>>
+            playerComparator =
+            new Comparator<Tuple2<MemberId, PlayerWithBalanceAndConnectionState>>() {
+
+                private final Collator collator = Collator.getInstance();
+
+                @Override
+                public int compare(Tuple2<MemberId, PlayerWithBalanceAndConnectionState> lhs,
+                                   Tuple2<MemberId, PlayerWithBalanceAndConnectionState> rhs) {
+                    return collator.compare(
+                            lhs._2().member().name(),
+                            rhs._2().member().name()
+                    );
+                }
+
+            };
 
     private ArrayAdapter<Tuple2<MemberId, PlayerWithBalanceAndConnectionState>> listAdapter;
 

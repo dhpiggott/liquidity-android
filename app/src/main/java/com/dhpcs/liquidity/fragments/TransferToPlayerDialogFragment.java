@@ -8,9 +8,9 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.widget.EditText;
 
+import com.dhpcs.liquidity.MonopolyGame.Identity;
+import com.dhpcs.liquidity.MonopolyGame.Player;
 import com.dhpcs.liquidity.R;
-import com.dhpcs.liquidity.models.AccountId;
-import com.dhpcs.liquidity.models.MemberId;
 
 import java.math.BigDecimal;
 
@@ -18,26 +18,26 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
 
     public interface Listener {
 
-        void onTransferValueEntered(MemberId actingAs,
-                                    AccountId fromAccountId,
-                                    AccountId toAccountId,
+        void onTransferValueEntered(Identity actingAs,
+                                    Player from,
+                                    Player to,
                                     BigDecimal transferValue);
 
     }
 
     private static final String ARG_ACTING_AS = "acting_as";
-    private static final String ARG_FROM_ACCOUNT_ID = "from_account_id";
-    private static final String ARG_TO_ACCOUNT_ID = "to_account_id";
+    private static final String ARG_FROM = "from";
+    private static final String ARG_TO = "to";
 
-    public static TransferToPlayerDialogFragment newInstance(MemberId actingAs,
-                                                             AccountId fromAccountId,
-                                                             AccountId toAccountId) {
+    public static TransferToPlayerDialogFragment newInstance(Identity actingAs,
+                                                             Player from,
+                                                             Player to) {
         TransferToPlayerDialogFragment transferToPlayerDialogFragment =
                 new TransferToPlayerDialogFragment();
         Bundle args = new Bundle();
         args.putSerializable(ARG_ACTING_AS, actingAs);
-        args.putSerializable(ARG_FROM_ACCOUNT_ID, fromAccountId);
-        args.putSerializable(ARG_TO_ACCOUNT_ID, toAccountId);
+        args.putSerializable(ARG_FROM, from);
+        args.putSerializable(ARG_TO, to);
         transferToPlayerDialogFragment.setArguments(args);
         return transferToPlayerDialogFragment;
     }
@@ -60,10 +60,8 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
     // Using http://stackoverflow.com/questions/5107901/better-way-to-format-currency-input-edittext
     // Currently this crashes when parsing '0' or '00'...
     // Add buttons with quantity suffixes
-    // Show source with spinner
+    // Show source (with spinner?)
     // Show destination
-    // Add support for multiple destinations (to speed up initial capital allocation etc.), with
-    // quantity presets
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         return new AlertDialog.Builder(getActivity())
@@ -75,12 +73,12 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
                             public void onClick(DialogInterface dialog, int whichButton) {
                                 if (listener != null) {
                                     listener.onTransferValueEntered(
-                                            (MemberId) getArguments()
+                                            (Identity) getArguments()
                                                     .getSerializable(ARG_ACTING_AS),
-                                            (AccountId) getArguments()
-                                                    .getSerializable(ARG_FROM_ACCOUNT_ID),
-                                            (AccountId) getArguments()
-                                                    .getSerializable(ARG_TO_ACCOUNT_ID),
+                                            (Player) getArguments()
+                                                    .getSerializable(ARG_FROM),
+                                            (Player) getArguments()
+                                                    .getSerializable(ARG_TO),
                                             new BigDecimal(
                                                     ((EditText) getDialog().findViewById(
                                                             R.id.edittext_transfer_value

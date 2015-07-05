@@ -30,22 +30,6 @@ public class IdentitiesFragment extends Fragment {
 
     }
 
-    private static final Comparator<Tuple2<MemberId, IdentityWithBalance>> identityComparator =
-            new Comparator<Tuple2<MemberId, IdentityWithBalance>>() {
-
-                private final Collator collator = Collator.getInstance();
-
-                @Override
-                public int compare(Tuple2<MemberId, IdentityWithBalance> lhs,
-                                   Tuple2<MemberId, IdentityWithBalance> rhs) {
-                    return collator.compare(
-                            lhs._2().member().name(),
-                            rhs._2().member().name()
-                    );
-                }
-
-            };
-
     private static class IdentitiesFragmentStatePagerAdapter extends FragmentStatePagerAdapter {
 
         private final ArrayList<Tuple2<MemberId, IdentityWithBalance>> identities
@@ -91,6 +75,22 @@ public class IdentitiesFragment extends Fragment {
         }
 
     }
+
+    private static final Comparator<Tuple2<MemberId, IdentityWithBalance>> identityComparator =
+            new Comparator<Tuple2<MemberId, IdentityWithBalance>>() {
+
+                private final Collator collator = Collator.getInstance();
+
+                @Override
+                public int compare(Tuple2<MemberId, IdentityWithBalance> lhs,
+                                   Tuple2<MemberId, IdentityWithBalance> rhs) {
+                    return collator.compare(
+                            lhs._2().member().name(),
+                            rhs._2().member().name()
+                    );
+                }
+
+            };
 
     private IdentitiesFragmentStatePagerAdapter playersFragmentStatePagerAdapter;
     private ViewPager viewPagerIdentities;
