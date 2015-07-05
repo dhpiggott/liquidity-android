@@ -59,7 +59,8 @@ object MonopolyGame {
 
     def onJoined(zoneId: ZoneId)
 
-    def onPlayersChanged(players: Iterable[PlayerWithBalanceAndConnectionState])
+    def onPlayersChanged(selectedIdentityId: Option[MemberId],
+                         players: Iterable[PlayerWithBalanceAndConnectionState])
 
     def onQuit()
 
@@ -349,7 +350,7 @@ class MonopolyGame(context: Context)
 
           listener.foreach { listener =>
             listener.onIdentitiesChanged(identities)
-            listener.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)).values)
+            listener.onPlayersChanged(selectedIdentityId, players.values)
           }
 
           val partiallyCreatedIdentities = zone.members.filter { case (memberId, member) =>
@@ -436,7 +437,7 @@ class MonopolyGame(context: Context)
 
             players = players ++ joinedPlayers
             listener.foreach(
-              _.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)).values)
+              _.onPlayersChanged(selectedIdentityId, players.values)
             )
 
           case clientQuitZoneNotification: ClientQuitZoneNotification =>
@@ -455,7 +456,7 @@ class MonopolyGame(context: Context)
 
             players = players ++ quitPlayers
             listener.foreach(
-              _.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)).values)
+              _.onPlayersChanged(selectedIdentityId, players.values)
             )
 
           case zoneTerminatedNotification: ZoneTerminatedNotification =>
@@ -534,7 +535,7 @@ class MonopolyGame(context: Context)
             createdPlayer.foreach { createdPlayer =>
               players = players + createdPlayer
               listener.foreach(
-                _.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)).values)
+                _.onPlayersChanged(selectedIdentityId, players.values)
               )
             }
 
@@ -573,7 +574,7 @@ class MonopolyGame(context: Context)
 
             listener.foreach { listener =>
               listener.onIdentitiesChanged(identities)
-              listener.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)).values)
+              listener.onPlayersChanged(selectedIdentityId, players.values)
             }
 
             if (isIdentityReceipt) {
@@ -624,7 +625,7 @@ class MonopolyGame(context: Context)
             createdPlayer.foreach { createdPlayer =>
               players = players + createdPlayer
               listener.foreach(
-                _.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)).values)
+                _.onPlayersChanged(selectedIdentityId, players.values)
               )
             }
 
@@ -661,7 +662,7 @@ class MonopolyGame(context: Context)
 
             listener.foreach { listener =>
               listener.onIdentitiesChanged(identities)
-              listener.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)).values)
+              listener.onPlayersChanged(selectedIdentityId, players.values)
             }
 
           case transactionAddedNotification: TransactionAddedNotification =>
@@ -704,7 +705,7 @@ class MonopolyGame(context: Context)
 
             players = players ++ updatedPlayers
             listener.foreach(
-              _.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)).values)
+              _.onPlayersChanged(selectedIdentityId, players.values)
             )
 
         }
@@ -799,7 +800,7 @@ class MonopolyGame(context: Context)
       } else {
         listener.onJoined(zoneId.get)
         listener.onIdentitiesChanged(identities)
-        listener.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)).values)
+        listener.onPlayersChanged(selectedIdentityId, players.values)
       }
     )
   }
@@ -807,7 +808,7 @@ class MonopolyGame(context: Context)
   def setSelectedIdentity(selectedIdentityId: MemberId) {
     this.selectedIdentityId = Option(selectedIdentityId)
     listener.foreach(
-      _.onPlayersChanged(players.filterKeys(selectedIdentityId != _).values)
+      _.onPlayersChanged(this.selectedIdentityId, players.values)
     )
   }
 

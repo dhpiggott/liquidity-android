@@ -16,11 +16,13 @@ import com.dhpcs.liquidity.MonopolyGame.PlayerWithBalanceAndConnectionState;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activities.MonopolyGameActivity;
 import com.dhpcs.liquidity.models.Identifier;
+import com.dhpcs.liquidity.models.MemberId;
 import com.dhpcs.liquidity.views.Identicon;
 
 import java.text.Collator;
 import java.util.Comparator;
 
+import scala.Option;
 import scala.collection.Iterator;
 
 // TODO: Extend ListFragment? http://developer.android.com/reference/android/app/ListFragment.html
@@ -135,13 +137,17 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
         }
     }
 
-    public void onPlayersChanged(scala.collection.Iterable<PlayerWithBalanceAndConnectionState>
+    public void onPlayersChanged(Option<MemberId> selectedIdentityId,
+                                 scala.collection.Iterable<PlayerWithBalanceAndConnectionState>
                                          players) {
         listAdapter.setNotifyOnChange(false);
         listAdapter.clear();
         Iterator<PlayerWithBalanceAndConnectionState> iterator = players.iterator();
         while (iterator.hasNext()) {
-            listAdapter.add(iterator.next());
+            PlayerWithBalanceAndConnectionState player = iterator.next();
+            if (!selectedIdentityId.contains(player.memberId())) {
+                listAdapter.add(player);
+            }
         }
         listAdapter.sort(playerComparator);
         listAdapter.notifyDataSetChanged();
