@@ -22,7 +22,6 @@ import com.dhpcs.liquidity.views.Identicon;
 import java.text.Collator;
 import java.util.Comparator;
 
-import scala.Option;
 import scala.collection.Iterator;
 
 // TODO: Extend ListFragment? http://developer.android.com/reference/android/app/ListFragment.html
@@ -137,7 +136,7 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
         }
     }
 
-    public void onPlayersChanged(Option<MemberId> selectedIdentityId,
+    public void onPlayersChanged(MemberId selectedIdentityId,
                                  scala.collection.Iterable<PlayerWithBalanceAndConnectionState>
                                          players) {
         listAdapter.setNotifyOnChange(false);
@@ -145,7 +144,7 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
         Iterator<PlayerWithBalanceAndConnectionState> iterator = players.iterator();
         while (iterator.hasNext()) {
             PlayerWithBalanceAndConnectionState player = iterator.next();
-            if (!selectedIdentityId.contains(player.memberId())) {
+            if (!player.memberId().equals(selectedIdentityId)) {
                 listAdapter.add(player);
             }
         }

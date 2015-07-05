@@ -44,7 +44,8 @@ object MonopolyGame {
                                  member: Member,
                                  accountId: AccountId,
                                  account: Account,
-                                 balanceWithCurrency: (BigDecimal, Option[Either[String, Currency]]))
+                                 balanceWithCurrency:
+                                 (BigDecimal, Option[Either[String, Currency]]))
     extends Identity
 
   trait Listener {
@@ -59,8 +60,7 @@ object MonopolyGame {
 
     def onJoined(zoneId: ZoneId)
 
-    def onPlayersChanged(selectedIdentityId: Option[MemberId],
-                         players: Iterable[PlayerWithBalanceAndConnectionState])
+    def onPlayersChanged(players: Iterable[PlayerWithBalanceAndConnectionState])
 
     def onQuit()
 
@@ -162,7 +162,6 @@ class MonopolyGame(context: Context)
 
   private var gameId = Option.empty[Future[Long]]
   private var zoneId = Option.empty[ZoneId]
-  private var selectedIdentityId = Option.empty[MemberId]
 
   // TODO
   private var zone: Zone = _
@@ -350,7 +349,7 @@ class MonopolyGame(context: Context)
 
           listener.foreach { listener =>
             listener.onIdentitiesChanged(identities)
-            listener.onPlayersChanged(selectedIdentityId, players.values)
+            listener.onPlayersChanged(players.values)
           }
 
           val partiallyCreatedIdentities = zone.members.filter { case (memberId, member) =>
@@ -437,7 +436,7 @@ class MonopolyGame(context: Context)
 
             players = players ++ joinedPlayers
             listener.foreach(
-              _.onPlayersChanged(selectedIdentityId, players.values)
+              _.onPlayersChanged(players.values)
             )
 
           case clientQuitZoneNotification: ClientQuitZoneNotification =>
@@ -456,7 +455,7 @@ class MonopolyGame(context: Context)
 
             players = players ++ quitPlayers
             listener.foreach(
-              _.onPlayersChanged(selectedIdentityId, players.values)
+              _.onPlayersChanged(players.values)
             )
 
           case zoneTerminatedNotification: ZoneTerminatedNotification =>
@@ -535,7 +534,7 @@ class MonopolyGame(context: Context)
             createdPlayer.foreach { createdPlayer =>
               players = players + createdPlayer
               listener.foreach(
-                _.onPlayersChanged(selectedIdentityId, players.values)
+                _.onPlayersChanged(players.values)
               )
             }
 
@@ -574,7 +573,7 @@ class MonopolyGame(context: Context)
 
             listener.foreach { listener =>
               listener.onIdentitiesChanged(identities)
-              listener.onPlayersChanged(selectedIdentityId, players.values)
+              listener.onPlayersChanged(players.values)
             }
 
             if (isIdentityReceipt) {
@@ -625,7 +624,7 @@ class MonopolyGame(context: Context)
             createdPlayer.foreach { createdPlayer =>
               players = players + createdPlayer
               listener.foreach(
-                _.onPlayersChanged(selectedIdentityId, players.values)
+                _.onPlayersChanged(players.values)
               )
             }
 
@@ -662,7 +661,7 @@ class MonopolyGame(context: Context)
 
             listener.foreach { listener =>
               listener.onIdentitiesChanged(identities)
-              listener.onPlayersChanged(selectedIdentityId, players.values)
+              listener.onPlayersChanged(players.values)
             }
 
           case transactionAddedNotification: TransactionAddedNotification =>
@@ -705,7 +704,7 @@ class MonopolyGame(context: Context)
 
             players = players ++ updatedPlayers
             listener.foreach(
-              _.onPlayersChanged(selectedIdentityId, players.values)
+              _.onPlayersChanged(players.values)
             )
 
         }
@@ -800,15 +799,8 @@ class MonopolyGame(context: Context)
       } else {
         listener.onJoined(zoneId.get)
         listener.onIdentitiesChanged(identities)
-        listener.onPlayersChanged(selectedIdentityId, players.values)
+        listener.onPlayersChanged(players.values)
       }
-    )
-  }
-
-  def setSelectedIdentity(selectedIdentityId: MemberId) {
-    this.selectedIdentityId = Option(selectedIdentityId)
-    listener.foreach(
-      _.onPlayersChanged(this.selectedIdentityId, players.values)
     )
   }
 

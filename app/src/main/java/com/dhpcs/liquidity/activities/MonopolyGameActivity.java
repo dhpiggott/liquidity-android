@@ -84,6 +84,8 @@ public class MonopolyGameActivity extends AppCompatActivity
     private PlayersFragment playersFragment;
 
     private ZoneId zoneId;
+    private MemberId selectedIdentityId;
+    private scala.collection.Iterable<PlayerWithBalanceAndConnectionState> players;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -154,9 +156,10 @@ public class MonopolyGameActivity extends AppCompatActivity
         IdentityWithBalance selectedIdentity = identitiesFragment.getIdentity(
                 identitiesFragment.getSelectedPage()
         );
-        monopolyGameHolderFragment.getMonopolyGame().setSelectedIdentity(
-                selectedIdentity == null ? null : selectedIdentity.memberId()
-        );
+        this.selectedIdentityId = selectedIdentity == null ? null : selectedIdentity.memberId();
+        if (players != null) {
+            playersFragment.onPlayersChanged(selectedIdentityId, players);
+        }
     }
 
     @Override
@@ -177,9 +180,10 @@ public class MonopolyGameActivity extends AppCompatActivity
     @Override
     public void onIdentityPageSelected(int page) {
         IdentityWithBalance selectedIdentity = identitiesFragment.getIdentity(page);
-        monopolyGameHolderFragment.getMonopolyGame().setSelectedIdentity(
-                selectedIdentity == null ? null : selectedIdentity.memberId()
-        );
+        this.selectedIdentityId = selectedIdentity == null ? null : selectedIdentity.memberId();
+        if (players != null) {
+            playersFragment.onPlayersChanged(selectedIdentityId, players);
+        }
     }
 
     @Override
@@ -256,9 +260,9 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onPlayersChanged(Option<MemberId> selectedIdentityId,
-                                 scala.collection.Iterable<PlayerWithBalanceAndConnectionState>
+    public void onPlayersChanged(scala.collection.Iterable<PlayerWithBalanceAndConnectionState>
                                          players) {
+        this.players = players;
         playersFragment.onPlayersChanged(selectedIdentityId, players);
     }
 
