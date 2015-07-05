@@ -7,7 +7,7 @@
     android:orientation="horizontal"
     tools:context="com.dhpcs.liquidity.fragments.IdentityFragment">
 
-    <com.dhpcs.liquidity.Identicon
+    <com.dhpcs.liquidity.views.Identicon
         android:id="@+id/identicon_id"
         android:layout_width="96dp"
         android:layout_height="96dp"

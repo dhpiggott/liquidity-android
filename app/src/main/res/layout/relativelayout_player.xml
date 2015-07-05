@@ -7,7 +7,7 @@
     android:paddingEnd="16dp"
     android:paddingStart="16dp">
 
-    <com.dhpcs.liquidity.Identicon
+    <com.dhpcs.liquidity.views.Identicon
         android:id="@+id/identicon_id"
         android:layout_width="48dp"
         android:layout_height="48dp"

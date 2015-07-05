@@ -12,7 +12,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-import com.dhpcs.liquidity.Identicon;
+import com.dhpcs.liquidity.views.Identicon;
 import com.dhpcs.liquidity.MonopolyGame;
 import com.dhpcs.liquidity.MonopolyGame.PlayerWithBalanceAndConnectionState;
 import com.dhpcs.liquidity.R;
