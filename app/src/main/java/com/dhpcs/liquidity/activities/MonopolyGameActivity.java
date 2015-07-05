@@ -148,20 +148,19 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onIdentitiesChanged(scala.collection.immutable
-                                            .Map<MemberId, IdentityWithBalance>
+    public void onIdentitiesChanged(scala.collection.immutable.Map<MemberId, IdentityWithBalance>
                                             identities) {
         identitiesFragment.onIdentitiesChanged(identities);
-        Tuple2<MemberId, IdentityWithBalance> selectedIdentity = identitiesFragment.getIdentity(
+        IdentityWithBalance selectedIdentity = identitiesFragment.getIdentity(
                 identitiesFragment.getSelectedPage()
         );
         monopolyGameHolderFragment.getMonopolyGame().setSelectedIdentity(
-                selectedIdentity == null ? null : selectedIdentity._1()
+                selectedIdentity == null ? null : selectedIdentity.memberId()
         );
     }
 
     @Override
-    public void onIdentityCreated(Tuple2<MemberId, IdentityWithBalance> identity) {
+    public void onIdentityCreated(IdentityWithBalance identity) {
         identitiesFragment.setSelectedPage(identitiesFragment.getPage(identity));
     }
 
@@ -177,16 +176,14 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public void onIdentityPageSelected(int page) {
-        Tuple2<MemberId, IdentityWithBalance> selectedIdentity = identitiesFragment.getIdentity(
-                page
-        );
+        IdentityWithBalance selectedIdentity = identitiesFragment.getIdentity(page);
         monopolyGameHolderFragment.getMonopolyGame().setSelectedIdentity(
-                selectedIdentity == null ? null : selectedIdentity._1()
+                selectedIdentity == null ? null : selectedIdentity.memberId()
         );
     }
 
     @Override
-    public void onIdentityReceived(Tuple2<MemberId, IdentityWithBalance> identity) {
+    public void onIdentityReceived(IdentityWithBalance identity) {
         DialogFragment receiveIdentityDialogFragment = (DialogFragment) getFragmentManager()
                 .findFragmentByTag("receive_identity_dialog_fragment");
         if (receiveIdentityDialogFragment != null) {
@@ -221,13 +218,13 @@ public class MonopolyGameActivity extends AppCompatActivity
                 );
                 return true;
             case R.id.action_change_identity_name:
-                Tuple2<MemberId, IdentityWithBalance> selectedIdentity = identitiesFragment
-                        .getIdentity(identitiesFragment.getSelectedPage());
+                IdentityWithBalance selectedIdentity = identitiesFragment.getIdentity(
+                        identitiesFragment.getSelectedPage()
+                );
                 if (selectedIdentity != null) {
                     ChangeIdentityNameDialogFragment.newInstance(
-                            selectedIdentity._1(),
-                            monopolyGameHolderFragment.getMonopolyGame()
-                                    .getIdentityName(selectedIdentity._1())
+                            selectedIdentity.memberId(),
+                            selectedIdentity.member().name()
                     ).show(
                             getFragmentManager(),
                             "change_identity_name_dialog_fragment"
@@ -259,23 +256,21 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onPlayersChanged(scala.collection.immutable
-                                         .Map<MemberId, PlayerWithBalanceAndConnectionState>
+    public void onPlayersChanged(scala.collection.Iterable<PlayerWithBalanceAndConnectionState>
                                          players) {
         playersFragment.onPlayersChanged(players);
     }
 
     @Override
-    public void onPlayerClicked(Tuple2<MemberId, MonopolyGame.PlayerWithBalanceAndConnectionState>
-                                        player) {
-        Tuple2<MemberId, IdentityWithBalance> identity = identitiesFragment.getIdentity(
+    public void onPlayerClicked(PlayerWithBalanceAndConnectionState player) {
+        IdentityWithBalance identity = identitiesFragment.getIdentity(
                 identitiesFragment.getSelectedPage()
         );
         if (identity != null) {
             TransferToPlayerDialogFragment.newInstance(
-                    identity._2(),
-                    identity._2(),
-                    player._2()
+                    identity,
+                    identity,
+                    player
             ).show(
                     getFragmentManager(),
                     "transfer_to_player_dialog_fragment"
@@ -301,7 +296,7 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public void onPublicKeyScanned(Result rawResult) {
-        Tuple2<MemberId, IdentityWithBalance> identity = identitiesFragment.getIdentity(
+        IdentityWithBalance identity = identitiesFragment.getIdentity(
                 identitiesFragment.getSelectedPage()
         );
         if (identity != null) {
@@ -310,9 +305,8 @@ public class MonopolyGameActivity extends AppCompatActivity
                             rawResult.getText()
                     )
             );
-            if (!monopolyGameHolderFragment.getMonopolyGame().isPublicKeyConnectedAndImplicitlyValid(
-                    publicKey
-            )) {
+            if (!monopolyGameHolderFragment.getMonopolyGame()
+                    .isPublicKeyConnectedAndImplicitlyValid(publicKey)) {
                 // TODO
                 Toast.makeText(
                         this,
@@ -320,7 +314,10 @@ public class MonopolyGameActivity extends AppCompatActivity
                         Toast.LENGTH_LONG
                 ).show();
             } else {
-                monopolyGameHolderFragment.getMonopolyGame().transfer(identity._1(), publicKey);
+                monopolyGameHolderFragment.getMonopolyGame().transfer(
+                        identity.memberId(),
+                        publicKey
+                );
             }
         }
     }

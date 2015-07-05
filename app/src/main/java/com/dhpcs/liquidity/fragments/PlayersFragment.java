@@ -12,18 +12,15 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-import com.dhpcs.liquidity.MonopolyGame;
 import com.dhpcs.liquidity.MonopolyGame.PlayerWithBalanceAndConnectionState;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activities.MonopolyGameActivity;
 import com.dhpcs.liquidity.models.Identifier;
-import com.dhpcs.liquidity.models.MemberId;
 import com.dhpcs.liquidity.views.Identicon;
 
 import java.text.Collator;
 import java.util.Comparator;
 
-import scala.Tuple2;
 import scala.collection.Iterator;
 
 // TODO: Extend ListFragment? http://developer.android.com/reference/android/app/ListFragment.html
@@ -31,13 +28,11 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
 
     public interface Listener {
 
-        void onPlayerClicked(Tuple2<MemberId, MonopolyGame.PlayerWithBalanceAndConnectionState>
-                                     player);
+        void onPlayerClicked(PlayerWithBalanceAndConnectionState player);
 
     }
 
-    private static class PlayersAdapter
-            extends ArrayAdapter<Tuple2<MemberId, PlayerWithBalanceAndConnectionState>> {
+    private static class PlayersAdapter extends ArrayAdapter<PlayerWithBalanceAndConnectionState> {
 
         public PlayersAdapter(Context context) {
             super(context,
@@ -52,20 +47,18 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
             TextView textViewName = (TextView) view.findViewById(R.id.textview_name);
             TextView textViewBalance = (TextView) view.findViewById(R.id.textview_balance);
 
-            Tuple2<MemberId, PlayerWithBalanceAndConnectionState> player = getItem(position);
+            PlayerWithBalanceAndConnectionState player = getItem(position);
 
-            Identifier identifier = player._1();
-            String name = player._2().member().name();
-            String balance = MonopolyGameActivity.formatBalance(
-                    player._2().balanceWithCurrency()
-            );
+            Identifier identifier = player.memberId();
+            String name = player.member().name();
+            String balance = MonopolyGameActivity.formatBalance(player.balanceWithCurrency());
 
             identiconId.show(identifier);
             textViewName.setText(
                     getContext().getString(
                             R.string.player_format_string,
                             name,
-                            player._2().isConnected() ?
+                            player.isConnected() ?
                                     getContext().getString(R.string.player_connected) :
                                     getContext().getString(R.string.player_disconnected)
                     )
@@ -77,24 +70,23 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
 
     }
 
-    private static final Comparator<Tuple2<MemberId, PlayerWithBalanceAndConnectionState>>
-            playerComparator =
-            new Comparator<Tuple2<MemberId, PlayerWithBalanceAndConnectionState>>() {
+    private static final Comparator<PlayerWithBalanceAndConnectionState> playerComparator =
+            new Comparator<PlayerWithBalanceAndConnectionState>() {
 
                 private final Collator collator = Collator.getInstance();
 
                 @Override
-                public int compare(Tuple2<MemberId, PlayerWithBalanceAndConnectionState> lhs,
-                                   Tuple2<MemberId, PlayerWithBalanceAndConnectionState> rhs) {
+                public int compare(PlayerWithBalanceAndConnectionState lhs,
+                                   PlayerWithBalanceAndConnectionState rhs) {
                     return collator.compare(
-                            lhs._2().member().name(),
-                            rhs._2().member().name()
+                            lhs.member().name(),
+                            rhs.member().name()
                     );
                 }
 
             };
 
-    private ArrayAdapter<Tuple2<MemberId, PlayerWithBalanceAndConnectionState>> listAdapter;
+    private ArrayAdapter<PlayerWithBalanceAndConnectionState> listAdapter;
 
     private Listener listener;
 
@@ -143,16 +135,13 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
         }
     }
 
-    public void onPlayersChanged(scala.collection.immutable
-                                         .Map<MemberId, PlayerWithBalanceAndConnectionState>
+    public void onPlayersChanged(scala.collection.Iterable<PlayerWithBalanceAndConnectionState>
                                          players) {
         listAdapter.setNotifyOnChange(false);
         listAdapter.clear();
-        Iterator<Tuple2<MemberId, PlayerWithBalanceAndConnectionState>> iterator = players
-                .iterator();
+        Iterator<PlayerWithBalanceAndConnectionState> iterator = players.iterator();
         while (iterator.hasNext()) {
-            Tuple2<MemberId, PlayerWithBalanceAndConnectionState> changedPlayer = iterator.next();
-            listAdapter.add(changedPlayer);
+            listAdapter.add(iterator.next());
         }
         listAdapter.sort(playerComparator);
         listAdapter.notifyDataSetChanged();

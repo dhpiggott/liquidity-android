@@ -53,13 +53,13 @@ object MonopolyGame {
 
     def onIdentitiesChanged(identities: Map[MemberId, IdentityWithBalance])
 
-    def onIdentityCreated(identity: (MemberId, IdentityWithBalance))
+    def onIdentityCreated(identity: IdentityWithBalance)
 
-    def onIdentityReceived(identity: (MemberId, IdentityWithBalance))
+    def onIdentityReceived(identity: IdentityWithBalance)
 
     def onJoined(zoneId: ZoneId)
 
-    def onPlayersChanged(players: Map[MemberId, PlayerWithBalanceAndConnectionState])
+    def onPlayersChanged(players: Iterable[PlayerWithBalanceAndConnectionState])
 
     def onQuit()
 
@@ -384,7 +384,7 @@ class MonopolyGame(context: Context)
 
           listener.foreach { listener =>
             listener.onIdentitiesChanged(identities)
-            listener.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)))
+            listener.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)).values)
           }
 
           val partiallyCreatedIdentities = zone.members.filter { case (memberId, member) =>
@@ -436,7 +436,7 @@ class MonopolyGame(context: Context)
 
             players = players ++ joinedPlayers
             listener.foreach(
-              _.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)))
+              _.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)).values)
             )
 
           case clientQuitZoneNotification: ClientQuitZoneNotification =>
@@ -455,7 +455,7 @@ class MonopolyGame(context: Context)
 
             players = players ++ quitPlayers
             listener.foreach(
-              _.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)))
+              _.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)).values)
             )
 
           case zoneTerminatedNotification: ZoneTerminatedNotification =>
@@ -534,14 +534,12 @@ class MonopolyGame(context: Context)
             createdPlayer.foreach { createdPlayer =>
               players = players + createdPlayer
               listener.foreach(
-                _.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)))
+                _.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)).values)
               )
             }
 
             if (isIdentityCreation) {
-              listener.foreach(_.onIdentityCreated(
-                (memberCreatedNotification.memberId, identities(memberCreatedNotification.memberId))
-              ))
+              listener.foreach(_.onIdentityCreated(identities(memberCreatedNotification.memberId)))
             }
 
           case memberUpdatedNotification: MemberUpdatedNotification =>
@@ -575,13 +573,11 @@ class MonopolyGame(context: Context)
 
             listener.foreach { listener =>
               listener.onIdentitiesChanged(identities)
-              listener.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)))
+              listener.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)).values)
             }
 
             if (isIdentityReceipt) {
-              listener.foreach(_.onIdentityReceived(
-                (memberUpdatedNotification.memberId, identities(memberUpdatedNotification.memberId))
-              ))
+              listener.foreach(_.onIdentityReceived(identities(memberUpdatedNotification.memberId)))
             }
 
           case accountCreatedNotification: AccountCreatedNotification =>
@@ -628,14 +624,13 @@ class MonopolyGame(context: Context)
             createdPlayer.foreach { createdPlayer =>
               players = players + createdPlayer
               listener.foreach(
-                _.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)))
+                _.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)).values)
               )
             }
 
             if (isIdentityCreation) {
               listener.foreach(_.onIdentityCreated(
-                (accountCreatedNotification.account.owners.head,
-                  identities(accountCreatedNotification.account.owners.head))
+                identities(accountCreatedNotification.account.owners.head)
               ))
             }
 
@@ -666,7 +661,7 @@ class MonopolyGame(context: Context)
 
             listener.foreach { listener =>
               listener.onIdentitiesChanged(identities)
-              listener.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)))
+              listener.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)).values)
             }
 
           case transactionAddedNotification: TransactionAddedNotification =>
@@ -709,7 +704,7 @@ class MonopolyGame(context: Context)
 
             players = players ++ updatedPlayers
             listener.foreach(
-              _.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)))
+              _.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)).values)
             )
 
         }
@@ -804,14 +799,16 @@ class MonopolyGame(context: Context)
       } else {
         listener.onJoined(zoneId.get)
         listener.onIdentitiesChanged(identities)
-        listener.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)))
+        listener.onPlayersChanged(players.filterKeys(!selectedIdentityId.contains(_)).values)
       }
     )
   }
 
   def setSelectedIdentity(selectedIdentityId: MemberId) {
     this.selectedIdentityId = Option(selectedIdentityId)
-    listener.foreach(_.onPlayersChanged(players.filterKeys(selectedIdentityId != _)))
+    listener.foreach(
+      _.onPlayersChanged(players.filterKeys(selectedIdentityId != _).values)
+    )
   }
 
   def setZoneId(zoneId: ZoneId) {

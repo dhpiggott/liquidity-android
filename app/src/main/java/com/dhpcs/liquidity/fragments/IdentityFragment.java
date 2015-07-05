@@ -7,20 +7,17 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.dhpcs.liquidity.views.Identicon;
 import com.dhpcs.liquidity.MonopolyGame.IdentityWithBalance;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activities.MonopolyGameActivity;
 import com.dhpcs.liquidity.models.Identifier;
-import com.dhpcs.liquidity.models.MemberId;
-
-import scala.Tuple2;
+import com.dhpcs.liquidity.views.Identicon;
 
 public class IdentityFragment extends Fragment {
 
     private static final String ARG_IDENTITY = "identity";
 
-    public static IdentityFragment newInstance(Tuple2<MemberId, IdentityWithBalance> identity) {
+    public static IdentityFragment newInstance(IdentityWithBalance identity) {
         IdentityFragment identityFragment = new IdentityFragment();
         Bundle args = new Bundle();
         args.putSerializable(ARG_IDENTITY, identity);
@@ -28,14 +25,13 @@ public class IdentityFragment extends Fragment {
         return identityFragment;
     }
 
-    private Tuple2<MemberId, IdentityWithBalance> identity;
+    private IdentityWithBalance identity;
 
     @Override
     @SuppressWarnings("unchecked")
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        identity = (Tuple2<MemberId, IdentityWithBalance>)
-                getArguments().getSerializable(ARG_IDENTITY);
+        identity = (IdentityWithBalance) getArguments().getSerializable(ARG_IDENTITY);
     }
 
     @Override
@@ -48,10 +44,10 @@ public class IdentityFragment extends Fragment {
         TextView textViewName = (TextView) view.findViewById(R.id.textview_name);
         TextView textViewBalance = (TextView) view.findViewById(R.id.textview_balance);
 
-        Identifier identifier = identity._1();
-        String name = identity._2().member().name();
+        Identifier identifier = identity.memberId();
+        String name = identity.member().name();
         String balance = MonopolyGameActivity.formatBalance(
-                identity._2().balanceWithCurrency()
+                identity.balanceWithCurrency()
         );
 
         identiconId.show(identifier);

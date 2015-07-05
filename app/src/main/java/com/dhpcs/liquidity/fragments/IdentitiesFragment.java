@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
-import scala.Tuple2;
 import scala.collection.Iterator;
 
 public class IdentitiesFragment extends Fragment {
@@ -32,14 +31,13 @@ public class IdentitiesFragment extends Fragment {
 
     private static class IdentitiesFragmentStatePagerAdapter extends FragmentStatePagerAdapter {
 
-        private final ArrayList<Tuple2<MemberId, IdentityWithBalance>> identities
-                = new ArrayList<>();
+        private final ArrayList<IdentityWithBalance> identities = new ArrayList<>();
 
         public IdentitiesFragmentStatePagerAdapter(FragmentManager fragmentManager) {
             super(fragmentManager);
         }
 
-        public void add(Tuple2<MemberId, IdentityWithBalance> identity) {
+        public void add(IdentityWithBalance identity) {
             identities.add(identity);
         }
 
@@ -47,7 +45,7 @@ public class IdentitiesFragment extends Fragment {
             identities.clear();
         }
 
-        public Tuple2<MemberId, IdentityWithBalance> get(int position) {
+        public IdentityWithBalance get(int position) {
             return identities.get(position);
         }
 
@@ -66,27 +64,26 @@ public class IdentitiesFragment extends Fragment {
             return POSITION_NONE;
         }
 
-        public int getPosition(Tuple2<MemberId, IdentityWithBalance> identity) {
+        public int getPosition(IdentityWithBalance identity) {
             return identities.indexOf(identity);
         }
 
-        public void sort(Comparator<Tuple2<MemberId, IdentityWithBalance>> comparator) {
+        public void sort(Comparator<IdentityWithBalance> comparator) {
             Collections.sort(identities, comparator);
         }
 
     }
 
-    private static final Comparator<Tuple2<MemberId, IdentityWithBalance>> identityComparator =
-            new Comparator<Tuple2<MemberId, IdentityWithBalance>>() {
+    private static final Comparator<IdentityWithBalance> identityComparator =
+            new Comparator<IdentityWithBalance>() {
 
                 private final Collator collator = Collator.getInstance();
 
                 @Override
-                public int compare(Tuple2<MemberId, IdentityWithBalance> lhs,
-                                   Tuple2<MemberId, IdentityWithBalance> rhs) {
+                public int compare(IdentityWithBalance lhs, IdentityWithBalance rhs) {
                     return collator.compare(
-                            lhs._2().member().name(),
-                            rhs._2().member().name()
+                            lhs.member().name(),
+                            rhs.member().name()
                     );
                 }
 
@@ -108,7 +105,7 @@ public class IdentitiesFragment extends Fragment {
         }
     }
 
-    public Tuple2<MemberId, IdentityWithBalance> getIdentity(int page) {
+    public IdentityWithBalance getIdentity(int page) {
         if (playersFragmentStatePagerAdapter.getCount() == 0) {
             return null;
         } else {
@@ -116,7 +113,7 @@ public class IdentitiesFragment extends Fragment {
         }
     }
 
-    public int getPage(Tuple2<MemberId, IdentityWithBalance> identity) {
+    public int getPage(IdentityWithBalance identity) {
         if (playersFragmentStatePagerAdapter.getCount() == 0) {
             return 0;
         } else {
@@ -166,26 +163,20 @@ public class IdentitiesFragment extends Fragment {
         listener = null;
     }
 
-    public void onIdentitiesChanged(scala.collection.immutable
-                                            .Map<MemberId, IdentityWithBalance>
+    public void onIdentitiesChanged(scala.collection.immutable.Map<MemberId, IdentityWithBalance>
                                             identities) {
-        Tuple2<MemberId, IdentityWithBalance> selectedIdentity = getIdentity(getSelectedPage());
+        IdentityWithBalance selectedIdentity = getIdentity(getSelectedPage());
         playersFragmentStatePagerAdapter.clear();
-        Iterator<Tuple2<MemberId, IdentityWithBalance>> iterator = identities
-                .iterator();
+        Iterator<IdentityWithBalance> iterator = identities.valuesIterator();
         while (iterator.hasNext()) {
-            Tuple2<MemberId, IdentityWithBalance> changedIdentity = iterator.next();
-            playersFragmentStatePagerAdapter.add(changedIdentity);
+            playersFragmentStatePagerAdapter.add(iterator.next());
         }
         playersFragmentStatePagerAdapter.sort(identityComparator);
         playersFragmentStatePagerAdapter.notifyDataSetChanged();
-        if (selectedIdentity != null && identities.contains(selectedIdentity._1())) {
+        if (selectedIdentity != null && identities.contains(selectedIdentity.memberId())) {
             viewPagerIdentities.setCurrentItem(
                     playersFragmentStatePagerAdapter.getPosition(
-                            Tuple2.apply(
-                                    selectedIdentity._1(),
-                                    identities.apply(selectedIdentity._1())
-                            )
+                            identities.apply(selectedIdentity.memberId())
                     ),
                     false
             );
