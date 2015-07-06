@@ -3,12 +3,14 @@ package com.dhpcs.liquidity.activities;
 import android.app.DialogFragment;
 import android.app.FragmentManager;
 import android.os.Bundle;
+import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.dhpcs.liquidity.ClientKey;
+import com.dhpcs.liquidity.MONOPOLY$;
 import com.dhpcs.liquidity.MonopolyGame;
 import com.dhpcs.liquidity.MonopolyGame.Identity;
 import com.dhpcs.liquidity.MonopolyGame.IdentityWithBalance;
@@ -234,6 +236,16 @@ public class MonopolyGameActivity extends AppCompatActivity
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case android.R.id.home:
+                NavUtils.navigateUpTo(
+                        this,
+                        NavUtils.getParentActivityIntent(this)
+                                .putExtra(
+                                        GamesActivity.GAME_TYPE,
+                                        MONOPOLY$.MODULE$
+                                )
+                );
+                return true;
             case R.id.action_add_players:
                 AddPlayersDialogFragment.newInstance(
                         zoneId
