@@ -52,6 +52,7 @@ public class MonopolyGameActivity extends AppCompatActivity
         TransferToPlayerDialogFragment.Listener {
 
     public static final String EXTRA_GAME_ID = "game_id";
+    public static final String EXTRA_GAME_NAME = "game_name";
     public static final String EXTRA_ZONE_ID = "zone_id";
 
     public static String formatBalance(
@@ -111,6 +112,14 @@ public class MonopolyGameActivity extends AppCompatActivity
 
                     monopolyGame.setGameId(
                             getIntent().getExtras().getLong(EXTRA_GAME_ID)
+                    );
+
+                }
+
+                if (getIntent().getExtras().containsKey(EXTRA_GAME_NAME)) {
+
+                    setTitle(
+                            getIntent().getExtras().getString(EXTRA_GAME_NAME)
                     );
 
                 }

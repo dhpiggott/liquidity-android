@@ -37,7 +37,7 @@ public class GamesFragment extends Fragment
 
     public interface Listener {
 
-        void onGameClicked(long gameId, ZoneId zoneId);
+        void onGameClicked(long gameId, ZoneId zoneId, String gameName);
 
     }
 
@@ -163,6 +163,9 @@ public class GamesFragment extends Fragment
                             cursor.getString(cursor.getColumnIndexOrThrow(
                                     LiquidityContract.Games.ZONE_ID
                             ))
+                    )),
+                    cursor.getString(cursor.getColumnIndexOrThrow(
+                            LiquidityContract.Games.NAME
                     ))
             );
         }

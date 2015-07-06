@@ -43,7 +43,7 @@ public class GamesActivity extends AppCompatActivity
         );
     }
 
-    private static void rejoinGame(Context context, long gameId, ZoneId zoneId) {
+    private static void rejoinGame(Context context, long gameId, ZoneId zoneId, String gameName) {
         context.startActivity(
                 new Intent(
                         context,
@@ -54,6 +54,9 @@ public class GamesActivity extends AppCompatActivity
                 ).putExtra(
                         MonopolyGameActivity.EXTRA_ZONE_ID,
                         zoneId
+                ).putExtra(
+                        MonopolyGameActivity.EXTRA_GAME_NAME,
+                        gameName
                 )
         );
     }
@@ -90,8 +93,8 @@ public class GamesActivity extends AppCompatActivity
     }
 
     @Override
-    public void onGameClicked(long gameId, ZoneId zoneId) {
-        rejoinGame(this, gameId, zoneId);
+    public void onGameClicked(long gameId, ZoneId zoneId, String gameName) {
+        rejoinGame(this, gameId, zoneId, gameName);
     }
 
     @Override
