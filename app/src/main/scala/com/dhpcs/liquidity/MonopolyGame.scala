@@ -339,6 +339,8 @@ class MonopolyGame(context: Context)
 
           // TODO: Chain this so it only happens after partially created identities have had their
           // accounts created.
+          // TODO: Revert gameId check but also check for deleted identities? Restore persistence of
+          // gameId to join response handler?
           if (gameId.isEmpty && !identities.values.exists(_.accountId != zone.equityAccountId)) {
             listener.foreach(_.onIdentityRequired())
           }
