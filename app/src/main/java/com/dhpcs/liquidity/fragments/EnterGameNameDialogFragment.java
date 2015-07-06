@@ -47,6 +47,14 @@ public class EnterGameNameDialogFragment extends DialogFragment {
         Dialog dialog = new AlertDialog.Builder(getActivity())
                 .setTitle(R.string.enter_game_name)
                 .setView(R.layout.fragment_enter_game_name_dialog)
+                .setNegativeButton(
+                        R.string.cancel,
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int whichButton) {
+                                getDialog().cancel();
+                            }
+                        }
+                )
                 .setPositiveButton(
                         R.string.ok,
                         new DialogInterface.OnClickListener() {
@@ -59,14 +67,6 @@ public class EnterGameNameDialogFragment extends DialogFragment {
                                     );
                                 }
                                 getDialog().dismiss();
-                            }
-                        }
-                )
-                .setNegativeButton(
-                        R.string.cancel,
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int whichButton) {
-                                getDialog().cancel();
                             }
                         }
                 )

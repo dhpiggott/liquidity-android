@@ -11,12 +11,15 @@
     <string name="cancel">Cancel</string>
     <string name="change_game_name">Change game name</string>
     <string name="change_identity_name">Change identity name</string>
+    <string name="confirm_delete">Confirm delete</string>
+    <string name="confirm_delete_format_string">Are you sure you want to delete your identity \"%1$s\"? You can always restore deleted identities via the menu later.</string>
     <string name="create_extra_identity">Create extra identity</string>
     <string name="created_format_string">Created %1$s</string>
+    <string name="delete_identity">Delete identity</string>
     <string name="enter_game_name">Enter game name</string>
     <string name="enter_identity_name">Enter identity name</string>
     <string name="enter_transfer_amount">Enter transfer amount</string>
-    <string name="game_name_format_string">Bank of %1$s</string>
+    <string name="game_name_format_string">%1$s\'s Game</string>
     <string name="join_game">Join game</string>
     <string name="new_game">New game</string>
     <string name="monopoly">Monopoly</string>

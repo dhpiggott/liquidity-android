@@ -18,6 +18,7 @@ import com.dhpcs.liquidity.MonopolyGame.Player;
 import com.dhpcs.liquidity.MonopolyGame.PlayerWithBalanceAndConnectionState;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.fragments.AddPlayersDialogFragment;
+import com.dhpcs.liquidity.fragments.ConfirmIdentityDeletionDialogFragment;
 import com.dhpcs.liquidity.fragments.CreateExtraIdentityDialogFragment;
 import com.dhpcs.liquidity.fragments.EnterGameNameDialogFragment;
 import com.dhpcs.liquidity.fragments.EnterIdentityNameDialogFragment;
@@ -46,6 +47,7 @@ import scala.util.Either;
 public class MonopolyGameActivity extends AppCompatActivity
         implements EnterGameNameDialogFragment.Listener,
         EnterIdentityNameDialogFragment.Listener,
+        ConfirmIdentityDeletionDialogFragment.Listener,
         CreateExtraIdentityDialogFragment.Listener,
         IdentitiesFragment.Listener,
         MonopolyGame.Listener,
@@ -169,13 +171,16 @@ public class MonopolyGameActivity extends AppCompatActivity
     public void onIdentitiesChanged(scala.collection.immutable.Map<MemberId, IdentityWithBalance>
                                             identities) {
         identitiesFragment.onIdentitiesChanged(identities);
-        IdentityWithBalance selectedIdentity = identitiesFragment.getIdentity(
-                identitiesFragment.getSelectedPage()
-        );
-        this.selectedIdentityId = selectedIdentity == null ? null : selectedIdentity.memberId();
+        Identity identity = identitiesFragment.getIdentity(identitiesFragment.getSelectedPage());
+        this.selectedIdentityId = identity == null ? null : identity.memberId();
         if (players != null) {
             playersFragment.onPlayersChanged(selectedIdentityId, players);
         }
+    }
+
+    @Override
+    public void onIdentityDeleteConfirmed(MemberId identityId) {
+        monopolyGameHolderFragment.getMonopolyGame().deleteIdentity(identityId);
     }
 
     @Override
@@ -199,8 +204,8 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public void onIdentityPageSelected(int page) {
-        IdentityWithBalance selectedIdentity = identitiesFragment.getIdentity(page);
-        this.selectedIdentityId = selectedIdentity == null ? null : selectedIdentity.memberId();
+        Identity identity = identitiesFragment.getIdentity(page);
+        this.selectedIdentityId = identity == null ? null : identity.memberId();
         if (players != null) {
             playersFragment.onPlayersChanged(selectedIdentityId, players);
         }
@@ -235,6 +240,7 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        Identity identity;
         switch (item.getItemId()) {
             case android.R.id.home:
                 NavUtils.navigateUpTo(
@@ -263,13 +269,11 @@ public class MonopolyGameActivity extends AppCompatActivity
                 );
                 return true;
             case R.id.action_change_identity_name:
-                IdentityWithBalance selectedIdentity = identitiesFragment.getIdentity(
-                        identitiesFragment.getSelectedPage()
-                );
-                if (selectedIdentity != null) {
+                identity = identitiesFragment.getIdentity(identitiesFragment.getSelectedPage());
+                if (identity != null) {
                     EnterIdentityNameDialogFragment.newInstance(
-                            selectedIdentity.memberId(),
-                            selectedIdentity.member().name()
+                            identity.memberId(),
+                            identity.member().name()
                     ).show(
                             getFragmentManager(),
                             "enter_identity_name_dialog_fragment"
@@ -281,6 +285,18 @@ public class MonopolyGameActivity extends AppCompatActivity
                         getFragmentManager(),
                         "create_extra_identity_dialog_fragment"
                 );
+                return true;
+            case R.id.action_delete_identity:
+                identity = identitiesFragment.getIdentity(identitiesFragment.getSelectedPage());
+                if (identity != null) {
+                    ConfirmIdentityDeletionDialogFragment.newInstance(
+                            identity.memberId(),
+                            identity.member().name()
+                    ).show(
+                            getFragmentManager(),
+                            "confirm_identity_deletion_dialog_fragment"
+                    );
+                }
                 return true;
             case R.id.action_receive_identity:
                 ReceiveIdentityDialogFragment.newInstance(
@@ -309,9 +325,7 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public void onPlayerClicked(PlayerWithBalanceAndConnectionState player) {
-        IdentityWithBalance identity = identitiesFragment.getIdentity(
-                identitiesFragment.getSelectedPage()
-        );
+        Identity identity = identitiesFragment.getIdentity(identitiesFragment.getSelectedPage());
         if (identity != null) {
             TransferToPlayerDialogFragment.newInstance(
                     identity,
@@ -326,15 +340,18 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
+        Identity identity = identitiesFragment.getIdentity(identitiesFragment.getSelectedPage());
         menu.findItem(R.id.action_add_players).setVisible(zoneId != null);
         menu.findItem(R.id.action_change_game_name).setVisible(zoneId != null);
         menu.findItem(R.id.action_change_identity_name).setVisible(
-                zoneId != null &&
-                        identitiesFragment.getIdentity(identitiesFragment.getSelectedPage()) != null
+                zoneId != null && identity != null
         );
         menu.findItem(R.id.action_create_extra_identity).setVisible(zoneId != null);
-        menu.findItem(R.id.action_receive_identity).setVisible(zoneId != null &&
-                        identitiesFragment.getIdentity(identitiesFragment.getSelectedPage()) != null
+        menu.findItem(R.id.action_delete_identity).setVisible(
+                zoneId != null && identity != null
+        );
+        menu.findItem(R.id.action_receive_identity).setVisible(
+                zoneId != null && identity != null
         );
         menu.findItem(R.id.action_transfer_identity).setVisible(zoneId != null);
         return true;
@@ -342,9 +359,7 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public void onPublicKeyScanned(Result rawResult) {
-        IdentityWithBalance identity = identitiesFragment.getIdentity(
-                identitiesFragment.getSelectedPage()
-        );
+        Identity identity = identitiesFragment.getIdentity(identitiesFragment.getSelectedPage());
         if (identity != null) {
             PublicKey publicKey = new PublicKey(
                     BaseEncoding.base64().decode(

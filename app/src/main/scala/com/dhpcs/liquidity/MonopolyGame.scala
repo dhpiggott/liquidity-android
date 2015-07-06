@@ -87,10 +87,23 @@ object MonopolyGame {
                                      currency: Option[Either[String, Currency]],
                                      members: Map[MemberId, Member],
                                      clientPublicKey: PublicKey,
-                                     equityAccountOwners: Set[MemberId]) =
+                                     equityAccountOwners: Set[MemberId],
+                                     includeHidden: Boolean = false,
+                                     includeUnhidden: Boolean = true) =
     accounts.collect {
       case (accountId, account) if account.owners.size == 1
-        && members.get(account.owners.head).fold(false)(_.publicKey == clientPublicKey) =>
+        && members.get(account.owners.head).fold(false) { member =>
+        if (includeHidden && includeUnhidden) {
+          true
+        } else if (includeHidden) {
+          isHidden(member)
+        } else if (includeUnhidden) {
+          !isHidden(member)
+        } else {
+          false
+        } &&
+          member.publicKey == clientPublicKey
+      } =>
 
         val ownerId = account.owners.head
         val owner = members(ownerId)
@@ -104,6 +117,13 @@ object MonopolyGame {
 
     }
 
+  private def isHidden(member: Member) =
+    member.metadata.fold(false)(
+      _.value.get("hidden").fold(false)(
+        _.asOpt[Boolean].getOrElse(false)
+      )
+    )
+
   private def playersFromAccounts(accounts: Map[AccountId, Account],
                                   balances: Map[AccountId, BigDecimal],
                                   currency: Option[Either[String, Currency]],
@@ -111,7 +131,7 @@ object MonopolyGame {
                                   connectedPublicKeys: Set[PublicKey]) =
     accounts.collect {
       case (accountId, account) if account.owners.size == 1
-        && members.contains(account.owners.head) =>
+        && members.get(account.owners.head).fold(false)(!isHidden(_)) =>
 
         val ownerId = account.owners.head
         val owner = members(ownerId)
@@ -235,6 +255,22 @@ class MonopolyGame(context: Context)
         }
 
       }
+    )
+  }
+
+  def deleteIdentity(identityId: MemberId) {
+    val member = zone.members(identityId)
+    serverConnection.sendCommand(
+      UpdateMemberCommand(
+        zoneId.get,
+        identityId,
+        member.copy(
+          metadata = Some(
+            member.metadata.getOrElse(Json.obj()) ++ Json.obj("hidden" -> true)
+          )
+        )
+      ),
+      noopResponseCallback
     )
   }
 

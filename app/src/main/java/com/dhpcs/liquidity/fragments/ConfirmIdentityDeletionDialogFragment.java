@@ -6,30 +6,30 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.widget.EditText;
 
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.models.MemberId;
 
-public class EnterIdentityNameDialogFragment extends DialogFragment {
+public class ConfirmIdentityDeletionDialogFragment extends DialogFragment {
 
     public interface Listener {
 
-        void onIdentityNameEntered(MemberId identityId, String name);
+        void onIdentityDeleteConfirmed(MemberId identityId);
 
     }
 
     private static final String ARG_IDENTITY_ID = "identity_id";
     private static final String ARG_NAME = "name";
 
-    public static EnterIdentityNameDialogFragment newInstance(MemberId identityId, String name) {
-        EnterIdentityNameDialogFragment transferToPlayerDialogFragment =
-                new EnterIdentityNameDialogFragment();
+    public static ConfirmIdentityDeletionDialogFragment newInstance(MemberId identityId,
+                                                                    String name) {
+        ConfirmIdentityDeletionDialogFragment confirmIdentityDeletionDialogFragment =
+                new ConfirmIdentityDeletionDialogFragment();
         Bundle args = new Bundle();
         args.putSerializable(ARG_IDENTITY_ID, identityId);
         args.putString(ARG_NAME, name);
-        transferToPlayerDialogFragment.setArguments(args);
-        return transferToPlayerDialogFragment;
+        confirmIdentityDeletionDialogFragment.setArguments(args);
+        return confirmIdentityDeletionDialogFragment;
     }
 
     private Listener listener;
@@ -41,16 +41,20 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
             listener = (Listener) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
-                    + " must implement EnterGameNameDialogFragment.Listener");
+                    + " must implement ConfirmIdentityDeletionDialogFragment.Listener");
         }
     }
 
-    // TODO: Remember and suggest previous names if arg is null
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        Dialog dialog = new AlertDialog.Builder(getActivity())
-                .setTitle(R.string.enter_identity_name)
-                .setView(R.layout.fragment_enter_identity_name_dialog)
+        return new AlertDialog.Builder(getActivity())
+                .setTitle(R.string.confirm_delete)
+                .setMessage(
+                        getString(
+                                R.string.confirm_delete_format_string,
+                                getArguments().getString(ARG_NAME)
+                        )
+                )
                 .setNegativeButton(
                         R.string.cancel,
                         new DialogInterface.OnClickListener() {
@@ -64,12 +68,9 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int whichButton) {
                                 if (listener != null) {
-                                    listener.onIdentityNameEntered(
+                                    listener.onIdentityDeleteConfirmed(
                                             (MemberId) getArguments()
-                                                    .getSerializable(ARG_IDENTITY_ID),
-                                            ((EditText) getDialog().findViewById(
-                                                    R.id.edittext_identity_name
-                                            )).getText().toString()
+                                                    .getSerializable(ARG_IDENTITY_ID)
                                     );
                                 }
                                 getDialog().dismiss();
@@ -77,9 +78,6 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
                         }
                 )
                 .create();
-        // TODO
-//        ((EditText)dialog.findViewById(R.id.edittext_game_name)).setText(getArguments().getString(ARG_NAME));
-        return dialog;
     }
 
     @Override

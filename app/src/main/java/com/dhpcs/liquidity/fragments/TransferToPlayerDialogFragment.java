@@ -67,6 +67,14 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
         return new AlertDialog.Builder(getActivity())
                 .setTitle(R.string.enter_transfer_amount)
                 .setView(R.layout.fragment_transfer_to_player_dialog)
+                .setNegativeButton(
+                        R.string.cancel,
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int whichButton) {
+                                getDialog().cancel();
+                            }
+                        }
+                )
                 .setPositiveButton(
                         R.string.ok,
                         new DialogInterface.OnClickListener() {
@@ -87,14 +95,6 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
                                     );
                                 }
                                 getDialog().dismiss();
-                            }
-                        }
-                )
-                .setNegativeButton(
-                        R.string.cancel,
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int whichButton) {
-                                getDialog().cancel();
                             }
                         }
                 )

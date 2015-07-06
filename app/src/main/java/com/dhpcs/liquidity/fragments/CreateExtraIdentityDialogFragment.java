@@ -41,6 +41,14 @@ public class CreateExtraIdentityDialogFragment extends DialogFragment {
         return new AlertDialog.Builder(getActivity())
                 .setTitle(R.string.enter_identity_name)
                 .setView(R.layout.fragment_create_extra_identity_dialog)
+                .setNegativeButton(
+                        R.string.cancel,
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int whichButton) {
+                                getDialog().cancel();
+                            }
+                        }
+                )
                 .setPositiveButton(
                         R.string.ok,
                         new DialogInterface.OnClickListener() {
@@ -53,14 +61,6 @@ public class CreateExtraIdentityDialogFragment extends DialogFragment {
                                     );
                                 }
                                 getDialog().dismiss();
-                            }
-                        }
-                )
-                .setNegativeButton(
-                        R.string.cancel,
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int whichButton) {
-                                getDialog().cancel();
                             }
                         }
                 )
