@@ -145,6 +145,11 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
+    public void onGameNameChanged(String name) {
+        setTitle(name);
+    }
+
+    @Override
     public void onGameNameEntered(String name) {
         monopolyGameHolderFragment.getMonopolyGame().setGameName(name);
     }
