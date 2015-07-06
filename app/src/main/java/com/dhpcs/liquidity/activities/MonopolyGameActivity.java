@@ -261,9 +261,7 @@ public class MonopolyGameActivity extends AppCompatActivity
                 );
                 return true;
             case R.id.action_change_game_name:
-                EnterGameNameDialogFragment.newInstance(
-                        monopolyGameHolderFragment.getMonopolyGame().getGameName()
-                ).show(
+                EnterGameNameDialogFragment.newInstance(getTitle().toString()).show(
                         getFragmentManager(),
                         "enter_game_name_dialog_fragment"
                 );

@@ -277,16 +277,6 @@ class MonopolyGame(context: Context)
   private def disconnect() =
     serverConnection.disconnect()
 
-  def getGameName =
-    if (zone == null) {
-      null
-    } else {
-      zone.name
-    }
-
-  def getIdentityName(identityId: MemberId) =
-    zone.members(identityId).name
-
   def isPublicKeyConnectedAndImplicitlyValid(publicKey: PublicKey) =
     connectedClients.contains(publicKey)
 
@@ -400,7 +390,7 @@ class MonopolyGame(context: Context)
     )
   }
 
-  def onNotificationReceived(notification: Notification) {
+  override def onNotificationReceived(notification: Notification) {
     log.debug("notification={}", notification)
 
     notification match {
@@ -698,7 +688,7 @@ class MonopolyGame(context: Context)
 
   }
 
-  def onStateChanged(connectionState: ServerConnection.ConnectionState) {
+  override def onStateChanged(connectionState: ServerConnection.ConnectionState) {
     log.debug("connectionState={}", connectionState)
     connectionState match {
 
