@@ -44,14 +44,19 @@ public class CreateExtraIdentityDialogFragment extends DialogFragment {
                 .setNegativeButton(
                         R.string.cancel,
                         new DialogInterface.OnClickListener() {
+
+                            @Override
                             public void onClick(DialogInterface dialog, int whichButton) {
                                 getDialog().cancel();
                             }
+
                         }
                 )
                 .setPositiveButton(
                         R.string.ok,
                         new DialogInterface.OnClickListener() {
+
+                            @Override
                             public void onClick(DialogInterface dialog, int whichButton) {
                                 if (listener != null) {
                                     listener.onIdentityNameEntered(
@@ -62,6 +67,7 @@ public class CreateExtraIdentityDialogFragment extends DialogFragment {
                                 }
                                 getDialog().dismiss();
                             }
+
                         }
                 )
                 .create();

@@ -27,6 +27,7 @@ import com.dhpcs.liquidity.fragments.IdentitiesFragment;
 import com.dhpcs.liquidity.fragments.MonopolyGameHolderFragment;
 import com.dhpcs.liquidity.fragments.PlayersFragment;
 import com.dhpcs.liquidity.fragments.ReceiveIdentityDialogFragment;
+import com.dhpcs.liquidity.fragments.RestoreIdentityDialogFragment;
 import com.dhpcs.liquidity.fragments.TransferIdentityDialogFragment;
 import com.dhpcs.liquidity.fragments.TransferToPlayerDialogFragment;
 import com.dhpcs.liquidity.models.ErrorResponse;
@@ -38,10 +39,12 @@ import com.google.zxing.Result;
 
 import java.math.BigDecimal;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Currency;
 
 import scala.Option;
 import scala.Tuple2;
+import scala.collection.JavaConversions;
 import scala.util.Either;
 
 public class MonopolyGameActivity extends AppCompatActivity
@@ -52,6 +55,7 @@ public class MonopolyGameActivity extends AppCompatActivity
         IdentitiesFragment.Listener,
         MonopolyGame.Listener,
         PlayersFragment.Listener,
+        RestoreIdentityDialogFragment.Listener,
         TransferIdentityDialogFragment.Listener,
         TransferToPlayerDialogFragment.Listener {
 
@@ -90,6 +94,7 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     private ZoneId zoneId;
     private MemberId selectedIdentityId;
+    private scala.collection.Iterable<IdentityWithBalance> hiddenIdentities;
     private scala.collection.Iterable<PlayerWithBalanceAndConnectionState> players;
 
     @Override
@@ -169,7 +174,10 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public void onIdentitiesChanged(scala.collection.immutable.Map<MemberId, IdentityWithBalance>
-                                            identities) {
+                                            identities,
+                                    scala.collection.Iterable<IdentityWithBalance>
+                                            hiddenIdentities) {
+        this.hiddenIdentities = hiddenIdentities;
         identitiesFragment.onIdentitiesChanged(identities);
         Identity identity = identitiesFragment.getIdentity(identitiesFragment.getSelectedPage());
         this.selectedIdentityId = identity == null ? null : identity.memberId();
@@ -230,6 +238,11 @@ public class MonopolyGameActivity extends AppCompatActivity
                 getFragmentManager(),
                 "enter_identity_name_dialog_fragment"
         );
+    }
+
+    @Override
+    public void onIdentityRestorationRequested(MemberId identityId) {
+        monopolyGameHolderFragment.getMonopolyGame().restoreIdentity(identityId);
     }
 
     @Override
@@ -296,6 +309,18 @@ public class MonopolyGameActivity extends AppCompatActivity
                     );
                 }
                 return true;
+            case R.id.action_restore_identity:
+                RestoreIdentityDialogFragment.newInstance(
+                        new ArrayList<>(
+                                JavaConversions.bufferAsJavaList(
+                                        hiddenIdentities.<IdentityWithBalance>toBuffer()
+                                )
+                        )
+                ).show(
+                        getFragmentManager(),
+                        "restore_identity_dialog_fragment"
+                );
+                return true;
             case R.id.action_receive_identity:
                 ReceiveIdentityDialogFragment.newInstance(
                         ClientKey.getInstance(this).getPublicKey()
@@ -345,12 +370,11 @@ public class MonopolyGameActivity extends AppCompatActivity
                 zoneId != null && identity != null
         );
         menu.findItem(R.id.action_create_extra_identity).setVisible(zoneId != null);
-        menu.findItem(R.id.action_delete_identity).setVisible(
-                zoneId != null && identity != null
+        menu.findItem(R.id.action_delete_identity).setVisible(zoneId != null && identity != null);
+        menu.findItem(R.id.action_restore_identity).setVisible(
+                zoneId != null && hiddenIdentities.nonEmpty()
         );
-        menu.findItem(R.id.action_receive_identity).setVisible(
-                zoneId != null && identity != null
-        );
+        menu.findItem(R.id.action_receive_identity).setVisible(zoneId != null && identity != null);
         menu.findItem(R.id.action_transfer_identity).setVisible(zoneId != null);
         return true;
     }

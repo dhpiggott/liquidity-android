@@ -58,14 +58,19 @@ public class ConfirmIdentityDeletionDialogFragment extends DialogFragment {
                 .setNegativeButton(
                         R.string.cancel,
                         new DialogInterface.OnClickListener() {
+
+                            @Override
                             public void onClick(DialogInterface dialog, int whichButton) {
                                 getDialog().cancel();
                             }
+
                         }
                 )
                 .setPositiveButton(
                         R.string.ok,
                         new DialogInterface.OnClickListener() {
+
+                            @Override
                             public void onClick(DialogInterface dialog, int whichButton) {
                                 if (listener != null) {
                                     listener.onIdentityDeleteConfirmed(
@@ -75,6 +80,7 @@ public class ConfirmIdentityDeletionDialogFragment extends DialogFragment {
                                 }
                                 getDialog().dismiss();
                             }
+
                         }
                 )
                 .create();

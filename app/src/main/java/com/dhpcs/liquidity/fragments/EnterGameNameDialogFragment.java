@@ -50,14 +50,19 @@ public class EnterGameNameDialogFragment extends DialogFragment {
                 .setNegativeButton(
                         R.string.cancel,
                         new DialogInterface.OnClickListener() {
+
+                            @Override
                             public void onClick(DialogInterface dialog, int whichButton) {
                                 getDialog().cancel();
                             }
+
                         }
                 )
                 .setPositiveButton(
                         R.string.ok,
                         new DialogInterface.OnClickListener() {
+
+                            @Override
                             public void onClick(DialogInterface dialog, int whichButton) {
                                 if (listener != null) {
                                     listener.onGameNameEntered(
@@ -68,6 +73,7 @@ public class EnterGameNameDialogFragment extends DialogFragment {
                                 }
                                 getDialog().dismiss();
                             }
+
                         }
                 )
                 .create();

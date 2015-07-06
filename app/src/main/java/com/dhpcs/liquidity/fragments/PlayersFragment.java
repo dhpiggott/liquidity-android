@@ -79,10 +79,7 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
                 @Override
                 public int compare(PlayerWithBalanceAndConnectionState lhs,
                                    PlayerWithBalanceAndConnectionState rhs) {
-                    return collator.compare(
-                            lhs.member().name(),
-                            rhs.member().name()
-                    );
+                    return collator.compare(lhs.member().name(), rhs.member().name());
                 }
 
             };

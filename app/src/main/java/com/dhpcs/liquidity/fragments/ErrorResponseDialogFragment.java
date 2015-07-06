@@ -32,9 +32,12 @@ public class ErrorResponseDialogFragment extends DialogFragment {
                 .setPositiveButton(
                         R.string.ok,
                         new DialogInterface.OnClickListener() {
+
+                            @Override
                             public void onClick(DialogInterface dialog, int whichButton) {
                                 getDialog().dismiss();
                             }
+
                         }
                 )
                 .create();

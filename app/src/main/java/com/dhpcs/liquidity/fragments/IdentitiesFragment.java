@@ -81,10 +81,7 @@ public class IdentitiesFragment extends Fragment {
 
                 @Override
                 public int compare(IdentityWithBalance lhs, IdentityWithBalance rhs) {
-                    return collator.compare(
-                            lhs.member().name(),
-                            rhs.member().name()
-                    );
+                    return collator.compare(lhs.member().name(), rhs.member().name());
                 }
 
             };

@@ -11,6 +11,7 @@
     <string name="cancel">Cancel</string>
     <string name="change_game_name">Change game name</string>
     <string name="change_identity_name">Change identity name</string>
+    <string name="choose_identity_to_restore">Choose identity to restore</string>
     <string name="confirm_delete">Confirm delete</string>
     <string name="confirm_delete_format_string">Are you sure you want to delete your identity \"%1$s\"? You can always restore deleted identities via the menu later.</string>
     <string name="create_extra_identity">Create extra identity</string>
@@ -34,6 +35,7 @@
     <string name="qr_code_is_not_a_public_key">"The scanned QR code is not a member of the game!"</string>
     <string name="qr_code_is_not_a_zone_id">"The scanned QR code is not a Liquidity game!"</string>
     <string name="receive_identity">Receive identity</string>
+    <string name="restore_identity">Restore identity</string>
     <string name="scan_the_qr_code_on_the_hosts_phone">Scan the QR code on the host\'s phone.</string>
     <string name="scan_the_qr_code_on_the_recipients_phone">Scan the QR code on the recipients\'s phone.</string>
     <string name="transfer_identity">Transfer identity</string>
