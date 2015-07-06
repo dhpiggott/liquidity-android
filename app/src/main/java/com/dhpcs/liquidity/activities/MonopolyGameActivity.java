@@ -16,9 +16,9 @@ import com.dhpcs.liquidity.MonopolyGame.Player;
 import com.dhpcs.liquidity.MonopolyGame.PlayerWithBalanceAndConnectionState;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.fragments.AddPlayersDialogFragment;
-import com.dhpcs.liquidity.fragments.ChangeGameNameDialogFragment;
-import com.dhpcs.liquidity.fragments.ChangeIdentityNameDialogFragment;
 import com.dhpcs.liquidity.fragments.CreateExtraIdentityDialogFragment;
+import com.dhpcs.liquidity.fragments.EnterGameNameDialogFragment;
+import com.dhpcs.liquidity.fragments.EnterIdentityNameDialogFragment;
 import com.dhpcs.liquidity.fragments.ErrorResponseDialogFragment;
 import com.dhpcs.liquidity.fragments.IdentitiesFragment;
 import com.dhpcs.liquidity.fragments.MonopolyGameHolderFragment;
@@ -42,8 +42,8 @@ import scala.Tuple2;
 import scala.util.Either;
 
 public class MonopolyGameActivity extends AppCompatActivity
-        implements ChangeGameNameDialogFragment.Listener,
-        ChangeIdentityNameDialogFragment.Listener,
+        implements EnterGameNameDialogFragment.Listener,
+        EnterIdentityNameDialogFragment.Listener,
         CreateExtraIdentityDialogFragment.Listener,
         IdentitiesFragment.Listener,
         MonopolyGame.Listener,
@@ -174,7 +174,11 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public void onIdentityNameEntered(MemberId identityId, String name) {
-        monopolyGameHolderFragment.getMonopolyGame().setIdentityName(identityId, name);
+        if (identityId == null) {
+            monopolyGameHolderFragment.getMonopolyGame().createIdentity(name);
+        } else {
+            monopolyGameHolderFragment.getMonopolyGame().setIdentityName(identityId, name);
+        }
     }
 
     @Override
@@ -197,6 +201,17 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
+    public void onIdentityRequired() {
+        EnterIdentityNameDialogFragment.newInstance(
+                null,
+                null
+        ).show(
+                getFragmentManager(),
+                "enter_identity_name_dialog_fragment"
+        );
+    }
+
+    @Override
     public void onJoined(ZoneId zoneId) {
         this.zoneId = zoneId;
         supportInvalidateOptionsMenu();
@@ -214,11 +229,11 @@ public class MonopolyGameActivity extends AppCompatActivity
                 );
                 return true;
             case R.id.action_change_game_name:
-                ChangeGameNameDialogFragment.newInstance(
+                EnterGameNameDialogFragment.newInstance(
                         monopolyGameHolderFragment.getMonopolyGame().getGameName()
                 ).show(
                         getFragmentManager(),
-                        "change_game_name_dialog_fragment"
+                        "enter_game_name_dialog_fragment"
                 );
                 return true;
             case R.id.action_change_identity_name:
@@ -226,12 +241,12 @@ public class MonopolyGameActivity extends AppCompatActivity
                         identitiesFragment.getSelectedPage()
                 );
                 if (selectedIdentity != null) {
-                    ChangeIdentityNameDialogFragment.newInstance(
+                    EnterIdentityNameDialogFragment.newInstance(
                             selectedIdentity.memberId(),
                             selectedIdentity.member().name()
                     ).show(
                             getFragmentManager(),
-                            "change_identity_name_dialog_fragment"
+                            "enter_identity_name_dialog_fragment"
                     );
                 }
                 return true;

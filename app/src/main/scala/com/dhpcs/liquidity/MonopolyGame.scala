@@ -3,7 +3,6 @@ package com.dhpcs.liquidity
 import java.util.{Currency, Locale}
 
 import android.content.{ContentUris, ContentValues, Context}
-import android.provider.ContactsContract
 import com.dhpcs.liquidity.MonopolyGame._
 import com.dhpcs.liquidity.ServerConnection.{ConnectionStateListener, NotificationListener, ResponseCallback}
 import com.dhpcs.liquidity.models._
@@ -58,6 +57,8 @@ object MonopolyGame {
 
     def onIdentityReceived(identity: IdentityWithBalance)
 
+    def onIdentityRequired()
+
     def onJoined(zoneId: ZoneId)
 
     def onPlayersChanged(players: Iterable[PlayerWithBalanceAndConnectionState])
@@ -78,24 +79,6 @@ object MonopolyGame {
         )
       )
     )
-
-  // TODO: Not on the UI thread!
-  private def getUserName(context: Context) = {
-    val cursor = context.getContentResolver.query(
-      ContactsContract.Profile.CONTENT_URI,
-      Array("display_name"),
-      null,
-      null,
-      null
-    )
-    val userName = if (cursor.moveToNext) {
-      cursor.getString(cursor.getColumnIndex("display_name"))
-    } else {
-      context.getString(R.string.unnamed)
-    }
-    cursor.close()
-    userName
-  }
 
   private def identitiesFromAccounts(accounts: Map[AccountId, Account],
                                      balances: Map[AccountId, BigDecimal],
@@ -160,6 +143,7 @@ class MonopolyGame(context: Context)
   private val serverConnection = new ServerConnection(context, this, this)
   private val noopResponseCallback = new ResponseCallback with ResponseCallbackWithErrorForwarding
 
+  // TODO
   private var gameId = Option.empty[Future[Long]]
   private var zoneId = Option.empty[ZoneId]
 
@@ -190,15 +174,9 @@ class MonopolyGame(context: Context)
   }
 
   private def createAndThenJoinZone() {
-    val identityName = MonopolyGame.getUserName(context)
-
-    log.debug("identityName={}", identityName)
-
-    val zoneName = context.getString(R.string.game_name_format_string, identityName)
-
     serverConnection.sendCommand(
       CreateZoneCommand(
-        zoneName,
+        context.getString(R.string.new_monopoly_game_name),
         Member(
           context.getString(R.string.bank_member_name),
           ClientKey.getInstance(context).getPublicKey
@@ -221,26 +199,9 @@ class MonopolyGame(context: Context)
 
           val createZoneResponse = resultResponse.asInstanceOf[CreateZoneResponse]
 
-          join(createZoneResponse.zoneId)
-
-          gameId = Some(
-            Future {
-              val contentValues = new ContentValues
-              contentValues.put(Games.GAME_TYPE, MONOPOLY.name)
-              contentValues.put(Games.ZONE_ID, createZoneResponse.zoneId.id.toString)
-              contentValues.put(Games.NAME, zoneName)
-              // TODO: Add created to response
-              //              contentValues.put(Games.CREATED, createZoneResponse.created: java.lang.Long)
-              contentValues.put(Games.CREATED, System.currentTimeMillis: java.lang.Long)
-              ContentUris.parseId(
-                context.getContentResolver.insert(
-                  Games.CONTENT_URI,
-                  contentValues
-                )
-              )
-            }
-          )
           zoneId = Some(createZoneResponse.zoneId)
+
+          join(createZoneResponse.zoneId)
 
         }
 
@@ -249,6 +210,9 @@ class MonopolyGame(context: Context)
   }
 
   def createIdentity(name: String) {
+    if (identities.size == 1 && identities.values.head.accountId == zone.equityAccountId) {
+      setGameName(context.getString(R.string.game_name_format_string, name))
+    }
     serverConnection.sendCommand(
       CreateMemberCommand(
         zoneId.get,
@@ -270,14 +234,6 @@ class MonopolyGame(context: Context)
 
       }
     )
-  }
-
-  private def createIdentity() {
-    val identityName = MonopolyGame.getUserName(context)
-
-    log.debug("identityName={}", identityName)
-
-    createIdentity(identityName)
   }
 
   private def disconnect() =
@@ -356,12 +312,12 @@ class MonopolyGame(context: Context)
             ClientKey.getInstance(context).getPublicKey == member.publicKey &&
               !zone.accounts.values.exists(_.owners == Set(memberId))
           }
-          partiallyCreatedIdentities.foreach { case (memberId, member) =>
-            createAccount(memberId)
-          }
+          partiallyCreatedIdentities.keys.foreach(createAccount)
 
-          if (gameId.isEmpty && identities.isEmpty) {
-            createIdentity()
+          // TODO: Chain this so it only happens after partially created identities have had their
+          // accounts created.
+          if (gameId.isEmpty && !identities.values.exists(_.accountId != zone.equityAccountId)) {
+            listener.foreach(_.onIdentityRequired())
           }
 
           gameId = gameId.fold(
@@ -499,9 +455,7 @@ class MonopolyGame(context: Context)
             val isIdentityCreation = !identities.contains(memberCreatedNotification.memberId) &&
               memberCreatedNotification.member.publicKey ==
                 ClientKey.getInstance(context).getPublicKey &&
-              zone.accounts.exists { case (_, account) =>
-                account.owners == Set(memberCreatedNotification.memberId)
-              }
+              zone.accounts.values.exists(_.owners == Set(memberCreatedNotification.memberId))
 
             val createdIdentity = MonopolyGame.identitiesFromAccounts(
               zone.accounts,
@@ -762,11 +716,11 @@ class MonopolyGame(context: Context)
       )
     }
 
-  def setGameName(gameName: String) {
+  def setGameName(name: String) {
     serverConnection.sendCommand(
       SetZoneNameCommand(
         zoneId.get,
-        gameName
+        name
       ),
       noopResponseCallback
     )

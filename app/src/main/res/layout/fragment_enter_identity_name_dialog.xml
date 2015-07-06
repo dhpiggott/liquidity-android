@@ -3,10 +3,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.dhpcs.liquidity.fragments.ChangeGameNameDialogFragment">
+    tools:context="com.dhpcs.liquidity.fragments.EnterIdentityNameDialogFragment">
 
     <EditText
-        android:id="@+id/edittext_game_name"
+        android:id="@+id/edittext_identity_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"

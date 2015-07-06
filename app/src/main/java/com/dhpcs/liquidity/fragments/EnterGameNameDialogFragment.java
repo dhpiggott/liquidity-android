@@ -9,24 +9,21 @@ import android.os.Bundle;
 import android.widget.EditText;
 
 import com.dhpcs.liquidity.R;
-import com.dhpcs.liquidity.models.MemberId;
 
-public class ChangeIdentityNameDialogFragment extends DialogFragment {
+public class EnterGameNameDialogFragment extends DialogFragment {
 
     public interface Listener {
 
-        void onIdentityNameEntered(MemberId identityId, String name);
+        void onGameNameEntered(String name);
 
     }
 
-    private static final String ARG_IDENTITY_ID = "identity_id";
     private static final String ARG_NAME = "name";
 
-    public static ChangeIdentityNameDialogFragment newInstance(MemberId identityId, String name) {
-        ChangeIdentityNameDialogFragment transferToPlayerDialogFragment =
-                new ChangeIdentityNameDialogFragment();
+    public static EnterGameNameDialogFragment newInstance(String name) {
+        EnterGameNameDialogFragment transferToPlayerDialogFragment =
+                new EnterGameNameDialogFragment();
         Bundle args = new Bundle();
-        args.putSerializable(ARG_IDENTITY_ID, identityId);
         args.putString(ARG_NAME, name);
         transferToPlayerDialogFragment.setArguments(args);
         return transferToPlayerDialogFragment;
@@ -41,25 +38,23 @@ public class ChangeIdentityNameDialogFragment extends DialogFragment {
             listener = (Listener) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
-                    + " must implement ChangeGameNameDialogFragment.Listener");
+                    + " must implement EnterGameNameDialogFragment.Listener");
         }
     }
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         Dialog dialog = new AlertDialog.Builder(getActivity())
-                .setTitle(R.string.enter_identity_name)
-                .setView(R.layout.fragment_change_identity_name_dialog)
+                .setTitle(R.string.enter_game_name)
+                .setView(R.layout.fragment_enter_game_name_dialog)
                 .setPositiveButton(
                         R.string.ok,
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int whichButton) {
                                 if (listener != null) {
-                                    listener.onIdentityNameEntered(
-                                            (MemberId) getArguments()
-                                                    .getSerializable(ARG_IDENTITY_ID),
+                                    listener.onGameNameEntered(
                                             ((EditText) getDialog().findViewById(
-                                                    R.id.edittext_identity_name
+                                                    R.id.edittext_game_name
                                             )).getText().toString()
                                     );
                                 }
@@ -76,6 +71,7 @@ public class ChangeIdentityNameDialogFragment extends DialogFragment {
                         }
                 )
                 .create();
+        // TODO: Make assignment of args to fields consistent across all fragments.
         // TODO
 //        ((EditText)dialog.findViewById(R.id.edittext_game_name)).setText(getArguments().getString(ARG_NAME));
         return dialog;

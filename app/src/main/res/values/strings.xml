@@ -20,6 +20,7 @@
     <string name="join_game">Join game</string>
     <string name="new_game">New game</string>
     <string name="monopoly">Monopoly</string>
+    <string name="new_monopoly_game_name">New Monopoly Game</string>
     <string name="no_other_players_present">No other players present</string>
     <string name="no_previous_games_available">No previous games available</string>
     <string name="ok">OK</string>
