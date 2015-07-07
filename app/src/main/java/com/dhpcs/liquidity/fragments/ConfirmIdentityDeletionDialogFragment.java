@@ -7,27 +7,24 @@ import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
 
+import com.dhpcs.liquidity.MonopolyGame.Identity;
 import com.dhpcs.liquidity.R;
-import com.dhpcs.liquidity.models.MemberId;
 
 public class ConfirmIdentityDeletionDialogFragment extends DialogFragment {
 
     public interface Listener {
 
-        void onIdentityDeleteConfirmed(MemberId identityId);
+        void onIdentityDeleteConfirmed(Identity identity);
 
     }
 
-    private static final String ARG_IDENTITY_ID = "identity_id";
-    private static final String ARG_NAME = "name";
+    private static final String ARG_IDENTITY = "identity";
 
-    public static ConfirmIdentityDeletionDialogFragment newInstance(MemberId identityId,
-                                                                    String name) {
+    public static ConfirmIdentityDeletionDialogFragment newInstance(Identity identity) {
         ConfirmIdentityDeletionDialogFragment confirmIdentityDeletionDialogFragment =
                 new ConfirmIdentityDeletionDialogFragment();
         Bundle args = new Bundle();
-        args.putSerializable(ARG_IDENTITY_ID, identityId);
-        args.putString(ARG_NAME, name);
+        args.putSerializable(ARG_IDENTITY, identity);
         confirmIdentityDeletionDialogFragment.setArguments(args);
         return confirmIdentityDeletionDialogFragment;
     }
@@ -52,7 +49,8 @@ public class ConfirmIdentityDeletionDialogFragment extends DialogFragment {
                 .setMessage(
                         getString(
                                 R.string.confirm_delete_format_string,
-                                getArguments().getString(ARG_NAME)
+                                ((Identity) getArguments().getSerializable(ARG_IDENTITY))
+                                        .member().name()
                         )
                 )
                 .setNegativeButton(
@@ -74,8 +72,7 @@ public class ConfirmIdentityDeletionDialogFragment extends DialogFragment {
                             public void onClick(DialogInterface dialog, int whichButton) {
                                 if (listener != null) {
                                     listener.onIdentityDeleteConfirmed(
-                                            (MemberId) getArguments()
-                                                    .getSerializable(ARG_IDENTITY_ID)
+                                            (Identity) getArguments().getSerializable(ARG_IDENTITY)
                                     );
                                 }
                                 getDialog().dismiss();

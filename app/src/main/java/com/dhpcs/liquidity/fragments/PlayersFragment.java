@@ -12,6 +12,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
+import com.dhpcs.liquidity.MonopolyGame.Player;
 import com.dhpcs.liquidity.MonopolyGame.PlayerWithBalanceAndConnectionState;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activities.MonopolyGameActivity;
@@ -29,7 +30,7 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
 
     public interface Listener {
 
-        void onPlayerClicked(PlayerWithBalanceAndConnectionState player);
+        void onPlayerClicked(Player player);
 
     }
 

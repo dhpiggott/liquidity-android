@@ -18,7 +18,8 @@ public class ReceiveIdentityDialogFragment extends DialogFragment {
     private static final String ARG_PUBLIC_KEY = "public_key";
 
     public static ReceiveIdentityDialogFragment newInstance(PublicKey publicKey) {
-        ReceiveIdentityDialogFragment receiveIdentityDialogFragment = new ReceiveIdentityDialogFragment();
+        ReceiveIdentityDialogFragment receiveIdentityDialogFragment =
+                new ReceiveIdentityDialogFragment();
         Bundle args = new Bundle();
         args.putSerializable(ARG_PUBLIC_KEY, publicKey);
         receiveIdentityDialogFragment.setArguments(args);

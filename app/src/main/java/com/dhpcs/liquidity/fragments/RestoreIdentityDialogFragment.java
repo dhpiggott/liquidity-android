@@ -12,11 +12,11 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
+import com.dhpcs.liquidity.MonopolyGame.Identity;
 import com.dhpcs.liquidity.MonopolyGame.IdentityWithBalance;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activities.MonopolyGameActivity;
 import com.dhpcs.liquidity.models.Identifier;
-import com.dhpcs.liquidity.models.MemberId;
 import com.dhpcs.liquidity.views.Identicon;
 
 import java.text.Collator;
@@ -27,7 +27,7 @@ public class RestoreIdentityDialogFragment extends DialogFragment {
 
     public interface Listener {
 
-        void onIdentityRestorationRequested(MemberId identityId);
+        void onIdentityRestorationRequested(Identity identity);
 
     }
 
@@ -116,9 +116,7 @@ public class RestoreIdentityDialogFragment extends DialogFragment {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         if (listener != null) {
-                            listener.onIdentityRestorationRequested(
-                                    listAdapter.getItem(which).memberId()
-                            );
+                            listener.onIdentityRestorationRequested(listAdapter.getItem(which));
                         }
                     }
 

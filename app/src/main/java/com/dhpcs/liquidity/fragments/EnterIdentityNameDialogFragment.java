@@ -8,26 +8,24 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.widget.EditText;
 
+import com.dhpcs.liquidity.MonopolyGame.Identity;
 import com.dhpcs.liquidity.R;
-import com.dhpcs.liquidity.models.MemberId;
 
 public class EnterIdentityNameDialogFragment extends DialogFragment {
 
     public interface Listener {
 
-        void onIdentityNameEntered(MemberId identityId, String name);
+        void onIdentityNameEntered(Identity identity, String name);
 
     }
 
-    private static final String ARG_IDENTITY_ID = "identity_id";
-    private static final String ARG_NAME = "name";
+    private static final String ARG_IDENTITY = "identity";
 
-    public static EnterIdentityNameDialogFragment newInstance(MemberId identityId, String name) {
+    public static EnterIdentityNameDialogFragment newInstance(Identity identity) {
         EnterIdentityNameDialogFragment transferToPlayerDialogFragment =
                 new EnterIdentityNameDialogFragment();
         Bundle args = new Bundle();
-        args.putSerializable(ARG_IDENTITY_ID, identityId);
-        args.putString(ARG_NAME, name);
+        args.putSerializable(ARG_IDENTITY, identity);
         transferToPlayerDialogFragment.setArguments(args);
         return transferToPlayerDialogFragment;
     }
@@ -41,7 +39,7 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
             listener = (Listener) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
-                    + " must implement EnterGameNameDialogFragment.Listener");
+                    + " must implement EnterIdentityNameDialogFragment.Listener");
         }
     }
 
@@ -70,8 +68,7 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
                             public void onClick(DialogInterface dialog, int whichButton) {
                                 if (listener != null) {
                                     listener.onIdentityNameEntered(
-                                            (MemberId) getArguments()
-                                                    .getSerializable(ARG_IDENTITY_ID),
+                                            (Identity) getArguments().getSerializable(ARG_IDENTITY),
                                             ((EditText) getDialog().findViewById(
                                                     R.id.edittext_identity_name
                                             )).getText().toString()
@@ -83,8 +80,11 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
                         }
                 )
                 .create();
-        // TODO
-//        ((EditText)dialog.findViewById(R.id.edittext_game_name)).setText(getArguments().getString(ARG_NAME));
+// TODO
+//        ((EditText) dialog.findViewById(R.id.edittext_game_name)).setText(
+//                ((Identity) getArguments().getSerializable(ARG_IDENTITY))
+//                        .member().name()
+//        );
         return dialog;
     }
 

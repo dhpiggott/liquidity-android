@@ -160,10 +160,11 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public void onErrorResponse(ErrorResponse errorResponse) {
-        ErrorResponseDialogFragment.newInstance(errorResponse).show(
-                getFragmentManager(),
-                "error_dialog_fragment"
-        );
+        ErrorResponseDialogFragment.newInstance(errorResponse)
+                .show(
+                        getFragmentManager(),
+                        "error_dialog_fragment"
+                );
     }
 
     @Override
@@ -194,8 +195,8 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onIdentityDeleteConfirmed(MemberId identityId) {
-        monopolyGameHolderFragment.getMonopolyGame().deleteIdentity(identityId);
+    public void onIdentityDeleteConfirmed(Identity identity) {
+        monopolyGameHolderFragment.getMonopolyGame().deleteIdentity(identity);
     }
 
     @Override
@@ -209,11 +210,11 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onIdentityNameEntered(MemberId identityId, String name) {
-        if (identityId == null) {
+    public void onIdentityNameEntered(Identity identity, String name) {
+        if (identity == null) {
             monopolyGameHolderFragment.getMonopolyGame().createIdentity(name);
         } else {
-            monopolyGameHolderFragment.getMonopolyGame().setIdentityName(identityId, name);
+            monopolyGameHolderFragment.getMonopolyGame().setIdentityName(identity, name);
         }
     }
 
@@ -238,18 +239,21 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public void onIdentityRequired() {
-        EnterIdentityNameDialogFragment.newInstance(
-                null,
-                null
-        ).show(
-                getFragmentManager(),
-                "enter_identity_name_dialog_fragment"
-        );
+        EnterIdentityNameDialogFragment.newInstance(null)
+                .show(
+                        getFragmentManager(),
+                        "enter_identity_name_dialog_fragment"
+                );
     }
 
     @Override
-    public void onIdentityRestorationRequested(MemberId identityId) {
-        monopolyGameHolderFragment.getMonopolyGame().restoreIdentity(identityId);
+    public void onIdentityRestored(IdentityWithBalance identity) {
+        identitiesFragment.setSelectedPage(identitiesFragment.getPage(identity));
+    }
+
+    @Override
+    public void onIdentityRestorationRequested(Identity identity) {
+        monopolyGameHolderFragment.getMonopolyGame().restoreIdentity(identity);
     }
 
     @Override
@@ -273,47 +277,44 @@ public class MonopolyGameActivity extends AppCompatActivity
                 );
                 return true;
             case R.id.action_add_players:
-                AddPlayersDialogFragment.newInstance(
-                        zoneId
-                ).show(
-                        getFragmentManager(),
-                        "add_players_dialog_fragment"
-                );
+                AddPlayersDialogFragment.newInstance(zoneId)
+                        .show(
+                                getFragmentManager(),
+                                "add_players_dialog_fragment"
+                        );
                 return true;
             case R.id.action_change_game_name:
-                EnterGameNameDialogFragment.newInstance(getTitle().toString()).show(
-                        getFragmentManager(),
-                        "enter_game_name_dialog_fragment"
-                );
+                EnterGameNameDialogFragment.newInstance(getTitle().toString())
+                        .show(
+                                getFragmentManager(),
+                                "enter_game_name_dialog_fragment"
+                        );
                 return true;
             case R.id.action_change_identity_name:
                 identity = identitiesFragment.getIdentity(identitiesFragment.getSelectedPage());
                 if (identity != null) {
-                    EnterIdentityNameDialogFragment.newInstance(
-                            identity.memberId(),
-                            identity.member().name()
-                    ).show(
-                            getFragmentManager(),
-                            "enter_identity_name_dialog_fragment"
-                    );
+                    EnterIdentityNameDialogFragment.newInstance(identity)
+                            .show(
+                                    getFragmentManager(),
+                                    "enter_identity_name_dialog_fragment"
+                            );
                 }
                 return true;
             case R.id.action_create_extra_identity:
-                CreateExtraIdentityDialogFragment.newInstance().show(
-                        getFragmentManager(),
-                        "create_extra_identity_dialog_fragment"
-                );
+                CreateExtraIdentityDialogFragment.newInstance()
+                        .show(
+                                getFragmentManager(),
+                                "create_extra_identity_dialog_fragment"
+                        );
                 return true;
             case R.id.action_delete_identity:
                 identity = identitiesFragment.getIdentity(identitiesFragment.getSelectedPage());
                 if (identity != null) {
-                    ConfirmIdentityDeletionDialogFragment.newInstance(
-                            identity.memberId(),
-                            identity.member().name()
-                    ).show(
-                            getFragmentManager(),
-                            "confirm_identity_deletion_dialog_fragment"
-                    );
+                    ConfirmIdentityDeletionDialogFragment.newInstance(identity)
+                            .show(
+                                    getFragmentManager(),
+                                    "confirm_identity_deletion_dialog_fragment"
+                            );
                 }
                 return true;
             case R.id.action_restore_identity:
@@ -337,10 +338,11 @@ public class MonopolyGameActivity extends AppCompatActivity
                 );
                 return true;
             case R.id.action_transfer_identity:
-                TransferIdentityDialogFragment.newInstance().show(
-                        getFragmentManager(),
-                        "transfer_identity_dialog_fragment"
-                );
+                TransferIdentityDialogFragment.newInstance()
+                        .show(
+                                getFragmentManager(),
+                                "transfer_identity_dialog_fragment"
+                        );
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -354,7 +356,7 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onPlayerClicked(PlayerWithBalanceAndConnectionState player) {
+    public void onPlayerClicked(Player player) {
         Identity identity = identitiesFragment.getIdentity(identitiesFragment.getSelectedPage());
         if (identity != null) {
             TransferToPlayerDialogFragment.newInstance(
