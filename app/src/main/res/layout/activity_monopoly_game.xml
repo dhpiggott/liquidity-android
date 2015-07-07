@@ -21,7 +21,15 @@
         android:id="@+id/fragment_players"
         android:name="com.dhpcs.liquidity.fragments.PlayersFragment"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="150dp"
         tools:layout="@layout/fragment_player_list" />
+    <!-- TODO: Height? -->
+
+    <fragment
+        android:id="@+id/fragment_transfers"
+        android:name="com.dhpcs.liquidity.fragments.TransfersFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:layout="@layout/fragment_transfers_list" />
 
 </LinearLayout>

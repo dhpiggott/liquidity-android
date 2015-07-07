@@ -28,7 +28,6 @@ public class IdentityFragment extends Fragment {
     private IdentityWithBalance identity;
 
     @Override
-    @SuppressWarnings("unchecked")
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         identity = (IdentityWithBalance) getArguments().getSerializable(ARG_IDENTITY);
@@ -46,8 +45,9 @@ public class IdentityFragment extends Fragment {
 
         Identifier identifier = identity.memberId();
         String name = identity.member().name();
-        String balance = MonopolyGameActivity.formatBalance(
-                identity.balanceWithCurrency()
+        String balance = MonopolyGameActivity.formatCurrency(
+                identity.balanceWithCurrency()._1(),
+                identity.balanceWithCurrency()._2()
         );
 
         identiconId.show(identifier);

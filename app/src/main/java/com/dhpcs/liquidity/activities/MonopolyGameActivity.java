@@ -16,6 +16,7 @@ import com.dhpcs.liquidity.MonopolyGame.Identity;
 import com.dhpcs.liquidity.MonopolyGame.IdentityWithBalance;
 import com.dhpcs.liquidity.MonopolyGame.Player;
 import com.dhpcs.liquidity.MonopolyGame.PlayerWithBalanceAndConnectionState;
+import com.dhpcs.liquidity.MonopolyGame.TransferWithCurrency;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.fragments.AddPlayersDialogFragment;
 import com.dhpcs.liquidity.fragments.ConfirmIdentityDeletionDialogFragment;
@@ -30,6 +31,7 @@ import com.dhpcs.liquidity.fragments.ReceiveIdentityDialogFragment;
 import com.dhpcs.liquidity.fragments.RestoreIdentityDialogFragment;
 import com.dhpcs.liquidity.fragments.TransferIdentityDialogFragment;
 import com.dhpcs.liquidity.fragments.TransferToPlayerDialogFragment;
+import com.dhpcs.liquidity.fragments.TransfersFragment;
 import com.dhpcs.liquidity.models.ErrorResponse;
 import com.dhpcs.liquidity.models.MemberId;
 import com.dhpcs.liquidity.models.PublicKey;
@@ -43,7 +45,6 @@ import java.util.ArrayList;
 import java.util.Currency;
 
 import scala.Option;
-import scala.Tuple2;
 import scala.collection.JavaConversions;
 import scala.util.Either;
 
@@ -63,34 +64,35 @@ public class MonopolyGameActivity extends AppCompatActivity
     public static final String EXTRA_GAME_NAME = "game_name";
     public static final String EXTRA_ZONE_ID = "zone_id";
 
-    public static String formatBalance(
-            Tuple2<scala.math.BigDecimal, Option<Either<String, Currency>>> balanceWithCurrency) {
+    public static String formatCurrency(scala.math.BigDecimal value,
+                                        Option<Either<String, Currency>> currency) {
 
-        BigDecimal balance = balanceWithCurrency._1().bigDecimal();
+        BigDecimal v = value.bigDecimal();
 
-        String balanceString;
-        if (!balanceWithCurrency._2().isDefined()) {
-            balanceString = NumberFormat.getNumberInstance().format(balance);
+        String valueString;
+        if (!currency.isDefined()) {
+            valueString = NumberFormat.getNumberInstance().format(v);
         } else {
 
-            Either<String, Currency> currency = balanceWithCurrency._2().get();
-            if (currency.isLeft()) {
-                String currencyCode = currency.left().get();
-                balanceString = currencyCode + " "
-                        + NumberFormat.getNumberInstance().format(balance);
+            Either<String, Currency> c = currency.get();
+            if (c.isLeft()) {
+                String currencyCode = c.left().get();
+                valueString = currencyCode + " "
+                        + NumberFormat.getNumberInstance().format(v);
             } else {
                 NumberFormat currencyFormat = NumberFormat.getCurrencyInstance();
-                currencyFormat.setCurrency(currency.right().get());
-                balanceString = currencyFormat.format(balance);
+                currencyFormat.setCurrency(c.right().get());
+                valueString = currencyFormat.format(v);
             }
         }
 
-        return balanceString;
+        return valueString;
     }
 
     private MonopolyGameHolderFragment monopolyGameHolderFragment;
     private IdentitiesFragment identitiesFragment;
     private PlayersFragment playersFragment;
+    private TransfersFragment transfersFragment;
 
     private ZoneId zoneId;
     private MemberId selectedIdentityId;
@@ -146,6 +148,8 @@ public class MonopolyGameActivity extends AppCompatActivity
                 fragmentManager.findFragmentById(R.id.fragment_identities);
         playersFragment = (PlayersFragment)
                 fragmentManager.findFragmentById(R.id.fragment_players);
+        transfersFragment = (TransfersFragment)
+                fragmentManager.findFragmentById(R.id.fragment_transfers);
     }
 
     @Override
@@ -173,11 +177,14 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onIdentitiesChanged(scala.collection.immutable.Map<MemberId, IdentityWithBalance>
-                                            identities,
-                                    scala.collection.Iterable<IdentityWithBalance>
-                                            hiddenIdentities) {
+    public void onHiddenIdentitiesChanged(scala.collection.Iterable<IdentityWithBalance>
+                                                  hiddenIdentities) {
         this.hiddenIdentities = hiddenIdentities;
+    }
+
+    @Override
+    public void onIdentitiesChanged(scala.collection.immutable.Map<MemberId, IdentityWithBalance>
+                                            identities) {
         identitiesFragment.onIdentitiesChanged(identities);
         Identity identity = identitiesFragment.getIdentity(identitiesFragment.getSelectedPage());
         this.selectedIdentityId = identity == null ? null : identity.memberId();
@@ -421,6 +428,11 @@ public class MonopolyGameActivity extends AppCompatActivity
     public void onStop() {
         super.onStop();
         monopolyGameHolderFragment.getMonopolyGame().setListener(null);
+    }
+
+    @Override
+    public void onTransfersChanged(scala.collection.Iterable<TransferWithCurrency> transfers) {
+        transfersFragment.onTransfersChanged(transfers);
     }
 
     @Override

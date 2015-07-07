@@ -52,7 +52,10 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
 
             Identifier identifier = player.memberId();
             String name = player.member().name();
-            String balance = MonopolyGameActivity.formatBalance(player.balanceWithCurrency());
+            String balance = MonopolyGameActivity.formatCurrency(
+                    player.balanceWithCurrency()._1(),
+                    player.balanceWithCurrency()._2()
+            );
 
             identiconId.show(identifier);
             textViewName.setText(
