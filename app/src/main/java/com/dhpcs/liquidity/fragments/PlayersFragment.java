@@ -20,17 +20,17 @@ import com.dhpcs.liquidity.models.Identifier;
 import com.dhpcs.liquidity.models.MemberId;
 import com.dhpcs.liquidity.views.Identicon;
 
-import java.text.Collator;
-import java.util.Comparator;
-
 import scala.collection.Iterator;
 
 // TODO: Extend ListFragment? http://developer.android.com/reference/android/app/ListFragment.html
-public class PlayersFragment extends Fragment implements AdapterView.OnItemClickListener {
+public class PlayersFragment extends Fragment implements AdapterView.OnItemClickListener,
+        AdapterView.OnItemLongClickListener {
 
     public interface Listener {
 
         void onPlayerClicked(Player player);
+
+        void onPlayerLongClicked(Player player);
 
     }
 
@@ -75,19 +75,6 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
 
     }
 
-    private static final Comparator<PlayerWithBalanceAndConnectionState> playerComparator =
-            new Comparator<PlayerWithBalanceAndConnectionState>() {
-
-                private final Collator collator = Collator.getInstance();
-
-                @Override
-                public int compare(PlayerWithBalanceAndConnectionState lhs,
-                                   PlayerWithBalanceAndConnectionState rhs) {
-                    return collator.compare(lhs.member().name(), rhs.member().name());
-                }
-
-            };
-
     private ArrayAdapter<PlayerWithBalanceAndConnectionState> listAdapter;
 
     private Listener listener;
@@ -120,6 +107,7 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
         absListViewPlayers.setAdapter(listAdapter);
         absListViewPlayers.setEmptyView(view.findViewById(android.R.id.empty));
         absListViewPlayers.setOnItemClickListener(this);
+        absListViewPlayers.setOnItemLongClickListener(this);
 
         return view;
     }
@@ -137,6 +125,14 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
         }
     }
 
+    @Override
+    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+        if (listener != null) {
+            listener.onPlayerLongClicked(listAdapter.getItem(position));
+        }
+        return true;
+    }
+
     public void onPlayersChanged(MemberId selectedIdentityId,
                                  scala.collection.Iterable<PlayerWithBalanceAndConnectionState>
                                          players) {
@@ -149,7 +145,7 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
                 listAdapter.add(player);
             }
         }
-        listAdapter.sort(playerComparator);
+        listAdapter.sort(MonopolyGameActivity.playerComparator);
         listAdapter.notifyDataSetChanged();
     }
 

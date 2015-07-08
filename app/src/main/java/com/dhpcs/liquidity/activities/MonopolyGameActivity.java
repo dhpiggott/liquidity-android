@@ -2,6 +2,7 @@ package com.dhpcs.liquidity.activities;
 
 import android.app.DialogFragment;
 import android.app.FragmentManager;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
@@ -31,7 +32,10 @@ import com.dhpcs.liquidity.fragments.ReceiveIdentityDialogFragment;
 import com.dhpcs.liquidity.fragments.RestoreIdentityDialogFragment;
 import com.dhpcs.liquidity.fragments.TransferIdentityDialogFragment;
 import com.dhpcs.liquidity.fragments.TransferToPlayerDialogFragment;
+import com.dhpcs.liquidity.fragments.TransfersDialogFragment;
 import com.dhpcs.liquidity.fragments.TransfersFragment;
+import com.dhpcs.liquidity.models.Account;
+import com.dhpcs.liquidity.models.AccountId;
 import com.dhpcs.liquidity.models.ErrorResponse;
 import com.dhpcs.liquidity.models.MemberId;
 import com.dhpcs.liquidity.models.PublicKey;
@@ -40,11 +44,14 @@ import com.google.common.io.BaseEncoding;
 import com.google.zxing.Result;
 
 import java.math.BigDecimal;
+import java.text.Collator;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Currency;
 
 import scala.Option;
+import scala.Tuple2;
 import scala.collection.JavaConversions;
 import scala.util.Either;
 
@@ -64,6 +71,42 @@ public class MonopolyGameActivity extends AppCompatActivity
     public static final String EXTRA_GAME_NAME = "game_name";
     public static final String EXTRA_ZONE_ID = "zone_id";
 
+    public static final Comparator<IdentityWithBalance> identityComparator =
+            new Comparator<IdentityWithBalance>() {
+
+                private final Collator collator = Collator.getInstance();
+
+                @Override
+                public int compare(IdentityWithBalance lhs, IdentityWithBalance rhs) {
+                    return collator.compare(lhs.member().name(), rhs.member().name());
+                }
+
+            };
+
+    public static final Comparator<PlayerWithBalanceAndConnectionState> playerComparator =
+            new Comparator<PlayerWithBalanceAndConnectionState>() {
+
+                private final Collator collator = Collator.getInstance();
+
+                @Override
+                public int compare(PlayerWithBalanceAndConnectionState lhs,
+                                   PlayerWithBalanceAndConnectionState rhs) {
+                    return collator.compare(lhs.member().name(), rhs.member().name());
+                }
+
+            };
+
+    public static final Comparator<TransferWithCurrency> transferComparator =
+            new Comparator<TransferWithCurrency>() {
+
+                @Override
+                public int compare(TransferWithCurrency lhs, TransferWithCurrency rhs) {
+                    return -1 *
+                            Long.compare(lhs.transaction().created(), rhs.transaction().created());
+                }
+
+            };
+
     public static String formatCurrency(scala.math.BigDecimal value,
                                         Option<Either<String, Currency>> currency) {
 
@@ -77,6 +120,7 @@ public class MonopolyGameActivity extends AppCompatActivity
             Either<String, Currency> c = currency.get();
             if (c.isLeft()) {
                 String currencyCode = c.left().get();
+                // TODO
                 valueString = currencyCode + " "
                         + NumberFormat.getNumberInstance().format(v);
             } else {
@@ -89,6 +133,24 @@ public class MonopolyGameActivity extends AppCompatActivity
         return valueString;
     }
 
+    public static String formatMemberOrAccount(Context context,
+                                               Either<Tuple2<AccountId, Account>, Player>
+                                                       eitherAccountTupleOrMember) {
+        String result;
+        if (eitherAccountTupleOrMember.isLeft()) {
+            AccountId accountId = eitherAccountTupleOrMember.left().get()._1();
+            Account account = eitherAccountTupleOrMember.left().get()._2();
+            result = context.getString(
+                    R.string.non_player_transfer_location_format_string,
+                    accountId.id().toString(),
+                    account.name()
+            );
+        } else {
+            result = eitherAccountTupleOrMember.right().get().member().name();
+        }
+        return result;
+    }
+
     private MonopolyGameHolderFragment monopolyGameHolderFragment;
     private IdentitiesFragment identitiesFragment;
     private PlayersFragment playersFragment;
@@ -98,6 +160,7 @@ public class MonopolyGameActivity extends AppCompatActivity
     private MemberId selectedIdentityId;
     private scala.collection.Iterable<IdentityWithBalance> hiddenIdentities;
     private scala.collection.Iterable<PlayerWithBalanceAndConnectionState> players;
+    private scala.collection.Iterable<TransferWithCurrency> transfers;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -344,6 +407,23 @@ public class MonopolyGameActivity extends AppCompatActivity
                                 "transfer_identity_dialog_fragment"
                         );
                 return true;
+            case R.id.action_view_transfers:
+                identity = identitiesFragment.getIdentity(identitiesFragment.getSelectedPage());
+                if (identity != null) {
+                    TransfersDialogFragment.newInstance(
+                            identity,
+                            new ArrayList<>(
+                                    JavaConversions.bufferAsJavaList(
+                                            transfers.<TransferWithCurrency>toBuffer()
+                                    )
+                            )
+                    )
+                            .show(
+                                    getFragmentManager(),
+                                    "transfers_dialog_fragment"
+                            );
+                }
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -371,6 +451,24 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
+    public void onPlayerLongClicked(Player player) {
+        // TODO: Show menu
+        TransfersDialogFragment.newInstance(
+                player,
+                new ArrayList<>(
+                        JavaConversions.bufferAsJavaList(
+                                transfers.<TransferWithCurrency>toBuffer()
+                        )
+                )
+        )
+                .show(
+                        getFragmentManager(),
+                        "transfers_dialog_fragment"
+                );
+    }
+
+    // TODO: Set strings based on current identity etc.
+    @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         Identity identity = identitiesFragment.getIdentity(identitiesFragment.getSelectedPage());
         menu.findItem(R.id.action_add_players).setVisible(zoneId != null);
@@ -385,6 +483,7 @@ public class MonopolyGameActivity extends AppCompatActivity
         );
         menu.findItem(R.id.action_receive_identity).setVisible(zoneId != null && identity != null);
         menu.findItem(R.id.action_transfer_identity).setVisible(zoneId != null);
+        menu.findItem(R.id.action_view_transfers).setVisible(zoneId != null);
         return true;
     }
 
@@ -434,7 +533,13 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public void onTransfersChanged(scala.collection.Iterable<TransferWithCurrency> transfers) {
+        this.transfers = transfers;
         transfersFragment.onTransfersChanged(transfers);
+        TransfersDialogFragment transfersDialogFragment = (TransfersDialogFragment)
+                getFragmentManager().findFragmentByTag("transfers_dialog_fragment");
+        if (transfersDialogFragment != null) {
+            transfersDialogFragment.onTransfersChanged(transfers);
+        }
     }
 
     @Override

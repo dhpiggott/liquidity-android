@@ -12,9 +12,9 @@ import android.view.ViewGroup;
 
 import com.dhpcs.liquidity.MonopolyGame.IdentityWithBalance;
 import com.dhpcs.liquidity.R;
+import com.dhpcs.liquidity.activities.MonopolyGameActivity;
 import com.dhpcs.liquidity.models.MemberId;
 
-import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -74,19 +74,7 @@ public class IdentitiesFragment extends Fragment {
 
     }
 
-    private static final Comparator<IdentityWithBalance> identityComparator =
-            new Comparator<IdentityWithBalance>() {
-
-                private final Collator collator = Collator.getInstance();
-
-                @Override
-                public int compare(IdentityWithBalance lhs, IdentityWithBalance rhs) {
-                    return collator.compare(lhs.member().name(), rhs.member().name());
-                }
-
-            };
-
-    private IdentitiesFragmentStatePagerAdapter playersFragmentStatePagerAdapter;
+    private IdentitiesFragmentStatePagerAdapter identitiesFragmentStatePagerAdapter;
     private ViewPager viewPagerIdentities;
 
     private Listener listener;
@@ -103,18 +91,18 @@ public class IdentitiesFragment extends Fragment {
     }
 
     public IdentityWithBalance getIdentity(int page) {
-        if (playersFragmentStatePagerAdapter.getCount() == 0) {
+        if (identitiesFragmentStatePagerAdapter.getCount() == 0) {
             return null;
         } else {
-            return playersFragmentStatePagerAdapter.get(page);
+            return identitiesFragmentStatePagerAdapter.get(page);
         }
     }
 
     public int getPage(IdentityWithBalance identity) {
-        if (playersFragmentStatePagerAdapter.getCount() == 0) {
+        if (identitiesFragmentStatePagerAdapter.getCount() == 0) {
             return 0;
         } else {
-            return playersFragmentStatePagerAdapter.getPosition(identity);
+            return identitiesFragmentStatePagerAdapter.getPosition(identity);
         }
     }
 
@@ -126,7 +114,7 @@ public class IdentitiesFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        playersFragmentStatePagerAdapter = new IdentitiesFragmentStatePagerAdapter(
+        identitiesFragmentStatePagerAdapter = new IdentitiesFragmentStatePagerAdapter(
                 getFragmentManager()
         );
     }
@@ -139,7 +127,7 @@ public class IdentitiesFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_identities, container, false);
 
         viewPagerIdentities = (ViewPager) view.findViewById(R.id.viewpager_identities);
-        viewPagerIdentities.setAdapter(playersFragmentStatePagerAdapter);
+        viewPagerIdentities.setAdapter(identitiesFragmentStatePagerAdapter);
         viewPagerIdentities.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
 
             @Override
@@ -164,16 +152,16 @@ public class IdentitiesFragment extends Fragment {
     public void onIdentitiesChanged(scala.collection.immutable.Map<MemberId, IdentityWithBalance>
                                             identities) {
         IdentityWithBalance selectedIdentity = getIdentity(getSelectedPage());
-        playersFragmentStatePagerAdapter.clear();
+        identitiesFragmentStatePagerAdapter.clear();
         Iterator<IdentityWithBalance> iterator = identities.valuesIterator();
         while (iterator.hasNext()) {
-            playersFragmentStatePagerAdapter.add(iterator.next());
+            identitiesFragmentStatePagerAdapter.add(iterator.next());
         }
-        playersFragmentStatePagerAdapter.sort(identityComparator);
-        playersFragmentStatePagerAdapter.notifyDataSetChanged();
+        identitiesFragmentStatePagerAdapter.sort(MonopolyGameActivity.identityComparator);
+        identitiesFragmentStatePagerAdapter.notifyDataSetChanged();
         if (selectedIdentity != null && identities.contains(selectedIdentity.memberId())) {
             viewPagerIdentities.setCurrentItem(
-                    playersFragmentStatePagerAdapter.getPosition(
+                    identitiesFragmentStatePagerAdapter.getPosition(
                             identities.apply(selectedIdentity.memberId())
                     ),
                     false

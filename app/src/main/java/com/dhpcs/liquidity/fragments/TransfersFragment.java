@@ -11,19 +11,13 @@ import android.widget.AbsListView;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-import com.dhpcs.liquidity.MonopolyGame.Player;
 import com.dhpcs.liquidity.MonopolyGame.TransferWithCurrency;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activities.MonopolyGameActivity;
-import com.dhpcs.liquidity.models.Account;
-import com.dhpcs.liquidity.models.AccountId;
 
 import java.text.DateFormat;
-import java.util.Comparator;
 
-import scala.Tuple2;
 import scala.collection.Iterator;
-import scala.util.Either;
 
 // TODO: Extend ListFragment? http://developer.android.com/reference/android/app/ListFragment.html
 public class TransfersFragment extends Fragment {
@@ -50,8 +44,8 @@ public class TransfersFragment extends Fragment {
             TransferWithCurrency transfer = getItem(position);
 
             long created = transfer.transaction().created();
-            String from = memberNameOrAccountString(transfer.from());
-            String to = memberNameOrAccountString(transfer.to());
+            String from = MonopolyGameActivity.formatMemberOrAccount(getContext(), transfer.from());
+            String to = MonopolyGameActivity.formatMemberOrAccount(getContext(), transfer.to());
             String value = MonopolyGameActivity.formatCurrency(
                     transfer.transaction().value(),
                     transfer.currency()
@@ -71,35 +65,7 @@ public class TransfersFragment extends Fragment {
             return view;
         }
 
-        public String memberNameOrAccountString(Either<Tuple2<AccountId, Account>, Player>
-                                                        eitherAccountTupleOrMember) {
-            String result;
-            if (eitherAccountTupleOrMember.isLeft()) {
-                AccountId accountId = eitherAccountTupleOrMember.left().get()._1();
-                Account account = eitherAccountTupleOrMember.left().get()._2();
-                result = getContext().getString(
-                        R.string.non_player_transfer_location_format_string,
-                        accountId.id().toString(),
-                        account.name()
-                );
-            } else {
-                result = eitherAccountTupleOrMember.right().get().member().name();
-            }
-            return result;
-        }
-
     }
-
-    private static final Comparator<TransferWithCurrency> transferComparator =
-            new Comparator<TransferWithCurrency>() {
-
-                @Override
-                public int compare(TransferWithCurrency lhs, TransferWithCurrency rhs) {
-                    return -1 *
-                            Long.compare(lhs.transaction().created(), rhs.transaction().created());
-                }
-
-            };
 
     private ArrayAdapter<TransferWithCurrency> listAdapter;
 
@@ -130,7 +96,7 @@ public class TransfersFragment extends Fragment {
         while (iterator.hasNext()) {
             listAdapter.add(iterator.next());
         }
-        listAdapter.sort(transferComparator);
+        listAdapter.sort(MonopolyGameActivity.transferComparator);
         listAdapter.notifyDataSetChanged();
     }
 

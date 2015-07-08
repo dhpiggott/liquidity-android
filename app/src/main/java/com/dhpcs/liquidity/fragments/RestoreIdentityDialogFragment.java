@@ -19,9 +19,7 @@ import com.dhpcs.liquidity.activities.MonopolyGameActivity;
 import com.dhpcs.liquidity.models.Identifier;
 import com.dhpcs.liquidity.views.Identicon;
 
-import java.text.Collator;
 import java.util.ArrayList;
-import java.util.Comparator;
 
 public class RestoreIdentityDialogFragment extends DialogFragment {
 
@@ -64,18 +62,6 @@ public class RestoreIdentityDialogFragment extends DialogFragment {
 
     }
 
-    private static final Comparator<IdentityWithBalance> identityComparator =
-            new Comparator<IdentityWithBalance>() {
-
-                private final Collator collator = Collator.getInstance();
-
-                @Override
-                public int compare(IdentityWithBalance lhs, IdentityWithBalance rhs) {
-                    return collator.compare(lhs.member().name(), rhs.member().name());
-                }
-
-            };
-
     private static final String ARG_IDENTITIES = "identities";
 
     public static RestoreIdentityDialogFragment newInstance(ArrayList<IdentityWithBalance>
@@ -108,7 +94,7 @@ public class RestoreIdentityDialogFragment extends DialogFragment {
         listAdapter.addAll(
                 (ArrayList<IdentityWithBalance>) getArguments().getSerializable(ARG_IDENTITIES)
         );
-        listAdapter.sort(identityComparator);
+        listAdapter.sort(MonopolyGameActivity.identityComparator);
         return new AlertDialog.Builder(getActivity())
                 .setTitle(R.string.choose_identity_to_restore)
                 .setAdapter(listAdapter, new DialogInterface.OnClickListener() {

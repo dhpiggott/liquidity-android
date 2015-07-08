@@ -17,6 +17,7 @@
     <string name="create_extra_identity">Create extra identity</string>
     <string name="created_format_string">Created %1$s</string>
     <string name="delete_identity">Delete identity</string>
+    <string name="done">Done</string>
     <string name="enter_game_name">Enter game name</string>
     <string name="enter_identity_name">Enter identity name</string>
     <string name="enter_transfer_amount">Enter transfer amount</string>
@@ -40,8 +41,12 @@
     <string name="restore_identity">Restore identity</string>
     <string name="scan_the_qr_code_on_the_hosts_phone">Scan the QR code on the host\'s phone.</string>
     <string name="scan_the_qr_code_on_the_recipients_phone">Scan the QR code on the recipients\'s phone.</string>
+    <string name="transfer_format_string">%1$s\'s transfers</string>
     <string name="transfer_identity">Transfer identity</string>
     <string name="transfer_summary_format_string">%1$s transferred %2$s to %3$s</string>
+    <string name="transfer_summary_received_from_format_string">Received %1$s from %2$s</string>
+    <string name="transfer_summary_sent_to_format_string">Sent %1$s to %2$s</string>
     <string name="unnamed">Unnamed</string>
+    <string name="view_transfers">View transfers</string>
 
 </resources>
