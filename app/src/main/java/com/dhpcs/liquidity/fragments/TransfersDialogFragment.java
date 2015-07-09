@@ -50,13 +50,13 @@ public class TransfersDialogFragment extends DialogFragment {
             TransferWithCurrency transfer = getItem(position);
 
             long created = transfer.transaction().created();
-            boolean isFromPlayer = transfer.from().right().get().memberId()
+            boolean isFromPlayer = player != null && transfer.from().right().get().memberId()
                     .equals(player.memberId());
             String value = MonopolyGameActivity.formatCurrency(
                     transfer.transaction().value(),
                     transfer.currency()
             );
-            boolean isToPlayer = transfer.to().right().get().memberId()
+            boolean isToPlayer = player != null && transfer.to().right().get().memberId()
                     .equals(player.memberId());
             String summary;
             if (isFromPlayer && !isToPlayer) {
@@ -113,10 +113,10 @@ public class TransfersDialogFragment extends DialogFragment {
         List<TransferWithCurrency> transfers =
                 (ArrayList<TransferWithCurrency>) getArguments().getSerializable(ARG_TRANSFERS);
         for (TransferWithCurrency transfer : transfers) {
-            if ((transfer.from().isRight()
-                    && transfer.from().right().get().memberId().equals(player.memberId()))
+            if (player == null || (transfer.from().isRight()
+                    && player.memberId().equals(transfer.from().right().get().memberId()))
                     || (transfer.to().isRight()
-                    && transfer.to().right().get().memberId().equals(player.memberId()))) {
+                    && player.memberId().equals(transfer.to().right().get().memberId()))) {
                 listAdapter.add(transfer);
             }
         }
@@ -125,10 +125,12 @@ public class TransfersDialogFragment extends DialogFragment {
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
+        Player player = (Player) getArguments().getSerializable(ARG_PLAYER);
         return new AlertDialog.Builder(getActivity())
                 .setTitle(
-                        getString(
-                                R.string.transfer_format_string,
+                        player == null ? getString(R.string.all_transfers)
+                                : getString(
+                                R.string.player_transfers_format_string,
                                 ((Player) getArguments().getSerializable(ARG_PLAYER))
                                         .member().name()
                         )
@@ -148,16 +150,16 @@ public class TransfersDialogFragment extends DialogFragment {
     }
 
     public void onTransfersChanged(scala.collection.Iterable<TransferWithCurrency> transfers) {
+        Player player = (Player) getArguments().getSerializable(ARG_PLAYER);
         listAdapter.setNotifyOnChange(false);
         listAdapter.clear();
-        Player player = (Player) getArguments().getSerializable(ARG_PLAYER);
         Iterator<TransferWithCurrency> iterator = transfers.iterator();
         while (iterator.hasNext()) {
             TransferWithCurrency transfer = iterator.next();
-            if ((transfer.from().isRight()
-                    && transfer.from().right().get().memberId().equals(player.memberId()))
+            if (player == null || (transfer.from().isRight()
+                    && player.memberId().equals(transfer.from().right().get().memberId()))
                     || (transfer.to().isRight()
-                    && transfer.to().right().get().memberId().equals(player.memberId()))) {
+                    && player.memberId().equals(transfer.to().right().get().memberId()))) {
                 listAdapter.add(transfer);
             }
         }

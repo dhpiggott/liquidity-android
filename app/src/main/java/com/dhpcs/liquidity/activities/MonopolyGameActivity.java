@@ -33,7 +33,6 @@ import com.dhpcs.liquidity.fragments.RestoreIdentityDialogFragment;
 import com.dhpcs.liquidity.fragments.TransferIdentityDialogFragment;
 import com.dhpcs.liquidity.fragments.TransferToPlayerDialogFragment;
 import com.dhpcs.liquidity.fragments.TransfersDialogFragment;
-import com.dhpcs.liquidity.fragments.TransfersFragment;
 import com.dhpcs.liquidity.models.Account;
 import com.dhpcs.liquidity.models.AccountId;
 import com.dhpcs.liquidity.models.ErrorResponse;
@@ -154,7 +153,6 @@ public class MonopolyGameActivity extends AppCompatActivity
     private MonopolyGameHolderFragment monopolyGameHolderFragment;
     private IdentitiesFragment identitiesFragment;
     private PlayersFragment playersFragment;
-    private TransfersFragment transfersFragment;
 
     private ZoneId zoneId;
     private MemberId selectedIdentityId;
@@ -211,8 +209,6 @@ public class MonopolyGameActivity extends AppCompatActivity
                 fragmentManager.findFragmentById(R.id.fragment_identities);
         playersFragment = (PlayersFragment)
                 fragmentManager.findFragmentById(R.id.fragment_players);
-        transfersFragment = (TransfersFragment)
-                fragmentManager.findFragmentById(R.id.fragment_transfers);
     }
 
     @Override
@@ -407,7 +403,21 @@ public class MonopolyGameActivity extends AppCompatActivity
                                 "transfer_identity_dialog_fragment"
                         );
                 return true;
-            case R.id.action_view_transfers:
+            case R.id.action_view_all_transfers:
+                TransfersDialogFragment.newInstance(
+                        null,
+                        new ArrayList<>(
+                                JavaConversions.bufferAsJavaList(
+                                        transfers.<TransferWithCurrency>toBuffer()
+                                )
+                        )
+                )
+                        .show(
+                                getFragmentManager(),
+                                "transfers_dialog_fragment"
+                        );
+                return true;
+            case R.id.action_view_identity_transfers:
                 identity = identitiesFragment.getIdentity(identitiesFragment.getSelectedPage());
                 if (identity != null) {
                     TransfersDialogFragment.newInstance(
@@ -450,9 +460,9 @@ public class MonopolyGameActivity extends AppCompatActivity
         }
     }
 
+    // TODO: Show menu on short click with the two options, remove long click?
     @Override
     public void onPlayerLongClicked(Player player) {
-        // TODO: Show menu
         TransfersDialogFragment.newInstance(
                 player,
                 new ArrayList<>(
@@ -483,7 +493,17 @@ public class MonopolyGameActivity extends AppCompatActivity
         );
         menu.findItem(R.id.action_receive_identity).setVisible(zoneId != null && identity != null);
         menu.findItem(R.id.action_transfer_identity).setVisible(zoneId != null);
-        menu.findItem(R.id.action_view_transfers).setVisible(zoneId != null);
+        menu.findItem(R.id.action_view_all_transfers).setVisible(zoneId != null);
+        MenuItem identityTransfers = menu.findItem(R.id.action_view_identity_transfers);
+        identityTransfers.setVisible(zoneId != null && identity != null);
+        if (identity != null) {
+            identityTransfers.setTitle(
+                    getString(
+                            R.string.view_identity_transfers_format_string,
+                            identity.member().name()
+                    )
+            );
+        }
         return true;
     }
 
@@ -534,7 +554,6 @@ public class MonopolyGameActivity extends AppCompatActivity
     @Override
     public void onTransfersChanged(scala.collection.Iterable<TransferWithCurrency> transfers) {
         this.transfers = transfers;
-        transfersFragment.onTransfersChanged(transfers);
         TransfersDialogFragment transfersDialogFragment = (TransfersDialogFragment)
                 getFragmentManager().findFragmentByTag("transfers_dialog_fragment");
         if (transfersDialogFragment != null) {

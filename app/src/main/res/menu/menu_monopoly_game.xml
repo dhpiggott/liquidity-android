@@ -51,9 +51,15 @@
         android:visible="false"
         app:showAsAction="never" />
     <item
-        android:id="@+id/action_view_transfers"
+        android:id="@+id/action_view_all_transfers"
         android:orderInCategory="100"
-        android:title="@string/view_transfers"
+        android:title="@string/view_all_transfers"
+        android:visible="false"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_view_identity_transfers"
+        android:orderInCategory="100"
+        android:title="@string/view_identity_transfers_format_string"
         android:visible="false"
         app:showAsAction="never" />
 </menu>
