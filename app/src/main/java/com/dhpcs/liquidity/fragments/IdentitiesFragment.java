@@ -6,6 +6,7 @@ import android.app.FragmentManager;
 import android.os.Bundle;
 import android.support.v13.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,7 +22,7 @@ import java.util.Comparator;
 
 import scala.collection.Iterator;
 
-public class IdentitiesFragment extends Fragment {
+public class IdentitiesFragment extends Fragment implements OnPageChangeListener {
 
     public interface Listener {
 
@@ -79,17 +80,6 @@ public class IdentitiesFragment extends Fragment {
 
     private Listener listener;
 
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        try {
-            listener = (Listener) activity;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
-                    + " must implement IdentitiesFragment.Listener");
-        }
-    }
-
     public IdentityWithBalance getIdentity(int page) {
         if (identitiesFragmentStatePagerAdapter.getCount() == 0) {
             return null;
@@ -111,6 +101,17 @@ public class IdentitiesFragment extends Fragment {
     }
 
     @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        try {
+            listener = (Listener) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString()
+                    + " must implement IdentitiesFragment.Listener");
+        }
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
@@ -128,18 +129,14 @@ public class IdentitiesFragment extends Fragment {
 
         viewPagerIdentities = (ViewPager) view.findViewById(R.id.viewpager_identities);
         viewPagerIdentities.setAdapter(identitiesFragmentStatePagerAdapter);
-        viewPagerIdentities.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
-
-            @Override
-            public void onPageSelected(int position) {
-                if (listener != null) {
-                    listener.onIdentityPageSelected(position);
-                }
-            }
-
-        });
+        viewPagerIdentities.addOnPageChangeListener(this);
 
         return view;
+    }
+
+    @Override
+    public void onDestroyView() {
+        viewPagerIdentities.removeOnPageChangeListener(this);
     }
 
     @Override
@@ -167,6 +164,21 @@ public class IdentitiesFragment extends Fragment {
                     false
             );
         }
+    }
+
+    @Override
+    public void onPageSelected(int position) {
+        if (listener != null) {
+            listener.onIdentityPageSelected(position);
+        }
+    }
+
+    @Override
+    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+    }
+
+    @Override
+    public void onPageScrollStateChanged(int state) {
     }
 
     public void setSelectedPage(int page) {
