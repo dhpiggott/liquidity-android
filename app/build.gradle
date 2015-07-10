@@ -42,7 +42,7 @@ dependencies {
     compile 'com.madgag.spongycastle:pkix:1.51.0.0'
     compile 'com.squareup.okhttp:okhttp:2.3.0'
     compile 'com.squareup.okhttp:okhttp-ws:2.3.0'
-    compile 'com.android.support:appcompat-v7:22.1.1'
+    compile 'com.android.support:appcompat-v7:22.2.0'
     compile 'com.android.support:support-v13:22.1.1'
     compile 'commons-io:commons-io:2.4'
     compile 'me.dm7.barcodescanner:zxing:1.7.1'
