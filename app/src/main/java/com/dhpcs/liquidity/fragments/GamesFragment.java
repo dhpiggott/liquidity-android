@@ -170,9 +170,9 @@ public class GamesFragment extends Fragment
         }
     }
 
+    // TODO: Swipe to hide?
     @Override
     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-        // TODO
         getActivity().getContentResolver().delete(
                 ContentUris.withAppendedId(LiquidityContract.Games.CONTENT_URI, id),
                 null,

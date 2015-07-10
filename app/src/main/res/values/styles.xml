@@ -1,11 +1,7 @@
 <resources>
 
-    <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
     </style>
-
-    <!--TODO: Review http://www.thewirelessguy.co.uk/2014/10/setting-android-app-project-use-material-design-appcompat/-->
-    <!--and https://chris.banes.me/2014/10/17/appcompat-v21-->
 
 </resources>

@@ -1,35 +1,70 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.dhpcs.liquidity.activities.MonopolyGameActivity">
 
-    <fragment
-        android:id="@+id/fragment_identities"
-        android:name="com.dhpcs.liquidity.fragments.IdentitiesFragment"
-        android:layout_width="match_parent"
-        android:layout_height="150dp"
-        tools:layout="@layout/fragment_identities" />
-    <!-- TODO: Height? -->
-
-    <fragment
-        android:id="@+id/fragment_players"
-        android:name="com.dhpcs.liquidity.fragments.PlayersFragment"
-        android:layout_width="match_parent"
-        android:layout_height="150dp"
-        tools:layout="@layout/fragment_player_list" />
-    <!-- TODO: Height? -->
-
-    <fragment
-        android:id="@+id/fragment_transfers"
-        android:name="com.dhpcs.liquidity.fragments.TransfersFragment"
+    <com.sothree.slidinguppanel.SlidingUpPanelLayout
+        android:id="@+id/slidinguppanellayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:layout="@layout/fragment_transfers_list" />
+        android:gravity="bottom"
+        app:umanoPanelHeight="?attr/actionBarSize"
+        app:umanoShadowHeight="4dp">
 
-</LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:paddingTop="?attr/actionBarSize">
+
+            <fragment
+                android:id="@+id/fragment_identities"
+                android:name="com.dhpcs.liquidity.fragments.IdentitiesFragment"
+                android:layout_width="match_parent"
+                android:layout_height="150dp"
+                tools:layout="@layout/fragment_identities" />
+            <!-- TODO: Height? -->
+
+            <fragment
+                android:id="@+id/fragment_players"
+                android:name="com.dhpcs.liquidity.fragments.PlayersFragment"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:layout="@layout/fragment_player_list" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <fragment
+                android:id="@+id/fragment_last_transfer"
+                android:name="com.dhpcs.liquidity.fragments.LastTransferFragment"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                tools:layout="@layout/fragment_last_transfer" />
+
+            <fragment
+                android:id="@+id/fragment_players_transfers"
+                android:name="com.dhpcs.liquidity.fragments.PlayersTransfersFragment"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:layout="@layout/fragment_players_transfers" />
+
+        </LinearLayout>
+
+    </com.sothree.slidinguppanel.SlidingUpPanelLayout>
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/background_material_dark"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+        app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+</FrameLayout>

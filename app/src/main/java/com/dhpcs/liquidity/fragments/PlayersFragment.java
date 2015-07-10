@@ -23,14 +23,11 @@ import com.dhpcs.liquidity.views.Identicon;
 import scala.collection.Iterator;
 
 // TODO: Extend ListFragment? Or switch to RecyclerView?
-public class PlayersFragment extends Fragment implements AdapterView.OnItemClickListener,
-        AdapterView.OnItemLongClickListener {
+public class PlayersFragment extends Fragment implements AdapterView.OnItemClickListener {
 
     public interface Listener {
 
         void onPlayerClicked(Player player);
-
-        void onPlayerLongClicked(Player player);
 
     }
 
@@ -107,7 +104,6 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
         absListViewPlayers.setAdapter(listAdapter);
         absListViewPlayers.setEmptyView(view.findViewById(android.R.id.empty));
         absListViewPlayers.setOnItemClickListener(this);
-        absListViewPlayers.setOnItemLongClickListener(this);
 
         return view;
     }
@@ -123,14 +119,6 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
         if (listener != null) {
             listener.onPlayerClicked(listAdapter.getItem(position));
         }
-    }
-
-    @Override
-    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-        if (listener != null) {
-            listener.onPlayerLongClicked(listAdapter.getItem(position));
-        }
-        return true;
     }
 
     public void onPlayersChanged(MemberId selectedIdentityId,

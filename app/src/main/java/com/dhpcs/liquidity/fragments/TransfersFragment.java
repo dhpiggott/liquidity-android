@@ -1,18 +1,16 @@
 package com.dhpcs.liquidity.fragments;
 
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.DialogFragment;
+import android.app.Fragment;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-import com.dhpcs.liquidity.MonopolyGame;
 import com.dhpcs.liquidity.MonopolyGame.Player;
 import com.dhpcs.liquidity.MonopolyGame.TransferWithCurrency;
 import com.dhpcs.liquidity.R;
@@ -24,7 +22,8 @@ import java.util.List;
 
 import scala.collection.Iterator;
 
-public class TransfersDialogFragment extends DialogFragment {
+// TODO: Extend ListFragment? Or switch to RecyclerView?
+public class TransfersFragment extends Fragment {
 
     private static class TransfersAdapter extends ArrayAdapter<TransferWithCurrency> {
 
@@ -91,17 +90,17 @@ public class TransfersDialogFragment extends DialogFragment {
     private static final String ARG_PLAYER = "player";
     private static final String ARG_TRANSFERS = "transfers";
 
-    public static TransfersDialogFragment newInstance(Player player,
-                                                      ArrayList<TransferWithCurrency> transfers) {
-        TransfersDialogFragment transfersDialogFragment = new TransfersDialogFragment();
+    public static TransfersFragment newInstance(Player player,
+                                                ArrayList<TransferWithCurrency> transfers) {
+        TransfersFragment transfersFragment = new TransfersFragment();
         Bundle args = new Bundle();
         args.putSerializable(ARG_PLAYER, player);
         args.putSerializable(ARG_TRANSFERS, transfers);
-        transfersDialogFragment.setArguments(args);
-        return transfersDialogFragment;
+        transfersFragment.setArguments(args);
+        return transfersFragment;
     }
 
-    private ArrayAdapter<MonopolyGame.TransferWithCurrency> listAdapter;
+    private ArrayAdapter<TransferWithCurrency> listAdapter;
 
     @Override
     @SuppressWarnings("unchecked")
@@ -112,41 +111,30 @@ public class TransfersDialogFragment extends DialogFragment {
         listAdapter = new TransfersAdapter(getActivity(), player);
         List<TransferWithCurrency> transfers =
                 (ArrayList<TransferWithCurrency>) getArguments().getSerializable(ARG_TRANSFERS);
-        for (TransferWithCurrency transfer : transfers) {
-            if (player == null || (transfer.from().isRight()
-                    && player.memberId().equals(transfer.from().right().get().memberId()))
-                    || (transfer.to().isRight()
-                    && player.memberId().equals(transfer.to().right().get().memberId()))) {
-                listAdapter.add(transfer);
+        if (transfers != null) {
+            for (TransferWithCurrency transfer : transfers) {
+                if (player == null || (transfer.from().isRight()
+                        && player.memberId().equals(transfer.from().right().get().memberId()))
+                        || (transfer.to().isRight()
+                        && player.memberId().equals(transfer.to().right().get().memberId()))) {
+                    listAdapter.add(transfer);
+                }
             }
+            listAdapter.sort(MonopolyGameActivity.transferComparator);
         }
-        listAdapter.sort(MonopolyGameActivity.transferComparator);
     }
 
     @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-        Player player = (Player) getArguments().getSerializable(ARG_PLAYER);
-        return new AlertDialog.Builder(getActivity())
-                .setTitle(
-                        player == null ? getString(R.string.all_transfers)
-                                : getString(
-                                R.string.player_transfers_format_string,
-                                ((Player) getArguments().getSerializable(ARG_PLAYER))
-                                        .member().name()
-                        )
-                )
-                .setAdapter(listAdapter, null)
-                .setPositiveButton(
-                        R.string.done,
-                        new DialogInterface.OnClickListener() {
+    public View onCreateView(LayoutInflater inflater,
+                             ViewGroup container,
+                             Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_transfers_list, container, false);
 
-                            public void onClick(DialogInterface dialog, int whichButton) {
-                                getDialog().dismiss();
-                            }
+        AbsListView absListViewPlayers = (AbsListView) view.findViewById(android.R.id.list);
+        absListViewPlayers.setAdapter(listAdapter);
+        absListViewPlayers.setEmptyView(view.findViewById(android.R.id.empty));
 
-                        }
-                )
-                .create();
+        return view;
     }
 
     public void onTransfersChanged(scala.collection.Iterable<TransferWithCurrency> transfers) {
