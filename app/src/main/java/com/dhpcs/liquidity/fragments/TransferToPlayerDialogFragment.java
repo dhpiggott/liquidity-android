@@ -58,6 +58,7 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
     // TODO:
     // Improve:
     // Using http://stackoverflow.com/questions/5107901/better-way-to-format-currency-input-edittext
+    // or https://github.com/BlacKCaT27/CurrencyEditText
     // Currently this crashes when parsing '0' or '00'...
     // Add buttons with quantity suffixes
     // Show source (with spinner?)

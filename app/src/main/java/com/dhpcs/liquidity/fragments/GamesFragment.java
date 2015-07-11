@@ -24,8 +24,7 @@ import com.dhpcs.liquidity.provider.LiquidityContract;
 import java.text.DateFormat;
 import java.util.UUID;
 
-// TODO: Extend ListFragment?
-// Example: http://developer.android.com/guide/components/loaders.html
+// TODO: Extend ListFragment? Or switch to RecyclerView?
 public class GamesFragment extends Fragment
         implements AdapterView.OnItemClickListener,
         AdapterView.OnItemLongClickListener,

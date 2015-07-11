@@ -54,6 +54,8 @@ import scala.Tuple2;
 import scala.collection.JavaConversions;
 import scala.util.Either;
 
+// TODO: Use http://developer.android.com/reference/android/support/design/widget/Snackbar.html for
+// confirmation of creates/deletes etc.
 public class MonopolyGameActivity extends AppCompatActivity
         implements EnterGameNameDialogFragment.Listener,
         EnterIdentityNameDialogFragment.Listener,

@@ -22,7 +22,7 @@ import com.dhpcs.liquidity.views.Identicon;
 
 import scala.collection.Iterator;
 
-// TODO: Extend ListFragment? http://developer.android.com/reference/android/app/ListFragment.html
+// TODO: Extend ListFragment? Or switch to RecyclerView?
 public class PlayersFragment extends Fragment implements AdapterView.OnItemClickListener,
         AdapterView.OnItemLongClickListener {
 
