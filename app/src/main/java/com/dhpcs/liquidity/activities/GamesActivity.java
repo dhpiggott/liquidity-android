@@ -3,11 +3,11 @@ package com.dhpcs.liquidity.activities;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
-import android.widget.Toast;
 
 import com.dhpcs.liquidity.GameType;
 import com.dhpcs.liquidity.R;
@@ -122,12 +122,11 @@ public class GamesActivity extends AppCompatActivity
                     )
             );
             joinGame(this, zoneId);
-        } catch (IllegalArgumentException iae) {
-            // TODO
-            Toast.makeText(
-                    this,
-                    R.string.qr_code_is_not_a_zone_id,
-                    Toast.LENGTH_LONG
+        } catch (IllegalArgumentException e) {
+            Snackbar.make(
+                    findViewById(R.id.coordinatorlayout),
+                    R.string.that_is_not_a_liquidity_game,
+                    Snackbar.LENGTH_LONG
             ).show();
         }
     }

@@ -4,13 +4,13 @@ import android.app.DialogFragment;
 import android.app.FragmentManager;
 import android.content.Context;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Toast;
 
 import com.dhpcs.liquidity.ClientKey;
 import com.dhpcs.liquidity.MONOPOLY$;
@@ -499,24 +499,26 @@ public class MonopolyGameActivity extends AppCompatActivity
     public void onPublicKeyScanned(Result rawResult) {
         Identity identity = identitiesFragment.getIdentity(identitiesFragment.getSelectedPage());
         if (identity != null) {
-            PublicKey publicKey = new PublicKey(
-                    BaseEncoding.base64().decode(
-                            rawResult.getText()
-                    )
-            );
-            if (!monopolyGameHolderFragment.getMonopolyGame()
-                    .isPublicKeyConnectedAndImplicitlyValid(publicKey)) {
-                // TODO
-                Toast.makeText(
-                        this,
-                        R.string.qr_code_is_not_a_public_key,
-                        Toast.LENGTH_LONG
-                ).show();
-            } else {
+            try {
+                PublicKey publicKey = new PublicKey(
+                        BaseEncoding.base64().decode(
+                                rawResult.getText()
+                        )
+                );
+                if (!monopolyGameHolderFragment.getMonopolyGame()
+                        .isPublicKeyConnectedAndImplicitlyValid(publicKey)) {
+                    throw new IllegalArgumentException();
+                }
                 monopolyGameHolderFragment.getMonopolyGame().transfer(
                         identity.memberId(),
                         publicKey
                 );
+            } catch (IllegalArgumentException e) {
+                Snackbar.make(
+                        findViewById(R.id.coordinatorlayout),
+                        R.string.that_is_not_a_member_of_the_game,
+                        Snackbar.LENGTH_LONG
+                ).show();
             }
         }
     }
