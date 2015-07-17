@@ -496,13 +496,13 @@ class MonopolyGame(context: Context)
             connectedClients = connectedClients + clientJoinedZoneNotification.publicKey
 
             val (joinedPlayers, joinedHiddenPlayers) = playersFromMembersAccounts(
-              memberIdsToAccountIds,
+              memberIdsToAccountIds.filterKeys(
+                zone.members(_).publicKey == clientJoinedZoneNotification.publicKey
+              ),
               zone.accounts,
               balances,
               currency,
-              zone.members.filter { case (_, member) =>
-                member.publicKey == clientJoinedZoneNotification.publicKey
-              },
+              zone.members,
               Set(clientJoinedZoneNotification.publicKey)
             )
 
@@ -520,13 +520,13 @@ class MonopolyGame(context: Context)
             connectedClients = connectedClients - clientQuitZoneNotification.publicKey
 
             val (quitPlayers, quitHiddenPlayers) = playersFromMembersAccounts(
-              memberIdsToAccountIds,
+              memberIdsToAccountIds.filterKeys(
+                zone.members(_).publicKey == clientQuitZoneNotification.publicKey
+              ),
               zone.accounts,
               balances,
               currency,
-              zone.members.filter { case (_, member) =>
-                member.publicKey == clientQuitZoneNotification.publicKey
-              },
+              zone.members,
               Set.empty
             )
 
