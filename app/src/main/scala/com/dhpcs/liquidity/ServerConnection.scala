@@ -10,8 +10,8 @@ import com.dhpcs.liquidity.ServerConnection._
 import com.dhpcs.liquidity.models._
 import com.google.android.gms.common.{GooglePlayServicesNotAvailableException, GooglePlayServicesRepairableException, GooglePlayServicesUtil}
 import com.google.android.gms.security.ProviderInstaller
+import com.squareup.okhttp.OkHttpClient
 import com.squareup.okhttp.ws.{WebSocket, WebSocketCall, WebSocketListener}
-import com.squareup.okhttp.{OkHttpClient, Request}
 import okio.{Buffer, BufferedSource}
 import org.slf4j.LoggerFactory
 import play.api.libs.json.Json
@@ -151,7 +151,7 @@ class ServerConnection(context: Context,
       log.debug("Creating WebSocket call")
       this.webSocketCall = WebSocketCall.create(
         client,
-        new Request.Builder().url(ServerConnection.ServerEndpoint).build
+        new com.squareup.okhttp.Request.Builder().url(ServerConnection.ServerEndpoint).build
       )
       this.webSocketCall.enqueue(ServerConnection.this)
     }
@@ -188,7 +188,7 @@ class ServerConnection(context: Context,
   }
 
   override def onClose(code: Int, reason: String) {
-    log.debug("WebSocket closed. Code: {}, reason: {}", code, reason)
+    log.debug("WebSocket closed. Reason: {}, Code: {}", reason, code)
     asyncPost(connectionHandler) {
       connectionHandler.removeCallbacks(pingRunnable)
       asyncPost(connectionStateHandler)(
@@ -201,8 +201,8 @@ class ServerConnection(context: Context,
     }
   }
 
-  override def onFailure(e: IOException) {
-    log.warn(e.getMessage, e)
+  override def onFailure(e: IOException, response: com.squareup.okhttp.Response) {
+    log.warn("WebSocked failed. Response: {}, Exception: {}", response: Any, e: Any)
   }
 
   override def onMessage(payload: BufferedSource, `type`: WebSocket.PayloadType) {
@@ -290,9 +290,7 @@ class ServerConnection(context: Context,
     payload.close()
   }
 
-  override def onOpen(webSocket: WebSocket,
-                      request: com.squareup.okhttp.Request,
-                      response: com.squareup.okhttp.Response) =
+  override def onOpen(webSocket: WebSocket, response: com.squareup.okhttp.Response) =
     asyncPost(connectionHandler) {
       log.debug("WebSocket opened")
       this.webSocketCall = null
