@@ -1,9 +1,12 @@
+apply plugin: 'com.github.ben-manes.versions'
+
 buildscript {
     repositories {
         jcenter()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:1.2.3'
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.11.3'
         classpath 'jp.leafytree.gradle:gradle-android-scala-plugin:1.4'
     }
 }
@@ -11,9 +14,9 @@ buildscript {
 allprojects {
     repositories {
         jcenter()
-        mavenLocal()
         maven {
             url 'http://repo.typesafe.com/typesafe/releases'
         }
+        mavenLocal()
     }
 }
