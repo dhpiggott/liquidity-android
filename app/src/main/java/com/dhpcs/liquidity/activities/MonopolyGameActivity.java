@@ -23,7 +23,7 @@ import com.dhpcs.liquidity.MonopolyGame.TransferWithCurrency;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.fragments.AddPlayersDialogFragment;
 import com.dhpcs.liquidity.fragments.ConfirmIdentityDeletionDialogFragment;
-import com.dhpcs.liquidity.fragments.CreateExtraIdentityDialogFragment;
+import com.dhpcs.liquidity.fragments.CreateIdentityDialogFragment;
 import com.dhpcs.liquidity.fragments.EnterGameNameDialogFragment;
 import com.dhpcs.liquidity.fragments.EnterIdentityNameDialogFragment;
 import com.dhpcs.liquidity.fragments.ErrorResponseDialogFragment;
@@ -65,7 +65,7 @@ public class MonopolyGameActivity extends AppCompatActivity
         implements EnterGameNameDialogFragment.Listener,
         EnterIdentityNameDialogFragment.Listener,
         ConfirmIdentityDeletionDialogFragment.Listener,
-        CreateExtraIdentityDialogFragment.Listener,
+        CreateIdentityDialogFragment.Listener,
         IdentitiesFragment.Listener,
         MonopolyGame.Listener,
         PlayersFragment.Listener,
@@ -402,11 +402,11 @@ public class MonopolyGameActivity extends AppCompatActivity
                             );
                 }
                 return true;
-            case R.id.action_create_extra_identity:
-                CreateExtraIdentityDialogFragment.newInstance()
+            case R.id.action_create_identity:
+                CreateIdentityDialogFragment.newInstance()
                         .show(
                                 getFragmentManager(),
-                                "create_extra_identity_dialog_fragment"
+                                "create_identity_dialog_fragment"
                         );
                 return true;
             case R.id.action_delete_identity:
@@ -485,7 +485,7 @@ public class MonopolyGameActivity extends AppCompatActivity
         menu.findItem(R.id.action_change_identity_name).setVisible(
                 zoneId != null && identity != null
         );
-        menu.findItem(R.id.action_create_extra_identity).setVisible(zoneId != null);
+        menu.findItem(R.id.action_create_identity).setVisible(zoneId != null);
         menu.findItem(R.id.action_delete_identity).setVisible(zoneId != null && identity != null);
         menu.findItem(R.id.action_restore_identity).setVisible(
                 zoneId != null && hiddenIdentities.nonEmpty()

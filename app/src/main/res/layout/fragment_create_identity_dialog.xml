@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.dhpcs.liquidity.fragments.CreateExtraIdentityDialogFragment">
+    tools:context="com.dhpcs.liquidity.fragments.CreateIdentityDialogFragment">
 
     <EditText
         android:id="@+id/edittext_identity_name"

@@ -10,7 +10,7 @@ import android.widget.EditText;
 
 import com.dhpcs.liquidity.R;
 
-public class CreateExtraIdentityDialogFragment extends DialogFragment {
+public class CreateIdentityDialogFragment extends DialogFragment {
 
     public interface Listener {
 
@@ -18,8 +18,8 @@ public class CreateExtraIdentityDialogFragment extends DialogFragment {
 
     }
 
-    public static CreateExtraIdentityDialogFragment newInstance() {
-        return new CreateExtraIdentityDialogFragment();
+    public static CreateIdentityDialogFragment newInstance() {
+        return new CreateIdentityDialogFragment();
     }
 
     private Listener listener;
@@ -31,7 +31,7 @@ public class CreateExtraIdentityDialogFragment extends DialogFragment {
             listener = (Listener) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
-                    + " must implement CreateExtraIdentityDialogFragment.Listener");
+                    + " must implement CreateIdentityDialogFragment.Listener");
         }
     }
 
@@ -40,7 +40,7 @@ public class CreateExtraIdentityDialogFragment extends DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         return new AlertDialog.Builder(getActivity())
                 .setTitle(R.string.enter_identity_name)
-                .setView(R.layout.fragment_create_extra_identity_dialog)
+                .setView(R.layout.fragment_create_identity_dialog)
                 .setNegativeButton(
                         R.string.cancel,
                         new DialogInterface.OnClickListener() {
