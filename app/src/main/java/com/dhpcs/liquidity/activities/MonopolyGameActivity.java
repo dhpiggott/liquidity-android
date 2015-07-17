@@ -392,6 +392,13 @@ public class MonopolyGameActivity extends AppCompatActivity
                                 "enter_game_name_dialog_fragment"
                         );
                 return true;
+            case R.id.action_create_identity:
+                CreateIdentityDialogFragment.newInstance()
+                        .show(
+                                getFragmentManager(),
+                                "create_identity_dialog_fragment"
+                        );
+                return true;
             case R.id.action_change_identity_name:
                 identity = identitiesFragment.getIdentity(identitiesFragment.getSelectedPage());
                 if (identity != null) {
@@ -401,13 +408,6 @@ public class MonopolyGameActivity extends AppCompatActivity
                                     "enter_identity_name_dialog_fragment"
                             );
                 }
-                return true;
-            case R.id.action_create_identity:
-                CreateIdentityDialogFragment.newInstance()
-                        .show(
-                                getFragmentManager(),
-                                "create_identity_dialog_fragment"
-                        );
                 return true;
             case R.id.action_delete_identity:
                 identity = identitiesFragment.getIdentity(identitiesFragment.getSelectedPage());
@@ -431,6 +431,13 @@ public class MonopolyGameActivity extends AppCompatActivity
                         "restore_identity_dialog_fragment"
                 );
                 return true;
+            case R.id.action_transfer_identity:
+                TransferIdentityDialogFragment.newInstance()
+                        .show(
+                                getFragmentManager(),
+                                "transfer_identity_dialog_fragment"
+                        );
+                return true;
             case R.id.action_receive_identity:
                 ReceiveIdentityDialogFragment.newInstance(
                         ClientKey.getInstance(this).getPublicKey()
@@ -438,13 +445,6 @@ public class MonopolyGameActivity extends AppCompatActivity
                         getFragmentManager(),
                         "receive_identity_dialog_fragment"
                 );
-                return true;
-            case R.id.action_transfer_identity:
-                TransferIdentityDialogFragment.newInstance()
-                        .show(
-                                getFragmentManager(),
-                                "transfer_identity_dialog_fragment"
-                        );
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -482,16 +482,16 @@ public class MonopolyGameActivity extends AppCompatActivity
         Identity identity = identitiesFragment.getIdentity(identitiesFragment.getSelectedPage());
         menu.findItem(R.id.action_add_players).setVisible(zoneId != null);
         menu.findItem(R.id.action_change_game_name).setVisible(zoneId != null);
+        menu.findItem(R.id.action_create_identity).setVisible(zoneId != null);
         menu.findItem(R.id.action_change_identity_name).setVisible(
                 zoneId != null && identity != null
         );
-        menu.findItem(R.id.action_create_identity).setVisible(zoneId != null);
         menu.findItem(R.id.action_delete_identity).setVisible(zoneId != null && identity != null);
         menu.findItem(R.id.action_restore_identity).setVisible(
                 zoneId != null && hiddenIdentities.nonEmpty()
         );
-        menu.findItem(R.id.action_receive_identity).setVisible(zoneId != null && identity != null);
         menu.findItem(R.id.action_transfer_identity).setVisible(zoneId != null);
+        menu.findItem(R.id.action_receive_identity).setVisible(zoneId != null && identity != null);
         return true;
     }
 
