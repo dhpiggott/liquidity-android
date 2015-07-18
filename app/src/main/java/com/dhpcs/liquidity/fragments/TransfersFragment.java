@@ -48,6 +48,8 @@ public class TransfersFragment extends Fragment {
 
             TransferWithCurrency transfer = getItem(position);
 
+            // TODO: Format strings are the wrong way around
+
             long created = transfer.transaction().created();
             boolean isFromPlayer = player != null && transfer.from().right().get().memberId()
                     .equals(player.memberId());
