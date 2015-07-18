@@ -67,6 +67,7 @@ object MonopolyGame {
                                   transactionId: TransactionId,
                                   transaction: Transaction,
                                   currency: Option[Either[String, Currency]])
+    extends Transfer
 
   trait Listener {
 
@@ -989,7 +990,7 @@ class MonopolyGame(context: Context)
   }
 
   def transfer(actingAs: Identity,
-               from: Player,
+               from: Identity,
                to: Player,
                value: BigDecimal) {
     serverConnection.sendCommand(

@@ -21,6 +21,8 @@ import com.dhpcs.liquidity.views.Identicon;
 
 import java.util.ArrayList;
 
+import scala.collection.JavaConversions;
+
 public class RestoreIdentityDialogFragment extends DialogFragment {
 
     public interface Listener {
@@ -64,12 +66,19 @@ public class RestoreIdentityDialogFragment extends DialogFragment {
 
     private static final String ARG_IDENTITIES = "identities";
 
-    public static RestoreIdentityDialogFragment newInstance(ArrayList<IdentityWithBalance>
-                                                                    identities) {
+    public static RestoreIdentityDialogFragment newInstance(
+            scala.collection.Iterable<IdentityWithBalance> identities) {
         RestoreIdentityDialogFragment restoreIdentityDialogFragment =
                 new RestoreIdentityDialogFragment();
         Bundle args = new Bundle();
-        args.putSerializable(ARG_IDENTITIES, identities);
+        args.putSerializable(
+                ARG_IDENTITIES,
+                new ArrayList<>(
+                        JavaConversions.bufferAsJavaList(
+                                identities.toBuffer()
+                        )
+                )
+        );
         restoreIdentityDialogFragment.setArguments(args);
         return restoreIdentityDialogFragment;
     }

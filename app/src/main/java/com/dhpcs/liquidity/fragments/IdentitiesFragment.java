@@ -11,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.dhpcs.liquidity.MonopolyGame.Identity;
 import com.dhpcs.liquidity.MonopolyGame.IdentityWithBalance;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activities.MonopolyGameActivity;
@@ -69,7 +70,7 @@ public class IdentitiesFragment extends Fragment implements OnPageChangeListener
             return identities.indexOf(identity);
         }
 
-        public void sort(Comparator<IdentityWithBalance> comparator) {
+        public void sort(Comparator<Identity> comparator) {
             Collections.sort(identities, comparator);
         }
 

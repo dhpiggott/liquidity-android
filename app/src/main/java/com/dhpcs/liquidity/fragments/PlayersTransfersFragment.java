@@ -11,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.dhpcs.liquidity.MonopolyGame.Player;
 import com.dhpcs.liquidity.MonopolyGame.PlayerWithBalanceAndConnectionState;
 import com.dhpcs.liquidity.MonopolyGame.TransferWithCurrency;
 import com.dhpcs.liquidity.R;
@@ -117,7 +118,7 @@ public class PlayersTransfersFragment extends Fragment {
             }
         }
 
-        public void sort(Comparator<PlayerWithBalanceAndConnectionState> comparator) {
+        public void sort(Comparator<Player> comparator) {
             Collections.sort(players, comparator);
         }
 

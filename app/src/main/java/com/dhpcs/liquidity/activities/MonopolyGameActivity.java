@@ -19,6 +19,7 @@ import com.dhpcs.liquidity.MonopolyGame.Identity;
 import com.dhpcs.liquidity.MonopolyGame.IdentityWithBalance;
 import com.dhpcs.liquidity.MonopolyGame.Player;
 import com.dhpcs.liquidity.MonopolyGame.PlayerWithBalanceAndConnectionState;
+import com.dhpcs.liquidity.MonopolyGame.Transfer;
 import com.dhpcs.liquidity.MonopolyGame.TransferWithCurrency;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.fragments.AddPlayersDialogFragment;
@@ -50,13 +51,11 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
 import java.math.BigDecimal;
 import java.text.Collator;
 import java.text.NumberFormat;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Currency;
 
 import scala.Option;
 import scala.Tuple2;
-import scala.collection.JavaConversions;
 import scala.util.Either;
 
 // TODO: Use http://developer.android.com/reference/android/support/design/widget/Snackbar.html for
@@ -77,41 +76,38 @@ public class MonopolyGameActivity extends AppCompatActivity
     public static final String EXTRA_GAME_NAME = "game_name";
     public static final String EXTRA_ZONE_ID = "zone_id";
 
-    public static final Comparator<IdentityWithBalance> identityComparator =
-            new Comparator<IdentityWithBalance>() {
+    public static final Comparator<Identity> identityComparator = new Comparator<Identity>() {
 
-                private final Collator collator = Collator.getInstance();
+        private final Collator collator = Collator.getInstance();
 
-                @Override
-                public int compare(IdentityWithBalance lhs, IdentityWithBalance rhs) {
-                    return collator.compare(lhs.member().name(), rhs.member().name());
-                }
+        @Override
+        public int compare(Identity lhs, Identity rhs) {
+            return collator.compare(lhs.member().name(), rhs.member().name());
+        }
 
-            };
+    };
 
-    public static final Comparator<PlayerWithBalanceAndConnectionState> playerComparator =
-            new Comparator<PlayerWithBalanceAndConnectionState>() {
+    public static final Comparator<Player> playerComparator = new Comparator<Player>() {
 
-                private final Collator collator = Collator.getInstance();
+        private final Collator collator = Collator.getInstance();
 
-                @Override
-                public int compare(PlayerWithBalanceAndConnectionState lhs,
-                                   PlayerWithBalanceAndConnectionState rhs) {
-                    return collator.compare(lhs.member().name(), rhs.member().name());
-                }
+        @Override
+        public int compare(Player lhs,
+                           Player rhs) {
+            return collator.compare(lhs.member().name(), rhs.member().name());
+        }
 
-            };
+    };
 
-    public static final Comparator<TransferWithCurrency> transferComparator =
-            new Comparator<TransferWithCurrency>() {
+    public static final Comparator<Transfer> transferComparator = new Comparator<Transfer>() {
 
-                @Override
-                public int compare(TransferWithCurrency lhs, TransferWithCurrency rhs) {
-                    return -1 *
-                            Long.compare(lhs.transaction().created(), rhs.transaction().created());
-                }
+        @Override
+        public int compare(Transfer lhs, Transfer rhs) {
+            return -1 *
+                    Long.compare(lhs.transaction().created(), rhs.transaction().created());
+        }
 
-            };
+    };
 
     public static String formatCurrency(scala.math.BigDecimal value,
                                         Option<Either<String, Currency>> currency) {
@@ -168,6 +164,7 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     private ZoneId zoneId;
     private MemberId selectedIdentityId;
+    private scala.collection.immutable.Map<MemberId, IdentityWithBalance> identities;
     private scala.collection.Iterable<IdentityWithBalance> hiddenIdentities;
     private scala.collection.immutable.Map<MemberId, PlayerWithBalanceAndConnectionState> players;
     private scala.collection.Iterable<TransferWithCurrency> transfers;
@@ -298,6 +295,7 @@ public class MonopolyGameActivity extends AppCompatActivity
     @Override
     public void onIdentitiesChanged(scala.collection.immutable.Map<MemberId, IdentityWithBalance>
                                             identities) {
+        this.identities = identities;
         identitiesFragment.onIdentitiesChanged(identities);
         Identity identity = identitiesFragment.getIdentity(identitiesFragment.getSelectedPage());
         this.selectedIdentityId = identity == null ? null : identity.memberId();
@@ -420,13 +418,7 @@ public class MonopolyGameActivity extends AppCompatActivity
                 }
                 return true;
             case R.id.action_restore_identity:
-                RestoreIdentityDialogFragment.newInstance(
-                        new ArrayList<>(
-                                JavaConversions.bufferAsJavaList(
-                                        hiddenIdentities.<IdentityWithBalance>toBuffer()
-                                )
-                        )
-                ).show(
+                RestoreIdentityDialogFragment.newInstance(hiddenIdentities).show(
                         getFragmentManager(),
                         "restore_identity_dialog_fragment"
                 );
@@ -463,10 +455,12 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public void onPlayerClicked(Player player) {
-        Identity identity = identitiesFragment.getIdentity(identitiesFragment.getSelectedPage());
+        IdentityWithBalance identity = identitiesFragment.getIdentity(
+                identitiesFragment.getSelectedPage()
+        );
         if (identity != null) {
             TransferToPlayerDialogFragment.newInstance(
-                    identity,
+                    identities,
                     identity,
                     player
             ).show(
@@ -549,12 +543,11 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onTransferValueEntered(Identity actingAs,
-                                       Player from,
+    public void onTransferValueEntered(Identity from,
                                        Player to,
                                        BigDecimal transferValue) {
         monopolyGameHolderFragment.getMonopolyGame().transfer(
-                actingAs,
+                from,
                 from,
                 to,
                 scala.math.BigDecimal.javaBigDecimal2bigDecimal(transferValue)
