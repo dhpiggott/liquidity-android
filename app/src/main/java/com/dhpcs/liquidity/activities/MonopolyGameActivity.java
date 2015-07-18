@@ -11,6 +11,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 
 import com.dhpcs.liquidity.ClientKey;
 import com.dhpcs.liquidity.MONOPOLY$;
@@ -208,6 +209,8 @@ public class MonopolyGameActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_monopoly_game);
+
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         FragmentManager fragmentManager = getFragmentManager();
         monopolyGameHolderFragment = (MonopolyGameHolderFragment) fragmentManager
