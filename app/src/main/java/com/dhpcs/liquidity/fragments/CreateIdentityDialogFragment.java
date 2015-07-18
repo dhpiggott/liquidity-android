@@ -1,11 +1,14 @@
 package com.dhpcs.liquidity.fragments;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.view.View;
+import android.view.WindowManager;
 import android.widget.EditText;
 
 import com.dhpcs.liquidity.R;
@@ -38,9 +41,16 @@ public class CreateIdentityDialogFragment extends DialogFragment {
     // TODO: Presets - e.g. Free Parking
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        return new AlertDialog.Builder(getActivity())
+        @SuppressLint("InflateParams") final View view = getActivity().getLayoutInflater().inflate(
+                R.layout.fragment_create_identity_dialog,
+                null
+        );
+        final EditText editTextIdentityName = (EditText) view.findViewById(
+                R.id.edittext_identity_name
+        );
+        Dialog dialog = new AlertDialog.Builder(getActivity())
                 .setTitle(R.string.enter_identity_name)
-                .setView(R.layout.fragment_create_identity_dialog)
+                .setView(view)
                 .setNegativeButton(
                         R.string.cancel,
                         new DialogInterface.OnClickListener() {
@@ -60,9 +70,7 @@ public class CreateIdentityDialogFragment extends DialogFragment {
                             public void onClick(DialogInterface dialog, int whichButton) {
                                 if (listener != null) {
                                     listener.onIdentityNameEntered(
-                                            ((EditText) getDialog().findViewById(
-                                                    R.id.edittext_identity_name
-                                            )).getText().toString()
+                                            editTextIdentityName.getText().toString()
                                     );
                                 }
                                 getDialog().dismiss();
@@ -71,6 +79,8 @@ public class CreateIdentityDialogFragment extends DialogFragment {
                         }
                 )
                 .create();
+        dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+        return dialog;
     }
 
     @Override

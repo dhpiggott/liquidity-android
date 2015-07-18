@@ -1,11 +1,14 @@
 package com.dhpcs.liquidity.fragments;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.view.View;
+import android.view.WindowManager;
 import android.widget.EditText;
 
 import com.dhpcs.liquidity.MonopolyGame.Identity;
@@ -22,12 +25,12 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
     private static final String ARG_IDENTITY = "identity";
 
     public static EnterIdentityNameDialogFragment newInstance(Identity identity) {
-        EnterIdentityNameDialogFragment transferToPlayerDialogFragment =
+        EnterIdentityNameDialogFragment enterIdentityNameDialogFragment =
                 new EnterIdentityNameDialogFragment();
         Bundle args = new Bundle();
         args.putSerializable(ARG_IDENTITY, identity);
-        transferToPlayerDialogFragment.setArguments(args);
-        return transferToPlayerDialogFragment;
+        enterIdentityNameDialogFragment.setArguments(args);
+        return enterIdentityNameDialogFragment;
     }
 
     private Listener listener;
@@ -46,9 +49,20 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
     // TODO: Remember and suggest previous names if arg is null
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
+        final Identity identity = (Identity) getArguments().getSerializable(ARG_IDENTITY);
+        @SuppressLint("InflateParams") final View view = getActivity().getLayoutInflater().inflate(
+                R.layout.fragment_enter_identity_name_dialog,
+                null
+        );
+        final EditText editTextIdentityName = (EditText) view.findViewById(
+                R.id.edittext_identity_name
+        );
+        if (identity != null) {
+            editTextIdentityName.setText(identity.member().name());
+        }
         Dialog dialog = new AlertDialog.Builder(getActivity())
                 .setTitle(R.string.enter_identity_name)
-                .setView(R.layout.fragment_enter_identity_name_dialog)
+                .setView(view)
                 .setNegativeButton(
                         R.string.cancel,
                         new DialogInterface.OnClickListener() {
@@ -68,10 +82,8 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
                             public void onClick(DialogInterface dialog, int whichButton) {
                                 if (listener != null) {
                                     listener.onIdentityNameEntered(
-                                            (Identity) getArguments().getSerializable(ARG_IDENTITY),
-                                            ((EditText) getDialog().findViewById(
-                                                    R.id.edittext_identity_name
-                                            )).getText().toString()
+                                            identity,
+                                            editTextIdentityName.getText().toString()
                                     );
                                 }
                                 getDialog().dismiss();
@@ -80,11 +92,7 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
                         }
                 )
                 .create();
-// TODO
-//        ((EditText) dialog.findViewById(R.id.edittext_game_name)).setText(
-//                ((Identity) getArguments().getSerializable(ARG_IDENTITY))
-//                        .member().name()
-//        );
+        dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
         return dialog;
     }
 

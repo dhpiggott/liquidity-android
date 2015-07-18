@@ -1,11 +1,14 @@
 package com.dhpcs.liquidity.fragments;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.view.View;
+import android.view.WindowManager;
 import android.widget.EditText;
 
 import com.dhpcs.liquidity.R;
@@ -21,12 +24,11 @@ public class EnterGameNameDialogFragment extends DialogFragment {
     private static final String ARG_NAME = "name";
 
     public static EnterGameNameDialogFragment newInstance(String name) {
-        EnterGameNameDialogFragment transferToPlayerDialogFragment =
-                new EnterGameNameDialogFragment();
+        EnterGameNameDialogFragment enterGameNameDialogFragment = new EnterGameNameDialogFragment();
         Bundle args = new Bundle();
         args.putString(ARG_NAME, name);
-        transferToPlayerDialogFragment.setArguments(args);
-        return transferToPlayerDialogFragment;
+        enterGameNameDialogFragment.setArguments(args);
+        return enterGameNameDialogFragment;
     }
 
     private Listener listener;
@@ -44,9 +46,17 @@ public class EnterGameNameDialogFragment extends DialogFragment {
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
+        // TODO: Make assignment of args to fields consistent across all fragments.
+        final String name = getArguments().getString(ARG_NAME);
+        @SuppressLint("InflateParams") final View view = getActivity().getLayoutInflater().inflate(
+                R.layout.fragment_enter_game_name_dialog,
+                null
+        );
+        final EditText editTextGameName = (EditText) view.findViewById(R.id.edittext_game_name);
+        editTextGameName.setText(name);
         Dialog dialog = new AlertDialog.Builder(getActivity())
                 .setTitle(R.string.enter_game_name)
-                .setView(R.layout.fragment_enter_game_name_dialog)
+                .setView(view)
                 .setNegativeButton(
                         R.string.cancel,
                         new DialogInterface.OnClickListener() {
@@ -66,9 +76,7 @@ public class EnterGameNameDialogFragment extends DialogFragment {
                             public void onClick(DialogInterface dialog, int whichButton) {
                                 if (listener != null) {
                                     listener.onGameNameEntered(
-                                            ((EditText) getDialog().findViewById(
-                                                    R.id.edittext_game_name
-                                            )).getText().toString()
+                                            editTextGameName.getText().toString()
                                     );
                                 }
                                 getDialog().dismiss();
@@ -77,9 +85,7 @@ public class EnterGameNameDialogFragment extends DialogFragment {
                         }
                 )
                 .create();
-        // TODO: Make assignment of args to fields consistent across all fragments.
-        // TODO
-//        ((EditText)dialog.findViewById(R.id.edittext_game_name)).setText(getArguments().getString(ARG_NAME));
+        dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
         return dialog;
     }
 

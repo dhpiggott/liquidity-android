@@ -1,11 +1,14 @@
 package com.dhpcs.liquidity.fragments;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.view.View;
+import android.view.WindowManager;
 import android.widget.EditText;
 
 import com.dhpcs.liquidity.MonopolyGame.Identity;
@@ -65,9 +68,16 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
     // Show destination
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        return new AlertDialog.Builder(getActivity())
+        @SuppressLint("InflateParams") final View view = getActivity().getLayoutInflater().inflate(
+                R.layout.fragment_transfer_to_player_dialog,
+                null
+        );
+        final EditText editTextTransferValue = (EditText) view.findViewById(
+                R.id.edittext_transfer_value
+        );
+        Dialog dialog = new AlertDialog.Builder(getActivity())
                 .setTitle(R.string.enter_transfer_amount)
-                .setView(R.layout.fragment_transfer_to_player_dialog)
+                .setView(view)
                 .setNegativeButton(
                         R.string.cancel,
                         new DialogInterface.OnClickListener() {
@@ -94,9 +104,7 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
                                             (Player) getArguments()
                                                     .getSerializable(ARG_TO),
                                             new BigDecimal(
-                                                    ((EditText) getDialog().findViewById(
-                                                            R.id.edittext_transfer_value
-                                                    )).getText().toString()
+                                                    editTextTransferValue.getText().toString()
                                             )
                                     );
                                 }
@@ -106,6 +114,8 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
                         }
                 )
                 .create();
+        dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+        return dialog;
     }
 
     @Override
