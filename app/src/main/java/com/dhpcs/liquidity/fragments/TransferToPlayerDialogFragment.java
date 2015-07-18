@@ -12,9 +12,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ArrayAdapter;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
 import com.dhpcs.liquidity.MonopolyGame.Identity;
 import com.dhpcs.liquidity.MonopolyGame.IdentityWithBalance;
@@ -25,10 +27,13 @@ import com.dhpcs.liquidity.models.MemberId;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Currency;
 import java.util.Iterator;
 import java.util.List;
 
+import scala.Option;
 import scala.collection.JavaConversions;
+import scala.util.Either;
 
 public class TransferToPlayerDialogFragment extends DialogFragment {
 
@@ -65,11 +70,32 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
     private static final String ARG_IDENTITIES = "identities";
     private static final String ARG_FROM = "from";
     private static final String ARG_TO = "to";
+    private static final String ARG_CURRENCY = "currency";
+
+    // TODO
+    private static String currencyOptionToString(Option<Either<String, Currency>> currency) {
+
+        String result;
+        if (!currency.isDefined()) {
+            result = "";
+        } else {
+
+            Either<String, Currency> c = currency.get();
+            if (c.isLeft()) {
+                result = c.left().get();
+            } else {
+                result = c.right().get().getSymbol();
+            }
+        }
+
+        return result;
+    }
 
     public static TransferToPlayerDialogFragment newInstance(
             scala.collection.immutable.Map<MemberId, IdentityWithBalance> identities,
             Identity from,
-            Player to) {
+            Player to,
+            Option<Either<String, Currency>> currency) {
         TransferToPlayerDialogFragment transferToPlayerDialogFragment =
                 new TransferToPlayerDialogFragment();
         Bundle args = new Bundle();
@@ -96,6 +122,7 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
         args.putSerializable(ARG_IDENTITIES, identitiesMinusTo);
         args.putSerializable(ARG_FROM, from);
         args.putSerializable(ARG_TO, to);
+        args.putSerializable(ARG_CURRENCY, currency);
         transferToPlayerDialogFragment.setArguments(args);
         return transferToPlayerDialogFragment;
     }
@@ -116,8 +143,6 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
     // TODO:
     // Use http://stackoverflow.com/questions/5107901/better-way-to-format-currency-input-edittext
     // or https://github.com/BlacKCaT27/CurrencyEditText
-    // Currently this crashes when parsing '0' or '00'...
-    // Add buttons with quantity suffixes
     @Override
     @SuppressWarnings("unchecked")
     public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -144,9 +169,51 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
             spinnerIdentity.setAdapter(spinnerAdapter);
             spinnerIdentity.setSelection(spinnerAdapter.getPosition(from));
         }
+        TextView textViewCurrency = (TextView) view.findViewById(R.id.textview_currency);
+        textViewCurrency.setText(
+                currencyOptionToString(
+                        (Option<Either<String, Currency>>)
+                                getArguments().getSerializable(ARG_CURRENCY)
+                )
+        );
         final EditText editTextTransferValue = (EditText) view.findViewById(
                 R.id.edittext_transfer_value
         );
+        final TextView textViewMultiplier = (TextView) view.findViewById(R.id.textview_multiplier);
+        final ToggleButton toggleButtonValueMultiplierMillion = (ToggleButton) view.findViewById(
+                R.id.togglebutton_value_multiplier_million
+        );
+        final ToggleButton toggleButtonValueMultiplierThousand = (ToggleButton) view.findViewById(
+                R.id.togglebutton_value_multiplier_thousand
+        );
+        toggleButtonValueMultiplierMillion
+                .setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        if (isChecked) {
+                            toggleButtonValueMultiplierThousand.setChecked(false);
+                            textViewMultiplier.setText(R.string.value_multiplier_million);
+                        } else {
+                            textViewMultiplier.setText(null);
+                        }
+                    }
+
+                });
+        toggleButtonValueMultiplierThousand
+                .setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        if (isChecked) {
+                            toggleButtonValueMultiplierMillion.setChecked(false);
+                            textViewMultiplier.setText(R.string.value_multiplier_thousand);
+                        } else {
+                            textViewMultiplier.setText(null);
+                        }
+                    }
+
+                });
         Dialog dialog = new AlertDialog.Builder(getActivity())
                 .setTitle(
                         getString(
@@ -173,21 +240,39 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
                             @Override
                             public void onClick(DialogInterface dialog, int whichButton) {
                                 if (listener != null) {
-                                    listener.onTransferValueEntered(
-                                            identities.size() == 1 ?
-                                                    from :
-                                                    spinnerAdapter.getItem(
-                                                            spinnerIdentity.
-                                                                    getSelectedItemPosition()
-                                                    ),
-                                            (Player) getArguments()
-                                                    .getSerializable(ARG_TO),
-                                            new BigDecimal(
-                                                    editTextTransferValue.getText().toString()
-                                            )
-                                    );
+                                    try {
+                                        BigDecimal value = new BigDecimal(
+                                                editTextTransferValue.getText().toString()
+                                        );
+                                        if (value.equals(BigDecimal.ZERO)) {
+
+                                            /*
+                                             * AddTransactionCommand requires that the value is
+                                             * greater than zero.
+                                             */
+                                            throw new IllegalArgumentException();
+                                        }
+                                        BigDecimal multiplier = BigDecimal.ONE;
+                                        if (toggleButtonValueMultiplierMillion.isChecked()) {
+                                            multiplier = new BigDecimal(1000000);
+                                        } else if (toggleButtonValueMultiplierThousand.isChecked()) {
+                                            multiplier = new BigDecimal(1000);
+                                        }
+                                        listener.onTransferValueEntered(
+                                                identities.size() == 1 ?
+                                                        from :
+                                                        spinnerAdapter.getItem(
+                                                                spinnerIdentity.
+                                                                        getSelectedItemPosition()
+                                                        ),
+                                                (Player) getArguments()
+                                                        .getSerializable(ARG_TO),
+                                                value.multiply(multiplier)
+                                        );
+                                        getDialog().dismiss();
+                                    } catch (IllegalArgumentException ignored) {
+                                    }
                                 }
-                                getDialog().dismiss();
                             }
 
                         }

@@ -340,6 +340,10 @@ class MonopolyGame(context: Context)
   private def disconnect() =
     serverConnection.disconnect()
 
+  // TODO
+  def getCurrency =
+    currency
+
   def isPublicKeyConnectedAndImplicitlyValid(publicKey: PublicKey) =
     connectedClients.contains(publicKey)
 

@@ -50,6 +50,8 @@
     <string name="transfer_summary_format_string">%1$s sent %2$s to %3$s</string>
     <string name="transfer_summary_received_from_format_string">Received %1$s from %2$s</string>
     <string name="transfer_summary_sent_to_format_string">Sent %1$s to %2$s</string>
+    <string name="value_multiplier_million">M</string>
+    <string name="value_multiplier_thousand">K</string>
     <string name="unnamed">Unnamed</string>
 
 </resources>

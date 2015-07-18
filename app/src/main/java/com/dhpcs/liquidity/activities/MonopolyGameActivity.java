@@ -462,7 +462,8 @@ public class MonopolyGameActivity extends AppCompatActivity
             TransferToPlayerDialogFragment.newInstance(
                     identities,
                     identity,
-                    player
+                    player,
+                    monopolyGameHolderFragment.getMonopolyGame().getCurrency()
             ).show(
                     getFragmentManager(),
                     "transfer_to_player_dialog_fragment"
