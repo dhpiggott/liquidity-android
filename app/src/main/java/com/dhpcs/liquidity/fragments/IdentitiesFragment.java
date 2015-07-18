@@ -136,8 +136,8 @@ public class IdentitiesFragment extends Fragment implements OnPageChangeListener
 
     @Override
     public void onDestroyView() {
-        viewPagerIdentities.removeOnPageChangeListener(this);
         super.onDestroyView();
+        viewPagerIdentities.removeOnPageChangeListener(this);
     }
 
     @Override

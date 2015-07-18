@@ -23,14 +23,17 @@ public class MonopolyGameHolderFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // TODO: Review https://code.google.com/p/android/issues/detail?id=22564 and
+        // https://android.googlesource.com/platform/development/+/master/samples/ApiDemos/src/com/example/android/apis/app/FragmentRetainInstance.java,
+        // fix by pushing containing activity code into fragment and making it hold this holder.
         setRetainInstance(true);
         monopolyGame.connectCreateAndOrJoinZone();
     }
 
     @Override
     public void onDestroy() {
-        monopolyGame.quitAndOrDisconnect();
         super.onDestroy();
+        monopolyGame.quitAndOrDisconnect();
     }
 
 }
