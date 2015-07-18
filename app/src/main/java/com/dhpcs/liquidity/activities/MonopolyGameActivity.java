@@ -109,30 +109,55 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     };
 
-    public static String formatCurrency(scala.math.BigDecimal value,
+    public static String formatCurrency(Context context,
+                                        scala.math.BigDecimal value,
                                         Option<Either<String, Currency>> currency) {
 
-        BigDecimal v = value.bigDecimal();
+        BigDecimal v;
+        String m;
+        if ((v = value.bigDecimal().movePointLeft(6)).abs().compareTo(BigDecimal.ONE) > 0) {
+            m = context.getString(R.string.value_multiplier_million_with_leading_space);
+        } else if ((v = value.bigDecimal().movePointLeft(3)).abs().compareTo(BigDecimal.ONE) > 0) {
+            m = context.getString(R.string.value_multiplier_thousand_with_leading_space);
+        } else {
+            v = value.bigDecimal();
+            m = context.getString(R.string.value_multiplier_none);
+        }
 
-        String valueString;
+        NumberFormat numberFormat = NumberFormat.getNumberInstance();
+        if (v.scale() != 0) {
+            numberFormat.setMinimumFractionDigits(2);
+            numberFormat.setMaximumFractionDigits(v.scale());
+        }
+        String vString = numberFormat.format(v);
+
+        String result;
         if (!currency.isDefined()) {
-            valueString = NumberFormat.getNumberInstance().format(v);
+            result = context.getString(R.string.currency_format_string,
+                    vString,
+                    m
+            );
         } else {
 
             Either<String, Currency> c = currency.get();
             if (c.isLeft()) {
                 String currencyCode = c.left().get();
-                // TODO
-                valueString = currencyCode + " "
-                        + NumberFormat.getNumberInstance().format(v);
+                result = context.getString(R.string.currency_code_format_string,
+                        currencyCode,
+                        vString,
+                        m
+                );
             } else {
-                NumberFormat currencyFormat = NumberFormat.getCurrencyInstance();
-                currencyFormat.setCurrency(c.right().get());
-                valueString = currencyFormat.format(v);
+                String currencySymbol = c.right().get().getSymbol();
+                result = context.getString(R.string.currency_symbol_format_string,
+                        currencySymbol,
+                        vString,
+                        m
+                );
             }
         }
 
-        return valueString;
+        return result;
     }
 
     public static String formatMemberOrAccount(Context context,

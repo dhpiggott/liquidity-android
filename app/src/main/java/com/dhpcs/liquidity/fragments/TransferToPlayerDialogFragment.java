@@ -255,7 +255,8 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
                                         BigDecimal multiplier = BigDecimal.ONE;
                                         if (toggleButtonValueMultiplierMillion.isChecked()) {
                                             multiplier = new BigDecimal(1000000);
-                                        } else if (toggleButtonValueMultiplierThousand.isChecked()) {
+                                        } else if (toggleButtonValueMultiplierThousand
+                                                .isChecked()) {
                                             multiplier = new BigDecimal(1000);
                                         }
                                         listener.onTransferValueEntered(

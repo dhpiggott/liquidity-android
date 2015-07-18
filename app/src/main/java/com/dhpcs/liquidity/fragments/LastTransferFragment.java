@@ -50,6 +50,7 @@ public class LastTransferFragment extends Fragment {
         if (lastTransfer != null) {
             long created = lastTransfer.transaction().created();
             String value = MonopolyGameActivity.formatCurrency(
+                    getActivity(),
                     lastTransfer.transaction().value(),
                     lastTransfer.currency()
             );

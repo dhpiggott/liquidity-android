@@ -17,6 +17,9 @@
     <string name="confirm_delete_format_string">Are you sure you want to delete your identity \"%1$s\"? You can always restore deleted identities via the menu later.</string>
     <string name="create_identity">Create identity</string>
     <string name="created_format_string">Created %1$s</string>
+    <string name="currency_format_string">%1$s%2$s</string>
+    <string name="currency_code_format_string">%1$s %2$s%3$s</string>
+    <string name="currency_symbol_format_string">%1$s%2$s%3$s</string>
     <string name="delete_identity">Delete identity</string>
     <string name="done">Done</string>
     <string name="enter_game_name">Enter game name</string>
@@ -51,7 +54,10 @@
     <string name="transfer_summary_received_from_format_string">Received %1$s from %2$s</string>
     <string name="transfer_summary_sent_to_format_string">Sent %1$s to %2$s</string>
     <string name="value_multiplier_million">M</string>
+    <string name="value_multiplier_million_with_leading_space">M</string>
+    <string name="value_multiplier_none" />
     <string name="value_multiplier_thousand">K</string>
+    <string name="value_multiplier_thousand_with_leading_space"> K</string>
     <string name="unnamed">Unnamed</string>
 
 </resources>

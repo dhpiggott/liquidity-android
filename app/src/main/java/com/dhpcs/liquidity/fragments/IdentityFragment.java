@@ -46,6 +46,7 @@ public class IdentityFragment extends Fragment {
         Identifier identifier = identity.memberId();
         String name = identity.member().name();
         String balance = MonopolyGameActivity.formatCurrency(
+                getActivity(),
                 identity.balanceWithCurrency()._1(),
                 identity.balanceWithCurrency()._2()
         );
