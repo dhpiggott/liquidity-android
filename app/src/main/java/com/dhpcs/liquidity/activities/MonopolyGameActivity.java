@@ -133,29 +133,44 @@ public class MonopolyGameActivity extends AppCompatActivity
                                              Option<Either<String, Currency>> currency,
                                              scala.math.BigDecimal value) {
 
-        BigDecimal v;
-        String m;
-        if ((v = value.bigDecimal().movePointLeft(6))
+        int scaleAmount;
+        BigDecimal scaledValue;
+        String multiplier;
+        if ((scaledValue = value.bigDecimal().scaleByPowerOfTen(scaleAmount = -6))
                 .abs().compareTo(BigDecimal.ONE) >= 0) {
-            m = context.getString(R.string.value_multiplier_million_with_leading_space);
-        } else if ((v = value.bigDecimal().movePointLeft(3))
+            multiplier = context.getString(R.string.value_multiplier_million_with_leading_space);
+        } else if ((scaledValue = value.bigDecimal().scaleByPowerOfTen(scaleAmount = -3))
                 .abs().compareTo(BigDecimal.ONE) >= 0) {
-            m = context.getString(R.string.value_multiplier_thousand_with_leading_space);
+            multiplier = context.getString(R.string.value_multiplier_thousand_with_leading_space);
         } else {
-            v = value.bigDecimal();
-            m = context.getString(R.string.value_multiplier_none);
+            scaleAmount = 0;
+            scaledValue = value.bigDecimal();
+            multiplier = context.getString(R.string.value_multiplier_none);
+        }
+
+        int maximumFractionDigits;
+        int minimumFractionDigits;
+        if (scaleAmount == 0) {
+            if (scaledValue.scale() == 0) {
+                maximumFractionDigits = 0;
+                minimumFractionDigits = 0;
+            } else {
+                maximumFractionDigits = scaledValue.scale();
+                minimumFractionDigits = 2;
+            }
+        } else {
+            maximumFractionDigits = scaledValue.scale();
+            minimumFractionDigits = 0;
         }
 
         NumberFormat numberFormat = NumberFormat.getNumberInstance();
-        if (v.scale() != 0) {
-            numberFormat.setMinimumFractionDigits(2);
-            numberFormat.setMaximumFractionDigits(v.scale());
-        }
+        numberFormat.setMaximumFractionDigits(maximumFractionDigits);
+        numberFormat.setMinimumFractionDigits(minimumFractionDigits);
 
         return context.getString(R.string.currency_value_format_string,
                 formatCurrency(context, currency),
-                numberFormat.format(v),
-                m
+                numberFormat.format(scaledValue),
+                multiplier
         );
     }
 
