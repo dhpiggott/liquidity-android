@@ -65,6 +65,7 @@ public class ClientKey {
         X500Name clientIdentity = new X500NameBuilder().addRDN(BCStyle.CN, androidId).build();
 
         if (keyPair == null) {
+            PRNGFixes.apply();
             try {
                 keyPair = KeyPairGenerator.getInstance("RSA").generateKeyPair();
             } catch (NoSuchAlgorithmException e) {

@@ -20,6 +20,8 @@ import scala.util.{Failure, Right, Success, Try}
 
 object ServerConnection {
 
+  PRNGFixes.apply()
+
   // TODO: Can this just be boolean?
   // TODO: Check NetworkUtils.isNetworkAvailable somewhere
   sealed trait ConnectionState
