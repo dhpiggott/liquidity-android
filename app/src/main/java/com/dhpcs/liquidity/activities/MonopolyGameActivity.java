@@ -362,11 +362,7 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public void onIdentityNameEntered(Identity identity, String name) {
-        if (identity == null) {
-            monopolyGameHolderFragment.getMonopolyGame().createIdentity(name);
-        } else {
-            monopolyGameHolderFragment.getMonopolyGame().setIdentityName(identity, name);
-        }
+        monopolyGameHolderFragment.getMonopolyGame().setIdentityName(identity, name);
     }
 
     @Override
@@ -390,10 +386,10 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public void onIdentityRequired() {
-        EnterIdentityNameDialogFragment.newInstance(null)
+        CreateIdentityDialogFragment.newInstance()
                 .show(
                         getFragmentManager(),
-                        "enter_identity_name_dialog_fragment"
+                        "create_identity_dialog_fragment"
                 );
     }
 
@@ -459,10 +455,11 @@ public class MonopolyGameActivity extends AppCompatActivity
                 }
                 return true;
             case R.id.action_restore_identity:
-                RestoreIdentityDialogFragment.newInstance(hiddenIdentities).show(
-                        getFragmentManager(),
-                        "restore_identity_dialog_fragment"
-                );
+                RestoreIdentityDialogFragment.newInstance(hiddenIdentities)
+                        .show(
+                                getFragmentManager(),
+                                "restore_identity_dialog_fragment"
+                        );
                 return true;
             case R.id.action_transfer_identity:
                 TransferIdentityDialogFragment.newInstance()

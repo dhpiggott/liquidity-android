@@ -53,17 +53,7 @@ public class ConfirmIdentityDeletionDialogFragment extends DialogFragment {
                                         .member().name()
                         )
                 )
-                .setNegativeButton(
-                        R.string.cancel,
-                        new DialogInterface.OnClickListener() {
-
-                            @Override
-                            public void onClick(DialogInterface dialog, int whichButton) {
-                                getDialog().cancel();
-                            }
-
-                        }
-                )
+                .setNegativeButton(R.string.cancel, null)
                 .setPositiveButton(
                         R.string.ok,
                         new DialogInterface.OnClickListener() {
@@ -75,7 +65,6 @@ public class ConfirmIdentityDeletionDialogFragment extends DialogFragment {
                                             (Identity) getArguments().getSerializable(ARG_IDENTITY)
                                     );
                                 }
-                                getDialog().dismiss();
                             }
 
                         }

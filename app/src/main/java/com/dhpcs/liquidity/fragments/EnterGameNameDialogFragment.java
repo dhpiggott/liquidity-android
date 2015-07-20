@@ -7,6 +7,9 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
@@ -46,28 +49,20 @@ public class EnterGameNameDialogFragment extends DialogFragment {
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        // TODO: Make assignment of args to fields consistent across all fragments.
-        final String name = getArguments().getString(ARG_NAME);
-        @SuppressLint("InflateParams") final View view = getActivity().getLayoutInflater().inflate(
+
+        @SuppressLint("InflateParams") View view = getActivity().getLayoutInflater().inflate(
                 R.layout.fragment_enter_game_name_dialog,
                 null
         );
+
+        final String name = getArguments().getString(ARG_NAME);
+
         final EditText editTextGameName = (EditText) view.findViewById(R.id.edittext_game_name);
-        editTextGameName.setText(name);
-        Dialog dialog = new AlertDialog.Builder(getActivity())
+
+        final AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
                 .setTitle(R.string.enter_game_name)
                 .setView(view)
-                .setNegativeButton(
-                        R.string.cancel,
-                        new DialogInterface.OnClickListener() {
-
-                            @Override
-                            public void onClick(DialogInterface dialog, int whichButton) {
-                                getDialog().cancel();
-                            }
-
-                        }
-                )
+                .setNegativeButton(R.string.cancel, null)
                 .setPositiveButton(
                         R.string.ok,
                         new DialogInterface.OnClickListener() {
@@ -79,14 +74,48 @@ public class EnterGameNameDialogFragment extends DialogFragment {
                                             editTextGameName.getText().toString()
                                     );
                                 }
-                                getDialog().dismiss();
                             }
 
                         }
                 )
                 .create();
-        dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
-        return dialog;
+
+        editTextGameName.setText(name);
+        editTextGameName.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(
+                        !TextUtils.isEmpty(s)
+                );
+            }
+
+        });
+
+        alertDialog.setOnShowListener(new DialogInterface.OnShowListener() {
+
+            @Override
+            public void onShow(DialogInterface dialog) {
+                alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(
+                        !TextUtils.isEmpty(name)
+                );
+            }
+
+        });
+
+        alertDialog.getWindow().setSoftInputMode(
+                WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE
+        );
+
+        return alertDialog;
     }
 
     @Override

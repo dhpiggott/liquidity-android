@@ -37,6 +37,7 @@ import scala.Option;
 import scala.collection.JavaConversions;
 import scala.util.Either;
 
+// TODO: Multiple destinations
 public class TransferToPlayerDialogFragment extends DialogFragment {
 
     public interface Listener {
@@ -133,6 +134,7 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
                 null
         );
 
+        // TODO: Make assignment of args to fields consistent across all fragments.
         final List<Identity> identities = (List<Identity>)
                 getArguments().getSerializable(ARG_IDENTITIES);
         final Identity from = (Identity) getArguments().getSerializable(ARG_FROM);

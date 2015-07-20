@@ -54,7 +54,7 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
                     getContext(),
                     player.balanceWithCurrency()._2(),
                     player.balanceWithCurrency()._1()
-                    );
+            );
 
             identiconId.show(identifier);
             textViewName.setText(

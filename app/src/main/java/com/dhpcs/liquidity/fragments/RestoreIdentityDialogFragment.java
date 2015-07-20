@@ -117,16 +117,7 @@ public class RestoreIdentityDialogFragment extends DialogFragment {
                     }
 
                 })
-                .setNegativeButton(
-                        R.string.cancel,
-                        new DialogInterface.OnClickListener() {
-
-                            public void onClick(DialogInterface dialog, int whichButton) {
-                                getDialog().cancel();
-                            }
-
-                        }
-                )
+                .setNegativeButton(R.string.cancel, null)
                 .create();
     }
 
