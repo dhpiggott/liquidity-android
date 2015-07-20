@@ -104,8 +104,9 @@ public class MonopolyGameActivity extends AppCompatActivity
 
         @Override
         public int compare(Transfer lhs, Transfer rhs) {
-            return -1 *
-                    Long.compare(lhs.transaction().created(), rhs.transaction().created());
+            long lhsCreated = lhs.transaction().created();
+            long rhsCreated = rhs.transaction().created();
+            return -1 * (lhsCreated < rhsCreated ? -1 : (lhsCreated == rhsCreated ? 0 : 1));
         }
 
     };
