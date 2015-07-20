@@ -512,7 +512,6 @@ public class MonopolyGameActivity extends AppCompatActivity
         }
     }
 
-    // TODO: Set strings based on current identity etc.
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         Identity identity = identitiesFragment.getIdentity(identitiesFragment.getSelectedPage());
