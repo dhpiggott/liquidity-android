@@ -165,7 +165,6 @@ public class PlayersTransfersFragment extends Fragment {
         return view;
     }
 
-    // TODO: Add placeholder fragment indicating no players exist
     public void onPlayersChanged(scala.collection.immutable.Map<MemberId,
             PlayerWithBalanceAndConnectionState> players) {
         PlayerWithBalanceAndConnectionState selectedPlayer = getSelectedPlayer();
