@@ -49,10 +49,10 @@ public class LastTransferFragment extends Fragment {
 
         if (lastTransfer != null) {
             long created = lastTransfer.transaction().created();
-            String value = MonopolyGameActivity.formatCurrency(
+            String value = MonopolyGameActivity.formatCurrencyValue(
                     getActivity(),
-                    lastTransfer.transaction().value(),
-                    lastTransfer.currency()
+                    lastTransfer.currency(),
+                    lastTransfer.transaction().value()
             );
             String summary = getString(
                     R.string.transfer_summary_format_string,

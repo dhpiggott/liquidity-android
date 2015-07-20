@@ -111,8 +111,27 @@ public class MonopolyGameActivity extends AppCompatActivity
     };
 
     public static String formatCurrency(Context context,
-                                        scala.math.BigDecimal value,
                                         Option<Either<String, Currency>> currency) {
+
+        String result;
+        if (!currency.isDefined()) {
+            result = context.getString(R.string.currency_none);
+        } else {
+
+            Either<String, Currency> c = currency.get();
+            if (c.isLeft()) {
+                result = context.getString(R.string.currency_code_format_string, c.left().get());
+            } else {
+                result = c.right().get().getSymbol();
+            }
+        }
+
+        return result;
+    }
+
+    public static String formatCurrencyValue(Context context,
+                                             Option<Either<String, Currency>> currency,
+                                             scala.math.BigDecimal value) {
 
         // TODO: This shows 1,000,000 as 1,000 K - it should be 1 M
         BigDecimal v;
@@ -135,35 +154,12 @@ public class MonopolyGameActivity extends AppCompatActivity
             numberFormat.setMinimumFractionDigits(2);
             numberFormat.setMaximumFractionDigits(v.scale());
         }
-        String vString = numberFormat.format(v);
 
-        String result;
-        if (!currency.isDefined()) {
-            result = context.getString(R.string.currency_format_string,
-                    vString,
-                    m
-            );
-        } else {
-
-            Either<String, Currency> c = currency.get();
-            if (c.isLeft()) {
-                String currencyCode = c.left().get();
-                result = context.getString(R.string.currency_code_format_string,
-                        currencyCode,
-                        vString,
-                        m
-                );
-            } else {
-                String currencySymbol = c.right().get().getSymbol();
-                result = context.getString(R.string.currency_symbol_format_string,
-                        currencySymbol,
-                        vString,
-                        m
-                );
-            }
-        }
-
-        return result;
+        return context.getString(R.string.currency_value_format_string,
+                formatCurrency(context, currency),
+                numberFormat.format(v),
+                m
+        );
     }
 
     public static String formatMemberOrAccount(Context context,

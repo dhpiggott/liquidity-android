@@ -53,10 +53,10 @@ public class TransfersFragment extends Fragment {
             long created = transfer.transaction().created();
             boolean isFromPlayer = player != null && transfer.from().right().get().memberId()
                     .equals(player.memberId());
-            String value = MonopolyGameActivity.formatCurrency(
+            String value = MonopolyGameActivity.formatCurrencyValue(
                     getContext(),
-                    transfer.transaction().value(),
-                    transfer.currency()
+                    transfer.currency(),
+                    transfer.transaction().value()
             );
             boolean isToPlayer = player != null && transfer.to().right().get().memberId()
                     .equals(player.memberId());

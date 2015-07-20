@@ -45,10 +45,10 @@ public class IdentityFragment extends Fragment {
 
         Identifier identifier = identity.memberId();
         String name = identity.member().name();
-        String balance = MonopolyGameActivity.formatCurrency(
+        String balance = MonopolyGameActivity.formatCurrencyValue(
                 getActivity(),
-                identity.balanceWithCurrency()._1(),
-                identity.balanceWithCurrency()._2()
+                identity.balanceWithCurrency()._2(),
+                identity.balanceWithCurrency()._1()
         );
 
         identiconId.show(identifier);

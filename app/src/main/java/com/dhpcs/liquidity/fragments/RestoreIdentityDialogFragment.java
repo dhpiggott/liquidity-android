@@ -50,10 +50,10 @@ public class RestoreIdentityDialogFragment extends DialogFragment {
 
             Identifier identifier = identity.memberId();
             String name = identity.member().name();
-            String balance = MonopolyGameActivity.formatCurrency(
+            String balance = MonopolyGameActivity.formatCurrencyValue(
                     getContext(),
-                    identity.balanceWithCurrency()._1(),
-                    identity.balanceWithCurrency()._2()
+                    identity.balanceWithCurrency()._2(),
+                    identity.balanceWithCurrency()._1()
             );
 
             identiconId.show(identifier);
