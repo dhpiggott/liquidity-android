@@ -48,8 +48,6 @@ public class TransfersFragment extends Fragment {
 
             TransferWithCurrency transfer = getItem(position);
 
-            // TODO: Format strings are the wrong way around
-
             long created = transfer.transaction().created();
             boolean isFromPlayer = player != null && transfer.from().right().get().memberId()
                     .equals(player.memberId());
@@ -63,13 +61,13 @@ public class TransfersFragment extends Fragment {
             String summary;
             if (isFromPlayer && !isToPlayer) {
                 summary = getContext().getString(
-                        R.string.transfer_summary_received_from_format_string,
+                        R.string.transfer_summary_sent_to_format_string,
                         value,
                         MonopolyGameActivity.formatMemberOrAccount(getContext(), transfer.to())
                 );
             } else if (!isFromPlayer && isToPlayer) {
                 summary = getContext().getString(
-                        R.string.transfer_summary_sent_to_format_string,
+                        R.string.transfer_summary_received_from_format_string,
                         value,
                         MonopolyGameActivity.formatMemberOrAccount(getContext(), transfer.from())
                 );
