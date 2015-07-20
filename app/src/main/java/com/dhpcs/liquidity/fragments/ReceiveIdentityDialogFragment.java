@@ -41,14 +41,21 @@ public class ReceiveIdentityDialogFragment extends DialogFragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_receive_identity_dialog, container, false);
 
-        ImageView imageViewQrCode = (ImageView) view.findViewById(R.id.imageview_qr_code);
-        imageViewQrCode.setImageBitmap(
-                ((QRCode) QRCode.from(
-                        BaseEncoding.base64().encode(publicKey.value())
-                        // TODO
-                ).withSize(1000, 1000))
-                        .bitmap()
-        );
+        final ImageView imageViewQrCode = (ImageView) view.findViewById(R.id.imageview_qr_code);
+        imageViewQrCode.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+
+            @Override
+            public void onLayoutChange(View v,
+                                       int left, int top, int right, int bottom,
+                                       int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                imageViewQrCode.setImageBitmap(
+                        ((QRCode) QRCode.from(BaseEncoding.base64().encode(publicKey.value()))
+                                .withSize(right - left, bottom - top))
+                                .bitmap()
+                );
+            }
+
+        });
 
         return view;
     }
