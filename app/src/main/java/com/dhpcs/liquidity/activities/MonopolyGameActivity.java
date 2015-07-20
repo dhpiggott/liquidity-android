@@ -133,16 +133,13 @@ public class MonopolyGameActivity extends AppCompatActivity
                                              Option<Either<String, Currency>> currency,
                                              scala.math.BigDecimal value) {
 
-        // TODO: This shows 1,000,000 as 1,000 K - it should be 1 M
         BigDecimal v;
         String m;
-//        if ((v = value.bigDecimal().movePointLeft(6)).abs().compareTo(BigDecimal.ONE) > 0) {
-        // TODO: Think this is the fix - test it!
-        if ((v = value.bigDecimal().movePointLeft(6)).abs().compareTo(BigDecimal.ONE) >= 0) {
+        if ((v = value.bigDecimal().movePointLeft(6))
+                .abs().compareTo(BigDecimal.ONE) >= 0) {
             m = context.getString(R.string.value_multiplier_million_with_leading_space);
-//        } else if ((v = value.bigDecimal().movePointLeft(3)).abs().compareTo(BigDecimal.ONE) > 0) {
-            // TODO: Think this is the fix - test it!
-        } else if ((v = value.bigDecimal().movePointLeft(3)).abs().compareTo(BigDecimal.ONE) >= 0) {
+        } else if ((v = value.bigDecimal().movePointLeft(3))
+                .abs().compareTo(BigDecimal.ONE) >= 0) {
             m = context.getString(R.string.value_multiplier_thousand_with_leading_space);
         } else {
             v = value.bigDecimal();
