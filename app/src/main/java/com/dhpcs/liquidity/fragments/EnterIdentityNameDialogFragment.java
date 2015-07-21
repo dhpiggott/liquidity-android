@@ -105,9 +105,8 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
 
             @Override
             public void onShow(DialogInterface dialog) {
-                assert identity != null;
                 alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(
-                        !TextUtils.isEmpty(identity.member().name())
+                        !TextUtils.isEmpty(editTextIdentityName.getText())
                 );
             }
 

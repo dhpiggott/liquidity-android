@@ -276,7 +276,12 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
 
             @Override
             public void onShow(DialogInterface dialog) {
-                alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(false);
+                try {
+                    value = parseValue(editTextValue.getText().toString());
+                    alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(true);
+                } catch (IllegalArgumentException e) {
+                    alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(false);
+                }
             }
 
         });

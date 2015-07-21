@@ -99,7 +99,7 @@ public class EnterGameNameDialogFragment extends DialogFragment {
             @Override
             public void onShow(DialogInterface dialog) {
                 alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(
-                        !TextUtils.isEmpty(name)
+                        !TextUtils.isEmpty(editTextGameName.getText())
                 );
             }
 
