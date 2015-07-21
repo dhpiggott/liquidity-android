@@ -1,7 +1,6 @@
 package com.dhpcs.liquidity.activities;
 
 import android.app.DialogFragment;
-import android.app.FragmentManager;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
@@ -31,7 +30,6 @@ import com.dhpcs.liquidity.fragments.EnterIdentityNameDialogFragment;
 import com.dhpcs.liquidity.fragments.ErrorResponseDialogFragment;
 import com.dhpcs.liquidity.fragments.IdentitiesFragment;
 import com.dhpcs.liquidity.fragments.LastTransferFragment;
-import com.dhpcs.liquidity.fragments.MonopolyGameHolderFragment;
 import com.dhpcs.liquidity.fragments.PlayersFragment;
 import com.dhpcs.liquidity.fragments.PlayersTransfersFragment;
 import com.dhpcs.liquidity.fragments.ReceiveIdentityDialogFragment;
@@ -193,7 +191,7 @@ public class MonopolyGameActivity extends AppCompatActivity
         return result;
     }
 
-    private MonopolyGameHolderFragment monopolyGameHolderFragment;
+    private MonopolyGame monopolyGame;
 
     private SlidingUpPanelLayout slidingUpPanelLayout;
 
@@ -226,13 +224,11 @@ public class MonopolyGameActivity extends AppCompatActivity
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        FragmentManager fragmentManager = getFragmentManager();
-        monopolyGameHolderFragment = (MonopolyGameHolderFragment) fragmentManager
-                .findFragmentByTag("monopoly_game_holder");
+        monopolyGame = (MonopolyGame) getLastCustomNonConfigurationInstance();
 
-        if (monopolyGameHolderFragment == null) {
+        if (monopolyGame == null) {
 
-            MonopolyGame monopolyGame = new MonopolyGame(this);
+            monopolyGame = new MonopolyGame(this);
 
             if (getIntent().getExtras() != null
                     && getIntent().getExtras().containsKey(EXTRA_ZONE_ID)) {
@@ -259,11 +255,8 @@ public class MonopolyGameActivity extends AppCompatActivity
 
             }
 
-            monopolyGameHolderFragment = new MonopolyGameHolderFragment(monopolyGame);
+            monopolyGame.connectCreateAndOrJoinZone();
 
-            fragmentManager.beginTransaction()
-                    .add(monopolyGameHolderFragment, "monopoly_game_holder")
-                    .commit();
         }
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -294,19 +287,27 @@ public class MonopolyGameActivity extends AppCompatActivity
         slidingUpPanelLayout = (SlidingUpPanelLayout) findViewById(R.id.slidinguppanellayout);
 
         identitiesFragment = (IdentitiesFragment)
-                fragmentManager.findFragmentById(R.id.fragment_identities);
+                getFragmentManager().findFragmentById(R.id.fragment_identities);
         playersFragment = (PlayersFragment)
-                fragmentManager.findFragmentById(R.id.fragment_players);
+                getFragmentManager().findFragmentById(R.id.fragment_players);
         lastTransferFragment = (LastTransferFragment)
-                fragmentManager.findFragmentById(R.id.fragment_last_transfer);
+                getFragmentManager().findFragmentById(R.id.fragment_last_transfer);
         playersTransfersFragment = (PlayersTransfersFragment)
-                fragmentManager.findFragmentById(R.id.fragment_players_transfers);
+                getFragmentManager().findFragmentById(R.id.fragment_players_transfers);
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_monopoly_game, menu);
         return true;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (isFinishing()) {
+            monopolyGame.quitAndOrDisconnect();
+        }
     }
 
     @Override
@@ -325,7 +326,7 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public void onGameNameEntered(String name) {
-        monopolyGameHolderFragment.getMonopolyGame().setGameName(name);
+        monopolyGame.setGameName(name);
     }
 
     @Override
@@ -348,7 +349,7 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public void onIdentityDeleteConfirmed(Identity identity) {
-        monopolyGameHolderFragment.getMonopolyGame().deleteIdentity(identity);
+        monopolyGame.deleteIdentity(identity);
     }
 
     @Override
@@ -358,12 +359,12 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public void onIdentityNameEntered(String name) {
-        monopolyGameHolderFragment.getMonopolyGame().createIdentity(name);
+        monopolyGame.createIdentity(name);
     }
 
     @Override
     public void onIdentityNameEntered(Identity identity, String name) {
-        monopolyGameHolderFragment.getMonopolyGame().setIdentityName(identity, name);
+        monopolyGame.setIdentityName(identity, name);
     }
 
     @Override
@@ -401,7 +402,7 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public void onIdentityRestorationRequested(Identity identity) {
-        monopolyGameHolderFragment.getMonopolyGame().restoreIdentity(identity);
+        monopolyGame.restoreIdentity(identity);
     }
 
     @Override
@@ -502,7 +503,7 @@ public class MonopolyGameActivity extends AppCompatActivity
                     identities,
                     identity,
                     player,
-                    monopolyGameHolderFragment.getMonopolyGame().getCurrency()
+                    monopolyGame.getCurrency()
             ).show(
                     getFragmentManager(),
                     "transfer_to_player_dialog_fragment"
@@ -538,14 +539,10 @@ public class MonopolyGameActivity extends AppCompatActivity
                                 rawResult.getText()
                         )
                 );
-                if (!monopolyGameHolderFragment.getMonopolyGame()
-                        .isPublicKeyConnectedAndImplicitlyValid(publicKey)) {
+                if (!monopolyGame.isPublicKeyConnectedAndImplicitlyValid(publicKey)) {
                     throw new IllegalArgumentException();
                 }
-                monopolyGameHolderFragment.getMonopolyGame().transfer(
-                        identity.memberId(),
-                        publicKey
-                );
+                monopolyGame.transfer(identity.memberId(), publicKey);
             } catch (IllegalArgumentException e) {
                 Snackbar.make(
                         findViewById(R.id.coordinatorlayout),
@@ -563,15 +560,20 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
+    public MonopolyGame onRetainCustomNonConfigurationInstance() {
+        return monopolyGame;
+    }
+
+    @Override
     public void onStart() {
         super.onStart();
-        monopolyGameHolderFragment.getMonopolyGame().setListener(this);
+        monopolyGame.setListener(this);
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        monopolyGameHolderFragment.getMonopolyGame().setListener(null);
+        monopolyGame.setListener(null);
     }
 
     @Override
@@ -585,7 +587,7 @@ public class MonopolyGameActivity extends AppCompatActivity
     public void onTransferValueEntered(Identity from,
                                        Player to,
                                        BigDecimal transferValue) {
-        monopolyGameHolderFragment.getMonopolyGame().transfer(
+        monopolyGame.transfer(
                 from,
                 from,
                 to,
