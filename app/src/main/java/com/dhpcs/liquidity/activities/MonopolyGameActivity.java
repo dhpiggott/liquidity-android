@@ -255,9 +255,9 @@ public class MonopolyGameActivity extends AppCompatActivity
 
             }
 
-            monopolyGame.connectCreateAndOrJoinZone();
-
         }
+
+        monopolyGame.connectCreateAndOrJoinZone();
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 

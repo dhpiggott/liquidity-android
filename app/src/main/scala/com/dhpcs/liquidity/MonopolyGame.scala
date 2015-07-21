@@ -243,7 +243,9 @@ class MonopolyGame(context: Context)
   private var listener = Option.empty[Listener]
 
   def connectCreateAndOrJoinZone() =
-    serverConnection.connect()
+    if (!serverConnection.isConnectingOrConnected) {
+      serverConnection.connect()
+    }
 
   private def createAccount(owner: MemberId) {
     serverConnection.sendCommand(
@@ -337,12 +339,10 @@ class MonopolyGame(context: Context)
     )
   }
 
-  private def disconnect() =
-    serverConnection.disconnect()
+  private def disconnect() = serverConnection.disconnect()
 
   // TODO
-  def getCurrency =
-    currency
+  def getCurrency = currency
 
   def isPublicKeyConnectedAndImplicitlyValid(publicKey: PublicKey) =
     connectedClients.contains(publicKey)
@@ -888,33 +888,35 @@ class MonopolyGame(context: Context)
   }
 
   def quitAndOrDisconnect() =
-    if (zone == null) {
-      disconnect()
-    } else {
-      serverConnection.sendCommand(
-        QuitZoneCommand(
-          zoneId.get
-        ),
-        new ResponseCallbackWithErrorForwarding {
+    if (serverConnection.isConnectingOrConnected) {
+      if (zone == null) {
+        disconnect()
+      } else {
+        serverConnection.sendCommand(
+          QuitZoneCommand(
+            zoneId.get
+          ),
+          new ResponseCallbackWithErrorForwarding {
 
-          override def onResultReceived(resultResponse: ResultResponse) {
-            log.debug("resultResponse={}", resultResponse)
+            override def onResultReceived(resultResponse: ResultResponse) {
+              log.debug("resultResponse={}", resultResponse)
 
-            zone = null
-            connectedClients = null
-            balances = null
-            currency = null
-            identities = null
-            players = null
+              zone = null
+              connectedClients = null
+              balances = null
+              currency = null
+              identities = null
+              players = null
 
-            listener.foreach(_.onQuit())
+              listener.foreach(_.onQuit())
 
-            disconnect()
+              disconnect()
+
+            }
 
           }
-
-        }
-      )
+        )
+      }
     }
 
   def restoreIdentity(identity: Identity) {
@@ -980,6 +982,7 @@ class MonopolyGame(context: Context)
     this.zoneId = Option(zoneId)
   }
 
+  // TODO: Names
   def transfer(identityId: MemberId,
                newOwnerPublicKey: PublicKey) {
     val identity = identities(identityId)

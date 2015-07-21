@@ -189,6 +189,8 @@ class ServerConnection(context: Context,
     }
   }
 
+  def isConnectingOrConnected = connectionHandler != null
+
   override def onClose(code: Int, reason: String) {
     log.debug("WebSocket closed. Reason: {}, Code: {}", reason, code)
     asyncPost(connectionHandler) {
