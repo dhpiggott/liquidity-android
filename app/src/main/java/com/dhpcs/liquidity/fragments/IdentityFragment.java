@@ -25,14 +25,6 @@ public class IdentityFragment extends Fragment {
         return identityFragment;
     }
 
-    private IdentityWithBalance identity;
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        identity = (IdentityWithBalance) getArguments().getSerializable(ARG_IDENTITY);
-    }
-
     @Override
     public View onCreateView(LayoutInflater inflater,
                              ViewGroup container,
@@ -42,6 +34,9 @@ public class IdentityFragment extends Fragment {
         Identicon identiconId = (Identicon) view.findViewById(R.id.identicon_id);
         TextView textViewName = (TextView) view.findViewById(R.id.textview_name);
         TextView textViewBalance = (TextView) view.findViewById(R.id.textview_balance);
+
+        IdentityWithBalance identity = (IdentityWithBalance) getArguments()
+                .getSerializable(ARG_IDENTITY);
 
         Identifier identifier = identity.memberId();
         String name = identity.member().name();

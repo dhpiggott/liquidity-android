@@ -126,11 +126,12 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
                 null
         );
 
-        // TODO: Make assignment of args to fields consistent across all fragments.
         final List<Identity> identities = (List<Identity>)
                 getArguments().getSerializable(ARG_IDENTITIES);
         final Identity from = (Identity) getArguments().getSerializable(ARG_FROM);
         final Player to = (Player) getArguments().getSerializable(ARG_TO);
+        Option<Either<String, Currency>> currency = (Option<Either<String, Currency>>)
+                getArguments().getSerializable(ARG_CURRENCY);
 
         Iterator<Identity> iterator = identities.iterator();
         while (iterator.hasNext()) {
@@ -169,7 +170,7 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
                 .setTitle(
                         getString(
                                 R.string.transfer_to_format_string,
-                                ((Player) getArguments().getSerializable(ARG_TO)).member().name()
+                                to.member().name()
                         )
                 )
                 .setView(view)
@@ -222,8 +223,7 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
         textViewCurrency.setText(
                 MonopolyGameActivity.formatCurrency(
                         getActivity(),
-                        (Option<Either<String, Currency>>)
-                                getArguments().getSerializable(ARG_CURRENCY)
+                        currency
                 )
         );
         editTextValue.addTextChangedListener(new TextWatcher() {

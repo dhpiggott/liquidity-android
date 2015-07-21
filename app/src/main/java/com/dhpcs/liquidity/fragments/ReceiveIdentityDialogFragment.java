@@ -26,13 +26,10 @@ public class ReceiveIdentityDialogFragment extends DialogFragment {
         return receiveIdentityDialogFragment;
     }
 
-    private PublicKey publicKey;
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setStyle(STYLE_NO_FRAME, android.R.style.Theme_Light);
-        publicKey = (PublicKey) getArguments().getSerializable(ARG_PUBLIC_KEY);
     }
 
     @Override
@@ -41,6 +38,7 @@ public class ReceiveIdentityDialogFragment extends DialogFragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_receive_identity_dialog, container, false);
 
+        final PublicKey publicKey = (PublicKey) getArguments().getSerializable(ARG_PUBLIC_KEY);
         final ImageView imageViewQrCode = (ImageView) view.findViewById(R.id.imageview_qr_code);
         imageViewQrCode.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
 

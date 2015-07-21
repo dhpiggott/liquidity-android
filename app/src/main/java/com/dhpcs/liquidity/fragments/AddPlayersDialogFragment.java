@@ -24,13 +24,10 @@ public class AddPlayersDialogFragment extends DialogFragment {
         return addPlayersDialogFragment;
     }
 
-    private ZoneId zoneId;
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setStyle(STYLE_NO_FRAME, android.R.style.Theme_Light);
-        zoneId = (ZoneId) getArguments().getSerializable(ARG_ZONE_ID);
     }
 
     @Override
@@ -39,6 +36,7 @@ public class AddPlayersDialogFragment extends DialogFragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_add_players_dialog, container, false);
 
+        final ZoneId zoneId = (ZoneId) getArguments().getSerializable(ARG_ZONE_ID);
         final ImageView imageViewQrCode = (ImageView) view.findViewById(R.id.imageview_qr_code);
         imageViewQrCode.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
 
