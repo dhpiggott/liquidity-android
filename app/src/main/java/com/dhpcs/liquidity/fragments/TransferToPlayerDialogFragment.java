@@ -117,13 +117,7 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        try {
-            listener = (Listener) activity;
-            // TODO: Remove all these
-        } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
-                    + " must implement TransferToPlayerDialogFragment.Listener");
-        }
+        listener = (Listener) activity;
     }
 
     @Override

@@ -81,12 +81,7 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        try {
-            listener = (Listener) activity;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
-                    + " must implement PlayersFragment.Listener");
-        }
+        listener = (Listener) activity;
     }
 
     @Override

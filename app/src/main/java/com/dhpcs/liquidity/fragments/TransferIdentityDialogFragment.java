@@ -39,12 +39,7 @@ public class TransferIdentityDialogFragment extends DialogFragment
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        try {
-            listener = (Listener) activity;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
-                    + " must implement TransferIdentityDialogFragment.Listener");
-        }
+        listener = (Listener) activity;
     }
 
     @Override
