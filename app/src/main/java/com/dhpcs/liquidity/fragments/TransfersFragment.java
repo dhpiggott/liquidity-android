@@ -42,12 +42,12 @@ public class TransfersFragment extends Fragment {
         public View getView(int position, View convertView, ViewGroup parent) {
             View view = super.getView(position, convertView, parent);
 
+            TransferWithCurrency transfer = getItem(position);
+
             TextView textViewSummary = (TextView) view.findViewById(android.R.id.text1);
             textViewSummary.setGravity(Gravity.START);
             TextView textViewCreated = (TextView) view.findViewById(android.R.id.text2);
             textViewCreated.setGravity(Gravity.END);
-
-            TransferWithCurrency transfer = getItem(position);
 
             long created = transfer.transaction().created();
             boolean isFromPlayer = player != null && transfer.from().right().get().memberId()
@@ -110,9 +110,11 @@ public class TransfersFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         Player player = (Player) getArguments().getSerializable(ARG_PLAYER);
-        listAdapter = new TransfersAdapter(getActivity(), player);
         List<TransferWithCurrency> transfers =
                 (ArrayList<TransferWithCurrency>) getArguments().getSerializable(ARG_TRANSFERS);
+
+        listAdapter = new TransfersAdapter(getActivity(), player);
+
         if (transfers != null) {
             for (TransferWithCurrency transfer : transfers) {
                 if (player == null || (transfer.from().isRight()
@@ -124,6 +126,7 @@ public class TransfersFragment extends Fragment {
             }
             listAdapter.sort(MonopolyGameActivity.transferComparator);
         }
+
     }
 
     @Override

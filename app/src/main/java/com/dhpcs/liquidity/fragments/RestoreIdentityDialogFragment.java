@@ -43,11 +43,11 @@ public class RestoreIdentityDialogFragment extends DialogFragment {
         public View getView(int position, View convertView, ViewGroup parent) {
             View view = super.getView(position, convertView, parent);
 
+            IdentityWithBalance identity = getItem(position);
+
             Identicon identiconId = (Identicon) view.findViewById(R.id.identicon_id);
             TextView textViewName = (TextView) view.findViewById(R.id.textview_name);
             TextView textViewBalance = (TextView) view.findViewById(R.id.textview_balance);
-
-            IdentityWithBalance identity = getItem(position);
 
             Identifier identifier = identity.memberId();
             String name = identity.member().name();

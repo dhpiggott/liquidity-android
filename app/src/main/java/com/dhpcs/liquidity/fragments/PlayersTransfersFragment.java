@@ -155,9 +155,9 @@ public class PlayersTransfersFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_players_transfers, container, false);
 
         viewPagerPlayersTransfers = (ViewPager) view.findViewById(R.id.viewpager_players_transfers);
-        viewPagerPlayersTransfers.setAdapter(playersTransfersFragmentStatePagerAdapter);
-
         tabLayoutPlayers = (TabLayout) view.findViewById(R.id.tablayout_players);
+
+        viewPagerPlayersTransfers.setAdapter(playersTransfersFragmentStatePagerAdapter);
         tabLayoutPlayers.setupWithViewPager(viewPagerPlayersTransfers);
 
         return view;

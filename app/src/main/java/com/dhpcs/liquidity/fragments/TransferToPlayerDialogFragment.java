@@ -55,14 +55,22 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
         @Override
         public View getDropDownView(int position, View convertView, ViewGroup parent) {
             TextView textView = (TextView) super.getDropDownView(position, convertView, parent);
-            textView.setText(getItem(position).member().name());
+
+            Identity identity = getItem(position);
+
+            textView.setText(identity.member().name());
+
             return textView;
         }
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             TextView textView = (TextView) super.getView(position, convertView, parent);
-            textView.setText(getItem(position).member().name());
+
+            Identity identity = getItem(position);
+
+            textView.setText(identity.member().name());
+
             return textView;
         }
 

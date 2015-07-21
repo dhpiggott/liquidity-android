@@ -37,6 +37,7 @@ public class AddPlayersDialogFragment extends DialogFragment {
         View view = inflater.inflate(R.layout.fragment_add_players_dialog, container, false);
 
         final ZoneId zoneId = (ZoneId) getArguments().getSerializable(ARG_ZONE_ID);
+
         final ImageView imageViewQrCode = (ImageView) view.findViewById(R.id.imageview_qr_code);
         imageViewQrCode.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
 

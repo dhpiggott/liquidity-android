@@ -43,11 +43,11 @@ public class PlayersFragment extends Fragment implements AdapterView.OnItemClick
         public View getView(int position, View convertView, ViewGroup parent) {
             View view = super.getView(position, convertView, parent);
 
+            PlayerWithBalanceAndConnectionState player = getItem(position);
+
             Identicon identiconId = (Identicon) view.findViewById(R.id.identicon_id);
             TextView textViewName = (TextView) view.findViewById(R.id.textview_name);
             TextView textViewBalance = (TextView) view.findViewById(R.id.textview_balance);
-
-            PlayerWithBalanceAndConnectionState player = getItem(position);
 
             Identifier identifier = player.memberId();
             String name = player.member().name();

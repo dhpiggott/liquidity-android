@@ -39,6 +39,7 @@ public class ReceiveIdentityDialogFragment extends DialogFragment {
         View view = inflater.inflate(R.layout.fragment_receive_identity_dialog, container, false);
 
         final PublicKey publicKey = (PublicKey) getArguments().getSerializable(ARG_PUBLIC_KEY);
+
         final ImageView imageViewQrCode = (ImageView) view.findViewById(R.id.imageview_qr_code);
         imageViewQrCode.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
 

@@ -31,12 +31,12 @@ public class IdentityFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_identity, container, false);
 
+        IdentityWithBalance identity = (IdentityWithBalance) getArguments()
+                .getSerializable(ARG_IDENTITY);
+
         Identicon identiconId = (Identicon) view.findViewById(R.id.identicon_id);
         TextView textViewName = (TextView) view.findViewById(R.id.textview_name);
         TextView textViewBalance = (TextView) view.findViewById(R.id.textview_balance);
-
-        IdentityWithBalance identity = (IdentityWithBalance) getArguments()
-                .getSerializable(ARG_IDENTITY);
 
         Identifier identifier = identity.memberId();
         String name = identity.member().name();
