@@ -7,6 +7,7 @@ android {
 
     defaultConfig {
         applicationId "com.dhpcs.liquidity"
+        minSdkVersion 15
         targetSdkVersion 22
         versionCode 1
         versionName "1.0"
@@ -19,15 +20,6 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
-    }
-
-    productFlavors {
-
-        /*
-         * Using 21 + reduces MultiDex compilation time.
-         */
-        dev.minSdkVersion 21
-        prod.minSdkVersion 15
     }
 
     packagingOptions {
