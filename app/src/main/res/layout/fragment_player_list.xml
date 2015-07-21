@@ -5,13 +5,13 @@
     android:layout_height="match_parent"
     tools:context="com.dhpcs.liquidity.fragments.PlayersFragment">
 
-    <ListView
-        android:id="@android:id/list"
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recyclerview"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
     <TextView
-        android:id="@android:id/empty"
+        android:id="@+id/textview_empty"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"

@@ -102,7 +102,7 @@ public class TransfersFragment extends Fragment {
         return transfersFragment;
     }
 
-    private ArrayAdapter<TransferWithCurrency> listAdapter;
+    private ArrayAdapter<TransferWithCurrency> arrayAdapter;
 
     @Override
     @SuppressWarnings("unchecked")
@@ -113,7 +113,7 @@ public class TransfersFragment extends Fragment {
         List<TransferWithCurrency> transfers =
                 (ArrayList<TransferWithCurrency>) getArguments().getSerializable(ARG_TRANSFERS);
 
-        listAdapter = new TransfersAdapter(getActivity(), player);
+        arrayAdapter = new TransfersAdapter(getActivity(), player);
 
         if (transfers != null) {
             for (TransferWithCurrency transfer : transfers) {
@@ -121,10 +121,10 @@ public class TransfersFragment extends Fragment {
                         && player.memberId().equals(transfer.from().right().get().memberId()))
                         || (transfer.to().isRight()
                         && player.memberId().equals(transfer.to().right().get().memberId()))) {
-                    listAdapter.add(transfer);
+                    arrayAdapter.add(transfer);
                 }
             }
-            listAdapter.sort(MonopolyGameActivity.transferComparator);
+            arrayAdapter.sort(MonopolyGameActivity.transferComparator);
         }
 
     }
@@ -136,7 +136,7 @@ public class TransfersFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_transfers_list, container, false);
 
         AbsListView absListViewPlayers = (AbsListView) view.findViewById(android.R.id.list);
-        absListViewPlayers.setAdapter(listAdapter);
+        absListViewPlayers.setAdapter(arrayAdapter);
         absListViewPlayers.setEmptyView(view.findViewById(android.R.id.empty));
 
         return view;
@@ -144,8 +144,8 @@ public class TransfersFragment extends Fragment {
 
     public void onTransfersChanged(scala.collection.Iterable<TransferWithCurrency> transfers) {
         Player player = (Player) getArguments().getSerializable(ARG_PLAYER);
-        listAdapter.setNotifyOnChange(false);
-        listAdapter.clear();
+        arrayAdapter.setNotifyOnChange(false);
+        arrayAdapter.clear();
         Iterator<TransferWithCurrency> iterator = transfers.iterator();
         while (iterator.hasNext()) {
             TransferWithCurrency transfer = iterator.next();
@@ -153,11 +153,11 @@ public class TransfersFragment extends Fragment {
                     && player.memberId().equals(transfer.from().right().get().memberId()))
                     || (transfer.to().isRight()
                     && player.memberId().equals(transfer.to().right().get().memberId()))) {
-                listAdapter.add(transfer);
+                arrayAdapter.add(transfer);
             }
         }
-        listAdapter.sort(MonopolyGameActivity.transferComparator);
-        listAdapter.notifyDataSetChanged();
+        arrayAdapter.sort(MonopolyGameActivity.transferComparator);
+        arrayAdapter.notifyDataSetChanged();
     }
 
 }
