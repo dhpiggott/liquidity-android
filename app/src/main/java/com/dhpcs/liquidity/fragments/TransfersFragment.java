@@ -41,6 +41,7 @@ public class TransfersFragment extends Fragment {
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             View view = super.getView(position, convertView, parent);
+
             TextView textViewSummary = (TextView) view.findViewById(android.R.id.text1);
             textViewSummary.setGravity(Gravity.START);
             TextView textViewCreated = (TextView) view.findViewById(android.R.id.text2);

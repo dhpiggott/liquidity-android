@@ -43,7 +43,6 @@ public class CreateIdentityDialogFragment extends DialogFragment {
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-
         @SuppressLint("InflateParams") View view = getActivity().getLayoutInflater().inflate(
                 R.layout.fragment_create_identity_dialog,
                 null

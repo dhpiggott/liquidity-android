@@ -125,7 +125,6 @@ public class IdentitiesFragment extends Fragment implements OnPageChangeListener
     public View onCreateView(LayoutInflater inflater,
                              ViewGroup container,
                              Bundle savedInstanceState) {
-
         View view = inflater.inflate(R.layout.fragment_identities, container, false);
 
         viewPagerIdentities = (ViewPager) view.findViewById(R.id.viewpager_identities);

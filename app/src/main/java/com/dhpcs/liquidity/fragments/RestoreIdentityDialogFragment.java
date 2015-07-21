@@ -42,6 +42,7 @@ public class RestoreIdentityDialogFragment extends DialogFragment {
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             View view = super.getView(position, convertView, parent);
+
             Identicon identiconId = (Identicon) view.findViewById(R.id.identicon_id);
             TextView textViewName = (TextView) view.findViewById(R.id.textview_name);
             TextView textViewBalance = (TextView) view.findViewById(R.id.textview_balance);

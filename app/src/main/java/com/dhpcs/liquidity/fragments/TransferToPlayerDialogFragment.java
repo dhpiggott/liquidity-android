@@ -129,7 +129,6 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
     @Override
     @SuppressWarnings("unchecked")
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-
         @SuppressLint("InflateParams") View view = getActivity().getLayoutInflater().inflate(
                 R.layout.fragment_transfer_to_player_dialog,
                 null
