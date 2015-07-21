@@ -14,11 +14,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ArrayAdapter;
-import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.ToggleButton;
 
 import com.dhpcs.liquidity.MonopolyGame.Identity;
 import com.dhpcs.liquidity.MonopolyGame.IdentityWithBalance;
@@ -42,9 +42,7 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
 
     public interface Listener {
 
-        void onTransferValueEntered(Identity from,
-                                    Player to,
-                                    BigDecimal transferValue);
+        void onTransferValueEntered(Identity from, Player to, BigDecimal transferValue);
 
     }
 
@@ -154,11 +152,17 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
         TextView textViewCurrency = (TextView) view.findViewById(R.id.textview_currency);
         final EditText editTextValue = (EditText) view.findViewById(R.id.edittext_value);
         final TextView textViewMultiplier = (TextView) view.findViewById(R.id.textview_multiplier);
-        final ToggleButton toggleButtonValueMultiplierMillion = (ToggleButton) view.findViewById(
-                R.id.togglebutton_value_multiplier_million
+        final RadioGroup radioGroupValueMultiplier = (RadioGroup) view.findViewById(
+                R.id.radiogroup_value_multiplier
         );
-        final ToggleButton toggleButtonValueMultiplierThousand = (ToggleButton) view.findViewById(
-                R.id.togglebutton_value_multiplier_thousand
+        RadioButton radioButtonValueMultiplierMillion = (RadioButton) view.findViewById(
+                R.id.radiobutton_value_multiplier_million
+        );
+        RadioButton radioButtonValueMultiplierThousand = (RadioButton) view.findViewById(
+                R.id.radiobutton_value_multiplier_thousand
+        );
+        RadioButton radioButtonValueMultiplierNone = (RadioButton) view.findViewById(
+                R.id.radiobutton_value_multiplier_none
         );
 
         final AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
@@ -177,6 +181,18 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
                             @Override
                             public void onClick(DialogInterface dialog, int whichButton) {
                                 if (listener != null) {
+                                    BigDecimal scaledValue = null;
+                                    switch (radioGroupValueMultiplier.getCheckedRadioButtonId()) {
+                                        case R.id.radiobutton_value_multiplier_million:
+                                            scaledValue = value.scaleByPowerOfTen(6);
+                                            break;
+                                        case R.id.radiobutton_value_multiplier_thousand:
+                                            scaledValue = value.scaleByPowerOfTen(3);
+                                            break;
+                                        case R.id.radiobutton_value_multiplier_none:
+                                            scaledValue = value;
+                                            break;
+                                    }
                                     listener.onTransferValueEntered(
                                             identities.size() == 1 ?
                                                     from :
@@ -185,15 +201,7 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
                                                                     getSelectedItemPosition()
                                                     ),
                                             to,
-                                            toggleButtonValueMultiplierMillion.isChecked()
-                                                    ?
-                                                    value.scaleByPowerOfTen(6)
-                                                    :
-                                                    toggleButtonValueMultiplierThousand.isChecked()
-                                                            ?
-                                                            value.scaleByPowerOfTen(3)
-                                                            :
-                                                            value
+                                            scaledValue
                                     );
                                 }
                             }
@@ -239,35 +247,30 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
             }
 
         });
+        radioButtonValueMultiplierMillion.setOnClickListener(new View.OnClickListener() {
 
-        toggleButtonValueMultiplierMillion
-                .setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onClick(View v) {
+                textViewMultiplier.setText(R.string.value_multiplier_million);
+            }
 
-                    @Override
-                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        if (isChecked) {
-                            toggleButtonValueMultiplierThousand.setChecked(false);
-                            textViewMultiplier.setText(R.string.value_multiplier_million);
-                        } else {
-                            textViewMultiplier.setText(null);
-                        }
-                    }
+        });
+        radioButtonValueMultiplierThousand.setOnClickListener(new View.OnClickListener() {
 
-                });
-        toggleButtonValueMultiplierThousand
-                .setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onClick(View v) {
+                textViewMultiplier.setText(R.string.value_multiplier_thousand);
+            }
 
-                    @Override
-                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        if (isChecked) {
-                            toggleButtonValueMultiplierMillion.setChecked(false);
-                            textViewMultiplier.setText(R.string.value_multiplier_thousand);
-                        } else {
-                            textViewMultiplier.setText(null);
-                        }
-                    }
+        });
+        radioButtonValueMultiplierNone.setOnClickListener(new View.OnClickListener() {
 
-                });
+            @Override
+            public void onClick(View v) {
+                textViewMultiplier.setText(R.string.value_multiplier_none);
+            }
+
+        });
 
         alertDialog.setOnShowListener(new DialogInterface.OnShowListener() {
 

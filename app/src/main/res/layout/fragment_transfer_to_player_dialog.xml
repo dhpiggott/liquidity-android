@@ -16,7 +16,7 @@
         android:id="@+id/textview_identity"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
+        android:textAppearance="?android:attr/textAppearanceLarge" />
 
     <Spinner
         android:id="@+id/spinner_identities"
@@ -30,53 +30,75 @@
         android:layout_marginTop="16dp"
         android:text="@string/transfer_amount" />
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:layout_height="wrap_content">
 
-        <TextView
-            android:id="@+id/textview_currency"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium" />
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:layout_toLeftOf="@+id/radiogroup_value_multiplier"
+            android:layout_toStartOf="@+id/radiogroup_value_multiplier"
+            android:orientation="horizontal"
+            tools:ignore="RtlHardcoded">
 
-        <EditText
-            android:id="@+id/edittext_value"
+            <TextView
+                android:id="@+id/textview_currency"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
+
+            <EditText
+                android:id="@+id/edittext_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:inputType="numberDecimal"
+                android:selectAllOnFocus="true"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                tools:ignore="LabelFor" />
+
+            <TextView
+                android:id="@+id/textview_multiplier"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
+
+        </LinearLayout>
+
+        <RadioGroup
+            android:id="@+id/radiogroup_value_multiplier"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:inputType="numberDecimal"
-            android:selectAllOnFocus="true"
-            tools:ignore="LabelFor" />
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:orientation="horizontal"
+            tools:ignore="RtlHardcoded">
 
-        <TextView
-            android:id="@+id/textview_multiplier"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium" />
+            <RadioButton
+                android:id="@+id/radiobutton_value_multiplier_million"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/value_multiplier_million" />
 
-    </LinearLayout>
+            <RadioButton
+                android:id="@+id/radiobutton_value_multiplier_thousand"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/value_multiplier_thousand" />
 
-    <!-- TODO -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+            <RadioButton
+                android:id="@+id/radiobutton_value_multiplier_none"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="@string/value_multiplier_none" />
 
-        <ToggleButton
-            android:id="@+id/togglebutton_value_multiplier_million"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textOff="@string/value_multiplier_million"
-            android:textOn="@string/value_multiplier_million" />
+        </RadioGroup>
 
-        <ToggleButton
-            android:id="@+id/togglebutton_value_multiplier_thousand"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textOff="@string/value_multiplier_thousand"
-            android:textOn="@string/value_multiplier_thousand" />
-
-    </LinearLayout>
+    </RelativeLayout>
 
 </LinearLayout>
