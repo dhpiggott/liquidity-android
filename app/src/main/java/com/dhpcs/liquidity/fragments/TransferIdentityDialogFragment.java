@@ -54,6 +54,7 @@ public class TransferIdentityDialogFragment extends DialogFragment
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_transfer_identity_dialog, container, false);
 
+        // TODO: Customise using https://github.com/dm77/barcodescanner/pull/80
         scannerView = (ZXingScannerView) view.findViewById(R.id.scannerview_scanner);
 
         return view;
