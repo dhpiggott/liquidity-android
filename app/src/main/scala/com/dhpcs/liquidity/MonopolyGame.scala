@@ -94,10 +94,12 @@ object MonopolyGame {
 
     def onJoined(zoneId: ZoneId)
 
+    // TODO: Be granular so RecyclerViews can work efficiently and make changes clear
     def onPlayersChanged(players: Map[MemberId, PlayerWithBalanceAndConnectionState])
 
     def onQuit()
 
+    // TODO: Be granular so RecyclerViews can work efficiently and make changes clear
     def onTransfersChanged(transfers: Iterable[TransferWithCurrency])
 
   }
