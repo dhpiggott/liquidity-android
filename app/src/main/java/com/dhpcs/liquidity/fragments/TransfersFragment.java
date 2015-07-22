@@ -7,7 +7,6 @@ import android.support.v7.util.SortedList;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.util.SortedListAdapterCallback;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,10 +35,8 @@ public class TransfersFragment extends Fragment {
 
             public TransferViewHolder(View itemView) {
                 super(itemView);
-                textViewSummary = (TextView) itemView.findViewById(android.R.id.text1);
-                textViewSummary.setGravity(Gravity.START);
-                textViewCreated = (TextView) itemView.findViewById(android.R.id.text2);
-                textViewCreated.setGravity(Gravity.END);
+                textViewSummary = (TextView) itemView.findViewById(R.id.textview_summary);
+                textViewCreated = (TextView) itemView.findViewById(R.id.textview_created);
             }
 
             public void bindTransfer(TransferWithCurrency transfer) {
@@ -94,7 +91,8 @@ public class TransfersFragment extends Fragment {
                                        TransferWithCurrency o2) {
                         long lhsCreated = o1.transaction().created();
                         long rhsCreated = o2.transaction().created();
-                        return -1 * (lhsCreated < rhsCreated ? -1 : (lhsCreated == rhsCreated ? 0 : 1));
+                        return -1 *
+                                (lhsCreated < rhsCreated ? -1 : (lhsCreated == rhsCreated ? 0 : 1));
                     }
 
                     @Override
@@ -127,8 +125,7 @@ public class TransfersFragment extends Fragment {
         public TransferViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             View view = LayoutInflater
                     .from(parent.getContext())
-                            // TODO
-                    .inflate(android.R.layout.simple_list_item_2, parent, false);
+                    .inflate(R.layout.relativelayout_transfer, parent, false);
             return new TransferViewHolder(view);
         }
 
