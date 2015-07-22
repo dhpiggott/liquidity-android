@@ -7,6 +7,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -190,6 +191,10 @@ public class MonopolyGameActivity extends AppCompatActivity
             result = eitherAccountTupleOrMember.right().get().member().name();
         }
         return result;
+    }
+
+    public static boolean isIdentityNameValid(Context context, CharSequence identityName) {
+        return !TextUtils.isEmpty(identityName) && !identityName.toString().equals(context.getString(R.string.bank_member_name));
     }
 
     private MonopolyGame monopolyGame;
@@ -537,7 +542,7 @@ public class MonopolyGameActivity extends AppCompatActivity
         menu.findItem(R.id.action_change_game_name).setVisible(zoneId != null);
         menu.findItem(R.id.action_create_identity).setVisible(zoneId != null);
         menu.findItem(R.id.action_change_identity_name).setVisible(
-                zoneId != null && identity != null
+                zoneId != null && identity != null && !identity.isBanker()
         );
         menu.findItem(R.id.action_delete_identity).setVisible(zoneId != null && identity != null);
         menu.findItem(R.id.action_restore_identity).setVisible(

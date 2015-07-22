@@ -8,13 +8,13 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
-import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
 
 import com.dhpcs.liquidity.R;
+import com.dhpcs.liquidity.activities.MonopolyGameActivity;
 
 public class CreateIdentityDialogFragment extends DialogFragment {
 
@@ -81,7 +81,7 @@ public class CreateIdentityDialogFragment extends DialogFragment {
             @Override
             public void afterTextChanged(Editable s) {
                 alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(
-                        !TextUtils.isEmpty(s)
+                        MonopolyGameActivity.isIdentityNameValid(getActivity(), s)
                 );
             }
 
@@ -92,7 +92,10 @@ public class CreateIdentityDialogFragment extends DialogFragment {
             @Override
             public void onShow(DialogInterface dialog) {
                 alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(
-                        !TextUtils.isEmpty(editTextIdentityName.getText())
+                        MonopolyGameActivity.isIdentityNameValid(
+                                getActivity(),
+                                editTextIdentityName.getText()
+                        )
                 );
             }
 

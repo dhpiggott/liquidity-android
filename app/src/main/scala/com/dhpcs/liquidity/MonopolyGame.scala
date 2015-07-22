@@ -29,7 +29,11 @@ object MonopolyGame {
 
   }
 
-  sealed trait Identity extends Player
+  sealed trait Identity extends Player {
+
+    def isBanker: Boolean
+
+  }
 
   sealed trait Transfer extends Serializable {
 
@@ -58,7 +62,8 @@ object MonopolyGame {
                                  accountId: AccountId,
                                  account: Account,
                                  balanceWithCurrency:
-                                 (BigDecimal, Option[Either[String, Currency]]))
+                                 (BigDecimal, Option[Either[String, Currency]]),
+                                 isBanker: Boolean)
     extends Identity
 
   case class TransferWithCurrency(from: Either[(AccountId, Account), Player],
@@ -115,7 +120,8 @@ object MonopolyGame {
                                             balances: Map[AccountId, BigDecimal],
                                             currency: Option[Either[String, Currency]],
                                             members: Map[MemberId, Member],
-                                            clientPublicKey: PublicKey) =
+                                            clientPublicKey: PublicKey,
+                                            equityAccountId: AccountId) =
     membersAccounts.collect {
       case (memberId, accountId) if members(memberId).publicKey == clientPublicKey =>
 
@@ -124,7 +130,8 @@ object MonopolyGame {
           members(memberId),
           accountId,
           accounts(accountId),
-          (balances(accountId).bigDecimal, currency)
+          (balances(accountId).bigDecimal, currency),
+          accountId == equityAccountId
         )
 
     }.partition { case (_, identity) =>
@@ -392,7 +399,8 @@ class MonopolyGame(context: Context)
             balances,
             currency,
             zone.members,
-            ClientKey.getInstance(context).getPublicKey
+            ClientKey.getInstance(context).getPublicKey,
+            zone.equityAccountId
           )
 
           identities = updatedIdentities
@@ -598,7 +606,8 @@ class MonopolyGame(context: Context)
               balances,
               currency,
               zone.members,
-              ClientKey.getInstance(context).getPublicKey
+              ClientKey.getInstance(context).getPublicKey,
+              zone.equityAccountId
             )
 
             if (updatedIdentities != identities) {
@@ -691,7 +700,8 @@ class MonopolyGame(context: Context)
               balances,
               currency,
               zone.members,
-              ClientKey.getInstance(context).getPublicKey
+              ClientKey.getInstance(context).getPublicKey,
+              zone.equityAccountId
             )
 
             if (createdIdentity.nonEmpty) {
@@ -742,7 +752,8 @@ class MonopolyGame(context: Context)
               balances,
               currency,
               zone.members,
-              ClientKey.getInstance(context).getPublicKey
+              ClientKey.getInstance(context).getPublicKey,
+              zone.equityAccountId
             )
 
             if (updatedIdentities != identities) {
@@ -814,7 +825,8 @@ class MonopolyGame(context: Context)
               balances,
               currency,
               zone.members,
-              ClientKey.getInstance(context).getPublicKey
+              ClientKey.getInstance(context).getPublicKey,
+              zone.equityAccountId
             )
 
             if (changedIdentities.nonEmpty) {

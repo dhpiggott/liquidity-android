@@ -28,7 +28,7 @@
     <string name="new_game">New game</string>
     <string name="monopoly">Monopoly</string>
     <string name="new_monopoly_game_name">New Monopoly Game</string>
-    <string name="no_games">You\'ve not played any games yet.</string>
+    <string name="no_games">You don\'t have any saved games.</string>
     <string name="no_identities">You don\'t have any identities. Tap here to create one.</string>
     <string name="no_other_players">No one else has joined yet. Tap here to invite them.</string>
     <string name="no_transfers">No transfers have been made yet.</string>
