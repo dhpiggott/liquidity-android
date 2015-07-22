@@ -33,6 +33,8 @@ public class PlayersFragment extends Fragment {
 
     public interface Listener {
 
+        void onNoPlayersTextClicked();
+
         void onPlayerClicked(Player player);
 
     }
@@ -184,6 +186,16 @@ public class PlayersFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_players, container, false);
 
         textViewEmpty = (TextView) view.findViewById(R.id.textview_empty);
+        textViewEmpty.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                if (listener != null) {
+                    listener.onNoPlayersTextClicked();
+                }
+            }
+
+        });
 
         RecyclerView recyclerViewPlayers = (RecyclerView) view.findViewById(R.id.recyclerview);
         recyclerViewPlayers.addItemDecoration(new RecyclerView.ItemDecoration() {

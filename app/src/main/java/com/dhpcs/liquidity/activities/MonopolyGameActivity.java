@@ -86,6 +86,7 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     };
 
+    // TODO: Add option to sort by balance
     public static final Comparator<Player> playerComparator = new Comparator<Player>() {
 
         private final Collator collator = Collator.getInstance();
@@ -409,6 +410,24 @@ public class MonopolyGameActivity extends AppCompatActivity
     public void onJoined(ZoneId zoneId) {
         this.zoneId = zoneId;
         supportInvalidateOptionsMenu();
+    }
+
+    @Override
+    public void onNoIdentitiesTextClicked() {
+        CreateIdentityDialogFragment.newInstance()
+                .show(
+                        getFragmentManager(),
+                        "create_identity_dialog_fragment"
+                );
+    }
+
+    @Override
+    public void onNoPlayersTextClicked() {
+        AddPlayersDialogFragment.newInstance(zoneId)
+                .show(
+                        getFragmentManager(),
+                        "add_players_dialog_fragment"
+                );
     }
 
     @Override

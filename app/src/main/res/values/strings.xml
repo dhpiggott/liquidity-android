@@ -28,9 +28,10 @@
     <string name="new_game">New game</string>
     <string name="monopoly">Monopoly</string>
     <string name="new_monopoly_game_name">New Monopoly Game</string>
-    <string name="no_other_players_present">No other players present</string>
-    <string name="no_previous_games_available">No previous games available</string>
-    <string name="no_transfers_have_been_made_yet">No transfers have been made yet</string>
+    <string name="no_games">You\'ve not played any games yet.</string>
+    <string name="no_identities">You don\'t have any identities. Tap here to create one.</string>
+    <string name="no_other_players">No one else has joined yet. Tap here to invite them.</string>
+    <string name="no_transfers">No transfers have been made yet.</string>
     <string name="non_player_transfer_location_format_string">%1$s (%2$s)</string>
     <string name="ok">OK</string>
     <string name="player_connected">Connected</string>

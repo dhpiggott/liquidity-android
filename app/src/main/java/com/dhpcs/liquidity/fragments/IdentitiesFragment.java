@@ -10,6 +10,7 @@ import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.dhpcs.liquidity.MonopolyGame.Identity;
 import com.dhpcs.liquidity.MonopolyGame.IdentityWithBalance;
@@ -28,6 +29,8 @@ public class IdentitiesFragment extends Fragment implements OnPageChangeListener
     public interface Listener {
 
         void onIdentityPageSelected(int page);
+
+        void onNoIdentitiesTextClicked();
 
     }
 
@@ -77,6 +80,8 @@ public class IdentitiesFragment extends Fragment implements OnPageChangeListener
     }
 
     private IdentitiesFragmentStatePagerAdapter identitiesFragmentStatePagerAdapter;
+
+    private TextView textViewEmpty;
     private ViewPager viewPagerIdentities;
 
     private Listener listener;
@@ -122,6 +127,18 @@ public class IdentitiesFragment extends Fragment implements OnPageChangeListener
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_identities, container, false);
 
+        textViewEmpty = (TextView) view.findViewById(R.id.textview_empty);
+        textViewEmpty.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                if (listener != null) {
+                    listener.onNoIdentitiesTextClicked();
+                }
+            }
+
+        });
+
         viewPagerIdentities = (ViewPager) view.findViewById(R.id.viewpager_identities);
         viewPagerIdentities.setAdapter(identitiesFragmentStatePagerAdapter);
         viewPagerIdentities.addOnPageChangeListener(this);
@@ -141,7 +158,6 @@ public class IdentitiesFragment extends Fragment implements OnPageChangeListener
         listener = null;
     }
 
-    // TODO: Add placeholder fragment with instruction to create identity
     public void onIdentitiesChanged(scala.collection.immutable.Map<MemberId, IdentityWithBalance>
                                             identities) {
         IdentityWithBalance selectedIdentity = getIdentity(getSelectedPage());
@@ -151,6 +167,9 @@ public class IdentitiesFragment extends Fragment implements OnPageChangeListener
             identitiesFragmentStatePagerAdapter.add(iterator.next());
         }
         identitiesFragmentStatePagerAdapter.sort(MonopolyGameActivity.identityComparator);
+        textViewEmpty.setVisibility(
+                identitiesFragmentStatePagerAdapter.getCount() == 0 ? View.VISIBLE : View.GONE
+        );
         identitiesFragmentStatePagerAdapter.notifyDataSetChanged();
         if (selectedIdentity != null && identities.contains(selectedIdentity.memberId())) {
             viewPagerIdentities.setCurrentItem(

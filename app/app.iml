@@ -121,8 +121,8 @@
     <orderEntry type="library" exported="" name="core-1.8" level="project" />
     <orderEntry type="library" exported="" name="prov-1.52.0.0" level="project" />
     <orderEntry type="library" exported="" name="scala-stm_2.11-0.7" level="project" />
-    <orderEntry type="library" exported="" name="play-functional_2.11-2.3.9" level="project" />
     <orderEntry type="library" exported="" name="okio-1.4.0" level="project" />
+    <orderEntry type="library" exported="" name="play-functional_2.11-2.3.9" level="project" />
     <orderEntry type="library" exported="" name="zxing-1.8" level="project" />
     <orderEntry type="library" exported="" scope="TEST" name="multidex-instrumentation-1.0.1" level="project" />
     <orderEntry type="library" exported="" name="liquidity-common_2.11-0.25.0" level="project" />
@@ -135,8 +135,8 @@
     <orderEntry type="library" exported="" name="apktool-lib-1.4.4-3" level="project" />
     <orderEntry type="library" exported="" name="scala-reflect-2.11.1" level="project" />
     <orderEntry type="library" exported="" name="play-json-rpc_2.11-0.2.0" level="project" />
-    <orderEntry type="library" exported="" name="joda-time-2.3" level="project" />
     <orderEntry type="library" exported="" name="jackson-databind-2.3.2" level="project" />
+    <orderEntry type="library" exported="" name="joda-time-2.3" level="project" />
     <orderEntry type="library" exported="" name="play-iteratees_2.11-2.3.9" level="project" />
     <orderEntry type="library" exported="" name="multidex-1.0.1" level="project" />
     <orderEntry type="library" exported="" name="scala-library-2.11.7" level="project" />
