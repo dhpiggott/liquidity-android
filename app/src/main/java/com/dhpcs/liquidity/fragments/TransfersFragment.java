@@ -203,7 +203,7 @@ public class TransfersFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater,
                              ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_transfers_list, container, false);
+        View view = inflater.inflate(R.layout.fragment_transfers, container, false);
 
         textViewEmpty = (TextView) view.findViewById(R.id.textview_empty);
         textViewEmpty.setVisibility(
