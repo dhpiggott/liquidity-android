@@ -4,7 +4,9 @@
     <string name="app_name">Liquidity</string>
     <string name="title_activity_game_types">Liquidity</string>
     <string name="title_activity_games_activity">Games</string>
+    <string name="title_activity_join_game_activity">Scan code</string>
     <string name="title_activity_monopoly_game">Monopoly Game</string>
+    <string name="title_activity_transfer_identity_activity">Scan code</string>
 
     <string name="add_players">Add players</string>
     <string name="all_transfers">All transfers</string>

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.dhpcs.liquidity">
 
     <uses-permission android:name="android.permission.CAMERA" />
@@ -24,18 +25,38 @@
         <activity
             android:name=".activities.GamesActivity"
             android:label="@string/title_activity_games_activity"
-            android:parentActivityName=".activities.GameTypesActivity">
+            android:parentActivityName=".activities.GameTypesActivity"
+            tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.dhpcs.liquidity.activities.GameTypesActivity" />
         </activity>
         <activity
-            android:name=".activities.MonopolyGameActivity"
-            android:label="@string/title_activity_monopoly_game"
-            android:parentActivityName=".activities.GamesActivity">
+            android:name=".activities.JoinGameActivity"
+            android:label="@string/title_activity_join_game_activity"
+            android:parentActivityName=".activities.GamesActivity"
+            tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.dhpcs.liquidity.activities.GamesActivity" />
+        </activity>
+        <activity
+            android:name=".activities.MonopolyGameActivity"
+            android:label="@string/title_activity_monopoly_game"
+            android:parentActivityName=".activities.GamesActivity"
+            tools:ignore="UnusedAttribute">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.dhpcs.liquidity.activities.GamesActivity" />
+        </activity>
+        <activity
+            android:name=".activities.TransferIdentityActivity"
+            android:label="@string/title_activity_transfer_identity_activity"
+            android:parentActivityName=".activities.MonopolyGameActivity"
+            tools:ignore="UnusedAttribute">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.dhpcs.liquidity.activities.MonopolyGameActivity" />
         </activity>
 
         <provider

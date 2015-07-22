@@ -24,12 +24,11 @@ import com.dhpcs.liquidity.provider.LiquidityContract;
 import java.text.DateFormat;
 import java.util.UUID;
 
-public class GamesFragment extends Fragment
-        implements AdapterView.OnItemClickListener,
+public class GamesFragment extends Fragment implements AdapterView.OnItemClickListener,
         AdapterView.OnItemLongClickListener,
         LoaderManager.LoaderCallbacks<Cursor> {
 
-    public static final String GAME_TYPE = "game_type";
+    public static final String EXTRA_GAME_TYPE = "game_type";
 
     private static final int GAMES_LOADER = 0;
 
@@ -42,7 +41,7 @@ public class GamesFragment extends Fragment
     public static GamesFragment newInstance(GameType gameType) {
         GamesFragment fragment = new GamesFragment();
         Bundle args = new Bundle();
-        args.putSerializable(GAME_TYPE, gameType);
+        args.putSerializable(EXTRA_GAME_TYPE, gameType);
         fragment.setArguments(args);
         return fragment;
     }
@@ -115,7 +114,7 @@ public class GamesFragment extends Fragment
                         },
                         LiquidityContract.Games.GAME_TYPE + " = ?",
                         new String[]{
-                                ((GameType) getArguments().getSerializable(GAME_TYPE)).name()
+                                ((GameType) getArguments().getSerializable(EXTRA_GAME_TYPE)).name()
                         },
                         LiquidityContract.Games.CREATED + " DESC"
                 );

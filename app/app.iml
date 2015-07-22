@@ -119,8 +119,8 @@
     <orderEntry type="library" exported="" name="android-2.0" level="project" />
     <orderEntry type="library" exported="" name="play-services-base-7.5.0" level="project" />
     <orderEntry type="library" exported="" name="core-1.8" level="project" />
-    <orderEntry type="library" exported="" name="prov-1.52.0.0" level="project" />
     <orderEntry type="library" exported="" name="scala-stm_2.11-0.7" level="project" />
+    <orderEntry type="library" exported="" name="prov-1.52.0.0" level="project" />
     <orderEntry type="library" exported="" name="okio-1.4.0" level="project" />
     <orderEntry type="library" exported="" name="play-functional_2.11-2.3.9" level="project" />
     <orderEntry type="library" exported="" name="zxing-1.8" level="project" />
@@ -143,8 +143,8 @@
     <orderEntry type="library" exported="" name="logback-android-classic-1.1.1-4" level="project" />
     <orderEntry type="library" exported="" name="support-v13-22.2.1" level="project" />
     <orderEntry type="library" exported="" name="design-22.2.1" level="project" />
-    <orderEntry type="library" exported="" name="slf4j-api-1.7.12" level="project" />
     <orderEntry type="library" exported="" name="play-json_2.11-2.3.9" level="project" />
+    <orderEntry type="library" exported="" name="slf4j-api-1.7.12" level="project" />
     <orderEntry type="library" exported="" name="library-3.1.0" level="project" />
     <orderEntry type="library" name="scala-sdk-2.11.7" level="application" />
   </component>

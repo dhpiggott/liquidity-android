@@ -2,6 +2,7 @@ package com.dhpcs.liquidity.activities;
 
 import android.app.DialogFragment;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.NavUtils;
@@ -35,7 +36,6 @@ import com.dhpcs.liquidity.fragments.PlayersFragment;
 import com.dhpcs.liquidity.fragments.PlayersTransfersFragment;
 import com.dhpcs.liquidity.fragments.ReceiveIdentityDialogFragment;
 import com.dhpcs.liquidity.fragments.RestoreIdentityDialogFragment;
-import com.dhpcs.liquidity.fragments.TransferIdentityDialogFragment;
 import com.dhpcs.liquidity.fragments.TransferToPlayerDialogFragment;
 import com.dhpcs.liquidity.models.Account;
 import com.dhpcs.liquidity.models.AccountId;
@@ -44,7 +44,6 @@ import com.dhpcs.liquidity.models.MemberId;
 import com.dhpcs.liquidity.models.PublicKey;
 import com.dhpcs.liquidity.models.ZoneId;
 import com.google.common.io.BaseEncoding;
-import com.google.zxing.Result;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
 
@@ -69,12 +68,13 @@ public class MonopolyGameActivity extends AppCompatActivity
         MonopolyGame.Listener,
         PlayersFragment.Listener,
         RestoreIdentityDialogFragment.Listener,
-        TransferIdentityDialogFragment.Listener,
         TransferToPlayerDialogFragment.Listener {
 
     public static final String EXTRA_GAME_ID = "game_id";
     public static final String EXTRA_GAME_NAME = "game_name";
     public static final String EXTRA_ZONE_ID = "zone_id";
+
+    private static final int REQUEST_TRANSFER_IDENTITY = 1;
 
     public static final Comparator<Identity> identityComparator = new Comparator<Identity>() {
 
@@ -214,6 +214,39 @@ public class MonopolyGameActivity extends AppCompatActivity
     private scala.collection.Iterable<TransferWithCurrency> transfers;
 
     @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_TRANSFER_IDENTITY) {
+            if (resultCode == RESULT_OK) {
+                Identity identity = identitiesFragment.getIdentity(
+                        identitiesFragment.getSelectedPage()
+                );
+                if (identity != null) {
+                    try {
+                        PublicKey publicKey = new PublicKey(
+                                BaseEncoding.base64().decode(
+                                        data.getStringExtra(
+                                                TransferIdentityActivity.EXTRA_RESULT_TEXT
+                                        )
+                                )
+                        );
+                        if (!monopolyGame.isPublicKeyConnectedAndImplicitlyValid(publicKey)) {
+                            throw new IllegalArgumentException();
+                        }
+                        monopolyGame.transfer(identity.memberId(), publicKey);
+                    } catch (IllegalArgumentException e) {
+                        Snackbar.make(
+                                findViewById(R.id.coordinatorlayout),
+                                R.string.that_is_not_a_member_of_the_game,
+                                Snackbar.LENGTH_LONG
+                        ).show();
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
     public void onBackPressed() {
         if (slidingUpPanelLayout.getPanelState() == PanelState.EXPANDED
                 || slidingUpPanelLayout.getPanelState() == PanelState.ANCHORED) {
@@ -281,7 +314,7 @@ public class MonopolyGameActivity extends AppCompatActivity
                             MonopolyGameActivity.this,
                             NavUtils.getParentActivityIntent(MonopolyGameActivity.this)
                                     .putExtra(
-                                            GamesActivity.GAME_TYPE,
+                                            GamesActivity.EXTRA_GAME_TYPE,
                                             MONOPOLY$.MODULE$
                                     )
                     );
@@ -488,11 +521,13 @@ public class MonopolyGameActivity extends AppCompatActivity
                         );
                 return true;
             case R.id.action_transfer_identity:
-                TransferIdentityDialogFragment.newInstance()
-                        .show(
-                                getFragmentManager(),
-                                "transfer_identity_dialog_fragment"
-                        );
+                startActivityForResult(
+                        new Intent(
+                                MonopolyGameActivity.this,
+                                TransferIdentityActivity.class
+                        ),
+                        REQUEST_TRANSFER_IDENTITY
+                );
                 return true;
             case R.id.action_receive_identity:
                 ReceiveIdentityDialogFragment.newInstance(
@@ -551,30 +586,6 @@ public class MonopolyGameActivity extends AppCompatActivity
         menu.findItem(R.id.action_transfer_identity).setVisible(zoneId != null);
         menu.findItem(R.id.action_receive_identity).setVisible(zoneId != null && identity != null);
         return true;
-    }
-
-    @Override
-    public void onPublicKeyScanned(Result rawResult) {
-        Identity identity = identitiesFragment.getIdentity(identitiesFragment.getSelectedPage());
-        if (identity != null) {
-            try {
-                PublicKey publicKey = new PublicKey(
-                        BaseEncoding.base64().decode(
-                                rawResult.getText()
-                        )
-                );
-                if (!monopolyGame.isPublicKeyConnectedAndImplicitlyValid(publicKey)) {
-                    throw new IllegalArgumentException();
-                }
-                monopolyGame.transfer(identity.memberId(), publicKey);
-            } catch (IllegalArgumentException e) {
-                Snackbar.make(
-                        findViewById(R.id.coordinatorlayout),
-                        R.string.that_is_not_a_member_of_the_game,
-                        Snackbar.LENGTH_LONG
-                ).show();
-            }
-        }
     }
 
     @Override
