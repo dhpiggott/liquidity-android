@@ -92,7 +92,7 @@ public class CreateIdentityDialogFragment extends DialogFragment {
             @Override
             public void onShow(DialogInterface dialog) {
                 alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(
-                        TextUtils.isEmpty(editTextIdentityName.getText())
+                        !TextUtils.isEmpty(editTextIdentityName.getText())
                 );
             }
 
