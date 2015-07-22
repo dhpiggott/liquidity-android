@@ -3,6 +3,10 @@ package com.dhpcs.liquidity.fragments;
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
+import android.content.res.TypedArray;
+import android.graphics.Canvas;
+import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v7.util.SortedList;
 import android.support.v7.widget.LinearLayoutManager;
@@ -182,6 +186,43 @@ public class PlayersFragment extends Fragment {
         textViewEmpty = (TextView) view.findViewById(R.id.textview_empty);
 
         RecyclerView recyclerViewPlayers = (RecyclerView) view.findViewById(R.id.recyclerview);
+        recyclerViewPlayers.addItemDecoration(new RecyclerView.ItemDecoration() {
+
+            private final Drawable divider;
+
+            {
+                TypedArray a = getActivity().obtainStyledAttributes(
+                        new int[]{android.R.attr.listDivider}
+                );
+                divider = a.getDrawable(0);
+                a.recycle();
+            }
+
+            @Override
+            public void getItemOffsets(Rect outRect,
+                                       View view,
+                                       RecyclerView parent,
+                                       RecyclerView.State state) {
+                outRect.set(0, 0, 0, divider.getIntrinsicHeight());
+            }
+
+            @Override
+            public void onDraw(Canvas c, RecyclerView parent, RecyclerView.State state) {
+                int left = parent.getPaddingLeft();
+                int right = parent.getWidth() - parent.getPaddingRight();
+                int childCount = parent.getChildCount();
+                for (int i = 0; i < childCount; i++) {
+                    View child = parent.getChildAt(i);
+                    RecyclerView.LayoutParams params = (RecyclerView.LayoutParams)
+                            child.getLayoutParams();
+                    int top = child.getBottom() + params.bottomMargin;
+                    int bottom = top + divider.getIntrinsicHeight();
+                    divider.setBounds(left, top, right, bottom);
+                    divider.draw(c);
+                }
+            }
+
+        });
         recyclerViewPlayers.setHasFixedSize(true);
         recyclerViewPlayers.setLayoutManager(new LinearLayoutManager(getActivity()));
         recyclerViewPlayers.setAdapter(playersAdapter);
