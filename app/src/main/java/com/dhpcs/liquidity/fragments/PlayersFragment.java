@@ -132,7 +132,7 @@ public class PlayersFragment extends Fragment {
         public PlayerViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             View view = LayoutInflater
                     .from(parent.getContext())
-                    .inflate(R.layout.relativelayout_player, parent, false);
+                    .inflate(R.layout.linearlayout_player, parent, false);
             return new PlayerViewHolder(view);
         }
 

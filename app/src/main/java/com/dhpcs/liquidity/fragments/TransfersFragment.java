@@ -129,7 +129,7 @@ public class TransfersFragment extends Fragment {
         public TransferViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             View view = LayoutInflater
                     .from(parent.getContext())
-                    .inflate(R.layout.relativelayout_transfer, parent, false);
+                    .inflate(R.layout.linearlayout_transfer, parent, false);
             return new TransferViewHolder(view);
         }
 

@@ -35,7 +35,7 @@ public class RestoreIdentityDialogFragment extends DialogFragment {
 
         public IdentitiesAdapter(Context context) {
             super(context,
-                    R.layout.relativelayout_identity,
+                    R.layout.linearlayout_identity,
                     R.id.textview_name);
         }
 

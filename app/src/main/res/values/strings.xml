@@ -2,13 +2,13 @@
 <resources>
 
     <string name="app_name">Liquidity</string>
+    
     <string name="title_activity_add_players">Add Players</string>
-    <string name="title_activity_game_types">Liquidity</string>
-    <string name="title_activity_games_activity">Games</string>
-    <string name="title_activity_join_game_activity">Join Game</string>
+    <string name="title_activity_games">Liquidity</string>
+    <string name="title_activity_join_game">Join Game</string>
     <string name="title_activity_monopoly_game">Monopoly Game</string>
     <string name="title_activity_receive_identity">Receive Identity</string>
-    <string name="title_activity_transfer_identity_activity">Transfer Identity</string>
+    <string name="title_activity_transfer_identity">Transfer Identity</string>
 
     <string name="add_players">Add players</string>
     <string name="all_transfers">All transfers</string>
@@ -30,7 +30,6 @@
     <string name="game_name_format_string">%1$s\'s Game</string>
     <string name="join_game">Join game</string>
     <string name="new_game">New game</string>
-    <string name="monopoly">Monopoly</string>
     <string name="new_monopoly_game_name">New Monopoly Game</string>
     <string name="no_games">You don\'t have any saved games.</string>
     <string name="no_identities">You don\'t have any identities. Tap here to create one.</string>

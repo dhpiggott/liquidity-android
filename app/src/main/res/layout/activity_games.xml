@@ -48,10 +48,12 @@
                 android:text="@string/previous_games"
                 android:textAppearance="?android:attr/textAppearanceLarge" />
 
-            <FrameLayout
-                android:id="@+id/framelayout_games"
+            <fragment
+                android:id="@+id/fragment_games"
+                android:name="com.dhpcs.liquidity.fragments.GamesFragment"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" />
+                android:layout_height="match_parent"
+                tools:layout="@layout/fragment_games" />
 
         </LinearLayout>
 

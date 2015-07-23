@@ -7,7 +7,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 
-import com.dhpcs.liquidity.GameType;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.fragments.GamesFragment;
 import com.dhpcs.liquidity.models.ZoneId;
@@ -18,8 +17,6 @@ import java.util.Collections;
 import java.util.UUID;
 
 public class GamesActivity extends AppCompatActivity implements GamesFragment.Listener {
-
-    public static final String EXTRA_GAME_TYPE = GamesFragment.EXTRA_GAME_TYPE;
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -63,8 +60,6 @@ public class GamesActivity extends AppCompatActivity implements GamesFragment.Li
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 
         setSupportActionBar(toolbar);
-        //noinspection ConstantConditions
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         findViewById(R.id.button_new_game).setOnClickListener(new View.OnClickListener() {
 
@@ -93,13 +88,6 @@ public class GamesActivity extends AppCompatActivity implements GamesFragment.Li
             }
 
         });
-
-        getFragmentManager().beginTransaction().add(
-                R.id.framelayout_games,
-                GamesFragment.newInstance(
-                        (GameType) getIntent().getSerializableExtra(EXTRA_GAME_TYPE)
-                )
-        ).commit();
     }
 
     @Override

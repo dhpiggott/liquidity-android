@@ -16,7 +16,6 @@ import android.widget.AdapterView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
-import com.dhpcs.liquidity.GameType;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.models.ZoneId;
 import com.dhpcs.liquidity.provider.LiquidityContract;
@@ -28,22 +27,12 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
         AdapterView.OnItemLongClickListener,
         LoaderManager.LoaderCallbacks<Cursor> {
 
-    public static final String EXTRA_GAME_TYPE = "game_type";
-
     private static final int GAMES_LOADER = 0;
 
     public interface Listener {
 
         void onGameClicked(long gameId, ZoneId zoneId, String gameName);
 
-    }
-
-    public static GamesFragment newInstance(GameType gameType) {
-        GamesFragment fragment = new GamesFragment();
-        Bundle args = new Bundle();
-        args.putSerializable(EXTRA_GAME_TYPE, gameType);
-        fragment.setArguments(args);
-        return fragment;
     }
 
     private Listener listener;
@@ -64,21 +53,21 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
 
         simpleCursorAdapter = new SimpleCursorAdapter(
                 getActivity(),
-                android.R.layout.simple_list_item_2,
+                R.layout.relativelayout_game,
                 null,
                 new String[]{
                         LiquidityContract.Games.NAME,
                         LiquidityContract.Games.CREATED
                 },
                 new int[]{
-                        android.R.id.text1,
-                        android.R.id.text2
+                        R.id.textview_name,
+                        R.id.textview_created
                 },
                 0
         );
-        simpleCursorAdapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
 
-            private final DateFormat dateFormat = DateFormat.getDateTimeInstance();
+        final DateFormat dateFormat = DateFormat.getDateTimeInstance();
+        simpleCursorAdapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
 
             @Override
             public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
@@ -112,10 +101,8 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
                                 LiquidityContract.Games.NAME,
                                 LiquidityContract.Games.CREATED
                         },
-                        LiquidityContract.Games.GAME_TYPE + " = ?",
-                        new String[]{
-                                ((GameType) getArguments().getSerializable(EXTRA_GAME_TYPE)).name()
-                        },
+                        null,
+                        null,
                         LiquidityContract.Games.CREATED + " DESC"
                 );
 
