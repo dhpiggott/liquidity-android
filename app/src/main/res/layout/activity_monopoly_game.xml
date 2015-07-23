@@ -25,9 +25,8 @@
                 android:id="@+id/fragment_identities"
                 android:name="com.dhpcs.liquidity.fragments.IdentitiesFragment"
                 android:layout_width="match_parent"
-                android:layout_height="150dp"
+                android:layout_height="128dp"
                 tools:layout="@layout/fragment_identities" />
-            <!-- TODO: Height? -->
 
             <fragment
                 android:id="@+id/fragment_players"
