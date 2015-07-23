@@ -96,7 +96,7 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
             public void afterTextChanged(Editable s) {
                 assert identity != null;
                 alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(
-                        MonopolyGameActivity.isIdentityNameValid( getActivity(), s )
+                        MonopolyGameActivity.isIdentityNameValid(getActivity(), s)
                 );
             }
 

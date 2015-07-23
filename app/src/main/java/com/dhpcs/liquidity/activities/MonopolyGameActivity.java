@@ -5,17 +5,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.view.WindowManager;
 
 import com.dhpcs.liquidity.ClientKey;
-import com.dhpcs.liquidity.MONOPOLY$;
 import com.dhpcs.liquidity.MonopolyGame;
 import com.dhpcs.liquidity.MonopolyGame.Identity;
 import com.dhpcs.liquidity.MonopolyGame.IdentityWithBalance;
@@ -44,12 +41,15 @@ import com.dhpcs.liquidity.models.MemberId;
 import com.dhpcs.liquidity.models.PublicKey;
 import com.dhpcs.liquidity.models.ZoneId;
 import com.google.common.io.BaseEncoding;
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
 
 import java.math.BigDecimal;
 import java.text.Collator;
 import java.text.NumberFormat;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Currency;
 
@@ -73,8 +73,6 @@ public class MonopolyGameActivity extends AppCompatActivity
     public static final String EXTRA_GAME_ID = "game_id";
     public static final String EXTRA_GAME_NAME = "game_name";
     public static final String EXTRA_ZONE_ID = "zone_id";
-
-    private static final int REQUEST_TRANSFER_IDENTITY = 1;
 
     public static final Comparator<Identity> identityComparator = new Comparator<Identity>() {
 
@@ -215,9 +213,10 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_TRANSFER_IDENTITY) {
-            if (resultCode == RESULT_OK) {
+        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+        if (result != null) {
+            String contents = result.getContents();
+            if (contents != null) {
                 Identity identity = identitiesFragment.getIdentity(
                         identitiesFragment.getSelectedPage()
                 );
@@ -225,9 +224,7 @@ public class MonopolyGameActivity extends AppCompatActivity
                     try {
                         PublicKey publicKey = new PublicKey(
                                 BaseEncoding.base64().decode(
-                                        data.getStringExtra(
-                                                TransferIdentityActivity.EXTRA_RESULT_TEXT
-                                        )
+                                        contents
                                 )
                         );
                         if (!monopolyGame.isPublicKeyConnectedAndImplicitlyValid(publicKey)) {
@@ -243,6 +240,8 @@ public class MonopolyGameActivity extends AppCompatActivity
                     }
                 }
             }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
         }
     }
 
@@ -301,27 +300,8 @@ public class MonopolyGameActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 
         setSupportActionBar(toolbar);
-
-        toolbar.setNavigationIcon(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                if (slidingUpPanelLayout.getPanelState() != PanelState.COLLAPSED) {
-                    slidingUpPanelLayout.setPanelState(PanelState.COLLAPSED);
-                } else {
-                    NavUtils.navigateUpTo(
-                            MonopolyGameActivity.this,
-                            NavUtils.getParentActivityIntent(MonopolyGameActivity.this)
-                                    .putExtra(
-                                            GamesActivity.EXTRA_GAME_TYPE,
-                                            MONOPOLY$.MODULE$
-                                    )
-                    );
-                }
-            }
-
-        });
+        //noinspection ConstantConditions
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         slidingUpPanelLayout = (SlidingUpPanelLayout) findViewById(R.id.slidinguppanellayout);
 
@@ -521,13 +501,12 @@ public class MonopolyGameActivity extends AppCompatActivity
                         );
                 return true;
             case R.id.action_transfer_identity:
-                startActivityForResult(
-                        new Intent(
-                                MonopolyGameActivity.this,
-                                TransferIdentityActivity.class
-                        ),
-                        REQUEST_TRANSFER_IDENTITY
-                );
+                new IntentIntegrator(MonopolyGameActivity.this)
+                        .setCaptureActivity(TransferIdentityActivity.class)
+                        .setDesiredBarcodeFormats(Collections.singleton("QR_CODE"))
+                        .setBeepEnabled(false)
+                        .setOrientationLocked(false)
+                        .initiateScan();
                 return true;
             case R.id.action_receive_identity:
                 ReceiveIdentityDialogFragment.newInstance(

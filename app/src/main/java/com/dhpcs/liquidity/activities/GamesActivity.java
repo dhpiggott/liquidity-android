@@ -3,7 +3,6 @@ package com.dhpcs.liquidity.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
@@ -12,24 +11,26 @@ import com.dhpcs.liquidity.GameType;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.fragments.GamesFragment;
 import com.dhpcs.liquidity.models.ZoneId;
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
 
+import java.util.Collections;
 import java.util.UUID;
 
 public class GamesActivity extends AppCompatActivity implements GamesFragment.Listener {
 
     public static final String EXTRA_GAME_TYPE = GamesFragment.EXTRA_GAME_TYPE;
 
-    private static final int REQUEST_JOIN_GAME = 1;
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_JOIN_GAME) {
-            if (resultCode == RESULT_OK) {
+        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+        if (result != null) {
+            String contents = result.getContents();
+            if (contents != null) {
                 try {
                     ZoneId zoneId = new ZoneId(
                             UUID.fromString(
-                                    data.getStringExtra(JoinGameActivity.EXTRA_RESULT_TEXT)
+                                    contents
                             )
                     );
                     startActivity(
@@ -49,6 +50,8 @@ public class GamesActivity extends AppCompatActivity implements GamesFragment.Li
                     ).show();
                 }
             }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
         }
     }
 
@@ -60,16 +63,8 @@ public class GamesActivity extends AppCompatActivity implements GamesFragment.Li
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 
         setSupportActionBar(toolbar);
-
-        toolbar.setNavigationIcon(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                NavUtils.navigateUpFromSameTask(GamesActivity.this);
-            }
-
-        });
+        //noinspection ConstantConditions
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         findViewById(R.id.button_new_game).setOnClickListener(new View.OnClickListener() {
 
@@ -89,16 +84,12 @@ public class GamesActivity extends AppCompatActivity implements GamesFragment.Li
 
             @Override
             public void onClick(View v) {
-                startActivityForResult(
-                        new Intent(
-                                GamesActivity.this,
-                                JoinGameActivity.class
-                        ).putExtra(
-                                JoinGameActivity.EXTRA_GAME_TYPE,
-                                getIntent().getSerializableExtra(EXTRA_GAME_TYPE)
-                        ),
-                        REQUEST_JOIN_GAME
-                );
+                new IntentIntegrator(GamesActivity.this)
+                        .setCaptureActivity(JoinGameActivity.class)
+                        .setDesiredBarcodeFormats(Collections.singleton("QR_CODE"))
+                        .setBeepEnabled(false)
+                        .setOrientationLocked(false)
+                        .initiateScan();
             }
 
         });

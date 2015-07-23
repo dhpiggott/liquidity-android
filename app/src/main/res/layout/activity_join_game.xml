@@ -6,28 +6,11 @@
     android:layout_height="match_parent"
     tools:context="com.dhpcs.liquidity.activities.JoinGameActivity">
 
-    <LinearLayout
+    <com.journeyapps.barcodescanner.CompoundBarcodeView
+        android:id="@+id/zxing_barcode_scanner"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:paddingTop="?attr/actionBarSize">
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            android:gravity="center_horizontal"
-            android:text="@string/scan_the_qr_code_on_the_hosts_phone"
-            android:textAppearance="?android:attr/textAppearanceMedium" />
-
-        <!-- TODO: Review https://github.com/dm77/barcodescanner/blob/master/core/src/main/java/me/dm7/barcodescanner/core/CameraPreview.java
-        and make this display without being letterboxed -->
-        <me.dm7.barcodescanner.zxing.ZXingScannerView
-            android:id="@+id/scannerview"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-
-    </LinearLayout>
+        app:zxing_scanner_layout="@layout/compoundbarcodeview" />
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar"

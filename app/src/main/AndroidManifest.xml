@@ -15,7 +15,8 @@
 
         <activity
             android:name=".activities.GameTypesActivity"
-            android:label="@string/title_activity_game_types">
+            android:label="@string/title_activity_game_types"
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -25,6 +26,7 @@
         <activity
             android:name=".activities.GamesActivity"
             android:label="@string/title_activity_games_activity"
+            android:launchMode="singleTop"
             android:parentActivityName=".activities.GameTypesActivity"
             tools:ignore="UnusedAttribute">
             <meta-data
@@ -34,6 +36,7 @@
         <activity
             android:name=".activities.JoinGameActivity"
             android:label="@string/title_activity_join_game_activity"
+            android:launchMode="standard"
             android:parentActivityName=".activities.GamesActivity"
             tools:ignore="UnusedAttribute">
             <meta-data
@@ -43,6 +46,7 @@
         <activity
             android:name=".activities.MonopolyGameActivity"
             android:label="@string/title_activity_monopoly_game"
+            android:launchMode="singleTop"
             android:parentActivityName=".activities.GamesActivity"
             tools:ignore="UnusedAttribute">
             <meta-data
@@ -52,6 +56,7 @@
         <activity
             android:name=".activities.TransferIdentityActivity"
             android:label="@string/title_activity_transfer_identity_activity"
+            android:launchMode="standard"
             android:parentActivityName=".activities.MonopolyGameActivity"
             tools:ignore="UnusedAttribute">
             <meta-data

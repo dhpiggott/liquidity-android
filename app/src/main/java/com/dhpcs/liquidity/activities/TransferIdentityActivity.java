@@ -1,35 +1,18 @@
 package com.dhpcs.liquidity.activities;
 
-import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
+import android.view.KeyEvent;
 
 import com.dhpcs.liquidity.R;
-import com.google.zxing.Result;
+import com.journeyapps.barcodescanner.CaptureManager;
+import com.journeyapps.barcodescanner.CompoundBarcodeView;
 
-import me.dm7.barcodescanner.zxing.ZXingScannerView;
+public class TransferIdentityActivity extends AppCompatActivity {
 
-public class TransferIdentityActivity extends AppCompatActivity
-        implements ZXingScannerView.ResultHandler {
-
-    public static final String EXTRA_RESULT_TEXT = "text";
-
-    private ZXingScannerView scannerView;
-
-    @Override
-    public void handleResult(Result rawResult) {
-        setResult(
-                RESULT_OK,
-                new Intent().putExtra(
-                        EXTRA_RESULT_TEXT,
-                        rawResult.getText()
-                )
-        );
-        finish();
-    }
+    private CaptureManager capture;
+    private CompoundBarcodeView barcodeScannerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,31 +22,46 @@ public class TransferIdentityActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 
         setSupportActionBar(toolbar);
+        //noinspection ConstantConditions
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        toolbar.setNavigationIcon(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+        barcodeScannerView = (CompoundBarcodeView) findViewById(R.id.zxing_barcode_scanner);
+        barcodeScannerView.setStatusText(
+                getString(R.string.scan_the_qr_code_on_the_recipients_phone)
+        );
 
-            @Override
-            public void onClick(View v) {
-                NavUtils.navigateUpFromSameTask(TransferIdentityActivity.this);
-            }
-
-        });
-
-        scannerView = (ZXingScannerView) findViewById(R.id.scannerview);
-        scannerView.setResultHandler(this);
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        scannerView.stopCamera();
+        capture = new CaptureManager(this, barcodeScannerView);
+        capture.initializeFromIntent(getIntent(), savedInstanceState);
+        capture.decode();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        scannerView.startCamera();
+        capture.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        capture.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        capture.onDestroy();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        capture.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        return barcodeScannerView.onKeyDown(keyCode, event) || super.onKeyDown(keyCode, event);
     }
 
 }

@@ -31,7 +31,7 @@ import java.security.Security;
 
 /**
  * Fixes for the output of the default PRNG having low entropy.
- *
+ * <p/>
  * The fixes need to be applied via {@link #apply()} before any use of Java
  * Cryptography Architecture primitives. A good place to invoke them is in the
  * application's {@code onCreate}.
@@ -43,8 +43,11 @@ public final class PRNGFixes {
     private static final byte[] BUILD_FINGERPRINT_AND_DEVICE_SERIAL =
             getBuildFingerprintAndDeviceSerial();
 
-    /** Hidden constructor to prevent instantiation. */
-    private PRNGFixes() {}
+    /**
+     * Hidden constructor to prevent instantiation.
+     */
+    private PRNGFixes() {
+    }
 
     /**
      * Applies all fixes.
