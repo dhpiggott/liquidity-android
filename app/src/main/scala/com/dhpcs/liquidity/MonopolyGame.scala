@@ -80,8 +80,10 @@ object MonopolyGame {
 
     def onGameNameChanged(name: String)
 
+    // TODO: Rename to updated
     def onHiddenIdentitiesChanged(hiddenIdentities: Iterable[IdentityWithBalance])
 
+    // TODO: Rename to updated
     def onIdentitiesChanged(identities: Map[MemberId, IdentityWithBalance])
 
     def onIdentityCreated(identity: IdentityWithBalance)
@@ -94,13 +96,21 @@ object MonopolyGame {
 
     def onJoined(zoneId: ZoneId)
 
-    // TODO: Be granular so RecyclerViews can work efficiently and make changes clear
-    def onPlayersChanged(players: Map[MemberId, PlayerWithBalanceAndConnectionState])
+    def onPlayersAdded(addedPlayers: Iterable[PlayerWithBalanceAndConnectionState])
+
+    def onPlayersChanged(changedPlayers: Iterable[PlayerWithBalanceAndConnectionState])
+
+    def onPlayersRemoved(removedPlayers: Iterable[PlayerWithBalanceAndConnectionState])
+
+    def onPlayersUpdated(players: Map[MemberId, PlayerWithBalanceAndConnectionState])
 
     def onQuit()
 
-    // TODO: Be granular so RecyclerViews can work efficiently and make changes clear
-    def onTransfersChanged(transfers: Iterable[TransferWithCurrency])
+    def onTransfersAdded(addedTransfers: Iterable[TransferWithCurrency])
+
+    def onTransfersChanged(changedTransfers: Iterable[TransferWithCurrency])
+
+    def onTransfersUpdated(transfers: Map[TransactionId, TransferWithCurrency])
 
   }
 
@@ -421,7 +431,8 @@ class MonopolyGame(context: Context)
           )
 
           players = updatedPlayers
-          listener.foreach(_.onPlayersChanged(players))
+          listener.foreach(_.onPlayersAdded(players.values))
+          listener.foreach(_.onPlayersUpdated(players))
 
           hiddenPlayers = updatedHiddenPlayers
 
@@ -434,7 +445,8 @@ class MonopolyGame(context: Context)
             zone.members
           )
 
-          listener.foreach(_.onTransfersChanged(transfers.values))
+          listener.foreach(_.onTransfersAdded(transfers.values))
+          listener.foreach(_.onTransfersUpdated(transfers))
 
           val partiallyCreatedIdentities = zone.members.filter { case (memberId, member) =>
             ClientKey.getInstance(context).getPublicKey == member.publicKey &&
@@ -523,7 +535,8 @@ class MonopolyGame(context: Context)
 
             if (joinedPlayers.nonEmpty) {
               players = players ++ joinedPlayers
-              listener.foreach(_.onPlayersChanged(players))
+              listener.foreach(_.onPlayersChanged(joinedPlayers.values))
+              listener.foreach(_.onPlayersUpdated(players))
             }
 
             if (joinedHiddenPlayers.nonEmpty) {
@@ -547,7 +560,8 @@ class MonopolyGame(context: Context)
 
             if (quitPlayers.nonEmpty) {
               players = players ++ quitPlayers
-              listener.foreach(_.onPlayersChanged(players))
+              listener.foreach(_.onPlayersChanged(quitPlayers.values))
+              listener.foreach(_.onPlayersUpdated(players))
             }
 
             if (quitHiddenPlayers.nonEmpty) {
@@ -656,8 +670,22 @@ class MonopolyGame(context: Context)
             )
 
             if (updatedPlayers != players) {
+              val addedPlayers = updatedPlayers -- players.keys
+              val changedPlayers = updatedPlayers.filter { case (memberId, player) =>
+                players.get(memberId).fold(false)(_ != player)
+              }
+              val removedPlayers = players -- updatedPlayers.keys
+              if (addedPlayers.nonEmpty) {
+                listener.foreach(_.onPlayersAdded(addedPlayers.values))
+              }
+              if (changedPlayers.nonEmpty) {
+                listener.foreach(_.onPlayersChanged(changedPlayers.values))
+              }
+              if (removedPlayers.nonEmpty) {
+                listener.foreach(_.onPlayersRemoved(removedPlayers.values))
+              }
               players = updatedPlayers
-              listener.foreach(_.onPlayersChanged(players))
+              listener.foreach(_.onPlayersUpdated(players))
             }
 
             if (updatedHiddenPlayers != hiddenPlayers) {
@@ -674,8 +702,14 @@ class MonopolyGame(context: Context)
             )
 
             if (updatedTransfers != transfers) {
+              val changedTransfers = updatedTransfers.filter { case (transactionId, transfer) =>
+                transfers.get(transactionId).fold(false)(_ == transfer)
+              }
+              if (changedTransfers.nonEmpty) {
+                listener.foreach(_.onTransfersChanged(changedTransfers.values))
+              }
               transfers = updatedTransfers
-              listener.foreach(_.onTransfersChanged(transfers.values))
+              listener.foreach(_.onTransfersUpdated(transfers))
             }
 
           case accountCreatedNotification: AccountCreatedNotification =>
@@ -730,7 +764,8 @@ class MonopolyGame(context: Context)
 
             if (createdPlayer.nonEmpty) {
               players = players ++ createdPlayer
-              listener.foreach(_.onPlayersChanged(players))
+              listener.foreach(_.onPlayersAdded(createdPlayer.values))
+              listener.foreach(_.onPlayersUpdated(players))
             }
 
             if (createdHiddenPlayer.nonEmpty) {
@@ -778,8 +813,22 @@ class MonopolyGame(context: Context)
             )
 
             if (updatedPlayers != players) {
+              val addedPlayers = updatedPlayers -- players.keys
+              val changedPlayers = updatedPlayers.filter { case (memberId, player) =>
+                players.get(memberId).fold(false)(_ != player)
+              }
+              val removedPlayers = players -- updatedPlayers.keys
+              if (addedPlayers.nonEmpty) {
+                listener.foreach(_.onPlayersAdded(addedPlayers.values))
+              }
+              if (changedPlayers.nonEmpty) {
+                listener.foreach(_.onPlayersChanged(changedPlayers.values))
+              }
+              if (removedPlayers.nonEmpty) {
+                listener.foreach(_.onPlayersRemoved(removedPlayers.values))
+              }
               players = updatedPlayers
-              listener.foreach(_.onPlayersChanged(players))
+              listener.foreach(_.onPlayersUpdated(players))
             }
 
             if (updatedHiddenPlayers != hiddenPlayers) {
@@ -796,8 +845,14 @@ class MonopolyGame(context: Context)
             )
 
             if (updatedTransfers != transfers) {
+              val changedTransfers = updatedTransfers.filter { case (transactionId, transfer) =>
+                transfers.get(transactionId).fold(false)(_ == transfer)
+              }
+              if (changedTransfers.nonEmpty) {
+                listener.foreach(_.onTransfersChanged(changedTransfers.values))
+              }
               transfers = updatedTransfers
-              listener.foreach(_.onTransfersChanged(transfers.values))
+              listener.foreach(_.onTransfersUpdated(transfers))
             }
 
           case transactionAddedNotification: TransactionAddedNotification =>
@@ -852,7 +907,8 @@ class MonopolyGame(context: Context)
 
             if (changedPlayers.nonEmpty) {
               players = players ++ changedPlayers
-              listener.foreach(_.onPlayersChanged(players))
+              listener.foreach(_.onPlayersChanged(changedPlayers.values))
+              listener.foreach(_.onPlayersUpdated(players))
             }
 
             if (changedHiddenPlayers.nonEmpty) {
@@ -873,7 +929,8 @@ class MonopolyGame(context: Context)
 
             if (createdTransfer.nonEmpty) {
               transfers = transfers ++ createdTransfer
-              listener.foreach(_.onTransfersChanged(transfers.values))
+              listener.foreach(_.onTransfersAdded(createdTransfer.values))
+              listener.foreach(_.onTransfersUpdated(transfers))
             }
 
         }
@@ -986,8 +1043,10 @@ class MonopolyGame(context: Context)
         listener.onGameNameChanged(zone.name)
         listener.onIdentitiesChanged(identities)
         listener.onHiddenIdentitiesChanged(hiddenIdentities.values)
-        listener.onPlayersChanged(players)
-        listener.onTransfersChanged(transfers.values)
+        listener.onPlayersAdded(players.values)
+        listener.onPlayersUpdated(players)
+        listener.onTransfersAdded(transfers.values)
+        listener.onTransfersUpdated(transfers)
       }
     )
   }

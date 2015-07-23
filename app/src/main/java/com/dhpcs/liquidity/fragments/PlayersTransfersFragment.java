@@ -17,6 +17,7 @@ import com.dhpcs.liquidity.MonopolyGame.TransferWithCurrency;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activities.MonopolyGameActivity;
 import com.dhpcs.liquidity.models.MemberId;
+import com.dhpcs.liquidity.models.TransactionId;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -107,15 +108,27 @@ public class PlayersTransfersFragment extends Fragment {
             return transfersFragment;
         }
 
-        public void onTransfersChanged(scala.collection.Iterable<TransferWithCurrency> transfers) {
+        public void onTransfersAdded(
+                scala.collection.Iterable<TransferWithCurrency> addedTransfers) {
+            for (TransfersFragment transfersFragment : transfersFragments) {
+                transfersFragment.onTransfersAdded(addedTransfers);
+            }
+        }
+
+        public void onTransfersChanged(
+                scala.collection.Iterable<TransferWithCurrency> changedTransfers) {
+            for (TransfersFragment transfersFragment : transfersFragments) {
+                transfersFragment.onTransfersChanged(changedTransfers);
+            }
+        }
+
+        public void onTransfersUpdated(
+                scala.collection.immutable.Map<TransactionId, TransferWithCurrency> transfers) {
             this.transfers = new ArrayList<>(
                     JavaConversions.bufferAsJavaList(
-                            transfers.<TransferWithCurrency>toBuffer()
+                            transfers.values().<TransferWithCurrency>toBuffer()
                     )
             );
-            for (TransfersFragment transfersFragment : transfersFragments) {
-                transfersFragment.onTransfersChanged(transfers);
-            }
         }
 
         public void sort(Comparator<Player> comparator) {
@@ -163,8 +176,8 @@ public class PlayersTransfersFragment extends Fragment {
         return view;
     }
 
-    public void onPlayersChanged(scala.collection.immutable.Map<MemberId,
-            PlayerWithBalanceAndConnectionState> players) {
+    public void onPlayersUpdated(
+            scala.collection.immutable.Map<MemberId, PlayerWithBalanceAndConnectionState> players) {
         PlayerWithBalanceAndConnectionState selectedPlayer = getSelectedPlayer();
         playersTransfersFragmentStatePagerAdapter.clear();
         Iterator<PlayerWithBalanceAndConnectionState> iterator = players.valuesIterator();
@@ -184,8 +197,18 @@ public class PlayersTransfersFragment extends Fragment {
         }
     }
 
-    public void onTransfersChanged(scala.collection.Iterable<TransferWithCurrency> transfers) {
-        playersTransfersFragmentStatePagerAdapter.onTransfersChanged(transfers);
+    public void onTransfersAdded(scala.collection.Iterable<TransferWithCurrency> addedTransfers) {
+        playersTransfersFragmentStatePagerAdapter.onTransfersAdded(addedTransfers);
+    }
+
+    public void onTransfersChanged(
+            scala.collection.Iterable<TransferWithCurrency> changedTransfers) {
+        playersTransfersFragmentStatePagerAdapter.onTransfersChanged(changedTransfers);
+    }
+
+    public void onTransfersUpdated(
+            scala.collection.immutable.Map<TransactionId, TransferWithCurrency> transfers) {
+        playersTransfersFragmentStatePagerAdapter.onTransfersUpdated(transfers);
     }
 
 }

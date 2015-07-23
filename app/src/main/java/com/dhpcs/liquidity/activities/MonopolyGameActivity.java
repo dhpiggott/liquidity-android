@@ -18,7 +18,6 @@ import com.dhpcs.liquidity.MonopolyGame.Identity;
 import com.dhpcs.liquidity.MonopolyGame.IdentityWithBalance;
 import com.dhpcs.liquidity.MonopolyGame.Player;
 import com.dhpcs.liquidity.MonopolyGame.PlayerWithBalanceAndConnectionState;
-import com.dhpcs.liquidity.MonopolyGame.Transfer;
 import com.dhpcs.liquidity.MonopolyGame.TransferWithCurrency;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.fragments.ConfirmIdentityDeletionDialogFragment;
@@ -37,6 +36,7 @@ import com.dhpcs.liquidity.models.AccountId;
 import com.dhpcs.liquidity.models.ErrorResponse;
 import com.dhpcs.liquidity.models.MemberId;
 import com.dhpcs.liquidity.models.PublicKey;
+import com.dhpcs.liquidity.models.TransactionId;
 import com.dhpcs.liquidity.models.ZoneId;
 import com.google.common.io.BaseEncoding;
 import com.google.zxing.integration.android.IntentIntegrator;
@@ -92,17 +92,6 @@ public class MonopolyGameActivity extends AppCompatActivity
         public int compare(Player lhs,
                            Player rhs) {
             return collator.compare(lhs.member().name(), rhs.member().name());
-        }
-
-    };
-
-    public static final Comparator<Transfer> transferComparator = new Comparator<Transfer>() {
-
-        @Override
-        public int compare(Transfer lhs, Transfer rhs) {
-            long lhsCreated = lhs.transaction().created();
-            long rhsCreated = rhs.transaction().created();
-            return -1 * (lhsCreated < rhsCreated ? -1 : (lhsCreated == rhsCreated ? 0 : 1));
         }
 
     };
@@ -206,8 +195,6 @@ public class MonopolyGameActivity extends AppCompatActivity
     private MemberId selectedIdentityId;
     private scala.collection.immutable.Map<MemberId, IdentityWithBalance> identities;
     private scala.collection.Iterable<IdentityWithBalance> hiddenIdentities;
-    private scala.collection.immutable.Map<MemberId, PlayerWithBalanceAndConnectionState> players;
-    private scala.collection.Iterable<TransferWithCurrency> transfers;
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -359,9 +346,7 @@ public class MonopolyGameActivity extends AppCompatActivity
         identitiesFragment.onIdentitiesChanged(identities);
         Identity identity = identitiesFragment.getIdentity(identitiesFragment.getSelectedPage());
         this.selectedIdentityId = identity == null ? null : identity.memberId();
-        if (players != null) {
-            playersFragment.onPlayersChanged(selectedIdentityId, players.values());
-        }
+        playersFragment.onSelectedIdentityChanged(selectedIdentityId);
     }
 
     @Override
@@ -388,9 +373,7 @@ public class MonopolyGameActivity extends AppCompatActivity
     public void onIdentityPageSelected(int page) {
         Identity identity = identitiesFragment.getIdentity(page);
         this.selectedIdentityId = identity == null ? null : identity.memberId();
-        if (players != null) {
-            playersFragment.onPlayersChanged(selectedIdentityId, players.values());
-        }
+        playersFragment.onSelectedIdentityChanged(selectedIdentityId);
     }
 
     @Override
@@ -439,15 +422,17 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public void onNoPlayersTextClicked() {
-        startActivity(
-                new Intent(
-                        this,
-                        AddPlayersActivity.class
-                ).putExtra(
-                        AddPlayersActivity.EXTRA_ZONE_ID,
-                        zoneId
-                )
-        );
+        if (zoneId != null) {
+            startActivity(
+                    new Intent(
+                            this,
+                            AddPlayersActivity.class
+                    ).putExtra(
+                            AddPlayersActivity.EXTRA_ZONE_ID,
+                            zoneId
+                    )
+            );
+        }
     }
 
     @Override
@@ -530,14 +515,28 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onPlayersChanged(scala.collection.immutable.Map<MemberId,
-            PlayerWithBalanceAndConnectionState> players) {
-        this.players = players;
-        playersFragment.onPlayersChanged(selectedIdentityId, players.values());
-        playersTransfersFragment.onPlayersChanged(players);
-        if (transfers != null) {
-            playersTransfersFragment.onTransfersChanged(transfers);
-        }
+    public void onPlayersAdded(
+            scala.collection.Iterable<PlayerWithBalanceAndConnectionState> addedPlayers) {
+        playersFragment.onPlayersAdded(addedPlayers);
+    }
+
+    @Override
+    public void onPlayersChanged(
+            scala.collection.Iterable<PlayerWithBalanceAndConnectionState> changedPlayers) {
+        playersFragment.onPlayersChanged(changedPlayers);
+    }
+
+    @Override
+    public void onPlayersRemoved(
+            scala.collection.Iterable<PlayerWithBalanceAndConnectionState> removedPlayers) {
+        playersFragment.onPlayersRemoved(removedPlayers);
+    }
+
+    @Override
+    public void onPlayersUpdated(
+            scala.collection.immutable.Map<MemberId, PlayerWithBalanceAndConnectionState> players) {
+        playersFragment.onPlayersUpdated(players);
+        playersTransfersFragment.onPlayersUpdated(players);
     }
 
     @Override
@@ -600,10 +599,22 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onTransfersChanged(scala.collection.Iterable<TransferWithCurrency> transfers) {
-        this.transfers = transfers;
-        lastTransferFragment.onTransfersChanged(transfers);
-        playersTransfersFragment.onTransfersChanged(transfers);
+    public void onTransfersAdded(scala.collection.Iterable<TransferWithCurrency> addedTransfers) {
+        lastTransferFragment.onTransfersAdded(addedTransfers);
+        playersTransfersFragment.onTransfersAdded(addedTransfers);
+    }
+
+    @Override
+    public void onTransfersChanged(
+            scala.collection.Iterable<TransferWithCurrency> changedTransfers) {
+        lastTransferFragment.onTransfersChanged(changedTransfers);
+        playersTransfersFragment.onTransfersChanged(changedTransfers);
+    }
+
+    @Override
+    public void onTransfersUpdated(
+            scala.collection.immutable.Map<TransactionId, TransferWithCurrency> transfers) {
+        playersTransfersFragment.onTransfersUpdated(transfers);
     }
 
     @Override

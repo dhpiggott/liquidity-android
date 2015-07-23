@@ -147,10 +147,6 @@ public class TransfersFragment extends Fragment {
             transfers.beginBatchedUpdates();
         }
 
-        public void clear() {
-            transfers.clear();
-        }
-
         public void endBatchedUpdates() {
             transfers.endBatchedUpdates();
         }
@@ -188,12 +184,7 @@ public class TransfersFragment extends Fragment {
         if (transfers != null) {
             transfersAdapter.beginBatchedUpdates();
             for (TransferWithCurrency transfer : transfers) {
-                if (player == null || (transfer.from().isRight()
-                        && player.memberId().equals(transfer.from().right().get().memberId()))
-                        || (transfer.to().isRight()
-                        && player.memberId().equals(transfer.to().right().get().memberId()))) {
-                    transfersAdapter.add(transfer);
-                }
+                replaceOrAddTransfer(player, transfer);
             }
             transfersAdapter.endBatchedUpdates();
         }
@@ -207,9 +198,9 @@ public class TransfersFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_transfers, container, false);
 
         textViewEmpty = (TextView) view.findViewById(R.id.textview_empty);
-        textViewEmpty.setVisibility(
-                transfersAdapter.getItemCount() == 0 ? View.VISIBLE : View.GONE
-        );
+        if (transfersAdapter.getItemCount() != 0) {
+            textViewEmpty.setVisibility(View.GONE);
+        }
 
         RecyclerView recyclerViewTransfers = (RecyclerView) view.findViewById(R.id.recyclerview);
         recyclerViewTransfers.addItemDecoration(new RecyclerView.ItemDecoration() {
@@ -256,24 +247,33 @@ public class TransfersFragment extends Fragment {
         return view;
     }
 
-    public void onTransfersChanged(scala.collection.Iterable<TransferWithCurrency> transfers) {
+    public void onTransfersAdded(scala.collection.Iterable<TransferWithCurrency> addedTransfers) {
+        replaceOrAddTransfers(addedTransfers);
+        if (transfersAdapter.getItemCount() != 0) {
+            textViewEmpty.setVisibility(View.GONE);
+        }
+    }
+
+    public void onTransfersChanged(
+            scala.collection.Iterable<TransferWithCurrency> changedTransfers) {
+        replaceOrAddTransfers(changedTransfers);
+    }
+
+    private void replaceOrAddTransfers(scala.collection.Iterable<TransferWithCurrency> transfers) {
         Player player = (Player) getArguments().getSerializable(ARG_PLAYER);
-        transfersAdapter.beginBatchedUpdates();
-        transfersAdapter.clear();
         Iterator<TransferWithCurrency> iterator = transfers.iterator();
         while (iterator.hasNext()) {
-            TransferWithCurrency transfer = iterator.next();
-            if (player == null || (transfer.from().isRight()
-                    && player.memberId().equals(transfer.from().right().get().memberId()))
-                    || (transfer.to().isRight()
-                    && player.memberId().equals(transfer.to().right().get().memberId()))) {
-                transfersAdapter.add(transfer);
-            }
+            replaceOrAddTransfer(player, iterator.next());
         }
-        textViewEmpty.setVisibility(
-                transfersAdapter.getItemCount() == 0 ? View.VISIBLE : View.GONE
-        );
-        transfersAdapter.endBatchedUpdates();
+    }
+
+    private void replaceOrAddTransfer(Player player, TransferWithCurrency transfer) {
+        if (player == null || (transfer.from().isRight()
+                && player.memberId().equals(transfer.from().right().get().memberId()))
+                || (transfer.to().isRight()
+                && player.memberId().equals(transfer.to().right().get().memberId()))) {
+            transfersAdapter.add(transfer);
+        }
     }
 
 }

@@ -12,8 +12,6 @@ import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activities.MonopolyGameActivity;
 
 import java.text.DateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
 
 import scala.collection.Iterator;
 
@@ -23,6 +21,8 @@ public class LastTransferFragment extends Fragment {
 
     private TextView textViewSummary;
     private TextView textViewCreated;
+
+    private TransferWithCurrency lastTransfer;
 
     @Override
     public View onCreateView(LayoutInflater inflater,
@@ -36,35 +36,49 @@ public class LastTransferFragment extends Fragment {
         return view;
     }
 
-    public void onTransfersChanged(scala.collection.Iterable<TransferWithCurrency> transfers) {
-        ArrayList<TransferWithCurrency> sortedTransfers = new ArrayList<>(transfers.size());
-        Iterator<TransferWithCurrency> iterator = transfers.iterator();
+    public void onTransfersAdded(scala.collection.Iterable<TransferWithCurrency> addedTransfers) {
+        Iterator<TransferWithCurrency> iterator = addedTransfers.iterator();
         while (iterator.hasNext()) {
-            sortedTransfers.add(iterator.next());
+            TransferWithCurrency transfer = iterator.next();
+            if (lastTransfer == null ||
+                    transfer.transaction().created() > lastTransfer.transaction().created()) {
+                lastTransfer = transfer;
+            }
         }
-        Collections.sort(sortedTransfers, MonopolyGameActivity.transferComparator);
-
-        TransferWithCurrency lastTransfer = sortedTransfers.size() == 0 ? null
-                : sortedTransfers.get(0);
-
         if (lastTransfer != null) {
-            long created = lastTransfer.transaction().created();
-            String value = MonopolyGameActivity.formatCurrencyValue(
-                    getActivity(),
-                    lastTransfer.currency(),
-                    lastTransfer.transaction().value()
-            );
-            String summary = getString(
-                    R.string.transfer_summary_format_string,
-                    MonopolyGameActivity.formatMemberOrAccount(getActivity(), lastTransfer.from()),
-                    value,
-                    MonopolyGameActivity.formatMemberOrAccount(getActivity(), lastTransfer.to())
-            );
-
-            textViewCreated.setText(dateFormat.format(created));
-            textViewSummary.setText(summary);
+            showTransfer(lastTransfer);
         }
+    }
 
+    public void onTransfersChanged(
+            scala.collection.Iterable<TransferWithCurrency> changedTransfers) {
+        Iterator<TransferWithCurrency> iterator = changedTransfers.iterator();
+        while (iterator.hasNext()) {
+            TransferWithCurrency transfer = iterator.next();
+            if (transfer.transactionId().equals(lastTransfer.transactionId())) {
+                lastTransfer = transfer;
+                showTransfer(lastTransfer);
+                break;
+            }
+        }
+    }
+
+    private void showTransfer(TransferWithCurrency transfer) {
+        long created = transfer.transaction().created();
+        String value = MonopolyGameActivity.formatCurrencyValue(
+                getActivity(),
+                transfer.currency(),
+                transfer.transaction().value()
+        );
+        String summary = getString(
+                R.string.transfer_summary_format_string,
+                MonopolyGameActivity.formatMemberOrAccount(getActivity(), lastTransfer.from()),
+                value,
+                MonopolyGameActivity.formatMemberOrAccount(getActivity(), lastTransfer.to())
+        );
+
+        textViewCreated.setText(dateFormat.format(created));
+        textViewSummary.setText(summary);
     }
 
 }

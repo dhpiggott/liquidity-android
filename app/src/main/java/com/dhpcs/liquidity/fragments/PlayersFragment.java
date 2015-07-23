@@ -27,6 +27,7 @@ import com.dhpcs.liquidity.views.Identicon;
 
 import java.text.Collator;
 
+import scala.Option;
 import scala.collection.Iterator;
 
 public class PlayersFragment extends Fragment {
@@ -146,16 +147,8 @@ public class PlayersFragment extends Fragment {
             return players.add(player);
         }
 
-        public void beginBatchedUpdates() {
-            players.beginBatchedUpdates();
-        }
-
-        public void clear() {
-            players.clear();
-        }
-
-        public void endBatchedUpdates() {
-            players.endBatchedUpdates();
+        public boolean remove(PlayerWithBalanceAndConnectionState player) {
+            return players.remove(player);
         }
 
     }
@@ -163,6 +156,9 @@ public class PlayersFragment extends Fragment {
     private PlayersAdapter playersAdapter;
 
     private TextView textViewEmpty;
+
+    private scala.collection.immutable.Map<MemberId, PlayerWithBalanceAndConnectionState> players;
+    private MemberId selectedIdentityId;
 
     private Listener listener;
 
@@ -248,11 +244,67 @@ public class PlayersFragment extends Fragment {
         listener = null;
     }
 
-    public void onPlayersChanged(MemberId selectedIdentityId,
-                                 scala.collection.Iterable<PlayerWithBalanceAndConnectionState>
-                                         players) {
-        playersAdapter.beginBatchedUpdates();
-        playersAdapter.clear();
+    public void onPlayersAdded(
+            scala.collection.Iterable<PlayerWithBalanceAndConnectionState> addedPlayers) {
+        replaceOrAddPlayers(addedPlayers);
+        if (playersAdapter.getItemCount() != 0) {
+            textViewEmpty.setVisibility(View.GONE);
+        }
+    }
+
+    public void onPlayersChanged(
+            scala.collection.Iterable<PlayerWithBalanceAndConnectionState> changedPlayers) {
+        replaceOrAddPlayers(changedPlayers);
+    }
+
+    public void onPlayersRemoved(
+            scala.collection.Iterable<PlayerWithBalanceAndConnectionState> removedPlayers) {
+        Iterator<PlayerWithBalanceAndConnectionState> iterator = removedPlayers.iterator();
+        while (iterator.hasNext()) {
+            PlayerWithBalanceAndConnectionState player = iterator.next();
+            if (!player.memberId().equals(selectedIdentityId)) {
+                playersAdapter.remove(player);
+            }
+        }
+        if (playersAdapter.getItemCount() == 0) {
+            textViewEmpty.setVisibility(View.VISIBLE);
+        }
+    }
+
+    public void onPlayersUpdated(
+            scala.collection.immutable.Map<MemberId, PlayerWithBalanceAndConnectionState> players) {
+        if (this.players == null) {
+            replaceOrAddPlayers(players.values());
+            textViewEmpty.setVisibility(
+                    playersAdapter.getItemCount() == 0 ? View.VISIBLE : View.GONE
+            );
+        }
+        this.players = players;
+    }
+
+    public void onSelectedIdentityChanged(MemberId selectedIdentityId) {
+        if (this.selectedIdentityId != null && players != null) {
+            Option<PlayerWithBalanceAndConnectionState> player =
+                    players.get(this.selectedIdentityId);
+            if (player.isDefined()) {
+                playersAdapter.add(player.get());
+            }
+        }
+        this.selectedIdentityId = selectedIdentityId;
+        if (this.selectedIdentityId != null && players != null) {
+            Option<PlayerWithBalanceAndConnectionState> player =
+                    players.get(this.selectedIdentityId);
+            if (player.isDefined()) {
+                playersAdapter.remove(player.get());
+            }
+        }
+        textViewEmpty.setVisibility(
+                playersAdapter.getItemCount() == 0 ? View.VISIBLE : View.GONE
+        );
+    }
+
+    private void replaceOrAddPlayers(
+            scala.collection.Iterable<PlayerWithBalanceAndConnectionState> players) {
         Iterator<PlayerWithBalanceAndConnectionState> iterator = players.iterator();
         while (iterator.hasNext()) {
             PlayerWithBalanceAndConnectionState player = iterator.next();
@@ -260,8 +312,6 @@ public class PlayersFragment extends Fragment {
                 playersAdapter.add(player);
             }
         }
-        textViewEmpty.setVisibility(playersAdapter.getItemCount() == 0 ? View.VISIBLE : View.GONE);
-        playersAdapter.endBatchedUpdates();
     }
 
 }

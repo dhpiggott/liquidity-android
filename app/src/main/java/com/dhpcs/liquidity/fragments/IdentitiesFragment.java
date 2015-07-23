@@ -167,10 +167,10 @@ public class IdentitiesFragment extends Fragment implements OnPageChangeListener
             identitiesFragmentStatePagerAdapter.add(iterator.next());
         }
         identitiesFragmentStatePagerAdapter.sort(MonopolyGameActivity.identityComparator);
+        identitiesFragmentStatePagerAdapter.notifyDataSetChanged();
         textViewEmpty.setVisibility(
                 identitiesFragmentStatePagerAdapter.getCount() == 0 ? View.VISIBLE : View.GONE
         );
-        identitiesFragmentStatePagerAdapter.notifyDataSetChanged();
         if (selectedIdentity != null && identities.contains(selectedIdentity.memberId())) {
             viewPagerIdentities.setCurrentItem(
                     identitiesFragmentStatePagerAdapter.getPosition(
