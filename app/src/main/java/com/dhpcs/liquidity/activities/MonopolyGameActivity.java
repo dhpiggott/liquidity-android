@@ -21,7 +21,6 @@ import com.dhpcs.liquidity.MonopolyGame.PlayerWithBalanceAndConnectionState;
 import com.dhpcs.liquidity.MonopolyGame.Transfer;
 import com.dhpcs.liquidity.MonopolyGame.TransferWithCurrency;
 import com.dhpcs.liquidity.R;
-import com.dhpcs.liquidity.fragments.AddPlayersDialogFragment;
 import com.dhpcs.liquidity.fragments.ConfirmIdentityDeletionDialogFragment;
 import com.dhpcs.liquidity.fragments.CreateIdentityDialogFragment;
 import com.dhpcs.liquidity.fragments.EnterGameNameDialogFragment;
@@ -31,7 +30,6 @@ import com.dhpcs.liquidity.fragments.IdentitiesFragment;
 import com.dhpcs.liquidity.fragments.LastTransferFragment;
 import com.dhpcs.liquidity.fragments.PlayersFragment;
 import com.dhpcs.liquidity.fragments.PlayersTransfersFragment;
-import com.dhpcs.liquidity.fragments.ReceiveIdentityDialogFragment;
 import com.dhpcs.liquidity.fragments.RestoreIdentityDialogFragment;
 import com.dhpcs.liquidity.fragments.TransferToPlayerDialogFragment;
 import com.dhpcs.liquidity.models.Account;
@@ -441,11 +439,15 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public void onNoPlayersTextClicked() {
-        AddPlayersDialogFragment.newInstance(zoneId)
-                .show(
-                        getFragmentManager(),
-                        "add_players_dialog_fragment"
-                );
+        startActivity(
+                new Intent(
+                        this,
+                        AddPlayersActivity.class
+                ).putExtra(
+                        AddPlayersActivity.EXTRA_ZONE_ID,
+                        zoneId
+                )
+        );
     }
 
     @Override
@@ -453,11 +455,15 @@ public class MonopolyGameActivity extends AppCompatActivity
         Identity identity;
         switch (item.getItemId()) {
             case R.id.action_add_players:
-                AddPlayersDialogFragment.newInstance(zoneId)
-                        .show(
-                                getFragmentManager(),
-                                "add_players_dialog_fragment"
-                        );
+                startActivity(
+                        new Intent(
+                                this,
+                                AddPlayersActivity.class
+                        ).putExtra(
+                                AddPlayersActivity.EXTRA_ZONE_ID,
+                                zoneId
+                        )
+                );
                 return true;
             case R.id.action_change_game_name:
                 EnterGameNameDialogFragment.newInstance(getTitle().toString())
@@ -509,11 +515,14 @@ public class MonopolyGameActivity extends AppCompatActivity
                         .initiateScan();
                 return true;
             case R.id.action_receive_identity:
-                ReceiveIdentityDialogFragment.newInstance(
-                        ClientKey.getInstance(this).getPublicKey()
-                ).show(
-                        getFragmentManager(),
-                        "receive_identity_dialog_fragment"
+                startActivity(
+                        new Intent(
+                                this,
+                                ReceiveIdentityActivity.class
+                        ).putExtra(
+                                ReceiveIdentityActivity.EXTRA_PUBLIC_KEY,
+                                ClientKey.getInstance(this).getPublicKey()
+                        )
                 );
                 return true;
         }

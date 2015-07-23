@@ -4,14 +4,30 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.dhpcs.liquidity.activities.TransferIdentityActivity">
+    tools:context="com.dhpcs.liquidity.activities.AddPlayersActivity">
 
-    <com.journeyapps.barcodescanner.CompoundBarcodeView
-        android:id="@+id/zxing_barcode_scanner"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:orientation="vertical"
         android:paddingTop="?attr/actionBarSize"
-        app:zxing_scanner_layout="@layout/compoundbarcodeview" />
+        tools:ignore="UseCompoundDrawables">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:gravity="center_horizontal"
+            android:text="@string/show_the_qr_code_to_the_joining_players"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
+
+        <ImageView
+            android:id="@+id/imageview_qr_code"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:ignore="ContentDescription" />
+
+    </LinearLayout>
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar"

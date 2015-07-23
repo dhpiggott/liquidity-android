@@ -10,6 +10,7 @@
         android:id="@+id/zxing_barcode_scanner"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:paddingTop="?attr/actionBarSize"
         app:zxing_scanner_layout="@layout/compoundbarcodeview" />
 
     <android.support.v7.widget.Toolbar
