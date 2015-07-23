@@ -12,7 +12,6 @@ import com.journeyapps.barcodescanner.CompoundBarcodeView;
 public class TransferIdentityActivity extends AppCompatActivity {
 
     private CaptureManager capture;
-    private CompoundBarcodeView barcodeScannerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,7 +24,8 @@ public class TransferIdentityActivity extends AppCompatActivity {
         //noinspection ConstantConditions
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        barcodeScannerView = (CompoundBarcodeView) findViewById(R.id.zxing_barcode_scanner);
+        CompoundBarcodeView barcodeScannerView = (CompoundBarcodeView)
+                findViewById(R.id.zxing_barcode_scanner);
         barcodeScannerView.setStatusText(
                 getString(R.string.scan_the_qr_code_on_the_recipients_phone)
         );
@@ -61,7 +61,16 @@ public class TransferIdentityActivity extends AppCompatActivity {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        return barcodeScannerView.onKeyDown(keyCode, event) || super.onKeyDown(keyCode, event);
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_FOCUS:
+            case KeyEvent.KEYCODE_CAMERA:
+
+                /*
+                 * We handle these events so they don't launch the Camera app.
+                 */
+                return true;
+        }
+        return super.onKeyDown(keyCode, event);
     }
 
 }
