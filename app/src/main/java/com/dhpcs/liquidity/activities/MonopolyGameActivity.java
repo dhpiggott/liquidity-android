@@ -55,8 +55,6 @@ import scala.Option;
 import scala.Tuple2;
 import scala.util.Either;
 
-// TODO: Use http://developer.android.com/reference/android/support/design/widget/Snackbar.html for
-// confirmation of creates/deletes etc.
 public class MonopolyGameActivity extends AppCompatActivity
         implements EnterGameNameDialogFragment.Listener,
         EnterIdentityNameDialogFragment.Listener,
@@ -83,7 +81,7 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     };
 
-    // TODO: Add option to sort by balance
+    // TODO: Add option to sort by balance?
     public static final Comparator<Player> playerComparator = new Comparator<Player>() {
 
         private final Collator collator = Collator.getInstance();
@@ -506,9 +504,8 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onPlayersAdded(
-            scala.collection.Iterable<PlayerWithBalanceAndConnectionState> addedPlayers) {
-        playersFragment.onPlayersAdded(addedPlayers);
+    public void onPlayerAdded(PlayerWithBalanceAndConnectionState addedPlayer) {
+        playersFragment.onPlayerAdded(addedPlayer);
     }
 
     @Override
@@ -518,9 +515,14 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onPlayersRemoved(
-            scala.collection.Iterable<PlayerWithBalanceAndConnectionState> removedPlayers) {
-        playersFragment.onPlayersRemoved(removedPlayers);
+    public void onPlayersInitialized(
+            scala.collection.Iterable<PlayerWithBalanceAndConnectionState> players) {
+        playersFragment.onPlayersInitialized(players);
+    }
+
+    @Override
+    public void onPlayerRemoved(PlayerWithBalanceAndConnectionState removedPlayer) {
+        playersFragment.onPlayerRemoved(removedPlayer);
     }
 
     @Override
@@ -590,9 +592,26 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onTransfersAdded(scala.collection.Iterable<TransferWithCurrency> addedTransfers) {
-        lastTransferFragment.onTransfersAdded(addedTransfers);
-        playersTransfersFragment.onTransfersAdded(addedTransfers);
+    public void onTransferAdded(TransferWithCurrency addedTransfer) {
+        lastTransferFragment.onTransferAdded(addedTransfer);
+        playersTransfersFragment.onTransferAdded(addedTransfer);
+        // TODO: Don't create a snackbar, animate the last transfer fragment change instead
+        String value = MonopolyGameActivity.formatCurrencyValue(
+                this,
+                addedTransfer.currency(),
+                addedTransfer.transaction().value()
+        );
+        String summary = getString(
+                R.string.transfer_summary_format_string,
+                MonopolyGameActivity.formatMemberOrAccount(this, addedTransfer.from()),
+                value,
+                MonopolyGameActivity.formatMemberOrAccount(this, addedTransfer.to())
+        );
+        Snackbar.make(
+                findViewById(R.id.coordinatorlayout),
+                summary,
+                Snackbar.LENGTH_LONG
+        ).show();
     }
 
     @Override
@@ -600,6 +619,13 @@ public class MonopolyGameActivity extends AppCompatActivity
             scala.collection.Iterable<TransferWithCurrency> changedTransfers) {
         lastTransferFragment.onTransfersChanged(changedTransfers);
         playersTransfersFragment.onTransfersChanged(changedTransfers);
+    }
+
+    @Override
+    public void onTransfersInitialized(
+            scala.collection.Iterable<TransferWithCurrency> transfers) {
+        lastTransferFragment.onTransfersInitialized(transfers);
+        playersTransfersFragment.onTransfersInitialized(transfers);
     }
 
     @Override

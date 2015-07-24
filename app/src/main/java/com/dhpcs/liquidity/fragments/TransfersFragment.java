@@ -247,11 +247,12 @@ public class TransfersFragment extends Fragment {
         return view;
     }
 
-    public void onTransfersAdded(scala.collection.Iterable<TransferWithCurrency> addedTransfers) {
-        replaceOrAddTransfers(addedTransfers);
-        if (transfersAdapter.getItemCount() != 0) {
-            textViewEmpty.setVisibility(View.GONE);
-        }
+    public void onTransferAdded(TransferWithCurrency addedTransfer) {
+        replaceOrAddTransfer(
+                (Player) getArguments().getSerializable(ARG_PLAYER),
+                addedTransfer
+        );
+        textViewEmpty.setVisibility(View.GONE);
     }
 
     public void onTransfersChanged(
@@ -259,11 +260,11 @@ public class TransfersFragment extends Fragment {
         replaceOrAddTransfers(changedTransfers);
     }
 
-    private void replaceOrAddTransfers(scala.collection.Iterable<TransferWithCurrency> transfers) {
-        Player player = (Player) getArguments().getSerializable(ARG_PLAYER);
-        Iterator<TransferWithCurrency> iterator = transfers.iterator();
-        while (iterator.hasNext()) {
-            replaceOrAddTransfer(player, iterator.next());
+    public void onTransfersInitialized(
+            scala.collection.Iterable<TransferWithCurrency> transfers) {
+        replaceOrAddTransfers(transfers);
+        if (transfers.nonEmpty()) {
+            textViewEmpty.setVisibility(View.GONE);
         }
     }
 
@@ -273,6 +274,14 @@ public class TransfersFragment extends Fragment {
                 || (transfer.to().isRight()
                 && player.memberId().equals(transfer.to().right().get().memberId()))) {
             transfersAdapter.add(transfer);
+        }
+    }
+
+    private void replaceOrAddTransfers(scala.collection.Iterable<TransferWithCurrency> transfers) {
+        Player player = (Player) getArguments().getSerializable(ARG_PLAYER);
+        Iterator<TransferWithCurrency> iterator = transfers.iterator();
+        while (iterator.hasNext()) {
+            replaceOrAddTransfer(player, iterator.next());
         }
     }
 

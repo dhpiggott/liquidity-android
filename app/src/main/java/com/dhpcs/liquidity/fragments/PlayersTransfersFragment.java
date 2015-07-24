@@ -108,10 +108,9 @@ public class PlayersTransfersFragment extends Fragment {
             return transfersFragment;
         }
 
-        public void onTransfersAdded(
-                scala.collection.Iterable<TransferWithCurrency> addedTransfers) {
+        public void onTransferAdded(TransferWithCurrency addedTransfer) {
             for (TransfersFragment transfersFragment : transfersFragments) {
-                transfersFragment.onTransfersAdded(addedTransfers);
+                transfersFragment.onTransferAdded(addedTransfer);
             }
         }
 
@@ -119,6 +118,13 @@ public class PlayersTransfersFragment extends Fragment {
                 scala.collection.Iterable<TransferWithCurrency> changedTransfers) {
             for (TransfersFragment transfersFragment : transfersFragments) {
                 transfersFragment.onTransfersChanged(changedTransfers);
+            }
+        }
+
+        public void onTransfersInitialized(
+                scala.collection.Iterable<TransferWithCurrency> transfers) {
+            for (TransfersFragment transfersFragment : transfersFragments) {
+                transfersFragment.onTransfersInitialized(transfers);
             }
         }
 
@@ -197,13 +203,17 @@ public class PlayersTransfersFragment extends Fragment {
         }
     }
 
-    public void onTransfersAdded(scala.collection.Iterable<TransferWithCurrency> addedTransfers) {
-        playersTransfersFragmentStatePagerAdapter.onTransfersAdded(addedTransfers);
+    public void onTransferAdded(TransferWithCurrency addedTransfer) {
+        playersTransfersFragmentStatePagerAdapter.onTransferAdded(addedTransfer);
     }
 
     public void onTransfersChanged(
             scala.collection.Iterable<TransferWithCurrency> changedTransfers) {
         playersTransfersFragmentStatePagerAdapter.onTransfersChanged(changedTransfers);
+    }
+
+    public void onTransfersInitialized(scala.collection.Iterable<TransferWithCurrency> transfers) {
+        playersTransfersFragmentStatePagerAdapter.onTransfersInitialized(transfers);
     }
 
     public void onTransfersUpdated(

@@ -36,16 +36,10 @@ public class LastTransferFragment extends Fragment {
         return view;
     }
 
-    public void onTransfersAdded(scala.collection.Iterable<TransferWithCurrency> addedTransfers) {
-        Iterator<TransferWithCurrency> iterator = addedTransfers.iterator();
-        while (iterator.hasNext()) {
-            TransferWithCurrency transfer = iterator.next();
-            if (lastTransfer == null ||
-                    transfer.transaction().created() > lastTransfer.transaction().created()) {
-                lastTransfer = transfer;
-            }
-        }
-        if (lastTransfer != null) {
+    public void onTransferAdded(TransferWithCurrency addedTransfer) {
+        if (lastTransfer == null ||
+                addedTransfer.transaction().created() > lastTransfer.transaction().created()) {
+            lastTransfer = addedTransfer;
             showTransfer(lastTransfer);
         }
     }
@@ -60,6 +54,20 @@ public class LastTransferFragment extends Fragment {
                 showTransfer(lastTransfer);
                 break;
             }
+        }
+    }
+
+    public void onTransfersInitialized(scala.collection.Iterable<TransferWithCurrency> transfers) {
+        Iterator<TransferWithCurrency> iterator = transfers.iterator();
+        while (iterator.hasNext()) {
+            TransferWithCurrency transfer = iterator.next();
+            if (lastTransfer == null ||
+                    transfer.transaction().created() > lastTransfer.transaction().created()) {
+                lastTransfer = transfer;
+            }
+        }
+        if (lastTransfer != null) {
+            showTransfer(lastTransfer);
         }
     }
 

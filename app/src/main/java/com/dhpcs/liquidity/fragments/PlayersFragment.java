@@ -245,12 +245,9 @@ public class PlayersFragment extends Fragment {
         listener = null;
     }
 
-    public void onPlayersAdded(
-            scala.collection.Iterable<PlayerWithBalanceAndConnectionState> addedPlayers) {
-        replaceOrAddPlayers(addedPlayers);
-        if (playersAdapter.getItemCount() != 0) {
-            textViewEmpty.setVisibility(View.GONE);
-        }
+    public void onPlayerAdded(PlayerWithBalanceAndConnectionState addedPlayer) {
+        replaceOrAddPlayer(addedPlayer);
+        textViewEmpty.setVisibility(View.GONE);
     }
 
     public void onPlayersChanged(
@@ -258,15 +255,18 @@ public class PlayersFragment extends Fragment {
         replaceOrAddPlayers(changedPlayers);
     }
 
-    public void onPlayersRemoved(
-            scala.collection.Iterable<PlayerWithBalanceAndConnectionState> removedPlayers) {
-        Iterator<PlayerWithBalanceAndConnectionState> iterator = removedPlayers.iterator();
-        while (iterator.hasNext()) {
-            PlayerWithBalanceAndConnectionState player = iterator.next();
-            if (selectedIdentity == null
-                    || !player.memberId().equals(selectedIdentity.memberId())) {
-                playersAdapter.remove(player);
-            }
+    public void onPlayersInitialized(
+            scala.collection.Iterable<PlayerWithBalanceAndConnectionState> players) {
+        replaceOrAddPlayers(players);
+        if (playersAdapter.getItemCount() != 0) {
+            textViewEmpty.setVisibility(View.GONE);
+        }
+    }
+
+    public void onPlayerRemoved(PlayerWithBalanceAndConnectionState removedPlayer) {
+        if (selectedIdentity == null
+                || !removedPlayer.memberId().equals(selectedIdentity.memberId())) {
+            playersAdapter.remove(removedPlayer);
         }
         if (playersAdapter.getItemCount() == 0) {
             textViewEmpty.setVisibility(View.VISIBLE);
@@ -305,15 +305,18 @@ public class PlayersFragment extends Fragment {
         );
     }
 
+    private void replaceOrAddPlayer(PlayerWithBalanceAndConnectionState player) {
+        if (selectedIdentity == null
+                || !player.memberId().equals(selectedIdentity.memberId())) {
+            playersAdapter.add(player);
+        }
+    }
+
     private void replaceOrAddPlayers(
             scala.collection.Iterable<PlayerWithBalanceAndConnectionState> players) {
         Iterator<PlayerWithBalanceAndConnectionState> iterator = players.iterator();
         while (iterator.hasNext()) {
-            PlayerWithBalanceAndConnectionState player = iterator.next();
-            if (selectedIdentity == null
-                    || !player.memberId().equals(selectedIdentity.memberId())) {
-                playersAdapter.add(player);
-            }
+            replaceOrAddPlayer(iterator.next());
         }
     }
 
