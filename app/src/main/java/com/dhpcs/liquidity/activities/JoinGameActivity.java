@@ -26,7 +26,7 @@ public class JoinGameActivity extends AppCompatActivity {
 
         CompoundBarcodeView barcodeScannerView = (CompoundBarcodeView)
                 findViewById(R.id.zxing_barcode_scanner);
-        barcodeScannerView.setStatusText(getString(R.string.scan_the_qr_code_on_the_hosts_phone));
+        barcodeScannerView.setStatusText(getString(R.string.join_game_instruction));
 
         capture = new CaptureManager(this, barcodeScannerView);
         capture.initializeFromIntent(getIntent(), savedInstanceState);

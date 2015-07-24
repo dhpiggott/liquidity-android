@@ -363,6 +363,8 @@ class MonopolyGame(context: Context)
   // TODO
   def getCurrency = currency
 
+  def getGameName = zone.name
+
   def getHiddenIdentities = hiddenIdentities.values
 
   def getIdentities = identities.values

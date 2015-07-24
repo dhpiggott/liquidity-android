@@ -11,6 +11,8 @@ import com.journeyapps.barcodescanner.CompoundBarcodeView;
 
 public class TransferIdentityActivity extends AppCompatActivity {
 
+    public static final String EXTRA_IDENTITY_NAME = "identity_name";
+
     private CaptureManager capture;
 
     @Override
@@ -24,10 +26,15 @@ public class TransferIdentityActivity extends AppCompatActivity {
         //noinspection ConstantConditions
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
+        String identityName = getIntent().getStringExtra(EXTRA_IDENTITY_NAME);
+
         CompoundBarcodeView barcodeScannerView = (CompoundBarcodeView)
                 findViewById(R.id.zxing_barcode_scanner);
         barcodeScannerView.setStatusText(
-                getString(R.string.scan_the_qr_code_on_the_recipients_phone)
+                getString(
+                        R.string.transfer_identity_identity_name_format_string,
+                        identityName
+                )
         );
 
         capture = new CaptureManager(this, barcodeScannerView);

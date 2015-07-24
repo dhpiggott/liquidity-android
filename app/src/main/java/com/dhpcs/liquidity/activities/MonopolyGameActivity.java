@@ -201,24 +201,22 @@ public class MonopolyGameActivity extends AppCompatActivity
                 Identity identity = identitiesFragment.getIdentity(
                         identitiesFragment.getSelectedPage()
                 );
-                if (identity != null) {
-                    try {
-                        PublicKey publicKey = new PublicKey(
-                                BaseEncoding.base64().decode(
-                                        contents
-                                )
-                        );
-                        if (!monopolyGame.isPublicKeyConnectedAndImplicitlyValid(publicKey)) {
-                            throw new IllegalArgumentException();
-                        }
-                        monopolyGame.transfer(identity.memberId(), publicKey);
-                    } catch (IllegalArgumentException e) {
-                        Snackbar.make(
-                                findViewById(R.id.coordinatorlayout),
-                                R.string.that_is_not_a_member_of_the_game,
-                                Snackbar.LENGTH_LONG
-                        ).show();
+                try {
+                    PublicKey publicKey = new PublicKey(
+                            BaseEncoding.base64().decode(
+                                    contents
+                            )
+                    );
+                    if (!monopolyGame.isPublicKeyConnectedAndImplicitlyValid(publicKey)) {
+                        throw new IllegalArgumentException();
                     }
+                    monopolyGame.transfer(identity.memberId(), publicKey);
+                } catch (IllegalArgumentException e) {
+                    Snackbar.make(
+                            findViewById(R.id.coordinatorlayout),
+                            R.string.transfer_identity_invalid_code,
+                            Snackbar.LENGTH_LONG
+                    ).show();
                 }
             }
         } else {
@@ -417,6 +415,9 @@ public class MonopolyGameActivity extends AppCompatActivity
                             this,
                             AddPlayersActivity.class
                     ).putExtra(
+                            AddPlayersActivity.EXTRA_GAME_NAME,
+                            monopolyGame.getGameName()
+                    ).putExtra(
                             AddPlayersActivity.EXTRA_ZONE_ID,
                             zoneId
                     )
@@ -433,6 +434,9 @@ public class MonopolyGameActivity extends AppCompatActivity
                         new Intent(
                                 this,
                                 AddPlayersActivity.class
+                        ).putExtra(
+                                AddPlayersActivity.EXTRA_GAME_NAME,
+                                monopolyGame.getGameName()
                         ).putExtra(
                                 AddPlayersActivity.EXTRA_ZONE_ID,
                                 zoneId
@@ -483,6 +487,11 @@ public class MonopolyGameActivity extends AppCompatActivity
             case R.id.action_transfer_identity:
                 new IntentIntegrator(MonopolyGameActivity.this)
                         .setCaptureActivity(TransferIdentityActivity.class)
+                        .addExtra(
+                                TransferIdentityActivity.EXTRA_IDENTITY_NAME,
+                                identitiesFragment.getIdentity(identitiesFragment.getSelectedPage())
+                                        .member().name()
+                        )
                         .setDesiredBarcodeFormats(Collections.singleton("QR_CODE"))
                         .setBeepEnabled(false)
                         .setOrientationLocked(false)
@@ -563,8 +572,8 @@ public class MonopolyGameActivity extends AppCompatActivity
         menu.findItem(R.id.action_restore_identity).setVisible(
                 zoneId != null && monopolyGame.getHiddenIdentities().nonEmpty()
         );
-        menu.findItem(R.id.action_transfer_identity).setVisible(zoneId != null);
-        menu.findItem(R.id.action_receive_identity).setVisible(zoneId != null && identity != null);
+        menu.findItem(R.id.action_transfer_identity).setVisible(zoneId != null && identity != null);
+        menu.findItem(R.id.action_receive_identity).setVisible(zoneId != null);
         return true;
     }
 

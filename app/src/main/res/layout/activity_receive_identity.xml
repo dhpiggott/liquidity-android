@@ -18,7 +18,7 @@
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
             android:gravity="center_horizontal"
-            android:text="@string/show_the_qr_code_to_the_sender"
+            android:text="@string/receive_identity_instruction"
             android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <ImageView

@@ -42,7 +42,7 @@ public class GamesActivity extends AppCompatActivity implements GamesFragment.Li
                 } catch (IllegalArgumentException e) {
                     Snackbar.make(
                             findViewById(R.id.coordinatorlayout),
-                            R.string.that_is_not_a_liquidity_game,
+                            R.string.join_game_invalid_code,
                             Snackbar.LENGTH_LONG
                     ).show();
                 }
