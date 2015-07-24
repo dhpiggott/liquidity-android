@@ -179,7 +179,8 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     public static boolean isIdentityNameValid(Context context, CharSequence identityName) {
-        return !TextUtils.isEmpty(identityName) && !identityName.toString().equals(context.getString(R.string.bank_member_name));
+        return !TextUtils.isEmpty(identityName)
+                && !identityName.toString().equals(context.getString(R.string.bank_member_name));
     }
 
     private MonopolyGame monopolyGame;
@@ -192,9 +193,6 @@ public class MonopolyGameActivity extends AppCompatActivity
     private PlayersTransfersFragment playersTransfersFragment;
 
     private ZoneId zoneId;
-    private MemberId selectedIdentityId;
-    private scala.collection.immutable.Map<MemberId, IdentityWithBalance> identities;
-    private scala.collection.Iterable<IdentityWithBalance> hiddenIdentities;
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -334,19 +332,12 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onHiddenIdentitiesChanged(scala.collection.Iterable<IdentityWithBalance>
-                                                  hiddenIdentities) {
-        this.hiddenIdentities = hiddenIdentities;
-    }
-
-    @Override
-    public void onIdentitiesChanged(scala.collection.immutable.Map<MemberId, IdentityWithBalance>
-                                            identities) {
-        this.identities = identities;
-        identitiesFragment.onIdentitiesChanged(identities);
-        Identity identity = identitiesFragment.getIdentity(identitiesFragment.getSelectedPage());
-        this.selectedIdentityId = identity == null ? null : identity.memberId();
-        playersFragment.onSelectedIdentityChanged(selectedIdentityId);
+    public void onIdentitiesUpdated(
+            scala.collection.immutable.Map<MemberId, IdentityWithBalance> identities) {
+        identitiesFragment.onIdentitiesUpdated(identities);
+        playersFragment.onSelectedIdentityChanged(
+                identitiesFragment.getIdentity(identitiesFragment.getSelectedPage())
+        );
     }
 
     @Override
@@ -371,9 +362,7 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public void onIdentityPageSelected(int page) {
-        Identity identity = identitiesFragment.getIdentity(page);
-        this.selectedIdentityId = identity == null ? null : identity.memberId();
-        playersFragment.onSelectedIdentityChanged(selectedIdentityId);
+        playersFragment.onSelectedIdentityChanged(identitiesFragment.getIdentity(page));
     }
 
     @Override
@@ -386,6 +375,8 @@ public class MonopolyGameActivity extends AppCompatActivity
         identitiesFragment.setSelectedPage(identitiesFragment.getPage(identity));
     }
 
+    // TODO: Only show this once (i.e. never again after e.g. rotating), pass flag so only the
+    // game-prompted identity creation results in the game name being set.
     @Override
     public void onIdentityRequired() {
         CreateIdentityDialogFragment.newInstance()
@@ -485,7 +476,7 @@ public class MonopolyGameActivity extends AppCompatActivity
                 }
                 return true;
             case R.id.action_restore_identity:
-                RestoreIdentityDialogFragment.newInstance(hiddenIdentities)
+                RestoreIdentityDialogFragment.newInstance(monopolyGame.getHiddenIdentities())
                         .show(
                                 getFragmentManager(),
                                 "restore_identity_dialog_fragment"
@@ -546,7 +537,7 @@ public class MonopolyGameActivity extends AppCompatActivity
         );
         if (identity != null) {
             TransferToPlayerDialogFragment.newInstance(
-                    identities,
+                    monopolyGame.getIdentities(),
                     identity,
                     player,
                     monopolyGame.getCurrency()
@@ -568,7 +559,7 @@ public class MonopolyGameActivity extends AppCompatActivity
         );
         menu.findItem(R.id.action_delete_identity).setVisible(zoneId != null && identity != null);
         menu.findItem(R.id.action_restore_identity).setVisible(
-                zoneId != null && hiddenIdentities.nonEmpty()
+                zoneId != null && monopolyGame.getHiddenIdentities().nonEmpty()
         );
         menu.findItem(R.id.action_transfer_identity).setVisible(zoneId != null);
         menu.findItem(R.id.action_receive_identity).setVisible(zoneId != null && identity != null);

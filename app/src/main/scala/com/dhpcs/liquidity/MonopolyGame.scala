@@ -80,11 +80,7 @@ object MonopolyGame {
 
     def onGameNameChanged(name: String)
 
-    // TODO: Rename to updated
-    def onHiddenIdentitiesChanged(hiddenIdentities: Iterable[IdentityWithBalance])
-
-    // TODO: Rename to updated
-    def onIdentitiesChanged(identities: Map[MemberId, IdentityWithBalance])
+    def onIdentitiesUpdated(identities: Map[MemberId, IdentityWithBalance])
 
     def onIdentityCreated(identity: IdentityWithBalance)
 
@@ -363,6 +359,10 @@ class MonopolyGame(context: Context)
   // TODO
   def getCurrency = currency
 
+  def getHiddenIdentities = hiddenIdentities.values
+
+  def getIdentities = identities.values
+
   def isPublicKeyConnectedAndImplicitlyValid(publicKey: PublicKey) =
     connectedClients.contains(publicKey)
 
@@ -416,10 +416,9 @@ class MonopolyGame(context: Context)
           )
 
           identities = updatedIdentities
-          listener.foreach(_.onIdentitiesChanged(identities))
+          listener.foreach(_.onIdentitiesUpdated(identities))
 
           hiddenIdentities = updatedHiddenIdentities
-          listener.foreach(_.onHiddenIdentitiesChanged(hiddenIdentities.values))
 
           val (updatedPlayers, updatedHiddenPlayers) = playersFromMembersAccounts(
             memberIdsToAccountIds,
@@ -643,7 +642,7 @@ class MonopolyGame(context: Context)
               }
 
               identities = updatedIdentities
-              listener.foreach(_.onIdentitiesChanged(identities))
+              listener.foreach(_.onIdentitiesUpdated(identities))
 
               receivedIdentity.foreach(receivedIdentity =>
                 listener.foreach(_.onIdentityReceived(receivedIdentity))
@@ -657,7 +656,6 @@ class MonopolyGame(context: Context)
 
             if (updatedHiddenIdentities != hiddenIdentities) {
               hiddenIdentities = updatedHiddenIdentities
-              listener.foreach(_.onHiddenIdentitiesChanged(hiddenIdentities.values))
             }
 
             val (updatedPlayers, updatedHiddenPlayers) = playersFromMembersAccounts(
@@ -742,7 +740,7 @@ class MonopolyGame(context: Context)
 
             if (createdIdentity.nonEmpty) {
               identities = identities ++ createdIdentity
-              listener.foreach(_.onIdentitiesChanged(identities))
+              listener.foreach(_.onIdentitiesUpdated(identities))
               listener.foreach(
                 _.onIdentityCreated(identities(accountCreatedNotification.account.owners.head))
               )
@@ -750,7 +748,6 @@ class MonopolyGame(context: Context)
 
             if (createdHiddenIdentity.nonEmpty) {
               hiddenIdentities = hiddenIdentities ++ createdHiddenIdentity
-              listener.foreach(_.onHiddenIdentitiesChanged(hiddenIdentities.values))
             }
 
             val (createdPlayer, createdHiddenPlayer) = playersFromMembersAccounts(
@@ -795,12 +792,11 @@ class MonopolyGame(context: Context)
 
             if (updatedIdentities != identities) {
               identities = updatedIdentities
-              listener.foreach(_.onIdentitiesChanged(identities))
+              listener.foreach(_.onIdentitiesUpdated(identities))
             }
 
             if (updatedHiddenIdentities != hiddenIdentities) {
               hiddenIdentities = updatedHiddenIdentities
-              listener.foreach(_.onHiddenIdentitiesChanged(hiddenIdentities.values))
             }
 
             val (updatedPlayers, updatedHiddenPlayers) = playersFromMembersAccounts(
@@ -888,12 +884,11 @@ class MonopolyGame(context: Context)
 
             if (changedIdentities.nonEmpty) {
               identities = identities ++ changedIdentities
-              listener.foreach(_.onIdentitiesChanged(identities))
+              listener.foreach(_.onIdentitiesUpdated(identities))
             }
 
             if (changedHiddenIdentities.nonEmpty) {
               hiddenIdentities = hiddenIdentities ++ changedHiddenIdentities
-              listener.foreach(_.onHiddenIdentitiesChanged(hiddenIdentities.values))
             }
 
             val (changedPlayers, changedHiddenPlayers) = playersFromMembersAccounts(
@@ -1041,8 +1036,7 @@ class MonopolyGame(context: Context)
       } else {
         listener.onJoined(zoneId.get)
         listener.onGameNameChanged(zone.name)
-        listener.onIdentitiesChanged(identities)
-        listener.onHiddenIdentitiesChanged(hiddenIdentities.values)
+        listener.onIdentitiesUpdated(identities)
         listener.onPlayersAdded(players.values)
         listener.onPlayersUpdated(players)
         listener.onTransfersAdded(transfers.values)

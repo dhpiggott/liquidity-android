@@ -158,8 +158,8 @@ public class IdentitiesFragment extends Fragment implements OnPageChangeListener
         listener = null;
     }
 
-    public void onIdentitiesChanged(scala.collection.immutable.Map<MemberId, IdentityWithBalance>
-                                            identities) {
+    public void onIdentitiesUpdated(
+            scala.collection.immutable.Map<MemberId, IdentityWithBalance> identities) {
         IdentityWithBalance selectedIdentity = getIdentity(getSelectedPage());
         identitiesFragmentStatePagerAdapter.clear();
         Iterator<IdentityWithBalance> iterator = identities.valuesIterator();

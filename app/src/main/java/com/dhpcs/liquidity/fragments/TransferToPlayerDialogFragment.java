@@ -25,7 +25,6 @@ import com.dhpcs.liquidity.MonopolyGame.IdentityWithBalance;
 import com.dhpcs.liquidity.MonopolyGame.Player;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activities.MonopolyGameActivity;
-import com.dhpcs.liquidity.models.MemberId;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -82,7 +81,7 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
     private static final String ARG_CURRENCY = "currency";
 
     public static TransferToPlayerDialogFragment newInstance(
-            scala.collection.immutable.Map<MemberId, IdentityWithBalance> identities,
+            scala.collection.Iterable<IdentityWithBalance> identities,
             Identity from,
             Player to,
             Option<Either<String, Currency>> currency) {
@@ -93,7 +92,7 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
                 ARG_IDENTITIES,
                 new ArrayList<>(
                         JavaConversions.bufferAsJavaList(
-                                identities.values().<Identity>toBuffer()
+                                identities.<Identity>toBuffer()
                         )
                 )
         );

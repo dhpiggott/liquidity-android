@@ -17,6 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.dhpcs.liquidity.MonopolyGame.Identity;
 import com.dhpcs.liquidity.MonopolyGame.Player;
 import com.dhpcs.liquidity.MonopolyGame.PlayerWithBalanceAndConnectionState;
 import com.dhpcs.liquidity.R;
@@ -158,7 +159,7 @@ public class PlayersFragment extends Fragment {
     private TextView textViewEmpty;
 
     private scala.collection.immutable.Map<MemberId, PlayerWithBalanceAndConnectionState> players;
-    private MemberId selectedIdentityId;
+    private Identity selectedIdentity;
 
     private Listener listener;
 
@@ -262,7 +263,8 @@ public class PlayersFragment extends Fragment {
         Iterator<PlayerWithBalanceAndConnectionState> iterator = removedPlayers.iterator();
         while (iterator.hasNext()) {
             PlayerWithBalanceAndConnectionState player = iterator.next();
-            if (!player.memberId().equals(selectedIdentityId)) {
+            if (selectedIdentity == null
+                    || !player.memberId().equals(selectedIdentity.memberId())) {
                 playersAdapter.remove(player);
             }
         }
@@ -282,18 +284,18 @@ public class PlayersFragment extends Fragment {
         this.players = players;
     }
 
-    public void onSelectedIdentityChanged(MemberId selectedIdentityId) {
-        if (this.selectedIdentityId != null && players != null) {
+    public void onSelectedIdentityChanged(Identity selectedIdentity) {
+        if (this.selectedIdentity != null && players != null) {
             Option<PlayerWithBalanceAndConnectionState> player =
-                    players.get(this.selectedIdentityId);
+                    players.get(this.selectedIdentity.memberId());
             if (player.isDefined()) {
                 playersAdapter.add(player.get());
             }
         }
-        this.selectedIdentityId = selectedIdentityId;
-        if (this.selectedIdentityId != null && players != null) {
+        this.selectedIdentity = selectedIdentity;
+        if (this.selectedIdentity != null && players != null) {
             Option<PlayerWithBalanceAndConnectionState> player =
-                    players.get(this.selectedIdentityId);
+                    players.get(this.selectedIdentity.memberId());
             if (player.isDefined()) {
                 playersAdapter.remove(player.get());
             }
@@ -308,7 +310,8 @@ public class PlayersFragment extends Fragment {
         Iterator<PlayerWithBalanceAndConnectionState> iterator = players.iterator();
         while (iterator.hasNext()) {
             PlayerWithBalanceAndConnectionState player = iterator.next();
-            if (!player.memberId().equals(selectedIdentityId)) {
+            if (selectedIdentity == null
+                    || !player.memberId().equals(selectedIdentity.memberId())) {
                 playersAdapter.add(player);
             }
         }
