@@ -347,8 +347,8 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onIdentityNameEntered(String name) {
-        monopolyGame.createIdentity(name);
+    public void onIdentityNameEntered(boolean isInitialPrompt, String name) {
+        monopolyGame.createIdentity(isInitialPrompt, name);
     }
 
     @Override
@@ -371,11 +371,9 @@ public class MonopolyGameActivity extends AppCompatActivity
         identitiesFragment.setSelectedPage(identitiesFragment.getPage(identity));
     }
 
-    // TODO: Only show this once (i.e. never again after e.g. rotating), pass flag so only the
-    // game-prompted identity creation results in the game name being set.
     @Override
     public void onIdentityRequired() {
-        CreateIdentityDialogFragment.newInstance()
+        CreateIdentityDialogFragment.newInstance(true)
                 .show(
                         getFragmentManager(),
                         "create_identity_dialog_fragment"
@@ -400,7 +398,7 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public void onNoIdentitiesTextClicked() {
-        CreateIdentityDialogFragment.newInstance()
+        CreateIdentityDialogFragment.newInstance(false)
                 .show(
                         getFragmentManager(),
                         "create_identity_dialog_fragment"
@@ -451,7 +449,7 @@ public class MonopolyGameActivity extends AppCompatActivity
                         );
                 return true;
             case R.id.action_create_identity:
-                CreateIdentityDialogFragment.newInstance()
+                CreateIdentityDialogFragment.newInstance(false)
                         .show(
                                 getFragmentManager(),
                                 "create_identity_dialog_fragment"

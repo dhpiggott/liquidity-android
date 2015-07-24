@@ -315,8 +315,9 @@ class MonopolyGame(context: Context)
     )
   }
 
-  def createIdentity(name: String) {
-    if (identities.size == 1 && identities.values.head.accountId == zone.equityAccountId) {
+  def createIdentity(isInitialPrompt: Boolean, name: String) {
+    if (isInitialPrompt
+      && identities.size == 1 && identities.values.head.accountId == zone.equityAccountId) {
       setGameName(context.getString(R.string.game_name_format_string, name))
     }
     serverConnection.sendCommand(
@@ -461,7 +462,8 @@ class MonopolyGame(context: Context)
 
           // TODO: Chain this so it only happens after partially created identities have had their
           // accounts created.
-          // TODO: Revert gameId check but also check for deleted identities? Restore persistence of
+          // Ensure activity only shows prompt once (i.e. never again after e.g. rotating).
+          // Revert gameId check but also check for deleted identities? Restore persistence of
           // gameId to join response handler?
           if (gameId.isEmpty && !identities.values.exists(_.accountId != zone.equityAccountId)) {
             listener.foreach(_.onIdentityRequired())
