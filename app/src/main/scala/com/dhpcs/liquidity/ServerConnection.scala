@@ -80,8 +80,7 @@ class ServerConnection(context: Context,
                        connectionStateListener: ServerConnection.ConnectionStateListener,
                        connectionStateHandler: Handler,
                        notificationListener: ServerConnection.NotificationListener,
-                       notificationHandler: Handler)
-  extends WebSocketListener {
+                       notificationHandler: Handler) extends WebSocketListener {
 
   private val log = LoggerFactory.getLogger(getClass)
   private val pingRunnable: Runnable = new Runnable() {
@@ -116,9 +115,9 @@ class ServerConnection(context: Context,
   private val defaultHandler = new Handler(Looper.getMainLooper)
 
   // TODO
-  private var connectionHandler: Handler = null
-  private var webSocketCall: WebSocketCall = null
-  private var webSocket: WebSocket = null
+  private var connectionHandler: Handler = _
+  private var webSocketCall: WebSocketCall = _
+  private var webSocket: WebSocket = _
 
   private var pendingRequests = Map.empty[Int, PendingRequest]
   private var commandIdentifier = 0
