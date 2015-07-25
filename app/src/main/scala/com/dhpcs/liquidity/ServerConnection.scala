@@ -68,7 +68,7 @@ object ServerConnection {
     val sslContext = SSLContext.getInstance("TLS")
     sslContext.init(
       ClientKey.getKeyManagers(context),
-      ServerTrust.getInstance(context).getTrustManagers,
+      ServerTrust.getTrustManagers(context),
       null
     )
     sslContext.getSocketFactory
@@ -112,7 +112,7 @@ class ServerConnection(context: Context,
 
   private val client = new OkHttpClient()
     .setSslSocketFactory(ServerConnection.getSslSocketFactory(context))
-    .setHostnameVerifier(ServerTrust.getInstance(context).getHostnameVerifier)
+    .setHostnameVerifier(ServerTrust.getHostnameVerifier(context))
   private val defaultHandler = new Handler(Looper.getMainLooper)
 
   // TODO
