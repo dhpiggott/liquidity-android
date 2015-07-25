@@ -30,15 +30,11 @@ object ClientKey {
   private val KeyManagersMutex = new Object
 
   private def generateCertKeyPair(context: Context) = {
-
     val androidId = Settings.Secure.getString(
       context.getContentResolver,
       Settings.Secure.ANDROID_ID
     )
     val clientIdentity = new X500NameBuilder().addRDN(BCStyle.CN, androidId).build
-
-    PRNGFixes.apply()
-
     val keyPair = KeyPairGenerator.getInstance("RSA").generateKeyPair
     val certificate = new JcaX509CertificateConverter().getCertificate(
       new JcaX509v3CertificateBuilder(
@@ -63,9 +59,7 @@ object ClientKey {
         ).build(
           new JcaContentSignerBuilder("SHA256withRSA").build(keyPair.getPrivate)
         )
-
     )
-
     (certificate, keyPair.getPrivate)
   }
 

@@ -82,9 +82,26 @@ class ServerConnection(context: Context,
                        notificationListener: ServerConnection.NotificationListener,
                        notificationHandler: Handler) extends WebSocketListener {
 
+  def this(context: Context,
+           connectionStateListener: ServerConnection.ConnectionStateListener,
+           notificationListener: ServerConnection.NotificationListener) =
+    this(context,
+      connectionStateListener,
+      new Handler(Looper.getMainLooper),
+      notificationListener,
+      new Handler(Looper.getMainLooper))
+
+  Try(ProviderInstaller.installIfNeeded(context)) match {
+    case Failure(e: GooglePlayServicesRepairableException) =>
+      GooglePlayServicesUtil.showErrorNotification(e.getConnectionStatusCode, context)
+    case Failure(e: GooglePlayServicesNotAvailableException) =>
+    case _ =>
+  }
+
   private val log = LoggerFactory.getLogger(getClass)
-  private val pingRunnable: Runnable = new Runnable() {
-    def run() {
+  private val pingRunnable = new Runnable() {
+
+    override def run() =
       Try {
         webSocket.sendPing(null)
         connectionHandler.postDelayed(pingRunnable, ServerConnection.PingPeriod)
@@ -93,19 +110,6 @@ class ServerConnection(context: Context,
           log.warn(s"Failed to send ping", e)
         case _ =>
       }
-    }
-  }
-
-  Try(ProviderInstaller.installIfNeeded(context)) match {
-
-    case Failure(e: GooglePlayServicesRepairableException) =>
-      log.warn("GooglePlayServicesRepairableException", e)
-      GooglePlayServicesUtil.showErrorNotification(e.getConnectionStatusCode, context)
-
-    case Failure(e: GooglePlayServicesNotAvailableException) =>
-      log.warn("GooglePlayServicesNotAvailableException", e)
-
-    case _ =>
 
   }
 
@@ -122,18 +126,11 @@ class ServerConnection(context: Context,
   private var pendingRequests = Map.empty[Int, PendingRequest]
   private var commandIdentifier = 0
 
-  def this(context: Context,
-           connectionStateListener: ServerConnection.ConnectionStateListener,
-           notificationListener: ServerConnection.NotificationListener) =
-    this(context,
-      connectionStateListener,
-      new Handler(Looper.getMainLooper),
-      notificationListener,
-      new Handler(Looper.getMainLooper))
-
   private def asyncPost(handler: Handler)(body: => Unit) =
     handler.post(new Runnable() {
+
       override def run() = body
+
     })
 
   def connect() {
@@ -158,7 +155,7 @@ class ServerConnection(context: Context,
     }
   }
 
-  def disconnect(): Unit = disconnect(1000, "Bye")
+  def disconnect() = disconnect(1000, "Bye")
 
   private def disconnect(code: Int, reason: String) {
     if (connectionHandler == null) {
