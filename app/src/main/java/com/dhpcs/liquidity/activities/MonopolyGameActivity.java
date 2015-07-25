@@ -502,7 +502,7 @@ public class MonopolyGameActivity extends AppCompatActivity
                                 ReceiveIdentityActivity.class
                         ).putExtra(
                                 ReceiveIdentityActivity.EXTRA_PUBLIC_KEY,
-                                ClientKey.getInstance(this).getPublicKey()
+                                ClientKey.getPublicKey(this)
                         )
                 );
                 return true;

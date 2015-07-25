@@ -67,7 +67,7 @@ object ServerConnection {
   private def getSslSocketFactory(context: Context) = {
     val sslContext = SSLContext.getInstance("TLS")
     sslContext.init(
-      ClientKey.getInstance(context).getKeyManagers,
+      ClientKey.getKeyManagers(context),
       ServerTrust.getInstance(context).getTrustManagers,
       null
     )

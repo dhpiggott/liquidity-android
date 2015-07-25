@@ -285,7 +285,7 @@ class MonopolyGame(context: Context)
         context.getString(R.string.new_monopoly_game_name),
         Member(
           context.getString(R.string.bank_member_name),
-          ClientKey.getInstance(context).getPublicKey
+          ClientKey.getPublicKey(context)
         ),
         Account(
           context.getString(R.string.bank_member_name),
@@ -325,7 +325,7 @@ class MonopolyGame(context: Context)
         zoneId.get,
         Member(
           name,
-          ClientKey.getInstance(context).getPublicKey
+          ClientKey.getPublicKey(context)
         )
       ),
       new ResponseCallbackWithErrorForwarding {
@@ -418,7 +418,7 @@ class MonopolyGame(context: Context)
             balances,
             currency,
             zone.members,
-            ClientKey.getInstance(context).getPublicKey,
+            ClientKey.getPublicKey(context),
             zone.equityAccountId
           )
 
@@ -455,7 +455,7 @@ class MonopolyGame(context: Context)
           listener.foreach(_.onTransfersUpdated(transfers))
 
           val partiallyCreatedIdentities = zone.members.filter { case (memberId, member) =>
-            ClientKey.getInstance(context).getPublicKey == member.publicKey &&
+            ClientKey.getPublicKey(context) == member.publicKey &&
               !zone.accounts.values.exists(_.owners == Set(memberId))
           }
           partiallyCreatedIdentities.keys.foreach(createAccount)
@@ -630,7 +630,7 @@ class MonopolyGame(context: Context)
               balances,
               currency,
               zone.members,
-              ClientKey.getInstance(context).getPublicKey,
+              ClientKey.getPublicKey(context),
               zone.equityAccountId
             )
 
@@ -747,7 +747,7 @@ class MonopolyGame(context: Context)
               balances,
               currency,
               zone.members,
-              ClientKey.getInstance(context).getPublicKey,
+              ClientKey.getPublicKey(context),
               zone.equityAccountId
             )
 
@@ -801,7 +801,7 @@ class MonopolyGame(context: Context)
               balances,
               currency,
               zone.members,
-              ClientKey.getInstance(context).getPublicKey,
+              ClientKey.getPublicKey(context),
               zone.equityAccountId
             )
 
@@ -897,7 +897,7 @@ class MonopolyGame(context: Context)
               balances,
               currency,
               zone.members,
-              ClientKey.getInstance(context).getPublicKey,
+              ClientKey.getPublicKey(context),
               zone.equityAccountId
             )
 

@@ -97,7 +97,7 @@ public class ServerConnectionTest extends AndroidTestCase
                         "Dave's zone",
                         new Member(
                                 "Bank",
-                                ClientKey.getInstance(getContext()).getPublicKey(),
+                                ClientKey.getPublicKey(getContext()),
                                 Option.<JsObject>empty()
                         ),
                         new Account(
