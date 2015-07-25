@@ -263,7 +263,7 @@ class MonopolyGame(context: Context)
   private var listener = Option.empty[Listener]
 
   def connectCreateAndOrJoinZone() =
-    if (!serverConnection.isConnectingOrConnected) {
+    if (serverConnection.isDisconnected) {
       serverConnection.connect()
     }
 
@@ -983,7 +983,7 @@ class MonopolyGame(context: Context)
   }
 
   def quitAndOrDisconnect() =
-    if (serverConnection.isConnectingOrConnected) {
+    if (!serverConnection.isDisconnected) {
       if (zone == null) {
         disconnect()
       } else {

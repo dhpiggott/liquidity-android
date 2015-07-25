@@ -20,19 +20,16 @@ import scala.util.{Failure, Right, Success, Try}
 
 object ServerConnection {
 
-  PRNGFixes.apply()
-
-  // TODO: Can this just be boolean?
   // TODO: Check NetworkUtils.isNetworkAvailable somewhere
   sealed trait ConnectionState
 
-  case object CONNECTING extends ConnectionState
-
   case object CONNECTED extends ConnectionState
 
-  case object DISCONNECTING extends ConnectionState
+  case object CONNECTING extends ConnectionState
 
   case object DISCONNECTED extends ConnectionState
+
+  case object DISCONNECTING extends ConnectionState
 
   trait ConnectionStateListener {
 
@@ -56,9 +53,26 @@ object ServerConnection {
 
   }
 
+  private sealed trait State
+
+  private case object DisconnectedState extends State
+
+  private sealed trait SubState
+
+  private case class ConnectingSubState(webSocketCall: WebSocketCall) extends SubState
+
+  private case class ConnectedSubState(webSocket: WebSocket) extends SubState
+
+  private case object DisconnectingSubState extends SubState
+
+  private case class ActiveState(handler: Handler) extends State {
+
+    var subState: SubState = _
+
+  }
+
   private case class PendingRequest(requestMessage: JsonRpcRequestMessage,
-                                    callback: ResponseCallback,
-                                    handler: Handler)
+                                    callback: ResponseCallback)
 
   private val ServerEndpoint = "https://liquidity.dhpcs.com/ws"
   // TODO
@@ -74,22 +88,14 @@ object ServerConnection {
     sslContext.getSocketFactory
   }
 
+  PRNGFixes.apply()
+
 }
 
 class ServerConnection(context: Context,
                        connectionStateListener: ServerConnection.ConnectionStateListener,
-                       connectionStateHandler: Handler,
-                       notificationListener: ServerConnection.NotificationListener,
-                       notificationHandler: Handler) extends WebSocketListener {
-
-  def this(context: Context,
-           connectionStateListener: ServerConnection.ConnectionStateListener,
-           notificationListener: ServerConnection.NotificationListener) =
-    this(context,
-      connectionStateListener,
-      new Handler(Looper.getMainLooper),
-      notificationListener,
-      new Handler(Looper.getMainLooper))
+                       notificationListener: ServerConnection.NotificationListener)
+  extends WebSocketListener {
 
   Try(ProviderInstaller.installIfNeeded(context)) match {
     case Failure(e: GooglePlayServicesRepairableException) =>
@@ -99,32 +105,49 @@ class ServerConnection(context: Context,
   }
 
   private val log = LoggerFactory.getLogger(getClass)
-  private val pingRunnable = new Runnable() {
-
-    override def run() =
-      Try {
-        webSocket.sendPing(null)
-        connectionHandler.postDelayed(pingRunnable, ServerConnection.PingPeriod)
-      } match {
-        case Failure(e) =>
-          log.warn(s"Failed to send ping", e)
-        case _ =>
-      }
-
-  }
 
   private val client = new OkHttpClient()
     .setSslSocketFactory(ServerConnection.getSslSocketFactory(context))
     .setHostnameVerifier(ServerTrust.getHostnameVerifier(context))
-  private val defaultHandler = new Handler(Looper.getMainLooper)
+  private val mainHandler = new Handler(Looper.getMainLooper)
+  private val pingRunnable: Runnable = new Runnable() {
 
-  // TODO
-  private var connectionHandler: Handler = _
-  private var webSocketCall: WebSocketCall = _
-  private var webSocket: WebSocket = _
+    override def run() =
+      Try(state match {
+
+        case activeState: ActiveState =>
+          activeState.subState match {
+
+            case _: ConnectingSubState =>
+              sys.error("Scheduled while connecting")
+
+            case connectedState: ConnectedSubState =>
+              connectedState.webSocket.sendPing(null)
+              activeState.handler.postDelayed(pingRunnable, ServerConnection.PingPeriod)
+
+            case DisconnectingSubState =>
+              log.debug("Scheduled while disconnecting, doing nothing")
+
+          }
+
+        case _ =>
+          sys.error("Scheduled while disconnected")
+
+      }) match {
+
+        case Failure(e) =>
+          log.warn(s"Failed to send ping", e)
+
+        case _ =>
+
+      }
+
+  }
 
   private var pendingRequests = Map.empty[Int, PendingRequest]
   private var commandIdentifier = 0
+
+  private var state: State = DisconnectedState
 
   private def asyncPost(handler: Handler)(body: => Unit) =
     handler.post(new Runnable() {
@@ -133,71 +156,101 @@ class ServerConnection(context: Context,
 
     })
 
-  def connect() {
-    if (connectionHandler != null) {
-      sys.error("Already connecting/connected")
-    }
-    val handlerThread = new HandlerThread("Connection")
-    handlerThread.start()
-    connectionHandler = new Handler(handlerThread.getLooper)
+  def connect() =
+    state match {
 
-    asyncPost(connectionHandler) {
-      asyncPost(connectionStateHandler)(
-        connectionStateListener.onStateChanged(ServerConnection.CONNECTING)
-      )
+      case _: ActiveState =>
+        sys.error("Already connecting/connected/disconnecting")
 
-      log.debug("Creating WebSocket call")
-      this.webSocketCall = WebSocketCall.create(
-        client,
-        new com.squareup.okhttp.Request.Builder().url(ServerConnection.ServerEndpoint).build
-      )
-      this.webSocketCall.enqueue(ServerConnection.this)
-    }
-  }
+      case ServerConnection.DisconnectedState =>
+        val handlerThread = new HandlerThread("ServerConnection")
+        handlerThread.start()
+        val handler = new Handler(handlerThread.getLooper)
+        val activeState = ActiveState(handler)
+        state = activeState
 
-  def disconnect() = disconnect(1000, "Bye")
-
-  private def disconnect(code: Int, reason: String) {
-    if (connectionHandler == null) {
-      sys.error("Not connecting/connected")
-    }
-
-    asyncPost(connectionHandler) {
-      asyncPost(connectionStateHandler)(
-        connectionStateListener.onStateChanged(ServerConnection.DISCONNECTING)
-      )
-
-      if (webSocket == null) {
-        log.debug("Cancelling WebSocket call")
-        this.webSocketCall.cancel()
-        this.webSocketCall = null
-      } else {
-        Try {
-          log.debug("Closing WebSocket")
-          this.webSocket.close(code, reason)
-          this.webSocket = null
-        } match {
-          case Failure(e) =>
-            log.warn("Failed to close WebSocket", e)
-          case _ =>
+        asyncPost(handler) {
+          log.debug("Creating WebSocket call")
+          val webSocketCall = WebSocketCall.create(
+            client,
+            new com.squareup.okhttp.Request.Builder().url(ServerConnection.ServerEndpoint).build
+          )
+          webSocketCall.enqueue(ServerConnection.this)
+          activeState.subState = ConnectingSubState(webSocketCall)
+          asyncPost(mainHandler)(
+            connectionStateListener.onStateChanged(CONNECTING)
+          )
         }
-      }
-    }
-  }
 
-  def isConnectingOrConnected = connectionHandler != null
+    }
+
+  def disconnect(): Unit = disconnect(1000, "Bye")
+
+  private def disconnect(code: Int, reason: String) =
+    state match {
+
+      case ServerConnection.DisconnectedState =>
+        sys.error("Already disconnected")
+
+      case activeState: ServerConnection.ActiveState =>
+        asyncPost(activeState.handler) {
+          activeState.subState match {
+
+            case connectingState: ConnectingSubState =>
+              log.debug("Cancelling WebSocket call")
+              connectingState.webSocketCall.cancel()
+
+            case connectedState: ConnectedSubState =>
+              Try {
+                log.debug("Closing WebSocket")
+                connectedState.webSocket.close(code, reason)
+              } match {
+
+                case Failure(e) =>
+                  log.warn("Failed to close WebSocket", e)
+
+                case _ =>
+
+              }
+
+            case DisconnectingSubState =>
+              sys.error("Already disconnecting")
+
+          }
+          activeState.subState = DisconnectingSubState
+          asyncPost(mainHandler)(
+            connectionStateListener.onStateChanged(DISCONNECTING)
+          )
+        }
+
+    }
+
+  def isDisconnected = state == DisconnectedState
 
   override def onClose(code: Int, reason: String) {
     log.debug("WebSocket closed. Reason: {}, Code: {}", reason, code)
-    asyncPost(connectionHandler) {
-      connectionHandler.removeCallbacks(pingRunnable)
-      asyncPost(connectionStateHandler)(
-        connectionStateListener.onStateChanged(ServerConnection.DISCONNECTED)
-      )
-      this.webSocketCall = null
-      this.webSocket = null
-      connectionHandler.getLooper.quit()
-      connectionHandler = null
+    state match {
+
+      case ServerConnection.DisconnectedState =>
+        sys.error("Already disconnected")
+
+      case activeState: ServerConnection.ActiveState =>
+        activeState.subState match {
+
+          case _: ConnectingSubState =>
+            sys.error("Not connected or disconnecting")
+
+          case _ =>
+            asyncPost(activeState.handler) {
+              activeState.handler.removeCallbacks(pingRunnable)
+              activeState.handler.getLooper.quit()
+              asyncPost(mainHandler) {
+                state = DisconnectedState
+                connectionStateListener.onStateChanged(DISCONNECTED)
+              }
+            }
+
+        }
     }
   }
 
@@ -205,100 +258,132 @@ class ServerConnection(context: Context,
     log.warn("WebSocked failed. Response: {}, Exception: {}", response: Any, e: Any)
   }
 
-  override def onMessage(payload: BufferedSource, `type`: WebSocket.PayloadType) {
-    `type` match {
+  override def onMessage(payload: BufferedSource, `type`: WebSocket.PayloadType) =
+    state match {
 
-      case WebSocket.PayloadType.TEXT =>
-        Try(Json.parse(payload.readUtf8)) match {
+      case activeState: ServerConnection.ActiveState =>
+        activeState.subState match {
 
-          case Failure(exception) =>
-            log.warn("Invalid JSON: {}", exception)
+          case _: ConnectingSubState =>
+            sys.error("Received message while connecting")
 
-          case Success(json) =>
+          case _: ConnectedSubState =>
+            `type` match {
 
-            Json.fromJson[JsonRpcMessage](json).fold(
-            errors => log.warn("Invalid JSON-RPC message: {}", errors), {
+              case WebSocket.PayloadType.TEXT =>
+                Try(Json.parse(payload.readUtf8)) match {
 
-              case _: JsonRpcRequestMessage =>
-                sys.error("Received JsonRpcRequestMessage")
+                  case Failure(exception) =>
+                    log.warn("Invalid JSON: {}", exception)
 
-              case jsonRpcResponseMessage: JsonRpcResponseMessage =>
-                jsonRpcResponseMessage.id.fold(
-                  log.warn("JSON-RPC message ID missing, eitherErrorOrResult={}",
-                    jsonRpcResponseMessage.eitherErrorOrResult
-                  )
-                ) { id =>
-                  id.right.toOption.fold(
-                    log.warn("JSON-RPC message ID was not an Int, id={}", id)
-                  ) { commandIdentifier =>
-                    asyncPost(connectionHandler)(
-                      pendingRequests.get(commandIdentifier).fold(
-                        log.warn("No pending request exists with commandIdentifier={}",
-                          commandIdentifier
-                        )
-                      ) { pendingRequest =>
-                        pendingRequests = pendingRequests - commandIdentifier
-                        Response.read(
-                          jsonRpcResponseMessage,
-                          pendingRequest.requestMessage.method
-                        ).fold(
-                        errors => log.warn("Invalid Response: {}", errors), {
+                  case Success(json) =>
 
-                          case errorResponse: ErrorResponse =>
-                            asyncPost(pendingRequest.handler)(
-                              pendingRequest.callback.onErrorReceived(errorResponse)
+                    Json.fromJson[JsonRpcMessage](json).fold(
+                    errors => log.warn("Invalid JSON-RPC message: {}", errors), {
+
+                      case _: JsonRpcRequestMessage =>
+                        sys.error("Received JsonRpcRequestMessage")
+
+                      case jsonRpcResponseMessage: JsonRpcResponseMessage =>
+                        jsonRpcResponseMessage.id.fold(
+                          log.warn("JSON-RPC message ID missing, eitherErrorOrResult={}",
+                            jsonRpcResponseMessage.eitherErrorOrResult
+                          )
+                        ) { id =>
+                          id.right.toOption.fold(
+                            log.warn("JSON-RPC message ID was not an Int, id={}", id)
+                          ) { commandIdentifier =>
+                            asyncPost(activeState.handler)(
+                              pendingRequests.get(commandIdentifier).fold(
+                                log.warn("No pending request exists with commandIdentifier={}",
+                                  commandIdentifier
+                                )
+                              ) { pendingRequest =>
+                                pendingRequests = pendingRequests - commandIdentifier
+                                Response.read(
+                                  jsonRpcResponseMessage,
+                                  pendingRequest.requestMessage.method
+                                ).fold(
+                                errors => log.warn("Invalid Response: {}", errors), {
+
+                                  case errorResponse: ErrorResponse =>
+                                    asyncPost(mainHandler)(
+                                      pendingRequest.callback.onErrorReceived(errorResponse)
+                                    )
+
+                                  case resultResponse: ResultResponse =>
+                                    asyncPost(mainHandler)(
+                                      pendingRequest.callback.onResultReceived(resultResponse)
+                                    )
+
+                                })
+                              }
                             )
+                          }
+                        }
 
-                          case resultResponse: ResultResponse =>
-                            asyncPost(pendingRequest.handler)(
-                              pendingRequest.callback.onResultReceived(resultResponse)
+                      case jsonRpcNotificationMessage: JsonRpcNotificationMessage =>
+                        Notification.read(jsonRpcNotificationMessage).fold(
+                          log.warn("No notification type exists with method={}",
+                            jsonRpcNotificationMessage.method
+                          )
+                        )(_.fold(
+                          errors =>
+                            log.warn("Invalid Notification: {}", errors),
+                          notification =>
+                            asyncPost(activeState.handler)(
+                              asyncPost(mainHandler)(
+                                notificationListener.onNotificationReceived(notification)
+                              )
                             )
+                        ))
 
-                        })
-                      }
-                    )
-                  }
+                    })
+
                 }
 
-              case jsonRpcNotificationMessage: JsonRpcNotificationMessage =>
-                Notification.read(jsonRpcNotificationMessage).fold(
-                  log.warn("No notification type exists with method={}",
-                    jsonRpcNotificationMessage.method
-                  )
-                )(_.fold(
-                  errors =>
-                    log.warn("Invalid Notification: {}", errors),
-                  notification =>
-                    asyncPost(connectionHandler)(
-                      asyncPost(notificationHandler)(
-                        notificationListener.onNotificationReceived(notification)
-                      )
-                    )
-                ))
+              case WebSocket.PayloadType.BINARY =>
+                disconnect(1003, "I don't support binary data")
 
-            })
+              case _ =>
+                sys.error("Unknown payload type: " + `type`)
+
+            }
+
+          case DisconnectingSubState =>
+            log.debug("Received while disconnecting, dropping message")
+
+        }
+        payload.close()
+
+      case _ =>
+        sys.error("Not connected")
+
+    }
+
+  override def onOpen(webSocket: WebSocket, response: com.squareup.okhttp.Response) =
+    state match {
+      case activeState: ActiveState =>
+
+        activeState.subState match {
+
+          case _: ServerConnection.ConnectingSubState =>
+            asyncPost(activeState.handler) {
+              activeState.handler.postDelayed(pingRunnable, ServerConnection.PingPeriod)
+              activeState.subState = ConnectedSubState(webSocket)
+              asyncPost(mainHandler)(
+                connectionStateListener.onStateChanged(CONNECTED)
+              )
+            }
+
+          case _ =>
+            sys.error("Not connecting")
 
         }
 
-      case WebSocket.PayloadType.BINARY =>
-        disconnect(1003, "I don't support binary data")
-
       case _ =>
-        sys.error("Unknown payload type: " + `type`)
+        sys.error("Not connecting")
 
-    }
-    payload.close()
-  }
-
-  override def onOpen(webSocket: WebSocket, response: com.squareup.okhttp.Response) =
-    asyncPost(connectionHandler) {
-      log.debug("WebSocket opened")
-      this.webSocketCall = null
-      this.webSocket = webSocket
-      asyncPost(connectionStateHandler)(
-        connectionStateListener.onStateChanged(ServerConnection.CONNECTED)
-      )
-      connectionHandler.postDelayed(pingRunnable, ServerConnection.PingPeriod)
     }
 
   override def onPong(payload: Buffer) {
@@ -312,31 +397,45 @@ class ServerConnection(context: Context,
   }
 
   def sendCommand(command: Command,
-                  responseCallback: ServerConnection.ResponseCallback,
-                  responseHandler: Handler = defaultHandler) =
-    asyncPost(connectionHandler) {
-      if (this.webSocket == null) {
+                  responseCallback: ServerConnection.ResponseCallback) =
+    state match {
+
+      case activeState: ServerConnection.ActiveState =>
+        activeState.subState match {
+
+          case connectedState: ConnectedSubState =>
+            asyncPost(activeState.handler) {
+              val jsonRpcRequestMessage = Command.write(command, Right(commandIdentifier))
+              commandIdentifier = commandIdentifier + 1
+              Try {
+                connectedState.webSocket.sendMessage(
+                  WebSocket.PayloadType.TEXT,
+                  new Buffer().writeUtf8(
+                    Json.stringify(
+                      Json.toJson(jsonRpcRequestMessage)
+                    )
+                  )
+                )
+                pendingRequests = pendingRequests +
+                  (jsonRpcRequestMessage.id.right.get ->
+                    PendingRequest(jsonRpcRequestMessage, responseCallback))
+              } match {
+
+                case Failure(e) =>
+                  log.warn(s"Failed to send: $jsonRpcRequestMessage", e)
+
+                case _ =>
+
+              }
+            }
+
+          case _ =>
+            sys.error("Not connected")
+        }
+
+      case _ =>
         sys.error("Not connected")
-      }
-      val jsonRpcRequestMessage = Command.write(command, Right(commandIdentifier))
-      commandIdentifier = commandIdentifier + 1
-      Try {
-        this.webSocket.sendMessage(
-          WebSocket.PayloadType.TEXT,
-          new Buffer().writeUtf8(
-            Json.stringify(
-              Json.toJson(jsonRpcRequestMessage)
-            )
-          )
-        )
-        pendingRequests = pendingRequests +
-          (jsonRpcRequestMessage.id.right.get ->
-            PendingRequest(jsonRpcRequestMessage, responseCallback, responseHandler))
-      } match {
-        case Failure(e) =>
-          log.warn(s"Failed to send: $jsonRpcRequestMessage", e)
-        case _ =>
-      }
+
     }
 
 }
