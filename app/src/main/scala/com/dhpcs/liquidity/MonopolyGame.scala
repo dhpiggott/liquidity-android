@@ -4,7 +4,7 @@ import java.util.{Currency, Locale}
 
 import android.content.{ContentUris, ContentValues, Context}
 import com.dhpcs.liquidity.MonopolyGame._
-import com.dhpcs.liquidity.ServerConnection.{ConnectionStateListener, NotificationListener, ResponseCallback}
+import com.dhpcs.liquidity.ServerConnection._
 import com.dhpcs.liquidity.models._
 import com.dhpcs.liquidity.provider.LiquidityContract
 import com.dhpcs.liquidity.provider.LiquidityContract.Games
@@ -231,7 +231,7 @@ object MonopolyGame {
 
 class MonopolyGame(context: Context) extends ConnectionStateListener with NotificationListener {
 
-  private trait ResponseCallbackWithErrorForwarding extends ServerConnection.ResponseCallback {
+  private trait ResponseCallbackWithErrorForwarding extends ResponseCallback {
 
     override def onErrorReceived(errorResponse: ErrorResponse) =
       listener.foreach(_.onErrorResponse(errorResponse))
@@ -913,19 +913,18 @@ class MonopolyGame(context: Context) extends ConnectionStateListener with Notifi
 
   }
 
-  override def onStateChanged(connectionState: ServerConnection.ConnectionState) {
+  override def onStateChanged(connectionState: ConnectionState) {
     log.debug("connectionState={}", connectionState)
     connectionState match {
 
-      case ServerConnection.CONNECTING =>
+      case CONNECTING =>
 
-      case ServerConnection.CONNECTED =>
-
+      case CONNECTED =>
         zoneId.fold(createAndThenJoinZone())(join)
 
-      case ServerConnection.DISCONNECTING =>
+      case DISCONNECTING =>
 
-      case ServerConnection.DISCONNECTED =>
+      case DISCONNECTED =>
 
       // TODO
 
@@ -1028,24 +1027,19 @@ class MonopolyGame(context: Context) extends ConnectionStateListener with Notifi
     this.zoneId = Option(zoneId)
   }
 
-  // TODO: Names
-  def transfer(identityId: MemberId,
-               newOwnerPublicKey: PublicKey) {
+  def transferIdentity(identityId: MemberId, to: PublicKey) {
     val identity = identities(identityId)
     serverConnection.sendCommand(
       UpdateMemberCommand(
         zoneId.get,
         identity.memberId,
-        identity.member.copy(publicKey = newOwnerPublicKey)
+        identity.member.copy(publicKey = to)
       ),
       noopResponseCallback
     )
   }
 
-  def transfer(actingAs: Identity,
-               from: Identity,
-               to: Player,
-               value: BigDecimal) {
+  def transfer(actingAs: Identity, from: Identity, to: Player, value: BigDecimal) {
     serverConnection.sendCommand(
       AddTransactionCommand(
         zoneId.get,

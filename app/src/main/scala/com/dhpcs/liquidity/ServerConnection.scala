@@ -93,8 +93,8 @@ object ServerConnection {
 }
 
 class ServerConnection(context: Context,
-                       connectionStateListener: ServerConnection.ConnectionStateListener,
-                       notificationListener: ServerConnection.NotificationListener)
+                       connectionStateListener: ConnectionStateListener,
+                       notificationListener: NotificationListener)
   extends WebSocketListener {
 
   Try(ProviderInstaller.installIfNeeded(context)) match {
@@ -107,7 +107,7 @@ class ServerConnection(context: Context,
   private val log = LoggerFactory.getLogger(getClass)
 
   private val client = new OkHttpClient()
-    .setSslSocketFactory(ServerConnection.getSslSocketFactory(context))
+    .setSslSocketFactory(getSslSocketFactory(context))
     .setHostnameVerifier(ServerTrust.getHostnameVerifier(context))
   private val mainHandler = new Handler(Looper.getMainLooper)
   private val pingRunnable: Runnable = new Runnable() {
@@ -123,7 +123,7 @@ class ServerConnection(context: Context,
 
             case connectedState: ConnectedSubState =>
               connectedState.webSocket.sendPing(null)
-              activeState.handler.postDelayed(pingRunnable, ServerConnection.PingPeriod)
+              activeState.handler.postDelayed(pingRunnable, PingPeriod)
 
             case DisconnectingSubState =>
               log.debug("Scheduled while disconnecting, doing nothing")
@@ -162,7 +162,7 @@ class ServerConnection(context: Context,
       case _: ActiveState =>
         sys.error("Already connecting/connected/disconnecting")
 
-      case ServerConnection.DisconnectedState =>
+      case DisconnectedState =>
         val handlerThread = new HandlerThread("ServerConnection")
         handlerThread.start()
         val handler = new Handler(handlerThread.getLooper)
@@ -173,9 +173,9 @@ class ServerConnection(context: Context,
           log.debug("Creating WebSocket call")
           val webSocketCall = WebSocketCall.create(
             client,
-            new com.squareup.okhttp.Request.Builder().url(ServerConnection.ServerEndpoint).build
+            new com.squareup.okhttp.Request.Builder().url(ServerEndpoint).build
           )
-          webSocketCall.enqueue(ServerConnection.this)
+          webSocketCall.enqueue(this)
           activeState.subState = ConnectingSubState(webSocketCall)
           asyncPost(mainHandler)(
             connectionStateListener.onStateChanged(CONNECTING)
@@ -189,10 +189,10 @@ class ServerConnection(context: Context,
   private def disconnect(code: Int, reason: String) =
     state match {
 
-      case ServerConnection.DisconnectedState =>
+      case DisconnectedState =>
         sys.error("Already disconnected")
 
-      case activeState: ServerConnection.ActiveState =>
+      case activeState: ActiveState =>
         asyncPost(activeState.handler) {
           activeState.subState match {
 
@@ -231,10 +231,10 @@ class ServerConnection(context: Context,
     log.debug("WebSocket closed. Reason: {}, Code: {}", reason, code)
     state match {
 
-      case ServerConnection.DisconnectedState =>
+      case DisconnectedState =>
         sys.error("Already disconnected")
 
-      case activeState: ServerConnection.ActiveState =>
+      case activeState: ActiveState =>
         activeState.subState match {
 
           case _: ConnectingSubState =>
@@ -261,7 +261,7 @@ class ServerConnection(context: Context,
   override def onMessage(payload: BufferedSource, `type`: WebSocket.PayloadType) =
     state match {
 
-      case activeState: ServerConnection.ActiveState =>
+      case activeState: ActiveState =>
         activeState.subState match {
 
           case _: ConnectingSubState =>
@@ -367,9 +367,9 @@ class ServerConnection(context: Context,
 
         activeState.subState match {
 
-          case _: ServerConnection.ConnectingSubState =>
+          case _: ConnectingSubState =>
             asyncPost(activeState.handler) {
-              activeState.handler.postDelayed(pingRunnable, ServerConnection.PingPeriod)
+              activeState.handler.postDelayed(pingRunnable, PingPeriod)
               activeState.subState = ConnectedSubState(webSocket)
               asyncPost(mainHandler)(
                 connectionStateListener.onStateChanged(CONNECTED)
@@ -396,11 +396,10 @@ class ServerConnection(context: Context,
     log.trace("Received pong: {}", payloadString)
   }
 
-  def sendCommand(command: Command,
-                  responseCallback: ServerConnection.ResponseCallback) =
+  def sendCommand(command: Command, responseCallback: ResponseCallback) =
     state match {
 
-      case activeState: ServerConnection.ActiveState =>
+      case activeState: ActiveState =>
         activeState.subState match {
 
           case connectedState: ConnectedSubState =>

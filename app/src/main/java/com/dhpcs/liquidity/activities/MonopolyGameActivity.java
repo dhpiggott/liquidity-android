@@ -210,7 +210,7 @@ public class MonopolyGameActivity extends AppCompatActivity
                     if (!monopolyGame.isPublicKeyConnectedAndImplicitlyValid(publicKey)) {
                         throw new IllegalArgumentException();
                     }
-                    monopolyGame.transfer(identity.memberId(), publicKey);
+                    monopolyGame.transferIdentity(identity.memberId(), publicKey);
                 } catch (IllegalArgumentException e) {
                     Snackbar.make(
                             findViewById(R.id.coordinatorlayout),
