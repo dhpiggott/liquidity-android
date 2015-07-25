@@ -65,6 +65,7 @@ public class GamesActivity extends AppCompatActivity implements GamesFragment.Li
 
             @Override
             public void onClick(View v) {
+                // TODO: Prompt for currency?
                 startActivity(
                         new Intent(
                                 GamesActivity.this,

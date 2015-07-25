@@ -113,11 +113,15 @@ object MonopolyGame {
 
   }
 
+  private val ZoneTypeKey = "type"
+  private val CurrencyCodeKey = "currency"
+  private val HiddenFlagKey = "hidden"
+
   private val ZoneType = MONOPOLY
 
   private def currencyFromMetadata(metadata: Option[JsObject]) =
     metadata.flatMap(
-      _.value.get("currency").flatMap(
+      _.value.get(CurrencyCodeKey).flatMap(
         _.asOpt[String].map(currencyCode =>
           Try(
             Currency.getInstance(currencyCode)
@@ -151,7 +155,7 @@ object MonopolyGame {
 
   private def isHidden(member: Member) =
     member.metadata.fold(false)(
-      _.value.get("hidden").fold(false)(
+      _.value.get(HiddenFlagKey).fold(false)(
         _.asOpt[Boolean].getOrElse(false)
       )
     )
@@ -225,8 +229,7 @@ object MonopolyGame {
 
 }
 
-class MonopolyGame(context: Context)
-  extends ConnectionStateListener with NotificationListener {
+class MonopolyGame(context: Context) extends ConnectionStateListener with NotificationListener {
 
   private trait ResponseCallbackWithErrorForwarding extends ServerConnection.ResponseCallback {
 
@@ -294,8 +297,8 @@ class MonopolyGame(context: Context)
         ),
         Some(
           Json.obj(
-            "type" -> ZoneType.name,
-            "currency" -> Currency.getInstance(Locale.getDefault).getCurrencyCode
+            ZoneTypeKey -> ZoneType.name,
+            CurrencyCodeKey -> Currency.getInstance(Locale.getDefault).getCurrencyCode
           )
         )
       ),
@@ -352,7 +355,7 @@ class MonopolyGame(context: Context)
         identity.memberId,
         member.copy(
           metadata = Some(
-            member.metadata.getOrElse(Json.obj()) ++ Json.obj("hidden" -> true)
+            member.metadata.getOrElse(Json.obj()) ++ Json.obj(HiddenFlagKey -> true)
           )
         )
       ),
@@ -362,7 +365,6 @@ class MonopolyGame(context: Context)
 
   private def disconnect() = serverConnection.disconnect()
 
-  // TODO
   def getCurrency = currency
 
   def getGameName = zone.name
@@ -387,7 +389,7 @@ class MonopolyGame(context: Context)
           val joinZoneResponse = resultResponse.asInstanceOf[JoinZoneResponse]
 
           if (joinZoneResponse.zone.metadata.fold(false)(metadata =>
-            metadata.value.get("type").fold(false)(
+            metadata.value.get(ZoneTypeKey).fold(false)(
               _.asOpt[String].contains(ZoneType.name)
             ))) {
             // TODO
@@ -969,7 +971,7 @@ class MonopolyGame(context: Context)
         zoneId.get,
         identity.memberId,
         member.copy(
-          metadata = member.metadata.map(_ - "hidden")
+          metadata = member.metadata.map(_ - HiddenFlagKey)
         )
       ),
       noopResponseCallback
