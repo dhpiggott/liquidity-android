@@ -235,8 +235,8 @@ class MonopolyGame(context: Context)
 
   }
 
-  // TODO: Review all other project Scala classes for non-private fields and class methods that
-  // could be companion object functions
+  // TODO: Review all other project Scala classes for fields and methods that could be companion
+  // object functions
 
   private val log = LoggerFactory.getLogger(getClass)
 
@@ -512,7 +512,6 @@ class MonopolyGame(context: Context)
     )
   }
 
-  // TODO: Factor out common blocks
   override def onNotificationReceived(notification: Notification) {
     log.debug("notification={}", notification)
 
@@ -524,6 +523,65 @@ class MonopolyGame(context: Context)
 
         if (zoneId != zoneNotification.zoneId) {
           sys.error(s"zoneId != zoneNotification.zoneId (${zoneNotification.zoneId} != $zoneId)")
+        }
+
+        def updatePlayersAndTransactions() {
+          val (updatedPlayers, updatedHiddenPlayers) = playersFromMembersAccounts(
+            memberIdsToAccountIds,
+            zone.accounts,
+            balances,
+            currency,
+            zone.members,
+            zone.equityAccountId,
+            connectedClients
+          )
+
+          if (updatedPlayers != players) {
+            val addedPlayers = updatedPlayers -- players.keys
+            val changedPlayers = updatedPlayers.filter { case (memberId, player) =>
+              players.get(memberId).fold(false)(_ != player)
+            }
+            val removedPlayers = players -- updatedPlayers.keys
+            if (addedPlayers.nonEmpty) {
+              listener.foreach(listener =>
+                addedPlayers.values.foreach(listener.onPlayerAdded)
+              )
+            }
+            if (changedPlayers.nonEmpty) {
+              listener.foreach(_.onPlayersChanged(changedPlayers.values))
+            }
+            if (removedPlayers.nonEmpty) {
+              listener.foreach(listener =>
+                removedPlayers.values.foreach(listener.onPlayerRemoved)
+              )
+            }
+            players = updatedPlayers
+            listener.foreach(_.onPlayersUpdated(players))
+          }
+
+          if (updatedHiddenPlayers != hiddenPlayers) {
+            hiddenPlayers = updatedHiddenPlayers
+          }
+
+          val updatedTransfers = transfersFromTransactions(
+            zone.transactions,
+            currency,
+            accountIdsToMemberIds,
+            players ++ hiddenPlayers,
+            zone.accounts,
+            zone.members
+          )
+
+          if (updatedTransfers != transfers) {
+            val changedTransfers = updatedTransfers.filter { case (transactionId, transfer) =>
+              transfers.get(transactionId).fold(false)(_ == transfer)
+            }
+            if (changedTransfers.nonEmpty) {
+              listener.foreach(_.onTransfersChanged(changedTransfers.values))
+            }
+            transfers = updatedTransfers
+            listener.foreach(_.onTransfersUpdated(transfers))
+          }
         }
 
         zoneNotification match {
@@ -671,62 +729,7 @@ class MonopolyGame(context: Context)
               hiddenIdentities = updatedHiddenIdentities
             }
 
-            val (updatedPlayers, updatedHiddenPlayers) = playersFromMembersAccounts(
-              memberIdsToAccountIds,
-              zone.accounts,
-              balances,
-              currency,
-              zone.members,
-              zone.equityAccountId,
-              connectedClients
-            )
-
-            if (updatedPlayers != players) {
-              val addedPlayers = updatedPlayers -- players.keys
-              val changedPlayers = updatedPlayers.filter { case (memberId, player) =>
-                players.get(memberId).fold(false)(_ != player)
-              }
-              val removedPlayers = players -- updatedPlayers.keys
-              if (addedPlayers.nonEmpty) {
-                listener.foreach(listener =>
-                  addedPlayers.values.foreach(listener.onPlayerAdded)
-                )
-              }
-              if (changedPlayers.nonEmpty) {
-                listener.foreach(_.onPlayersChanged(changedPlayers.values))
-              }
-              if (removedPlayers.nonEmpty) {
-                listener.foreach(listener =>
-                  removedPlayers.values.foreach(listener.onPlayerRemoved)
-                )
-              }
-              players = updatedPlayers
-              listener.foreach(_.onPlayersUpdated(players))
-            }
-
-            if (updatedHiddenPlayers != hiddenPlayers) {
-              hiddenPlayers = updatedHiddenPlayers
-            }
-
-            val updatedTransfers = transfersFromTransactions(
-              zone.transactions,
-              currency,
-              accountIdsToMemberIds,
-              players ++ hiddenPlayers,
-              zone.accounts,
-              zone.members
-            )
-
-            if (updatedTransfers != transfers) {
-              val changedTransfers = updatedTransfers.filter { case (transactionId, transfer) =>
-                transfers.get(transactionId).fold(false)(_ == transfer)
-              }
-              if (changedTransfers.nonEmpty) {
-                listener.foreach(_.onTransfersChanged(changedTransfers.values))
-              }
-              transfers = updatedTransfers
-              listener.foreach(_.onTransfersUpdated(transfers))
-            }
+            updatePlayersAndTransactions()
 
           case accountCreatedNotification: AccountCreatedNotification =>
 
@@ -820,62 +823,7 @@ class MonopolyGame(context: Context)
               hiddenIdentities = updatedHiddenIdentities
             }
 
-            val (updatedPlayers, updatedHiddenPlayers) = playersFromMembersAccounts(
-              memberIdsToAccountIds,
-              zone.accounts,
-              balances,
-              currency,
-              zone.members,
-              zone.equityAccountId,
-              connectedClients
-            )
-
-            if (updatedPlayers != players) {
-              val addedPlayers = updatedPlayers -- players.keys
-              val changedPlayers = updatedPlayers.filter { case (memberId, player) =>
-                players.get(memberId).fold(false)(_ != player)
-              }
-              val removedPlayers = players -- updatedPlayers.keys
-              if (addedPlayers.nonEmpty) {
-                listener.foreach(listener =>
-                  addedPlayers.values.foreach(listener.onPlayerAdded)
-                )
-              }
-              if (changedPlayers.nonEmpty) {
-                listener.foreach(_.onPlayersChanged(changedPlayers.values))
-              }
-              if (removedPlayers.nonEmpty) {
-                listener.foreach(listener =>
-                  removedPlayers.values.foreach(listener.onPlayerRemoved)
-                )
-              }
-              players = updatedPlayers
-              listener.foreach(_.onPlayersUpdated(players))
-            }
-
-            if (updatedHiddenPlayers != hiddenPlayers) {
-              hiddenPlayers = updatedHiddenPlayers
-            }
-
-            val updatedTransfers = transfersFromTransactions(
-              zone.transactions,
-              currency,
-              accountIdsToMemberIds,
-              players ++ hiddenPlayers,
-              zone.accounts,
-              zone.members
-            )
-
-            if (updatedTransfers != transfers) {
-              val changedTransfers = updatedTransfers.filter { case (transactionId, transfer) =>
-                transfers.get(transactionId).fold(false)(_ == transfer)
-              }
-              if (changedTransfers.nonEmpty) {
-                listener.foreach(_.onTransfersChanged(changedTransfers.values))
-              }
-              transfers = updatedTransfers
-              listener.foreach(_.onTransfersUpdated(transfers))
-            }
+            updatePlayersAndTransactions()
 
           case transactionAddedNotification: TransactionAddedNotification =>
 
