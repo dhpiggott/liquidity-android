@@ -246,7 +246,6 @@ class MonopolyGame(context: Context) extends ConnectionStateListener with Notifi
   private val serverConnection = new ServerConnection(context, this, this)
   private val noopResponseCallback = new ResponseCallback with ResponseCallbackWithErrorForwarding
 
-  // TODO
   private var gameId = Option.empty[Future[Long]]
   private var zoneId = Option.empty[ZoneId]
 
@@ -270,7 +269,7 @@ class MonopolyGame(context: Context) extends ConnectionStateListener with Notifi
       serverConnection.connect()
     }
 
-  private def createAccount(owner: MemberId) {
+  private def createAccount(owner: MemberId) =
     serverConnection.sendCommand(
       CreateAccountCommand(
         zoneId.get,
@@ -281,9 +280,8 @@ class MonopolyGame(context: Context) extends ConnectionStateListener with Notifi
       ),
       noopResponseCallback
     )
-  }
 
-  private def createAndThenJoinZone() {
+  private def createAndThenJoinZone() =
     serverConnection.sendCommand(
       CreateZoneCommand(
         context.getString(R.string.new_monopoly_game_name),
@@ -317,7 +315,6 @@ class MonopolyGame(context: Context) extends ConnectionStateListener with Notifi
 
       }
     )
-  }
 
   def createIdentity(isInitialPrompt: Boolean, name: String) {
     if (isInitialPrompt
@@ -376,7 +373,7 @@ class MonopolyGame(context: Context) extends ConnectionStateListener with Notifi
   def isPublicKeyConnectedAndImplicitlyValid(publicKey: PublicKey) =
     connectedClients.contains(publicKey)
 
-  private def join(zoneId: ZoneId) {
+  private def join(zoneId: ZoneId) =
     serverConnection.sendCommand(
       JoinZoneCommand(
         zoneId
@@ -458,21 +455,29 @@ class MonopolyGame(context: Context) extends ConnectionStateListener with Notifi
           listener.foreach(_.onTransfersInitialized(transfers.values))
           listener.foreach(_.onTransfersUpdated(transfers))
 
-          val partiallyCreatedIdentities = zone.members.filter { case (memberId, member) =>
-            ClientKey.getPublicKey(context) == member.publicKey &&
-              !zone.accounts.values.exists(_.owners == Set(memberId))
+          val partiallyCreatedIdentityIds = zone.members.collect {
+            case (memberId, member) if ClientKey.getPublicKey(context) == member.publicKey
+              && !zone.accounts.values.exists(_.owners == Set(memberId)) =>
+              memberId
           }
-          partiallyCreatedIdentities.keys.foreach(createAccount)
 
-          // TODO: Chain this so it only happens after partially created identities have had their
-          // accounts created.
-          // Ensure activity only shows prompt once (i.e. never again after e.g. rotating).
-          // Revert gameId check but also check for deleted identities? Restore persistence of
-          // gameId to join response handler?
-          if (gameId.isEmpty && !identities.values.exists(_.accountId != zone.equityAccountId)) {
+          partiallyCreatedIdentityIds.foreach(createAccount)
+
+          /*
+           * Since we must only prompt for a required identity if none exist yet and since having
+           * one or more partially created identities implies that gameId would be set, we can
+           * proceed here without checking that partiallyCreatedIdentityIds is non empty.
+           */
+          if (gameId.isEmpty && !(updatedIdentities ++ updatedHiddenIdentities).values.exists(
+            _.accountId != zone.equityAccountId
+          )) {
             listener.foreach(_.onIdentityRequired())
           }
 
+          /*
+           * We don't set gameId until now as it also indicates above whether we've prompted for the
+           * required identity - which we must do at most once.
+           */
           gameId = gameId.fold(
             Some(
               Future {
@@ -512,7 +517,6 @@ class MonopolyGame(context: Context) extends ConnectionStateListener with Notifi
 
       }
     )
-  }
 
   override def onNotificationReceived(notification: Notification) {
     log.debug("notification={}", notification)
@@ -977,7 +981,7 @@ class MonopolyGame(context: Context) extends ConnectionStateListener with Notifi
     )
   }
 
-  def setGameName(name: String) {
+  def setGameName(name: String) =
     serverConnection.sendCommand(
       SetZoneNameCommand(
         zoneId.get,
@@ -985,7 +989,6 @@ class MonopolyGame(context: Context) extends ConnectionStateListener with Notifi
       ),
       noopResponseCallback
     )
-  }
 
   def setGameId(gameId: Long) {
     this.gameId = Option(gameId).fold[Option[Future[Long]]](
@@ -995,7 +998,7 @@ class MonopolyGame(context: Context) extends ConnectionStateListener with Notifi
       )
   }
 
-  def setIdentityName(identity: Identity, name: String) {
+  def setIdentityName(identity: Identity, name: String) =
     serverConnection.sendCommand(
       UpdateMemberCommand(
         zoneId.get,
@@ -1004,7 +1007,6 @@ class MonopolyGame(context: Context) extends ConnectionStateListener with Notifi
       ),
       noopResponseCallback
     )
-  }
 
   def setListener(listener: Listener) {
     this.listener = Option(listener)
@@ -1039,7 +1041,7 @@ class MonopolyGame(context: Context) extends ConnectionStateListener with Notifi
     )
   }
 
-  def transfer(actingAs: Identity, from: Identity, to: Player, value: BigDecimal) {
+  def transfer(actingAs: Identity, from: Identity, to: Player, value: BigDecimal) =
     serverConnection.sendCommand(
       AddTransactionCommand(
         zoneId.get,
@@ -1051,6 +1053,5 @@ class MonopolyGame(context: Context) extends ConnectionStateListener with Notifi
       ),
       noopResponseCallback
     )
-  }
 
 }

@@ -396,7 +396,7 @@ class ServerConnection(context: Context,
     log.trace("Received pong: {}", payloadString)
   }
 
-  def sendCommand(command: Command, responseCallback: ResponseCallback) =
+  def sendCommand(command: Command, responseCallback: ResponseCallback) {
     state match {
 
       case activeState: ActiveState =>
@@ -436,5 +436,6 @@ class ServerConnection(context: Context,
         sys.error("Not connected")
 
     }
+  }
 
 }
