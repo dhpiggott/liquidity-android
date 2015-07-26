@@ -245,31 +245,26 @@ public class MonopolyGameActivity extends AppCompatActivity
 
         if (monopolyGame == null) {
 
-            monopolyGame = new MonopolyGame(this);
-
-            if (getIntent().getExtras() != null
-                    && getIntent().getExtras().containsKey(EXTRA_ZONE_ID)) {
-
-                monopolyGame.setZoneId(
-                        (ZoneId) getIntent().getExtras().getSerializable(EXTRA_ZONE_ID)
-                );
-
-                if (getIntent().getExtras().containsKey(EXTRA_GAME_ID)) {
-
-                    monopolyGame.setGameId(
+            if (getIntent().getExtras() == null
+                    || !getIntent().getExtras().containsKey(EXTRA_ZONE_ID)) {
+                monopolyGame = new MonopolyGame(this);
+            } else {
+                ZoneId zoneId = (ZoneId) getIntent().getExtras().getSerializable(EXTRA_ZONE_ID);
+                if (!getIntent().getExtras().containsKey(EXTRA_GAME_ID)) {
+                    monopolyGame = new MonopolyGame(
+                            this,
+                            zoneId
+                    );
+                } else {
+                    monopolyGame = new MonopolyGame(
+                            this,
+                            zoneId,
                             getIntent().getExtras().getLong(EXTRA_GAME_ID)
                     );
-
                 }
-
                 if (getIntent().getExtras().containsKey(EXTRA_GAME_NAME)) {
-
-                    setTitle(
-                            getIntent().getExtras().getString(EXTRA_GAME_NAME)
-                    );
-
+                    setTitle(getIntent().getExtras().getString(EXTRA_GAME_NAME));
                 }
-
             }
 
         }

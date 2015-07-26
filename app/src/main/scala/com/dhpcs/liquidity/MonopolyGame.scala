@@ -117,8 +117,6 @@ object MonopolyGame {
   private val CurrencyCodeKey = "currency"
   private val HiddenFlagKey = "hidden"
 
-  private val ZoneType = MONOPOLY
-
   private def currencyFromMetadata(metadata: Option[JsObject]) =
     metadata.flatMap(
       _.value.get(CurrencyCodeKey).flatMap(
@@ -229,7 +227,22 @@ object MonopolyGame {
 
 }
 
-class MonopolyGame(context: Context) extends ConnectionStateListener with NotificationListener {
+class MonopolyGame private(context: Context,
+                           private var zoneId: Option[ZoneId],
+                           private var gameId: Option[Future[Long]])
+  extends ConnectionStateListener with NotificationListener {
+
+  def this(context: Context) {
+    this(context, None, None)
+  }
+
+  def this(context: Context, zoneId: ZoneId) {
+    this(context, Some(zoneId), None)
+  }
+
+  def this(context: Context, zoneId: ZoneId, gameId: Long) {
+    this(context, Some(zoneId), Some(Future.successful(gameId)))
+  }
 
   private trait ResponseCallbackWithErrorForwarding extends ResponseCallback {
 
@@ -245,9 +258,6 @@ class MonopolyGame(context: Context) extends ConnectionStateListener with Notifi
 
   private val serverConnection = new ServerConnection(context, this, this)
   private val noopResponseCallback = new ResponseCallback with ResponseCallbackWithErrorForwarding
-
-  private var gameId = Option.empty[Future[Long]]
-  private var zoneId = Option.empty[ZoneId]
 
   // TODO
   private var zone: Zone = _
@@ -295,7 +305,7 @@ class MonopolyGame(context: Context) extends ConnectionStateListener with Notifi
         ),
         Some(
           Json.obj(
-            ZoneTypeKey -> ZoneType.name,
+            ZoneTypeKey -> MONOPOLY.name,
             CurrencyCodeKey -> Currency.getInstance(Locale.getDefault).getCurrencyCode
           )
         )
@@ -385,132 +395,160 @@ class MonopolyGame(context: Context) extends ConnectionStateListener with Notifi
 
           val joinZoneResponse = resultResponse.asInstanceOf[JoinZoneResponse]
 
-          if (joinZoneResponse.zone.metadata.fold(false)(metadata =>
-            metadata.value.get(ZoneTypeKey).fold(false)(
-              _.asOpt[String].contains(ZoneType.name)
-            ))) {
+          joinZoneResponse.zone.metadata
+            .flatMap(_.value.get(ZoneTypeKey)
+            .flatMap(_.asOpt[String])).getOrElse("") match {
+
+            case zoneTypeName if zoneTypeName != MONOPOLY.name =>
             // TODO
-          }
 
-          listener.foreach(_.onJoined(zoneId))
+            case _ =>
 
-          zone = joinZoneResponse.zone
-          connectedClients = joinZoneResponse.connectedClients
-          balances = Map.empty.withDefaultValue(BigDecimal(0))
-          currency = currencyFromMetadata(zone.metadata)
+              listener.foreach(_.onJoined(zoneId))
 
-          listener.foreach(_.onGameNameChanged(zone.name))
+              zone = joinZoneResponse.zone
+              connectedClients = joinZoneResponse.connectedClients
+              balances = Map.empty.withDefaultValue(BigDecimal(0))
+              currency = currencyFromMetadata(zone.metadata)
 
-          val iterator = zone.transactions.valuesIterator
-          while (iterator.hasNext) {
-            val transaction = iterator.next()
-            balances = balances +
-              (transaction.from -> (balances(transaction.from) - transaction.value)) +
-              (transaction.to -> (balances(transaction.to) + transaction.value))
-          }
+              listener.foreach(_.onGameNameChanged(zone.name))
 
-          memberIdsToAccountIds = membersAccountsFromAccounts(zone.accounts)
-          accountIdsToMemberIds = memberIdsToAccountIds.map(_.swap)
-
-          val (updatedIdentities, updatedHiddenIdentities) = identitiesFromMembersAccounts(
-            memberIdsToAccountIds,
-            zone.accounts,
-            balances,
-            currency,
-            zone.members,
-            zone.equityAccountId,
-            ClientKey.getPublicKey(context)
-          )
-
-          identities = updatedIdentities
-          listener.foreach(_.onIdentitiesUpdated(identities))
-
-          hiddenIdentities = updatedHiddenIdentities
-
-          val (updatedPlayers, updatedHiddenPlayers) = playersFromMembersAccounts(
-            memberIdsToAccountIds,
-            zone.accounts,
-            balances,
-            currency,
-            zone.members,
-            zone.equityAccountId,
-            connectedClients
-          )
-
-          players = updatedPlayers
-          listener.foreach(_.onPlayersInitialized(players.values))
-          listener.foreach(_.onPlayersUpdated(players))
-
-          hiddenPlayers = updatedHiddenPlayers
-
-          transfers = transfersFromTransactions(
-            zone.transactions,
-            currency,
-            accountIdsToMemberIds,
-            players ++ hiddenPlayers,
-            zone.accounts,
-            zone.members
-          )
-
-          listener.foreach(_.onTransfersInitialized(transfers.values))
-          listener.foreach(_.onTransfersUpdated(transfers))
-
-          val partiallyCreatedIdentityIds = zone.members.collect {
-            case (memberId, member) if ClientKey.getPublicKey(context) == member.publicKey
-              && !zone.accounts.values.exists(_.owners == Set(memberId)) =>
-              memberId
-          }
-
-          partiallyCreatedIdentityIds.foreach(createAccount)
-
-          /*
-           * Since we must only prompt for a required identity if none exist yet and since having
-           * one or more partially created identities implies that gameId would be set, we can
-           * proceed here without checking that partiallyCreatedIdentityIds is non empty.
-           */
-          if (gameId.isEmpty && !(updatedIdentities ++ updatedHiddenIdentities).values.exists(
-            _.accountId != zone.equityAccountId
-          )) {
-            listener.foreach(_.onIdentityRequired())
-          }
-
-          /*
-           * We don't set gameId until now as it also indicates above whether we've prompted for the
-           * required identity - which we must do at most once.
-           */
-          gameId = gameId.fold(
-            Some(
-              Future {
-                val zone = joinZoneResponse.zone
-                val contentValues = new ContentValues
-                contentValues.put(Games.GAME_TYPE, MONOPOLY.name)
-                contentValues.put(Games.ZONE_ID, zoneId.id.toString)
-                contentValues.put(Games.NAME, zone.name)
-                contentValues.put(Games.CREATED, zone.created: java.lang.Long)
-                ContentUris.parseId(
-                  context.getContentResolver.insert(
-                    Games.CONTENT_URI,
-                    contentValues
-                  )
-                )
+              val iterator = zone.transactions.valuesIterator
+              while (iterator.hasNext) {
+                val transaction = iterator.next()
+                balances = balances +
+                  (transaction.from -> (balances(transaction.from) - transaction.value)) +
+                  (transaction.to -> (balances(transaction.to) + transaction.value))
               }
-            )
-          ) { gameId =>
-            if (zone == null || zone.name != joinZoneResponse.zone.name) {
-              gameId.onSuccess { case id =>
-                Future {
-                  val contentValues = new ContentValues
-                  contentValues.put(Games.NAME, joinZoneResponse.zone.name)
-                  context.getContentResolver.update(
-                    ContentUris.withAppendedId(Games.CONTENT_URI, id),
-                    contentValues,
-                    null,
-                    null
+
+              memberIdsToAccountIds = membersAccountsFromAccounts(zone.accounts)
+              accountIdsToMemberIds = memberIdsToAccountIds.map(_.swap)
+
+              val (updatedIdentities, updatedHiddenIdentities) = identitiesFromMembersAccounts(
+                memberIdsToAccountIds,
+                zone.accounts,
+                balances,
+                currency,
+                zone.members,
+                zone.equityAccountId,
+                ClientKey.getPublicKey(context)
+              )
+
+              identities = updatedIdentities
+              listener.foreach(_.onIdentitiesUpdated(identities))
+
+              hiddenIdentities = updatedHiddenIdentities
+
+              val (updatedPlayers, updatedHiddenPlayers) = playersFromMembersAccounts(
+                memberIdsToAccountIds,
+                zone.accounts,
+                balances,
+                currency,
+                zone.members,
+                zone.equityAccountId,
+                connectedClients
+              )
+
+              players = updatedPlayers
+              listener.foreach(_.onPlayersInitialized(players.values))
+              listener.foreach(_.onPlayersUpdated(players))
+
+              hiddenPlayers = updatedHiddenPlayers
+
+              transfers = transfersFromTransactions(
+                zone.transactions,
+                currency,
+                accountIdsToMemberIds,
+                players ++ hiddenPlayers,
+                zone.accounts,
+                zone.members
+              )
+
+              listener.foreach(_.onTransfersInitialized(transfers.values))
+              listener.foreach(_.onTransfersUpdated(transfers))
+
+              val partiallyCreatedIdentityIds = zone.members.collect {
+                case (memberId, member) if ClientKey.getPublicKey(context) == member.publicKey
+                  && !zone.accounts.values.exists(_.owners == Set(memberId)) =>
+                  memberId
+              }
+
+              partiallyCreatedIdentityIds.foreach(createAccount)
+
+              /*
+               * Since we must only prompt for a required identity if none exist yet and since
+               * having one or more partially created identities implies that gameId would be set,
+               * we can proceed here without checking that partiallyCreatedIdentityIds is non empty.
+               *
+               * The second condition isn't usually of significance but exists to prevent
+               * incorrectly prompting for an identity if a user rejoins a game by scanning its
+               * code again rather than by clicking its list item.
+               */
+              if (gameId.isEmpty && !(updatedIdentities ++ updatedHiddenIdentities).values.exists(
+                _.accountId != zone.equityAccountId
+              )) {
+                listener.foreach(_.onIdentityRequired())
+              }
+
+              def checkAndUpdateGameName(name: String): Option[Long] = {
+                val existingEntry = context.getContentResolver.query(
+                  Games.CONTENT_URI,
+                  Array(LiquidityContract.Games._ID, LiquidityContract.Games.NAME),
+                  LiquidityContract.Games.ZONE_ID + " = ?",
+                  Array(zoneId.id.toString),
+                  null
+                )
+                if (!existingEntry.moveToFirst()) {
+                  None
+                } else {
+                  val gameId = existingEntry.getLong(
+                    existingEntry.getColumnIndexOrThrow(LiquidityContract.Games._ID)
                   )
+                  if (zone.name != existingEntry.getString(
+                    existingEntry.getColumnIndexOrThrow(LiquidityContract.Games.NAME)
+                  )) {
+                    updateGameName(gameId, name)
+                  }
+                  Some(gameId)
                 }
               }
-            }
-            Some(gameId)
+
+              /*
+               * We don't set gameId until now as it also indicates above whether we've prompted
+               * for the required identity - which we must do at most once.
+               */
+              gameId = gameId.fold(
+                Some(Future(
+
+                  /*
+                   * This is in-case a user rejoins a game by scanning its code again rather than
+                   * by clicking its list item - in such cases we mustn't attempt to insert an
+                   * entry as that would silently fail (as it happens on the Future's worker
+                   * thread), but we may need to update the existing entries name.
+                   */
+                  checkAndUpdateGameName(joinZoneResponse.zone.name).getOrElse {
+                    val contentValues = new ContentValues
+                    contentValues.put(Games.GAME_TYPE, MONOPOLY.name)
+                    contentValues.put(Games.ZONE_ID, zoneId.id.toString)
+                    contentValues.put(Games.NAME, joinZoneResponse.zone.name)
+                    contentValues.put(Games.CREATED, joinZoneResponse.zone.created: java.lang.Long)
+                    ContentUris.parseId(
+                      context.getContentResolver.insert(
+                        Games.CONTENT_URI,
+                        contentValues
+                      )
+                    )
+                  }
+                ))
+              ) { id =>
+                id.onSuccess { case _ =>
+                  Future(
+                    checkAndUpdateGameName(joinZoneResponse.zone.name)
+                  )
+                }
+                Some(id)
+              }
+
           }
 
         }
@@ -661,18 +699,11 @@ class MonopolyGame(context: Context) extends ConnectionStateListener with Notifi
 
             zone = zone.copy(name = zoneNameSetNotification.name)
 
-            listener.foreach(_.onGameNameChanged(zoneNameSetNotification.name))
+            listener.foreach(_.onGameNameChanged(zone.name))
 
             gameId.foreach(_.onSuccess { case id =>
               Future {
-                val contentValues = new ContentValues
-                contentValues.put(LiquidityContract.Games.NAME, zoneNameSetNotification.name)
-                context.getContentResolver.update(
-                  ContentUris.withAppendedId(Games.CONTENT_URI, id),
-                  contentValues,
-                  null,
-                  null
-                )
+                updateGameName(id, zoneNameSetNotification.name)
               }
             })
 
@@ -990,14 +1021,6 @@ class MonopolyGame(context: Context) extends ConnectionStateListener with Notifi
       noopResponseCallback
     )
 
-  def setGameId(gameId: Long) {
-    this.gameId = Option(gameId).fold[Option[Future[Long]]](
-      None
-    )(gameId =>
-      Some(Future(gameId))
-      )
-  }
-
   def setIdentityName(identity: Identity, name: String) =
     serverConnection.sendCommand(
       UpdateMemberCommand(
@@ -1025,10 +1048,6 @@ class MonopolyGame(context: Context) extends ConnectionStateListener with Notifi
     )
   }
 
-  def setZoneId(zoneId: ZoneId) {
-    this.zoneId = Option(zoneId)
-  }
-
   def transferIdentity(identityId: MemberId, to: PublicKey) {
     val identity = identities(identityId)
     serverConnection.sendCommand(
@@ -1053,5 +1072,16 @@ class MonopolyGame(context: Context) extends ConnectionStateListener with Notifi
       ),
       noopResponseCallback
     )
+
+  private def updateGameName(gameId: Long, name: String) {
+    val contentValues = new ContentValues
+    contentValues.put(LiquidityContract.Games.NAME, name)
+    context.getContentResolver.update(
+      ContentUris.withAppendedId(Games.CONTENT_URI, gameId),
+      contentValues,
+      null,
+      null
+    )
+  }
 
 }
