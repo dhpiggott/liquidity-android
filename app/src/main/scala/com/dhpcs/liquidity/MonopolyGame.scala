@@ -263,9 +263,6 @@ class MonopolyGame private(context: Context,
 
   }
 
-  // TODO: Review all other project Scala classes for fields and methods that could be companion
-  // object functions
-
   private val log = LoggerFactory.getLogger(getClass)
 
   private val serverConnection = new ServerConnection(context, this, this)

@@ -78,6 +78,13 @@ object ServerConnection {
   // TODO
   private val PingPeriod = 5000L
 
+  private def asyncPost(handler: Handler)(body: => Unit) =
+    handler.post(new Runnable() {
+
+      override def run() = body
+
+    })
+
   private def getSslSocketFactory(context: Context) = {
     val sslContext = SSLContext.getInstance("TLS")
     sslContext.init(
@@ -148,13 +155,6 @@ class ServerConnection(context: Context,
   private var commandIdentifier = 0
 
   private var state: State = DisconnectedState
-
-  private def asyncPost(handler: Handler)(body: => Unit) =
-    handler.post(new Runnable() {
-
-      override def run() = body
-
-    })
 
   def connect() =
     state match {
