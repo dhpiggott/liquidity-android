@@ -12,7 +12,6 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.dhpcs.liquidity.MonopolyGame.Player;
-import com.dhpcs.liquidity.MonopolyGame.PlayerWithBalanceAndConnectionState;
 import com.dhpcs.liquidity.MonopolyGame.TransferWithCurrency;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activities.MonopolyGameActivity;
@@ -33,7 +32,7 @@ public class PlayersTransfersFragment extends Fragment {
     private static class PlayersTransfersFragmentStatePagerAdapter
             extends FragmentStatePagerAdapter {
 
-        private final ArrayList<PlayerWithBalanceAndConnectionState> players = new ArrayList<>();
+        private final ArrayList<Player> players = new ArrayList<>();
         private final Set<TransfersFragment> transfersFragments = new HashSet<>();
         private final Context context;
 
@@ -45,7 +44,7 @@ public class PlayersTransfersFragment extends Fragment {
             this.context = context;
         }
 
-        public void add(PlayerWithBalanceAndConnectionState player) {
+        public void add(Player player) {
             players.add(player);
         }
 
@@ -60,7 +59,7 @@ public class PlayersTransfersFragment extends Fragment {
             super.destroyItem(container, position, object);
         }
 
-        public PlayerWithBalanceAndConnectionState get(int position) {
+        public Player get(int position) {
             if (position == 0) {
                 return null;
             } else {
@@ -88,7 +87,7 @@ public class PlayersTransfersFragment extends Fragment {
 
         @Override
         public CharSequence getPageTitle(int position) {
-            PlayerWithBalanceAndConnectionState player = get(position);
+            Player player = get(position);
             return player == null ? context.getString(R.string.all_transfers)
                     : context.getString(
                     R.string.player_transfers_format_string,
@@ -96,7 +95,7 @@ public class PlayersTransfersFragment extends Fragment {
             );
         }
 
-        public int getPosition(PlayerWithBalanceAndConnectionState player) {
+        public int getPosition(Player player) {
             return players.indexOf(player) + 1;
         }
 
@@ -147,7 +146,7 @@ public class PlayersTransfersFragment extends Fragment {
     private ViewPager viewPagerPlayersTransfers;
     private TabLayout tabLayoutPlayers;
 
-    public PlayerWithBalanceAndConnectionState getSelectedPlayer() {
+    public Player getSelectedPlayer() {
         if (playersTransfersFragmentStatePagerAdapter.getCount() == 0) {
             return null;
         } else {
@@ -183,10 +182,10 @@ public class PlayersTransfersFragment extends Fragment {
     }
 
     public void onPlayersUpdated(
-            scala.collection.immutable.Map<MemberId, PlayerWithBalanceAndConnectionState> players) {
-        PlayerWithBalanceAndConnectionState selectedPlayer = getSelectedPlayer();
+            scala.collection.immutable.Map<MemberId, ? extends Player> players) {
+        Player selectedPlayer = getSelectedPlayer();
         playersTransfersFragmentStatePagerAdapter.clear();
-        Iterator<PlayerWithBalanceAndConnectionState> iterator = players.valuesIterator();
+        Iterator<? extends Player> iterator = players.valuesIterator();
         while (iterator.hasNext()) {
             playersTransfersFragmentStatePagerAdapter.add(iterator.next());
         }

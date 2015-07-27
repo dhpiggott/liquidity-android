@@ -50,9 +50,11 @@ import java.text.NumberFormat;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Currency;
+import java.util.List;
 
 import scala.Option;
 import scala.Tuple2;
+import scala.collection.JavaConversions;
 import scala.util.Either;
 
 public class MonopolyGameActivity extends AppCompatActivity
@@ -70,18 +72,6 @@ public class MonopolyGameActivity extends AppCompatActivity
     public static final String EXTRA_GAME_NAME = "game_name";
     public static final String EXTRA_ZONE_ID = "zone_id";
 
-    public static final Comparator<Identity> identityComparator = new Comparator<Identity>() {
-
-        private final Collator collator = Collator.getInstance();
-
-        @Override
-        public int compare(Identity lhs, Identity rhs) {
-            return collator.compare(lhs.member().name(), rhs.member().name());
-        }
-
-    };
-
-    // TODO: Add option to sort by balance?
     public static final Comparator<Player> playerComparator = new Comparator<Player>() {
 
         private final Collator collator = Collator.getInstance();
@@ -116,19 +106,25 @@ public class MonopolyGameActivity extends AppCompatActivity
     public static String formatCurrencyValue(Context context,
                                              Option<Either<String, Currency>> currency,
                                              scala.math.BigDecimal value) {
+        return formatCurrencyValue(context, currency, value.bigDecimal());
+    }
+
+    public static String formatCurrencyValue(Context context,
+                                             Option<Either<String, Currency>> currency,
+                                             BigDecimal value) {
 
         int scaleAmount;
         BigDecimal scaledValue;
         String multiplier;
-        if ((scaledValue = value.bigDecimal().scaleByPowerOfTen(scaleAmount = -6))
+        if ((scaledValue = value.scaleByPowerOfTen(scaleAmount = -6))
                 .abs().compareTo(BigDecimal.ONE) >= 0) {
             multiplier = context.getString(R.string.value_multiplier_million_with_leading_space);
-        } else if ((scaledValue = value.bigDecimal().scaleByPowerOfTen(scaleAmount = -3))
+        } else if ((scaledValue = value.scaleByPowerOfTen(scaleAmount = -3))
                 .abs().compareTo(BigDecimal.ONE) >= 0) {
             multiplier = context.getString(R.string.value_multiplier_thousand_with_leading_space);
         } else {
             scaleAmount = 0;
-            scaledValue = value.bigDecimal();
+            scaledValue = value;
             multiplier = context.getString(R.string.value_multiplier_none);
         }
 
@@ -329,6 +325,12 @@ public class MonopolyGameActivity extends AppCompatActivity
         playersFragment.onSelectedIdentityChanged(
                 identitiesFragment.getIdentity(identitiesFragment.getSelectedPage())
         );
+        TransferToPlayerDialogFragment transferToPlayerDialogFragment =
+                (TransferToPlayerDialogFragment) getFragmentManager()
+                        .findFragmentByTag("transfer_to_player_dialog_fragment");
+        if (transferToPlayerDialogFragment != null) {
+            transferToPlayerDialogFragment.onIdentitiesUpdated(identities);
+        }
     }
 
     @Override
@@ -420,7 +422,7 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        Identity identity;
+        IdentityWithBalance identity;
         switch (item.getItemId()) {
             case R.id.action_add_players:
                 startActivity(
@@ -436,18 +438,26 @@ public class MonopolyGameActivity extends AppCompatActivity
                         )
                 );
                 return true;
+            case R.id.action_group_transfer:
+                identity = identitiesFragment.getIdentity(identitiesFragment.getSelectedPage());
+                if (identity != null) {
+                    TransferToPlayerDialogFragment.newInstance(
+                            monopolyGame.getIdentities(),
+                            monopolyGame.getPlayers(),
+                            monopolyGame.getCurrency(),
+                            identity,
+                            null
+                    ).show(
+                            getFragmentManager(),
+                            "transfer_to_player_dialog_fragment"
+                    );
+                }
+                return true;
             case R.id.action_change_game_name:
                 EnterGameNameDialogFragment.newInstance(getTitle().toString())
                         .show(
                                 getFragmentManager(),
                                 "enter_game_name_dialog_fragment"
-                        );
-                return true;
-            case R.id.action_create_identity:
-                CreateIdentityDialogFragment.newInstance(false)
-                        .show(
-                                getFragmentManager(),
-                                "create_identity_dialog_fragment"
                         );
                 return true;
             case R.id.action_change_identity_name:
@@ -460,6 +470,20 @@ public class MonopolyGameActivity extends AppCompatActivity
                             );
                 }
                 return true;
+            case R.id.action_create_identity:
+                CreateIdentityDialogFragment.newInstance(false)
+                        .show(
+                                getFragmentManager(),
+                                "create_identity_dialog_fragment"
+                        );
+                return true;
+            case R.id.action_restore_identity:
+                RestoreIdentityDialogFragment.newInstance(monopolyGame.getHiddenIdentities())
+                        .show(
+                                getFragmentManager(),
+                                "restore_identity_dialog_fragment"
+                        );
+                return true;
             case R.id.action_delete_identity:
                 identity = identitiesFragment.getIdentity(identitiesFragment.getSelectedPage());
                 if (identity != null) {
@@ -470,12 +494,16 @@ public class MonopolyGameActivity extends AppCompatActivity
                             );
                 }
                 return true;
-            case R.id.action_restore_identity:
-                RestoreIdentityDialogFragment.newInstance(monopolyGame.getHiddenIdentities())
-                        .show(
-                                getFragmentManager(),
-                                "restore_identity_dialog_fragment"
-                        );
+            case R.id.action_receive_identity:
+                startActivity(
+                        new Intent(
+                                this,
+                                ReceiveIdentityActivity.class
+                        ).putExtra(
+                                ReceiveIdentityActivity.EXTRA_PUBLIC_KEY,
+                                ClientKey.getPublicKey(this)
+                        )
+                );
                 return true;
             case R.id.action_transfer_identity:
                 new IntentIntegrator(MonopolyGameActivity.this)
@@ -489,17 +517,6 @@ public class MonopolyGameActivity extends AppCompatActivity
                         .setBeepEnabled(false)
                         .setOrientationLocked(false)
                         .initiateScan();
-                return true;
-            case R.id.action_receive_identity:
-                startActivity(
-                        new Intent(
-                                this,
-                                ReceiveIdentityActivity.class
-                        ).putExtra(
-                                ReceiveIdentityActivity.EXTRA_PUBLIC_KEY,
-                                ClientKey.getPublicKey(this)
-                        )
-                );
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -542,9 +559,10 @@ public class MonopolyGameActivity extends AppCompatActivity
         if (identity != null) {
             TransferToPlayerDialogFragment.newInstance(
                     monopolyGame.getIdentities(),
+                    monopolyGame.getPlayers(),
+                    monopolyGame.getCurrency(),
                     identity,
-                    player,
-                    monopolyGame.getCurrency()
+                    player
             ).show(
                     getFragmentManager(),
                     "transfer_to_player_dialog_fragment"
@@ -556,17 +574,20 @@ public class MonopolyGameActivity extends AppCompatActivity
     public boolean onPrepareOptionsMenu(Menu menu) {
         Identity identity = identitiesFragment.getIdentity(identitiesFragment.getSelectedPage());
         menu.findItem(R.id.action_add_players).setVisible(zoneId != null);
+        menu.findItem(R.id.action_group_transfer).setVisible(
+                zoneId != null && identity != null
+        );
         menu.findItem(R.id.action_change_game_name).setVisible(zoneId != null);
-        menu.findItem(R.id.action_create_identity).setVisible(zoneId != null);
         menu.findItem(R.id.action_change_identity_name).setVisible(
                 zoneId != null && identity != null && !identity.isBanker()
         );
-        menu.findItem(R.id.action_delete_identity).setVisible(zoneId != null && identity != null);
+        menu.findItem(R.id.action_create_identity).setVisible(zoneId != null);
         menu.findItem(R.id.action_restore_identity).setVisible(
                 zoneId != null && monopolyGame.getHiddenIdentities().nonEmpty()
         );
-        menu.findItem(R.id.action_transfer_identity).setVisible(zoneId != null && identity != null);
+        menu.findItem(R.id.action_delete_identity).setVisible(zoneId != null && identity != null);
         menu.findItem(R.id.action_receive_identity).setVisible(zoneId != null);
+        menu.findItem(R.id.action_transfer_identity).setVisible(zoneId != null && identity != null);
         return true;
     }
 
@@ -638,12 +659,12 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public void onTransferValueEntered(Identity from,
-                                       Player to,
+                                       List<Player> to,
                                        BigDecimal transferValue) {
         monopolyGame.transfer(
                 from,
                 from,
-                to,
+                JavaConversions.asScalaBuffer(to),
                 scala.math.BigDecimal.javaBigDecimal2bigDecimal(transferValue)
         );
     }

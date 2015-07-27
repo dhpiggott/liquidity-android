@@ -12,8 +12,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.dhpcs.liquidity.MonopolyGame.Identity;
 import com.dhpcs.liquidity.MonopolyGame.IdentityWithBalance;
+import com.dhpcs.liquidity.MonopolyGame.Player;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activities.MonopolyGameActivity;
 import com.dhpcs.liquidity.models.MemberId;
@@ -73,7 +73,7 @@ public class IdentitiesFragment extends Fragment implements OnPageChangeListener
             return identities.indexOf(identity);
         }
 
-        public void sort(Comparator<Identity> comparator) {
+        public void sort(Comparator<Player> comparator) {
             Collections.sort(identities, comparator);
         }
 
@@ -158,6 +158,7 @@ public class IdentitiesFragment extends Fragment implements OnPageChangeListener
         listener = null;
     }
 
+    // TODO: Selected identity is reset on rotate
     public void onIdentitiesUpdated(
             scala.collection.immutable.Map<MemberId, IdentityWithBalance> identities) {
         IdentityWithBalance selectedIdentity = getIdentity(getSelectedPage());
@@ -166,7 +167,7 @@ public class IdentitiesFragment extends Fragment implements OnPageChangeListener
         while (iterator.hasNext()) {
             identitiesFragmentStatePagerAdapter.add(iterator.next());
         }
-        identitiesFragmentStatePagerAdapter.sort(MonopolyGameActivity.identityComparator);
+        identitiesFragmentStatePagerAdapter.sort(MonopolyGameActivity.playerComparator);
         identitiesFragmentStatePagerAdapter.notifyDataSetChanged();
         textViewEmpty.setVisibility(
                 identitiesFragmentStatePagerAdapter.getCount() == 0 ? View.VISIBLE : View.GONE

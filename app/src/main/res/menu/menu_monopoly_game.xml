@@ -10,15 +10,15 @@
         android:visible="false"
         app:showAsAction="never" />
     <item
-        android:id="@+id/action_change_game_name"
+        android:id="@+id/action_group_transfer"
         android:orderInCategory="2"
-        android:title="@string/change_game_name"
+        android:title="@string/group_transfer"
         android:visible="false"
         app:showAsAction="never" />
     <item
-        android:id="@+id/action_create_identity"
+        android:id="@+id/action_change_game_name"
         android:orderInCategory="3"
-        android:title="@string/create_identity"
+        android:title="@string/change_game_name"
         android:visible="false"
         app:showAsAction="never" />
     <item
@@ -28,9 +28,9 @@
         android:visible="false"
         app:showAsAction="never" />
     <item
-        android:id="@+id/action_delete_identity"
+        android:id="@+id/action_create_identity"
         android:orderInCategory="5"
-        android:title="@string/delete_identity"
+        android:title="@string/create_identity"
         android:visible="false"
         app:showAsAction="never" />
     <item
@@ -40,15 +40,21 @@
         android:visible="false"
         app:showAsAction="never" />
     <item
-        android:id="@+id/action_transfer_identity"
+        android:id="@+id/action_delete_identity"
         android:orderInCategory="7"
-        android:title="@string/transfer_identity"
+        android:title="@string/delete_identity"
         android:visible="false"
         app:showAsAction="never" />
     <item
         android:id="@+id/action_receive_identity"
         android:orderInCategory="8"
         android:title="@string/receive_identity"
+        android:visible="false"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_transfer_identity"
+        android:orderInCategory="9"
+        android:title="@string/transfer_identity"
         android:visible="false"
         app:showAsAction="never" />
 </menu>

@@ -11,6 +11,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.EditText;
 
 import com.dhpcs.liquidity.MonopolyGame.Identity;
@@ -79,9 +80,6 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
                 )
                 .create();
 
-        if (identity != null) {
-            editTextIdentityName.setText(identity.member().name());
-        }
         editTextIdentityName.addTextChangedListener(new TextWatcher() {
 
             @Override
@@ -94,19 +92,22 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
 
             @Override
             public void afterTextChanged(Editable s) {
-                assert identity != null;
-                alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(
-                        MonopolyGameActivity.isIdentityNameValid(getActivity(), s)
-                );
+                Button buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
+                if (buttonPositive != null) {
+                    buttonPositive.setEnabled(
+                            MonopolyGameActivity.isIdentityNameValid(getActivity(), s)
+                    );
+                }
             }
 
         });
+
+        editTextIdentityName.setText(identity.member().name());
 
         alertDialog.setOnShowListener(new DialogInterface.OnShowListener() {
 
             @Override
             public void onShow(DialogInterface dialog) {
-                assert identity != null;
                 alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(
                         MonopolyGameActivity.isIdentityNameValid(
                                 getActivity(),

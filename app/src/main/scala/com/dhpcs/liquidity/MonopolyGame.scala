@@ -379,6 +379,8 @@ class MonopolyGame private(context: Context,
 
   def getIdentities = state.identities.values
 
+  def getPlayers = state.players.values
+
   def isPublicKeyConnectedAndImplicitlyValid(publicKey: PublicKey) =
     state.connectedClients.contains(publicKey)
 
@@ -387,6 +389,7 @@ class MonopolyGame private(context: Context,
       JoinZoneCommand(
         zoneId
       ),
+      // TODO: Don't forward error - need to handle non-existant zone
       new ResponseCallbackWithErrorForwarding {
 
         override def onResultReceived(resultResponse: ResultResponse) {
@@ -1057,17 +1060,19 @@ class MonopolyGame private(context: Context,
     )
   }
 
-  def transfer(actingAs: Identity, from: Identity, to: Player, value: BigDecimal) =
-    serverConnection.sendCommand(
-      AddTransactionCommand(
-        zoneId.get,
-        actingAs.memberId,
-        "transfer",
-        from.accountId,
-        to.accountId,
-        value
-      ),
-      noopResponseCallback
+  def transfer(actingAs: Identity, from: Identity, to: Seq[Player], value: BigDecimal) =
+    to.foreach(to =>
+      serverConnection.sendCommand(
+        AddTransactionCommand(
+          zoneId.get,
+          actingAs.memberId,
+          "transfer",
+          from.accountId,
+          to.accountId,
+          value
+        ),
+        noopResponseCallback
+      )
     )
 
   private def updateGameName(gameId: Long, name: String) {

@@ -4,13 +4,17 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="24dp"
+    android:paddingEnd="24dp"
+    android:paddingLeft="24dp"
+    android:paddingRight="24dp"
+    android:paddingStart="24dp"
     tools:context="com.dhpcs.liquidity.fragments.CreateIdentityDialogFragment">
 
     <EditText
         android:id="@+id/edittext_identity_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
         android:inputType="textCapWords"
         android:selectAllOnFocus="true"
         tools:ignore="LabelFor" />

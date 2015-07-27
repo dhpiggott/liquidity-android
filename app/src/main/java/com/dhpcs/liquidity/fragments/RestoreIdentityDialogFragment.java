@@ -96,19 +96,23 @@ public class RestoreIdentityDialogFragment extends DialogFragment {
     @Override
     @SuppressWarnings("unchecked")
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        final ArrayAdapter<IdentityWithBalance> arrayAdapter = new IdentitiesAdapter(getActivity());
-        arrayAdapter.addAll(
+        final ArrayAdapter<IdentityWithBalance> identitiesAdapter = new IdentitiesAdapter(
+                getActivity()
+        );
+        identitiesAdapter.addAll(
                 (ArrayList<IdentityWithBalance>) getArguments().getSerializable(ARG_IDENTITIES)
         );
-        arrayAdapter.sort(MonopolyGameActivity.identityComparator);
+        identitiesAdapter.sort(MonopolyGameActivity.playerComparator);
         return new AlertDialog.Builder(getActivity())
                 .setTitle(R.string.choose_identity_to_restore)
-                .setAdapter(arrayAdapter, new DialogInterface.OnClickListener() {
+                .setAdapter(identitiesAdapter, new DialogInterface.OnClickListener() {
 
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         if (listener != null) {
-                            listener.onIdentityRestorationRequested(arrayAdapter.getItem(which));
+                            listener.onIdentityRestorationRequested(
+                                    identitiesAdapter.getItem(which)
+                            );
                         }
                     }
 

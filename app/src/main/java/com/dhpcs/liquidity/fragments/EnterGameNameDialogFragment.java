@@ -12,6 +12,7 @@ import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.EditText;
 
 import com.dhpcs.liquidity.R;
@@ -74,7 +75,6 @@ public class EnterGameNameDialogFragment extends DialogFragment {
                 )
                 .create();
 
-        editTextGameName.setText(name);
         editTextGameName.addTextChangedListener(new TextWatcher() {
 
             @Override
@@ -87,12 +87,17 @@ public class EnterGameNameDialogFragment extends DialogFragment {
 
             @Override
             public void afterTextChanged(Editable s) {
-                alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(
-                        !TextUtils.isEmpty(s)
-                );
+                Button buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
+                if (buttonPositive != null) {
+                    buttonPositive.setEnabled(
+                            !TextUtils.isEmpty(s)
+                    );
+                }
             }
 
         });
+
+        editTextGameName.setText(name);
 
         alertDialog.setOnShowListener(new DialogInterface.OnShowListener() {
 

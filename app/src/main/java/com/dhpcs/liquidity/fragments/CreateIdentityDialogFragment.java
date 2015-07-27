@@ -11,6 +11,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.EditText;
 
 import com.dhpcs.liquidity.R;
@@ -90,9 +91,12 @@ public class CreateIdentityDialogFragment extends DialogFragment {
 
             @Override
             public void afterTextChanged(Editable s) {
-                alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(
-                        MonopolyGameActivity.isIdentityNameValid(getActivity(), s)
-                );
+                Button buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
+                if (buttonPositive != null) {
+                    buttonPositive.setEnabled(
+                            MonopolyGameActivity.isIdentityNameValid(getActivity(), s)
+                    );
+                }
             }
 
         });
