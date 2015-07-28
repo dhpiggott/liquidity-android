@@ -150,7 +150,7 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
         }
     }
 
-    // TODO: Swipe to hide?
+    // TODO: Deferred
     @Override
     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
         getActivity().getContentResolver().delete(
