@@ -88,11 +88,7 @@ public class PlayersTransfersFragment extends Fragment {
         @Override
         public CharSequence getPageTitle(int position) {
             Player player = get(position);
-            return player == null ? context.getString(R.string.all_transfers)
-                    : context.getString(
-                    R.string.player_transfers_format_string,
-                    player.member().name()
-            );
+            return player == null ? context.getString(R.string.all) : player.member().name();
         }
 
         public int getPosition(Player player) {
@@ -142,19 +138,29 @@ public class PlayersTransfersFragment extends Fragment {
 
     }
 
-    private PlayersTransfersFragmentStatePagerAdapter playersTransfersFragmentStatePagerAdapter;
-    private ViewPager viewPagerPlayersTransfers;
-    private TabLayout tabLayoutPlayers;
+    private static final String STATE_SELECTED_PLAYER = "selected_player";
 
-    public Player getSelectedPlayer() {
-        if (playersTransfersFragmentStatePagerAdapter.getCount() == 0) {
-            return null;
-        } else {
-            return playersTransfersFragmentStatePagerAdapter.get(
-                    viewPagerPlayersTransfers.getCurrentItem()
-            );
-        }
-    }
+    private final ViewPager.OnPageChangeListener pageChangeListener =
+            new ViewPager.SimpleOnPageChangeListener() {
+
+                @Override
+                public void onPageSelected(int position) {
+                    if (playersTransfersFragmentStatePagerAdapter.getCount() == 0) {
+                        selectedPlayer = null;
+                    } else {
+                        selectedPlayer = playersTransfersFragmentStatePagerAdapter.get(position);
+                    }
+                }
+
+
+            };
+
+    private PlayersTransfersFragmentStatePagerAdapter playersTransfersFragmentStatePagerAdapter;
+
+    private TabLayout tabLayoutPlayers;
+    private ViewPager viewPagerPlayersTransfers;
+
+    private Player selectedPlayer;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -164,6 +170,10 @@ public class PlayersTransfersFragment extends Fragment {
                 getFragmentManager(),
                 getActivity()
         );
+
+        if (savedInstanceState != null) {
+            selectedPlayer = (Player) savedInstanceState.getSerializable(STATE_SELECTED_PLAYER);
+        }
     }
 
     @Override
@@ -172,18 +182,24 @@ public class PlayersTransfersFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_players_transfers, container, false);
 
-        viewPagerPlayersTransfers = (ViewPager) view.findViewById(R.id.viewpager_players_transfers);
         tabLayoutPlayers = (TabLayout) view.findViewById(R.id.tablayout_players);
+        viewPagerPlayersTransfers = (ViewPager) view.findViewById(R.id.viewpager_players_transfers);
 
         viewPagerPlayersTransfers.setAdapter(playersTransfersFragmentStatePagerAdapter);
+        viewPagerPlayersTransfers.addOnPageChangeListener(pageChangeListener);
         tabLayoutPlayers.setupWithViewPager(viewPagerPlayersTransfers);
 
         return view;
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        viewPagerPlayersTransfers.removeOnPageChangeListener(pageChangeListener);
+    }
+
     public void onPlayersUpdated(
             scala.collection.immutable.Map<MemberId, ? extends Player> players) {
-        Player selectedPlayer = getSelectedPlayer();
         playersTransfersFragmentStatePagerAdapter.clear();
         Iterator<? extends Player> iterator = players.valuesIterator();
         while (iterator.hasNext()) {
@@ -200,6 +216,12 @@ public class PlayersTransfersFragment extends Fragment {
                     false
             );
         }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putSerializable(STATE_SELECTED_PLAYER, selectedPlayer);
     }
 
     public void onTransferAdded(TransferWithCurrency addedTransfer) {

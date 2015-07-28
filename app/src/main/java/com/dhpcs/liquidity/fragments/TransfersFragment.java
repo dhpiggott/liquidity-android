@@ -35,17 +35,18 @@ public class TransfersFragment extends Fragment {
         public class TransferViewHolder extends RecyclerView.ViewHolder {
 
             private final TextView textViewSummary;
-            private final TextView textViewCreated;
+            private final TextView textViewCreatedTime;
+            private final TextView textViewCreatedDate;
 
             public TransferViewHolder(View itemView) {
                 super(itemView);
                 textViewSummary = (TextView) itemView.findViewById(R.id.textview_summary);
-                textViewCreated = (TextView) itemView.findViewById(R.id.textview_created);
+                textViewCreatedTime = (TextView) itemView.findViewById(R.id.textview_created_time);
+                textViewCreatedDate = (TextView) itemView.findViewById(R.id.textview_created_date);
             }
 
             public void bindTransfer(TransferWithCurrency transfer) {
 
-                long created = transfer.transaction().created();
                 boolean isFromPlayer = player != null && transfer.from().right().get().memberId()
                         .equals(player.memberId());
                 String value = MonopolyGameActivity.formatCurrencyValue(
@@ -76,16 +77,20 @@ public class TransfersFragment extends Fragment {
                             MonopolyGameActivity.formatMemberOrAccount(context, transfer.to())
                     );
                 }
+                String createdTime = timeFormat.format(transfer.transaction().created());
+                String createdDate = dateFormat.format(transfer.transaction().created());
 
-                textViewCreated.setText(dateFormat.format(created));
                 textViewSummary.setText(summary);
+                textViewCreatedTime.setText(createdTime);
+                textViewCreatedDate.setText(createdDate);
             }
 
         }
 
         private final Context context;
         private final Player player;
-        private final DateFormat dateFormat = DateFormat.getDateTimeInstance();
+        private final DateFormat timeFormat = DateFormat.getTimeInstance();
+        private final DateFormat dateFormat = DateFormat.getDateInstance();
         private final SortedList<TransferWithCurrency> transfers = new SortedList<>(
                 TransferWithCurrency.class,
                 new SortedListAdapterCallback<TransferWithCurrency>(this) {
@@ -169,6 +174,7 @@ public class TransfersFragment extends Fragment {
     private TransfersAdapter transfersAdapter;
 
     private TextView textViewEmpty;
+    private RecyclerView recyclerViewTransfers;
 
     @Override
     @SuppressWarnings("unchecked")
@@ -198,11 +204,7 @@ public class TransfersFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_transfers, container, false);
 
         textViewEmpty = (TextView) view.findViewById(R.id.textview_empty);
-        if (transfersAdapter.getItemCount() != 0) {
-            textViewEmpty.setVisibility(View.GONE);
-        }
-
-        RecyclerView recyclerViewTransfers = (RecyclerView) view.findViewById(R.id.recyclerview);
+        recyclerViewTransfers = (RecyclerView) view.findViewById(R.id.recyclerview_transfers);
         recyclerViewTransfers.addItemDecoration(new RecyclerView.ItemDecoration() {
 
             private final Drawable divider;
@@ -244,6 +246,11 @@ public class TransfersFragment extends Fragment {
         recyclerViewTransfers.setLayoutManager(new LinearLayoutManager(getActivity()));
         recyclerViewTransfers.setAdapter(transfersAdapter);
 
+        if (transfersAdapter.getItemCount() != 0) {
+            textViewEmpty.setVisibility(View.GONE);
+            recyclerViewTransfers.setVisibility(View.VISIBLE);
+        }
+
         return view;
     }
 
@@ -253,6 +260,7 @@ public class TransfersFragment extends Fragment {
                 addedTransfer
         );
         textViewEmpty.setVisibility(View.GONE);
+        recyclerViewTransfers.setVisibility(View.VISIBLE);
     }
 
     public void onTransfersChanged(
@@ -265,6 +273,7 @@ public class TransfersFragment extends Fragment {
         replaceOrAddTransfers(transfers);
         if (transfers.nonEmpty()) {
             textViewEmpty.setVisibility(View.GONE);
+            recyclerViewTransfers.setVisibility(View.VISIBLE);
         }
     }
 

@@ -14,12 +14,12 @@
         tools:ignore="UseCompoundDrawables">
 
         <TextView
+            style="@style/TextAppearance.AppCompat.Subhead"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
             android:gravity="center_horizontal"
-            android:text="@string/receive_identity_instruction"
-            android:textAppearance="?android:attr/textAppearanceMedium" />
+            android:text="@string/receive_identity_instruction" />
 
         <ImageView
             android:id="@+id/imageview_qr_code"

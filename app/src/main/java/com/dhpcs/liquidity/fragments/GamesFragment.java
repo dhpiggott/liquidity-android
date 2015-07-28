@@ -11,8 +11,8 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
@@ -37,7 +37,7 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
 
     private Listener listener;
 
-    private SimpleCursorAdapter simpleCursorAdapter;
+    private SimpleCursorAdapter gamesAdapter;
 
     @Override
     public void onAttach(Activity activity) {
@@ -51,9 +51,9 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
 
         getLoaderManager().initLoader(GAMES_LOADER, null, this);
 
-        simpleCursorAdapter = new SimpleCursorAdapter(
+        gamesAdapter = new SimpleCursorAdapter(
                 getActivity(),
-                R.layout.relativelayout_game,
+                R.layout.linearlayout_game,
                 null,
                 new String[]{
                         LiquidityContract.Games.NAME,
@@ -67,7 +67,7 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
         );
 
         final DateFormat dateFormat = DateFormat.getDateTimeInstance();
-        simpleCursorAdapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
+        gamesAdapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
 
             @Override
             public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
@@ -117,11 +117,11 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_games, container, false);
 
-        AbsListView absListViewGames = (AbsListView) view.findViewById(android.R.id.list);
-        absListViewGames.setAdapter(simpleCursorAdapter);
-        absListViewGames.setEmptyView(view.findViewById(android.R.id.empty));
-        absListViewGames.setOnItemClickListener(this);
-        absListViewGames.setOnItemLongClickListener(this);
+        ListView listViewGames = (ListView) view.findViewById(R.id.listview_games);
+        listViewGames.setAdapter(gamesAdapter);
+        listViewGames.setEmptyView(view.findViewById(R.id.textview_empty));
+        listViewGames.setOnItemClickListener(this);
+        listViewGames.setOnItemLongClickListener(this);
 
         return view;
     }
@@ -163,12 +163,12 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        simpleCursorAdapter.changeCursor(null);
+        gamesAdapter.changeCursor(null);
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        simpleCursorAdapter.changeCursor(data);
+        gamesAdapter.changeCursor(data);
     }
 
 }

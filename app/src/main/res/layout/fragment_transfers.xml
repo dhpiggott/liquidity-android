@@ -5,17 +5,20 @@
     android:layout_height="match_parent"
     tools:context="com.dhpcs.liquidity.fragments.TransfersFragment">
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/recyclerview"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scrollbars="vertical" />
-
     <TextView
         android:id="@+id/textview_empty"
+        style="@style/TextAppearance.AppCompat.Caption"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
+        android:padding="16dp"
         android:text="@string/no_transfers" />
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recyclerview_transfers"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scrollbars="vertical"
+        android:visibility="gone" />
 
 </FrameLayout>

@@ -2,10 +2,10 @@ package com.dhpcs.liquidity.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
+import android.widget.Toast;
 
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.fragments.GamesFragment;
@@ -40,10 +40,10 @@ public class GamesActivity extends AppCompatActivity implements GamesFragment.Li
                             )
                     );
                 } catch (IllegalArgumentException e) {
-                    Snackbar.make(
-                            findViewById(R.id.coordinatorlayout),
+                    Toast.makeText(
+                            this,
                             R.string.join_game_invalid_code,
-                            Snackbar.LENGTH_LONG
+                            Toast.LENGTH_LONG
                     ).show();
                 }
             }

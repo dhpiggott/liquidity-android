@@ -6,7 +6,6 @@ import android.app.FragmentManager;
 import android.os.Bundle;
 import android.support.v13.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,7 +24,7 @@ import java.util.Comparator;
 
 import scala.collection.Iterator;
 
-public class IdentitiesFragment extends Fragment implements OnPageChangeListener {
+public class IdentitiesFragment extends Fragment {
 
     public interface Listener {
 
@@ -80,7 +79,21 @@ public class IdentitiesFragment extends Fragment implements OnPageChangeListener
 
     }
 
-    private static final String STATE_SELECTED_IDENTTIY = "selected_identity";
+    private static final String STATE_SELECTED_IDENTITY = "selected_identity";
+
+    private final ViewPager.OnPageChangeListener pageChangeListener =
+            new ViewPager.SimpleOnPageChangeListener() {
+
+                @Override
+                public void onPageSelected(int position) {
+                    selectedIdentity = getIdentity(position);
+                    if (listener != null) {
+                        listener.onIdentityPageSelected(position);
+                    }
+                }
+
+
+            };
 
     private IdentitiesFragmentStatePagerAdapter identitiesFragmentStatePagerAdapter;
 
@@ -127,7 +140,7 @@ public class IdentitiesFragment extends Fragment implements OnPageChangeListener
 
         if (savedInstanceState != null) {
             selectedIdentity =
-                    (Identity) savedInstanceState.getSerializable(STATE_SELECTED_IDENTTIY);
+                    (Identity) savedInstanceState.getSerializable(STATE_SELECTED_IDENTITY);
         }
     }
 
@@ -151,7 +164,7 @@ public class IdentitiesFragment extends Fragment implements OnPageChangeListener
 
         viewPagerIdentities = (ViewPager) view.findViewById(R.id.viewpager_identities);
         viewPagerIdentities.setAdapter(identitiesFragmentStatePagerAdapter);
-        viewPagerIdentities.addOnPageChangeListener(this);
+        viewPagerIdentities.addOnPageChangeListener(pageChangeListener);
 
         return view;
     }
@@ -159,7 +172,7 @@ public class IdentitiesFragment extends Fragment implements OnPageChangeListener
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        viewPagerIdentities.removeOnPageChangeListener(this);
+        viewPagerIdentities.removeOnPageChangeListener(pageChangeListener);
     }
 
     @Override
@@ -180,6 +193,9 @@ public class IdentitiesFragment extends Fragment implements OnPageChangeListener
         textViewEmpty.setVisibility(
                 identitiesFragmentStatePagerAdapter.getCount() == 0 ? View.VISIBLE : View.GONE
         );
+        viewPagerIdentities.setVisibility(
+                identitiesFragmentStatePagerAdapter.getCount() == 0 ? View.GONE : View.VISIBLE
+        );
         if (selectedIdentity != null && identities.contains(selectedIdentity.memberId())) {
             viewPagerIdentities.setCurrentItem(
                     identitiesFragmentStatePagerAdapter.getPosition(
@@ -191,25 +207,9 @@ public class IdentitiesFragment extends Fragment implements OnPageChangeListener
     }
 
     @Override
-    public void onPageSelected(int position) {
-        selectedIdentity = getIdentity(position);
-        if (listener != null) {
-            listener.onIdentityPageSelected(position);
-        }
-    }
-
-    @Override
-    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-    }
-
-    @Override
-    public void onPageScrollStateChanged(int state) {
-    }
-
-    @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putSerializable(STATE_SELECTED_IDENTTIY, selectedIdentity);
+        outState.putSerializable(STATE_SELECTED_IDENTITY, selectedIdentity);
     }
 
     public void setSelectedPage(int page) {

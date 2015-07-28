@@ -5,16 +5,19 @@
     android:layout_height="match_parent"
     tools:context="com.dhpcs.liquidity.fragments.GamesFragment">
 
-    <ListView
-        android:id="@android:id/list"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
     <TextView
-        android:id="@android:id/empty"
+        android:id="@+id/textview_empty"
+        style="@style/TextAppearance.AppCompat.Caption"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
+        android:padding="16dp"
         android:text="@string/no_games" />
+
+    <ListView
+        android:id="@+id/listview_games"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
 
 </FrameLayout>

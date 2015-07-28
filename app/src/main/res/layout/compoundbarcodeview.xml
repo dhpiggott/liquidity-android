@@ -6,11 +6,11 @@
 
     <TextView
         android:id="@+id/zxing_status_view"
+        style="@style/TextAppearance.AppCompat.Subhead"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:gravity="center_horizontal"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
+        android:gravity="center_horizontal" />
 
     <FrameLayout
         android:layout_width="match_parent"

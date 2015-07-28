@@ -373,7 +373,12 @@ class MonopolyGame private(context: Context,
 
   def getCurrency = state.currency
 
-  def getGameName = state.zone.name
+  def getGameName =
+    if (state == null) {
+      null
+    } else {
+      state.zone.name
+    }
 
   def getHiddenIdentities = state.hiddenIdentities.values
 
@@ -389,7 +394,7 @@ class MonopolyGame private(context: Context,
       JoinZoneCommand(
         zoneId
       ),
-      // TODO: Don't forward error - need to handle non-existant zone
+      // TODO: Don't forward error - need to handle non-existent zone
       new ResponseCallbackWithErrorForwarding {
 
         override def onResultReceived(resultResponse: ResultResponse) {

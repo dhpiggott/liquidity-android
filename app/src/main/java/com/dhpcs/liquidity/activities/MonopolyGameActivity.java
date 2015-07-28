@@ -4,13 +4,14 @@ import android.app.DialogFragment;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import com.dhpcs.liquidity.ClientKey;
 import com.dhpcs.liquidity.MonopolyGame;
@@ -208,10 +209,10 @@ public class MonopolyGameActivity extends AppCompatActivity
                     }
                     monopolyGame.transferIdentity(identity.memberId(), publicKey);
                 } catch (IllegalArgumentException e) {
-                    Snackbar.make(
-                            findViewById(R.id.coordinatorlayout),
+                    Toast.makeText(
+                            this,
                             R.string.transfer_identity_invalid_code,
-                            Snackbar.LENGTH_LONG
+                            Toast.LENGTH_LONG
                     ).show();
                 }
             }
@@ -274,6 +275,36 @@ public class MonopolyGameActivity extends AppCompatActivity
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         slidingUpPanelLayout = (SlidingUpPanelLayout) findViewById(R.id.slidinguppanellayout);
+        slidingUpPanelLayout.setPanelSlideListener(new SlidingUpPanelLayout.PanelSlideListener() {
+
+            @Override
+            public void onPanelSlide(View view, float v) {
+            }
+
+            @Override
+            public void onPanelCollapsed(View view) {
+                String gameName = monopolyGame.getGameName();
+                setTitle(gameName == null
+                        ?
+                        getString(R.string.title_activity_monopoly_game)
+                        :
+                        gameName);
+            }
+
+            @Override
+            public void onPanelExpanded(View view) {
+                setTitle(R.string.transfers);
+            }
+
+            @Override
+            public void onPanelAnchored(View view) {
+            }
+
+            @Override
+            public void onPanelHidden(View view) {
+            }
+
+        });
 
         identitiesFragment = (IdentitiesFragment)
                 getFragmentManager().findFragmentById(R.id.fragment_identities);
@@ -424,6 +455,14 @@ public class MonopolyGameActivity extends AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         IdentityWithBalance identity;
         switch (item.getItemId()) {
+            case android.R.id.home:
+                if (slidingUpPanelLayout.getPanelState() == PanelState.EXPANDED
+                        || slidingUpPanelLayout.getPanelState() == PanelState.ANCHORED) {
+                    slidingUpPanelLayout.setPanelState(PanelState.COLLAPSED);
+                    return true;
+                } else {
+                    return false;
+                }
             case R.id.action_add_players:
                 startActivity(
                         new Intent(
@@ -573,21 +612,34 @@ public class MonopolyGameActivity extends AppCompatActivity
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         Identity identity = identitiesFragment.getIdentity(identitiesFragment.getSelectedPage());
-        menu.findItem(R.id.action_add_players).setVisible(zoneId != null);
+        boolean isPanelCollapsed = slidingUpPanelLayout.getPanelState() == PanelState.COLLAPSED;
+        menu.findItem(R.id.action_add_players).setVisible(
+                zoneId != null
+        );
         menu.findItem(R.id.action_group_transfer).setVisible(
-                zoneId != null && identity != null
+                zoneId != null && identity != null && isPanelCollapsed
         );
-        menu.findItem(R.id.action_change_game_name).setVisible(zoneId != null);
+        menu.findItem(R.id.action_change_game_name).setVisible(
+                zoneId != null
+        );
         menu.findItem(R.id.action_change_identity_name).setVisible(
-                zoneId != null && identity != null && !identity.isBanker()
+                zoneId != null && identity != null && isPanelCollapsed && !identity.isBanker()
         );
-        menu.findItem(R.id.action_create_identity).setVisible(zoneId != null);
+        menu.findItem(R.id.action_create_identity).setVisible(
+                zoneId != null && isPanelCollapsed
+        );
         menu.findItem(R.id.action_restore_identity).setVisible(
-                zoneId != null && monopolyGame.getHiddenIdentities().nonEmpty()
+                zoneId != null && isPanelCollapsed && monopolyGame.getHiddenIdentities().nonEmpty()
         );
-        menu.findItem(R.id.action_delete_identity).setVisible(zoneId != null && identity != null);
-        menu.findItem(R.id.action_receive_identity).setVisible(zoneId != null);
-        menu.findItem(R.id.action_transfer_identity).setVisible(zoneId != null && identity != null);
+        menu.findItem(R.id.action_delete_identity).setVisible(
+                zoneId != null && identity != null && isPanelCollapsed
+        );
+        menu.findItem(R.id.action_receive_identity).setVisible(
+                zoneId != null && isPanelCollapsed
+        );
+        menu.findItem(R.id.action_transfer_identity).setVisible(
+                zoneId != null && identity != null && isPanelCollapsed
+        );
         return true;
     }
 
@@ -618,23 +670,6 @@ public class MonopolyGameActivity extends AppCompatActivity
     public void onTransferAdded(TransferWithCurrency addedTransfer) {
         lastTransferFragment.onTransferAdded(addedTransfer);
         playersTransfersFragment.onTransferAdded(addedTransfer);
-        // TODO: Don't create a snackbar, animate the last transfer fragment change instead
-        String value = MonopolyGameActivity.formatCurrencyValue(
-                this,
-                addedTransfer.currency(),
-                addedTransfer.transaction().value()
-        );
-        String summary = getString(
-                R.string.transfer_summary_format_string,
-                MonopolyGameActivity.formatMemberOrAccount(this, addedTransfer.from()),
-                value,
-                MonopolyGameActivity.formatMemberOrAccount(this, addedTransfer.to())
-        );
-        Snackbar.make(
-                findViewById(R.id.coordinatorlayout),
-                summary,
-                Snackbar.LENGTH_LONG
-        ).show();
     }
 
     @Override
@@ -645,8 +680,7 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onTransfersInitialized(
-            scala.collection.Iterable<TransferWithCurrency> transfers) {
+    public void onTransfersInitialized(scala.collection.Iterable<TransferWithCurrency> transfers) {
         lastTransferFragment.onTransfersInitialized(transfers);
         playersTransfersFragment.onTransfersInitialized(transfers);
     }
@@ -658,9 +692,7 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onTransferValueEntered(Identity from,
-                                       List<Player> to,
-                                       BigDecimal transferValue) {
+    public void onTransferValueEntered(Identity from, List<Player> to, BigDecimal transferValue) {
         monopolyGame.transfer(
                 from,
                 from,

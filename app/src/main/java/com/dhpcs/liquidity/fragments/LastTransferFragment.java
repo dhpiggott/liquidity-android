@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextSwitcher;
 import android.widget.TextView;
 
 import com.dhpcs.liquidity.MonopolyGame.TransferWithCurrency;
@@ -17,10 +18,11 @@ import scala.collection.Iterator;
 
 public class LastTransferFragment extends Fragment {
 
-    private final DateFormat dateFormat = DateFormat.getDateTimeInstance();
+    private final DateFormat timeFormat = DateFormat.getTimeInstance();
 
-    private TextView textViewSummary;
-    private TextView textViewCreated;
+    private TextView textViewEmpty;
+    private TextSwitcher textSwitcherSummary;
+    private TextSwitcher textSwitcherCreated;
 
     private TransferWithCurrency lastTransfer;
 
@@ -30,8 +32,9 @@ public class LastTransferFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_last_transfer, container, false);
 
-        textViewSummary = (TextView) view.findViewById(R.id.textview_summary);
-        textViewCreated = (TextView) view.findViewById(R.id.textview_created);
+        textViewEmpty = (TextView) view.findViewById(R.id.textview_empty);
+        textSwitcherSummary = (TextSwitcher) view.findViewById(R.id.textswitcher_summary);
+        textSwitcherCreated = (TextSwitcher) view.findViewById(R.id.textswitcher_created);
 
         return view;
     }
@@ -40,7 +43,7 @@ public class LastTransferFragment extends Fragment {
         if (lastTransfer == null ||
                 addedTransfer.transaction().created() > lastTransfer.transaction().created()) {
             lastTransfer = addedTransfer;
-            showTransfer(lastTransfer);
+            showTransfer(lastTransfer, true);
         }
     }
 
@@ -51,7 +54,7 @@ public class LastTransferFragment extends Fragment {
             TransferWithCurrency transfer = iterator.next();
             if (transfer.transactionId().equals(lastTransfer.transactionId())) {
                 lastTransfer = transfer;
-                showTransfer(lastTransfer);
+                showTransfer(lastTransfer, false);
                 break;
             }
         }
@@ -67,26 +70,33 @@ public class LastTransferFragment extends Fragment {
             }
         }
         if (lastTransfer != null) {
-            showTransfer(lastTransfer);
+            showTransfer(lastTransfer, false);
         }
     }
 
-    private void showTransfer(TransferWithCurrency transfer) {
-        long created = transfer.transaction().created();
-        String value = MonopolyGameActivity.formatCurrencyValue(
-                getActivity(),
-                transfer.currency(),
-                transfer.transaction().value()
-        );
+    private void showTransfer(TransferWithCurrency transfer, boolean animate) {
         String summary = getString(
                 R.string.transfer_summary_format_string,
                 MonopolyGameActivity.formatMemberOrAccount(getActivity(), lastTransfer.from()),
-                value,
+                MonopolyGameActivity.formatCurrencyValue(
+                        getActivity(),
+                        transfer.currency(),
+                        transfer.transaction().value()
+                ),
                 MonopolyGameActivity.formatMemberOrAccount(getActivity(), lastTransfer.to())
         );
+        String created = timeFormat.format(transfer.transaction().created());
 
-        textViewCreated.setText(dateFormat.format(created));
-        textViewSummary.setText(summary);
+        if (animate) {
+            textSwitcherSummary.setText(summary);
+            textSwitcherCreated.setText(created);
+        } else {
+            textSwitcherSummary.setCurrentText(summary);
+            textSwitcherCreated.setCurrentText(created);
+        }
+        textViewEmpty.setVisibility(View.GONE);
+        textSwitcherSummary.setVisibility(View.VISIBLE);
+        textSwitcherCreated.setVisibility(View.VISIBLE);
     }
 
 }

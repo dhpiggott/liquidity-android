@@ -12,7 +12,7 @@
 
     <string name="add_players">Add players</string>
     <string name="add_players_game_name_format_string">Show the QR code to the joining players to admit them to %1$s.</string>
-    <string name="all_transfers">All transfers</string>
+    <string name="all">All</string>
     <string name="bank_member_name">Bank</string>
     <string name="cancel">Cancel</string>
     <string name="change_game_name">Change game name</string>
@@ -41,16 +41,17 @@
     <string name="no_identities">You don\'t have any identities. Tap here to create one.</string>
     <string name="no_other_players">No one else has joined yet. Tap here to invite them.</string>
     <string name="no_transfers">No transfers have been made yet.</string>
+    <string name="no_transfers_with_instruction">No transfers have been made yet. Tap a player to send money to them.</string>
     <string name="non_player_transfer_location_format_string">%1$s (%2$s)</string>
     <string name="ok">OK</string>
     <string name="player_connected">Connected</string>
     <string name="player_disconnected">Disconnected</string>
     <string name="player_format_string">%1$s (%2$s)</string>
-    <string name="player_transfers_format_string">%1$s\'s transfers</string>
     <string name="previous_games">Previous games</string>
     <string name="receive_identity">Receive identity</string>
     <string name="receive_identity_instruction">Show the QR code to the sender.</string>
     <string name="restore_identity">Restore identity</string>
+    <string name="transfers">Transfers</string>
     <string name="transfer_amount">Amount</string>
     <string name="transfer_from">From</string>
     <string name="transfer_identity">Transfer identity</string>

@@ -157,6 +157,7 @@ public class PlayersFragment extends Fragment {
     private PlayersAdapter playersAdapter;
 
     private TextView textViewEmpty;
+    private RecyclerView recyclerViewPlayers;
 
     private scala.collection.immutable.Map<MemberId, PlayerWithBalanceAndConnectionState> players;
     private Identity selectedIdentity;
@@ -194,7 +195,7 @@ public class PlayersFragment extends Fragment {
 
         });
 
-        RecyclerView recyclerViewPlayers = (RecyclerView) view.findViewById(R.id.recyclerview);
+        recyclerViewPlayers = (RecyclerView) view.findViewById(R.id.recyclerview_players);
         recyclerViewPlayers.addItemDecoration(new RecyclerView.ItemDecoration() {
 
             private final Drawable divider;
@@ -248,6 +249,7 @@ public class PlayersFragment extends Fragment {
     public void onPlayerAdded(PlayerWithBalanceAndConnectionState addedPlayer) {
         replaceOrAddPlayer(addedPlayer);
         textViewEmpty.setVisibility(View.GONE);
+        recyclerViewPlayers.setVisibility(View.VISIBLE);
     }
 
     public void onPlayersChanged(
@@ -260,6 +262,7 @@ public class PlayersFragment extends Fragment {
         replaceOrAddPlayers(players);
         if (playersAdapter.getItemCount() != 0) {
             textViewEmpty.setVisibility(View.GONE);
+            recyclerViewPlayers.setVisibility(View.VISIBLE);
         }
     }
 
@@ -270,6 +273,7 @@ public class PlayersFragment extends Fragment {
         }
         if (playersAdapter.getItemCount() == 0) {
             textViewEmpty.setVisibility(View.VISIBLE);
+            recyclerViewPlayers.setVisibility(View.GONE);
         }
     }
 
@@ -279,6 +283,9 @@ public class PlayersFragment extends Fragment {
             replaceOrAddPlayers(players.values());
             textViewEmpty.setVisibility(
                     playersAdapter.getItemCount() == 0 ? View.VISIBLE : View.GONE
+            );
+            recyclerViewPlayers.setVisibility(
+                    playersAdapter.getItemCount() == 0 ? View.GONE : View.VISIBLE
             );
         }
         this.players = players;
@@ -302,6 +309,9 @@ public class PlayersFragment extends Fragment {
         }
         textViewEmpty.setVisibility(
                 playersAdapter.getItemCount() == 0 ? View.VISIBLE : View.GONE
+        );
+        recyclerViewPlayers.setVisibility(
+                playersAdapter.getItemCount() == 0 ? View.GONE : View.VISIBLE
         );
     }
 

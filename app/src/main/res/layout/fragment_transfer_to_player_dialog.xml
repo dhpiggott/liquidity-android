@@ -14,7 +14,7 @@
         style="@style/TextAppearance.AppCompat.Subhead"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="8dp"
         android:text="@string/transfer_amount" />
 
     <View
@@ -25,11 +25,11 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="12dp"
-        android:layout_marginLeft="12dp"
-        android:layout_marginRight="12dp"
-        android:layout_marginStart="12dp"
-        android:layout_marginTop="12dp">
+        android:layout_marginEnd="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -44,24 +44,24 @@
 
             <TextView
                 android:id="@+id/textview_currency"
+                style="@style/TextAppearance.AppCompat.Title"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceLarge" />
+                android:layout_height="wrap_content" />
 
             <EditText
                 android:id="@+id/edittext_value"
+                style="@style/TextAppearance.AppCompat.Title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:inputType="numberDecimal"
                 android:labelFor="@id/textview_currency"
-                android:selectAllOnFocus="true"
-                android:textAppearance="?android:attr/textAppearanceLarge" />
+                android:selectAllOnFocus="true" />
 
             <TextView
                 android:id="@+id/textview_multiplier"
+                style="@style/TextAppearance.AppCompat.Title"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceLarge" />
+                android:layout_height="wrap_content" />
 
         </LinearLayout>
 
@@ -102,44 +102,44 @@
         style="@style/TextAppearance.AppCompat.Subhead"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="8dp"
         android:text="@string/transfer_from" />
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="?android:attr/dividerHorizontal" />
+        android:background="?attr/android:dividerHorizontal" />
 
     <Spinner
         android:id="@+id/spinner_from"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="12dp"
-        android:layout_marginLeft="12dp"
-        android:layout_marginRight="12dp"
-        android:layout_marginStart="12dp"
-        android:layout_marginTop="12dp" />
+        android:layout_marginEnd="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp" />
 
     <TextView
         style="@style/TextAppearance.AppCompat.Subhead"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="8dp"
         android:text="@string/transfer_to" />
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="?android:attr/dividerHorizontal" />
+        android:background="?attr/android:dividerHorizontal" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="12dp"
-        android:layout_marginLeft="12dp"
-        android:layout_marginRight="12dp"
-        android:layout_marginStart="12dp"
-        android:layout_marginTop="12dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
         android:orientation="vertical">
 
         <Spinner
