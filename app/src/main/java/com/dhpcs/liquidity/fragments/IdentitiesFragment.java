@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.dhpcs.liquidity.MonopolyGame.Identity;
 import com.dhpcs.liquidity.MonopolyGame.IdentityWithBalance;
 import com.dhpcs.liquidity.MonopolyGame.Player;
 import com.dhpcs.liquidity.R;
@@ -79,10 +80,14 @@ public class IdentitiesFragment extends Fragment implements OnPageChangeListener
 
     }
 
+    private static final String STATE_SELECTED_IDENTTIY = "selected_identity";
+
     private IdentitiesFragmentStatePagerAdapter identitiesFragmentStatePagerAdapter;
 
     private TextView textViewEmpty;
     private ViewPager viewPagerIdentities;
+
+    private Identity selectedIdentity;
 
     private Listener listener;
 
@@ -119,6 +124,11 @@ public class IdentitiesFragment extends Fragment implements OnPageChangeListener
         identitiesFragmentStatePagerAdapter = new IdentitiesFragmentStatePagerAdapter(
                 getFragmentManager()
         );
+
+        if (savedInstanceState != null) {
+            selectedIdentity =
+                    (Identity) savedInstanceState.getSerializable(STATE_SELECTED_IDENTTIY);
+        }
     }
 
     @Override
@@ -158,10 +168,8 @@ public class IdentitiesFragment extends Fragment implements OnPageChangeListener
         listener = null;
     }
 
-    // TODO: Selected identity is reset on rotate
     public void onIdentitiesUpdated(
             scala.collection.immutable.Map<MemberId, IdentityWithBalance> identities) {
-        IdentityWithBalance selectedIdentity = getIdentity(getSelectedPage());
         identitiesFragmentStatePagerAdapter.clear();
         Iterator<IdentityWithBalance> iterator = identities.valuesIterator();
         while (iterator.hasNext()) {
@@ -184,6 +192,7 @@ public class IdentitiesFragment extends Fragment implements OnPageChangeListener
 
     @Override
     public void onPageSelected(int position) {
+        selectedIdentity = getIdentity(position);
         if (listener != null) {
             listener.onIdentityPageSelected(position);
         }
@@ -195,6 +204,12 @@ public class IdentitiesFragment extends Fragment implements OnPageChangeListener
 
     @Override
     public void onPageScrollStateChanged(int state) {
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putSerializable(STATE_SELECTED_IDENTTIY, selectedIdentity);
     }
 
     public void setSelectedPage(int page) {
