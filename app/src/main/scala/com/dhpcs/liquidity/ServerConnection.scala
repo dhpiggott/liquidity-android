@@ -113,9 +113,10 @@ class ServerConnection(context: Context,
 
   private val log = LoggerFactory.getLogger(getClass)
 
-  private val client = new OkHttpClient()
+  private lazy val client = new OkHttpClient()
     .setSslSocketFactory(getSslSocketFactory(context))
     .setHostnameVerifier(ServerTrust.getHostnameVerifier(context))
+
   private val mainHandler = new Handler(Looper.getMainLooper)
   private val pingRunnable: Runnable = new Runnable() {
 
