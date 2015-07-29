@@ -29,6 +29,10 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginEnd="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginStart="8dp"
         android:gravity="center"
         android:orientation="vertical">
 
@@ -46,7 +50,7 @@
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:gravity="center_horizontal"
-                android:lines="1" />
+                android:singleLine="true" />
 
             <TextView
                 style="@style/TextAppearance.AppCompat.Subhead"
@@ -54,7 +58,7 @@
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:gravity="center_horizontal"
-                android:lines="1" />
+                android:singleLine="true" />
 
         </TextSwitcher>
 
