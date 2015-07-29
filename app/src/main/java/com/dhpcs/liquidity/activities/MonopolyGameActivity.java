@@ -567,9 +567,8 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onPlayersChanged(
-            scala.collection.Iterable<PlayerWithBalanceAndConnectionState> changedPlayers) {
-        playersFragment.onPlayersChanged(changedPlayers);
+    public void onPlayerChanged(PlayerWithBalanceAndConnectionState changedPlayer) {
+        playersFragment.onPlayerChanged(changedPlayer);
     }
 
     @Override

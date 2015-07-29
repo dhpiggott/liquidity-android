@@ -74,10 +74,7 @@ public class PlayersTransfersFragment extends Fragment {
 
         @Override
         public Fragment getItem(int position) {
-            return TransfersFragment.newInstance(
-                    get(position),
-                    transfers
-            );
+            return TransfersFragment.newInstance(get(position), transfers);
         }
 
         @Override
@@ -145,11 +142,7 @@ public class PlayersTransfersFragment extends Fragment {
 
                 @Override
                 public void onPageSelected(int position) {
-                    if (playersTransfersFragmentStatePagerAdapter.getCount() == 0) {
-                        selectedPlayer = null;
-                    } else {
-                        selectedPlayer = playersTransfersFragmentStatePagerAdapter.get(position);
-                    }
+                    selectedPlayer = playersTransfersFragmentStatePagerAdapter.get(position);
                 }
 
 
@@ -186,8 +179,8 @@ public class PlayersTransfersFragment extends Fragment {
         viewPagerPlayersTransfers = (ViewPager) view.findViewById(R.id.viewpager_players_transfers);
 
         viewPagerPlayersTransfers.setAdapter(playersTransfersFragmentStatePagerAdapter);
-        viewPagerPlayersTransfers.addOnPageChangeListener(pageChangeListener);
         tabLayoutPlayers.setupWithViewPager(viewPagerPlayersTransfers);
+        viewPagerPlayersTransfers.addOnPageChangeListener(pageChangeListener);
 
         return view;
     }
@@ -207,7 +200,17 @@ public class PlayersTransfersFragment extends Fragment {
         }
         playersTransfersFragmentStatePagerAdapter.sort(MonopolyGameActivity.playerComparator);
         playersTransfersFragmentStatePagerAdapter.notifyDataSetChanged();
-        tabLayoutPlayers.setupWithViewPager(viewPagerPlayersTransfers);
+
+        /*
+         * The call to setTabsFromPagerAdapter first removes all existing tabs. The first tab
+         * re-added is consequently also automatically selected for us. That's not so helpful here
+         * as it would cause selectedPlayer to be set to null (the value corresponding to the
+         * always-present, always-first 'ALL' tab). We could just store the fields value in a local
+         * here, but this somehow seems to read better.
+         */
+        viewPagerPlayersTransfers.removeOnPageChangeListener(pageChangeListener);
+        tabLayoutPlayers.setTabsFromPagerAdapter(playersTransfersFragmentStatePagerAdapter);
+        viewPagerPlayersTransfers.addOnPageChangeListener(pageChangeListener);
         if (selectedPlayer != null && players.contains(selectedPlayer.memberId())) {
             viewPagerPlayersTransfers.setCurrentItem(
                     playersTransfersFragmentStatePagerAdapter.getPosition(

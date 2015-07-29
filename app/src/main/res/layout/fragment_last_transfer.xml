@@ -15,8 +15,8 @@
 
     <TextView
         android:id="@+id/textview_empty"
-        android:layout_width="wrap_content"
         style="@style/TextAppearance.AppCompat.Caption"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_marginEnd="8dp"
@@ -24,7 +24,7 @@
         android:layout_marginRight="8dp"
         android:layout_marginStart="8dp"
         android:gravity="center"
-        android:text="@string/no_transfers_with_instruction" />
+        android:text="@string/no_last_transfer" />
 
     <LinearLayout
         android:layout_width="match_parent"

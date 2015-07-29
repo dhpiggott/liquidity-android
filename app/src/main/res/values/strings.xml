@@ -39,9 +39,9 @@
     <string name="new_monopoly_game_name" tools:ignore="UnusedResources">New Monopoly Game</string>
     <string name="no_games">You don\'t have any saved games.</string>
     <string name="no_identities">You don\'t have any identities. Tap here to create one.</string>
+    <string name="no_last_transfer">Tap a player to send money to them.</string>
     <string name="no_other_players">No one else has joined yet. Tap here to invite them.</string>
     <string name="no_transfers">No transfers have been made yet.</string>
-    <string name="no_transfers_with_instruction">No transfers have been made yet. Tap a player to send money to them.</string>
     <string name="non_player_transfer_location_format_string">%1$s (%2$s)</string>
     <string name="ok">OK</string>
     <string name="player_connected">Connected</string>

@@ -93,7 +93,7 @@ object MonopolyGame {
 
     def onPlayerAdded(addedPlayer: PlayerWithBalanceAndConnectionState)
 
-    def onPlayersChanged(changedPlayers: Iterable[PlayerWithBalanceAndConnectionState])
+    def onPlayerChanged(changedPlayer: PlayerWithBalanceAndConnectionState)
 
     def onPlayersInitialized(players: Iterable[PlayerWithBalanceAndConnectionState])
 
@@ -601,7 +601,9 @@ class MonopolyGame private(context: Context,
               )
             }
             if (changedPlayers.nonEmpty) {
-              listener.foreach(_.onPlayersChanged(changedPlayers.values))
+              listener.foreach(listener =>
+                changedPlayers.values.foreach(listener.onPlayerChanged)
+              )
             }
             if (removedPlayers.nonEmpty) {
               listener.foreach(listener =>
@@ -627,7 +629,7 @@ class MonopolyGame private(context: Context,
 
           if (updatedTransfers != state.transfers) {
             val changedTransfers = updatedTransfers.filter { case (transactionId, transfer) =>
-              state.transfers.get(transactionId).fold(false)(_ == transfer)
+              state.transfers.get(transactionId).fold(false)(_ != transfer)
             }
             if (changedTransfers.nonEmpty) {
               listener.foreach(_.onTransfersChanged(changedTransfers.values))
@@ -658,7 +660,9 @@ class MonopolyGame private(context: Context,
 
             if (joinedPlayers.nonEmpty) {
               state.players = state.players ++ joinedPlayers
-              listener.foreach(_.onPlayersChanged(joinedPlayers.values))
+              listener.foreach(listener =>
+                joinedPlayers.values.foreach(listener.onPlayerChanged)
+              )
               listener.foreach(_.onPlayersUpdated(state.players))
             }
 
@@ -684,7 +688,9 @@ class MonopolyGame private(context: Context,
 
             if (quitPlayers.nonEmpty) {
               state.players = state.players ++ quitPlayers
-              listener.foreach(_.onPlayersChanged(quitPlayers.values))
+              listener.foreach(listener =>
+                quitPlayers.values.foreach(listener.onPlayerChanged)
+              )
               listener.foreach(_.onPlayersUpdated(state.players))
             }
 
@@ -924,7 +930,9 @@ class MonopolyGame private(context: Context,
 
             if (changedPlayers.nonEmpty) {
               state.players = state.players ++ changedPlayers
-              listener.foreach(_.onPlayersChanged(changedPlayers.values))
+              listener.foreach(listener =>
+                changedPlayers.values.foreach(listener.onPlayerChanged)
+              )
               listener.foreach(_.onPlayersUpdated(state.players))
             }
 

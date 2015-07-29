@@ -144,12 +144,23 @@ public class PlayersFragment extends Fragment {
             holder.bindPlayer(player);
         }
 
-        public int add(PlayerWithBalanceAndConnectionState player) {
+        /**
+         * @param player Must have same position according to the lists order as any item it
+         *               replaces. If properties of the player (i.e. its name) have changed
+         *               relative to any previous item, the replace method must instead be called.
+         * @return The index of the (newly) added player .
+         */
+        public int addOrReplace(PlayerWithBalanceAndConnectionState player) {
             return players.add(player);
         }
 
         public boolean remove(PlayerWithBalanceAndConnectionState player) {
             return players.remove(player);
+        }
+
+        public void replace(PlayerWithBalanceAndConnectionState oldPlayer,
+                            PlayerWithBalanceAndConnectionState newPlayer) {
+            players.updateItemAt(players.indexOf(oldPlayer), newPlayer);
         }
 
     }
@@ -184,6 +195,8 @@ public class PlayersFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_players, container, false);
 
         textViewEmpty = (TextView) view.findViewById(R.id.textview_empty);
+        recyclerViewPlayers = (RecyclerView) view.findViewById(R.id.recyclerview_players);
+
         textViewEmpty.setOnClickListener(new View.OnClickListener() {
 
             @Override
@@ -194,8 +207,6 @@ public class PlayersFragment extends Fragment {
             }
 
         });
-
-        recyclerViewPlayers = (RecyclerView) view.findViewById(R.id.recyclerview_players);
         recyclerViewPlayers.addItemDecoration(new RecyclerView.ItemDecoration() {
 
             private final Drawable divider;
@@ -248,18 +259,25 @@ public class PlayersFragment extends Fragment {
 
     public void onPlayerAdded(PlayerWithBalanceAndConnectionState addedPlayer) {
         replaceOrAddPlayer(addedPlayer);
-        textViewEmpty.setVisibility(View.GONE);
-        recyclerViewPlayers.setVisibility(View.VISIBLE);
+        if (playersAdapter.getItemCount() != 0) {
+            textViewEmpty.setVisibility(View.GONE);
+            recyclerViewPlayers.setVisibility(View.VISIBLE);
+        }
     }
 
-    public void onPlayersChanged(
-            scala.collection.Iterable<PlayerWithBalanceAndConnectionState> changedPlayers) {
-        replaceOrAddPlayers(changedPlayers);
+    public void onPlayerChanged(PlayerWithBalanceAndConnectionState changedPlayer) {
+        if (selectedIdentity == null
+                || !changedPlayer.memberId().equals(selectedIdentity.memberId())) {
+            playersAdapter.replace(players.apply(changedPlayer.memberId()), changedPlayer);
+        }
     }
 
     public void onPlayersInitialized(
             scala.collection.Iterable<PlayerWithBalanceAndConnectionState> players) {
-        replaceOrAddPlayers(players);
+        Iterator<PlayerWithBalanceAndConnectionState> iterator = players.iterator();
+        while (iterator.hasNext()) {
+            replaceOrAddPlayer(iterator.next());
+        }
         if (playersAdapter.getItemCount() != 0) {
             textViewEmpty.setVisibility(View.GONE);
             recyclerViewPlayers.setVisibility(View.VISIBLE);
@@ -279,15 +297,6 @@ public class PlayersFragment extends Fragment {
 
     public void onPlayersUpdated(
             scala.collection.immutable.Map<MemberId, PlayerWithBalanceAndConnectionState> players) {
-        if (this.players == null) {
-            replaceOrAddPlayers(players.values());
-            textViewEmpty.setVisibility(
-                    playersAdapter.getItemCount() == 0 ? View.VISIBLE : View.GONE
-            );
-            recyclerViewPlayers.setVisibility(
-                    playersAdapter.getItemCount() == 0 ? View.GONE : View.VISIBLE
-            );
-        }
         this.players = players;
     }
 
@@ -296,7 +305,7 @@ public class PlayersFragment extends Fragment {
             Option<PlayerWithBalanceAndConnectionState> player =
                     players.get(this.selectedIdentity.memberId());
             if (player.isDefined()) {
-                playersAdapter.add(player.get());
+                playersAdapter.addOrReplace(player.get());
             }
         }
         this.selectedIdentity = selectedIdentity;
@@ -318,15 +327,7 @@ public class PlayersFragment extends Fragment {
     private void replaceOrAddPlayer(PlayerWithBalanceAndConnectionState player) {
         if (selectedIdentity == null
                 || !player.memberId().equals(selectedIdentity.memberId())) {
-            playersAdapter.add(player);
-        }
-    }
-
-    private void replaceOrAddPlayers(
-            scala.collection.Iterable<PlayerWithBalanceAndConnectionState> players) {
-        Iterator<PlayerWithBalanceAndConnectionState> iterator = players.iterator();
-        while (iterator.hasNext()) {
-            replaceOrAddPlayer(iterator.next());
+            playersAdapter.addOrReplace(player);
         }
     }
 

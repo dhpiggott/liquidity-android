@@ -144,7 +144,7 @@ public class TransfersFragment extends Fragment {
             holder.bindTransfer(transfer);
         }
 
-        public int add(TransferWithCurrency transfer) {
+        public int addOrReplace(TransferWithCurrency transfer) {
             return transfers.add(transfer);
         }
 
@@ -205,6 +205,7 @@ public class TransfersFragment extends Fragment {
 
         textViewEmpty = (TextView) view.findViewById(R.id.textview_empty);
         recyclerViewTransfers = (RecyclerView) view.findViewById(R.id.recyclerview_transfers);
+
         recyclerViewTransfers.addItemDecoration(new RecyclerView.ItemDecoration() {
 
             private final Drawable divider;
@@ -282,7 +283,7 @@ public class TransfersFragment extends Fragment {
                 && player.memberId().equals(transfer.from().right().get().memberId()))
                 || (transfer.to().isRight()
                 && player.memberId().equals(transfer.to().right().get().memberId()))) {
-            transfersAdapter.add(transfer);
+            transfersAdapter.addOrReplace(transfer);
         }
     }
 
