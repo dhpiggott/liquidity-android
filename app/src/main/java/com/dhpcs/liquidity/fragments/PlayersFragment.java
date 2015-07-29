@@ -49,6 +49,7 @@ public class PlayersFragment extends Fragment {
             private final Identicon identiconId;
             private final TextView textViewName;
             private final TextView textViewBalance;
+            private final TextView textViewStatus;
 
             private Player player;
 
@@ -58,6 +59,7 @@ public class PlayersFragment extends Fragment {
                 identiconId = (Identicon) itemView.findViewById(R.id.identicon_id);
                 textViewName = (TextView) itemView.findViewById(R.id.textview_name);
                 textViewBalance = (TextView) itemView.findViewById(R.id.textview_balance);
+                textViewStatus = (TextView) itemView.findViewById(R.id.textview_status);
             }
 
             public void bindPlayer(PlayerWithBalanceAndConnectionState player) {
@@ -70,18 +72,13 @@ public class PlayersFragment extends Fragment {
                         player.balanceWithCurrency()._2(),
                         player.balanceWithCurrency()._1()
                 );
+                String status = player.isConnected() ?
+                        null : context.getString(R.string.player_disconnected);
 
                 identiconId.show(identifier);
-                textViewName.setText(
-                        context.getString(
-                                R.string.player_format_string,
-                                name,
-                                player.isConnected() ?
-                                        context.getString(R.string.player_connected) :
-                                        context.getString(R.string.player_disconnected)
-                        )
-                );
+                textViewName.setText(name);
                 textViewBalance.setText(balance);
+                textViewStatus.setText(status);
             }
 
             @Override

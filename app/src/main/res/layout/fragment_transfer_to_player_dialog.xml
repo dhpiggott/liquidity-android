@@ -39,8 +39,7 @@
             android:layout_centerVertical="true"
             android:layout_toLeftOf="@+id/radiogroup_value_multiplier"
             android:layout_toStartOf="@+id/radiogroup_value_multiplier"
-            android:orientation="horizontal"
-            tools:ignore="RtlHardcoded">
+            android:orientation="horizontal">
 
             <TextView
                 android:id="@+id/textview_currency"
@@ -72,8 +71,7 @@
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
-            android:orientation="horizontal"
-            tools:ignore="RtlHardcoded">
+            android:orientation="horizontal">
 
             <RadioButton
                 android:id="@+id/radiobutton_value_multiplier_million"
