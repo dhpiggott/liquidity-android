@@ -19,7 +19,7 @@
     <string name="change_identity_name">Change identity name</string>
     <string name="choose_identity_to_restore">Choose identity to restore</string>
     <string name="confirm_delete">Confirm delete</string>
-    <string name="confirm_delete_format_string">Are you sure you want to delete your identity \"%1$s\"? You can always restore deleted identities via the menu later.</string>
+    <string name="confirm_delete_format_string">Are you sure you want to delete your identity %1$s? You can always restore deleted identities via the menu later.</string>
     <string name="create_identity">Create identity</string>
     <string name="created_format_string">Created %1$s</string>
     <string name="currency_code_format_string">"%1$s "</string>
@@ -37,7 +37,7 @@
     <string name="join_game_invalid_code">"That's not a Liquidity game!"</string>
     <string name="new_game">New game</string>
     <string name="new_monopoly_game_name" tools:ignore="UnusedResources">New Monopoly Game</string>
-    <string name="no_games">You don\'t have any saved games.</string>
+    <string name="no_games">You don\'t have any saved games. Use the menu above to create or join one.</string>
     <string name="no_identities">You don\'t have any identities. Tap here to create one.</string>
     <string name="no_last_transfer">Tap a player to send money to them.</string>
     <string name="no_other_players">No one else has joined yet. Tap here to invite them.</string>
@@ -53,8 +53,8 @@
     <string name="transfer_amount">Amount</string>
     <string name="transfer_from">From</string>
     <string name="transfer_identity">Transfer identity</string>
-    <string name="transfer_identity_identity_name_format_string">Scan the QR code on the recipients\'s phone to transfer %1$s to them.</string>
-    <string name="transfer_identity_invalid_code">"That's not a member of the game!"</string>
+    <string name="transfer_identity_identity_name_format_string">Scan the QR code on the recipients\'s phone to transfer your identity %1$s to them.</string>
+    <string name="transfer_identity_invalid_code_format_string">"That's not a player connected to %1$s!"</string>
     <string name="transfer_summary_format_string">%1$s sent %2$s to %3$s</string>
     <string name="transfer_summary_received_from_format_string">Received %1$s from %2$s</string>
     <string name="transfer_summary_sent_to_format_string">Sent %1$s to %2$s</string>

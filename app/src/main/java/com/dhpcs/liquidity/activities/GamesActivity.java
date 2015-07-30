@@ -4,7 +4,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.dhpcs.liquidity.R;
@@ -60,35 +61,12 @@ public class GamesActivity extends AppCompatActivity implements GamesFragment.Li
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 
         setSupportActionBar(toolbar);
+    }
 
-        findViewById(R.id.button_new_game).setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                // TODO: Prompt for currency? And name?
-                startActivity(
-                        new Intent(
-                                GamesActivity.this,
-                                MonopolyGameActivity.class
-                        )
-                );
-            }
-
-        });
-
-        findViewById(R.id.button_join_game).setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                new IntentIntegrator(GamesActivity.this)
-                        .setCaptureActivity(JoinGameActivity.class)
-                        .setDesiredBarcodeFormats(Collections.singleton("QR_CODE"))
-                        .setBeepEnabled(false)
-                        .setOrientationLocked(false)
-                        .initiateScan();
-            }
-
-        });
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_games, menu);
+        return true;
     }
 
     @Override
@@ -108,6 +86,30 @@ public class GamesActivity extends AppCompatActivity implements GamesFragment.Li
                         gameName
                 )
         );
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_new_game:
+                // TODO: Prompt for currency? And name?
+                startActivity(
+                        new Intent(
+                                GamesActivity.this,
+                                MonopolyGameActivity.class
+                        )
+                );
+                return true;
+            case R.id.action_join_game:
+                new IntentIntegrator(GamesActivity.this)
+                        .setCaptureActivity(JoinGameActivity.class)
+                        .setDesiredBarcodeFormats(Collections.singleton("QR_CODE"))
+                        .setBeepEnabled(false)
+                        .setOrientationLocked(false)
+                        .initiateScan();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
 }

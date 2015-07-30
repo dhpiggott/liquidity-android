@@ -96,6 +96,8 @@
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/rs" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/symbols" />
       <excludeFolder url="file://$MODULE_DIR$/build/outputs" />
+      <excludeFolder url="file://$MODULE_DIR$/build/reports" />
+      <excludeFolder url="file://$MODULE_DIR$/build/test-results" />
       <excludeFolder url="file://$MODULE_DIR$/build/tmp" />
     </content>
     <orderEntry type="jdk" jdkName="Android API 22 Platform" jdkType="Android SDK" />
@@ -133,8 +135,8 @@
     <orderEntry type="library" exported="" name="apktool-lib-1.4.4-3" level="project" />
     <orderEntry type="library" exported="" name="scala-reflect-2.11.1" level="project" />
     <orderEntry type="library" exported="" name="play-json-rpc_2.11-0.2.0" level="project" />
-    <orderEntry type="library" exported="" name="jackson-databind-2.3.2" level="project" />
     <orderEntry type="library" exported="" name="joda-time-2.3" level="project" />
+    <orderEntry type="library" exported="" name="jackson-databind-2.3.2" level="project" />
     <orderEntry type="library" exported="" name="play-iteratees_2.11-2.3.9" level="project" />
     <orderEntry type="library" exported="" name="multidex-1.0.1" level="project" />
     <orderEntry type="library" exported="" name="scala-library-2.11.7" level="project" />

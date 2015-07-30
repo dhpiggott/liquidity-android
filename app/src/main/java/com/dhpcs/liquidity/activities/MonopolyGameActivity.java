@@ -1,6 +1,5 @@
 package com.dhpcs.liquidity.activities;
 
-import android.app.DialogFragment;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -72,6 +71,8 @@ public class MonopolyGameActivity extends AppCompatActivity
     public static final String EXTRA_GAME_ID = "game_id";
     public static final String EXTRA_GAME_NAME = "game_name";
     public static final String EXTRA_ZONE_ID = "zone_id";
+
+    private static final int REQUEST_CODE_RECEIVE_IDENTITY = 0;
 
     public static final Comparator<Player> playerComparator = new Comparator<Player>() {
 
@@ -148,7 +149,8 @@ public class MonopolyGameActivity extends AppCompatActivity
         numberFormat.setMaximumFractionDigits(maximumFractionDigits);
         numberFormat.setMinimumFractionDigits(minimumFractionDigits);
 
-        return context.getString(R.string.currency_value_format_string,
+        return context.getString(
+                R.string.currency_value_format_string,
                 formatCurrency(context, currency),
                 numberFormat.format(scaledValue),
                 multiplier
@@ -211,7 +213,10 @@ public class MonopolyGameActivity extends AppCompatActivity
                 } catch (IllegalArgumentException e) {
                     Toast.makeText(
                             this,
-                            R.string.transfer_identity_invalid_code,
+                            getString(
+                                    R.string.transfer_identity_invalid_code_format_string,
+                                    monopolyGame.getGameName()
+                            ),
                             Toast.LENGTH_LONG
                     ).show();
                 }
@@ -266,8 +271,6 @@ public class MonopolyGameActivity extends AppCompatActivity
 
         }
 
-        monopolyGame.connectCreateAndOrJoinZone();
-
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 
         setSupportActionBar(toolbar);
@@ -314,6 +317,9 @@ public class MonopolyGameActivity extends AppCompatActivity
                 getFragmentManager().findFragmentById(R.id.fragment_last_transfer);
         playersTransfersFragment = (PlayersTransfersFragment)
                 getFragmentManager().findFragmentById(R.id.fragment_players_transfers);
+
+        monopolyGame.connectCreateAndOrJoinZone();
+        monopolyGame.setListener(this);
     }
 
     @Override
@@ -325,6 +331,7 @@ public class MonopolyGameActivity extends AppCompatActivity
     @Override
     public void onDestroy() {
         super.onDestroy();
+        monopolyGame.setListener(null);
         if (isFinishing()) {
             monopolyGame.quitAndOrDisconnect();
         }
@@ -391,11 +398,7 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public void onIdentityReceived(IdentityWithBalance identity) {
-        DialogFragment receiveIdentityDialogFragment = (DialogFragment) getFragmentManager()
-                .findFragmentByTag("receive_identity_dialog_fragment");
-        if (receiveIdentityDialogFragment != null) {
-            receiveIdentityDialogFragment.dismiss();
-        }
+        finishActivity(REQUEST_CODE_RECEIVE_IDENTITY);
         identitiesFragment.setSelectedPage(identitiesFragment.getPage(identity));
     }
 
@@ -534,14 +537,15 @@ public class MonopolyGameActivity extends AppCompatActivity
                 }
                 return true;
             case R.id.action_receive_identity:
-                startActivity(
+                startActivityForResult(
                         new Intent(
                                 this,
                                 ReceiveIdentityActivity.class
                         ).putExtra(
                                 ReceiveIdentityActivity.EXTRA_PUBLIC_KEY,
                                 ClientKey.getPublicKey(this)
-                        )
+                        ),
+                        REQUEST_CODE_RECEIVE_IDENTITY
                 );
                 return true;
             case R.id.action_transfer_identity:
@@ -651,18 +655,6 @@ public class MonopolyGameActivity extends AppCompatActivity
     @Override
     public MonopolyGame onRetainCustomNonConfigurationInstance() {
         return monopolyGame;
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        monopolyGame.setListener(this);
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        monopolyGame.setListener(null);
     }
 
     @Override
