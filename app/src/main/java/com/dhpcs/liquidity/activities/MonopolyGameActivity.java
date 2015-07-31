@@ -185,8 +185,8 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     private MonopolyGame monopolyGame;
 
-    private TextView textViewState;
     private ProgressBar progressBarState;
+    private TextView textViewState;
     private Button buttonReconnect;
     private SlidingUpPanelLayout slidingUpPanelLayout;
 
@@ -255,8 +255,8 @@ public class MonopolyGameActivity extends AppCompatActivity
         //noinspection ConstantConditions
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        textViewState = (TextView) findViewById(R.id.textview_state);
         progressBarState = (ProgressBar) findViewById(R.id.progressbar_state);
+        textViewState = (TextView) findViewById(R.id.textview_state);
         buttonReconnect = (Button) findViewById(R.id.button_reconnect);
         slidingUpPanelLayout = (SlidingUpPanelLayout) findViewById(R.id.slidinguppanellayout);
 
@@ -457,18 +457,18 @@ public class MonopolyGameActivity extends AppCompatActivity
             slidingUpPanelLayout.setVisibility(View.GONE);
             buttonReconnect.setVisibility(View.GONE);
 
+            progressBarState.setVisibility(View.VISIBLE);
             textViewState.setVisibility(View.VISIBLE);
             textViewState.setText(R.string.connecting);
-            progressBarState.setVisibility(View.VISIBLE);
 
         } else if (joinState == MonopolyGame.JOINING$.MODULE$) {
 
             slidingUpPanelLayout.setVisibility(View.GONE);
             buttonReconnect.setVisibility(View.GONE);
 
+            progressBarState.setVisibility(View.VISIBLE);
             textViewState.setVisibility(View.VISIBLE);
             textViewState.setText(R.string.joining);
-            progressBarState.setVisibility(View.VISIBLE);
 
         } else if (joinState == MonopolyGame.JOINED$.MODULE$) {
 
@@ -484,18 +484,18 @@ public class MonopolyGameActivity extends AppCompatActivity
             slidingUpPanelLayout.setVisibility(View.GONE);
             buttonReconnect.setVisibility(View.GONE);
 
+            progressBarState.setVisibility(View.VISIBLE);
             textViewState.setVisibility(View.VISIBLE);
             textViewState.setText(R.string.quitting);
-            progressBarState.setVisibility(View.VISIBLE);
 
         } else if (joinState == MonopolyGame.DISCONNECTING$.MODULE$) {
 
             slidingUpPanelLayout.setVisibility(View.GONE);
             buttonReconnect.setVisibility(View.GONE);
 
+            progressBarState.setVisibility(View.VISIBLE);
             textViewState.setVisibility(View.VISIBLE);
             textViewState.setText(R.string.disconnecting);
-            progressBarState.setVisibility(View.VISIBLE);
 
         }
         supportInvalidateOptionsMenu();
