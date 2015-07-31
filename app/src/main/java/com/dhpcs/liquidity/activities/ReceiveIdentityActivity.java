@@ -12,6 +12,7 @@ import com.google.common.io.BaseEncoding;
 
 import net.glxn.qrgen.android.QRCode;
 
+// TODO: Review activity lifecycle contract and revert to dialog fragment if necessary
 public class ReceiveIdentityActivity extends AppCompatActivity {
 
     public static final String EXTRA_PUBLIC_KEY = "public_key";
