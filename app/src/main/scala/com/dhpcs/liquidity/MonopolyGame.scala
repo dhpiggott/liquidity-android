@@ -17,6 +17,20 @@ import scala.util.Try
 
 object MonopolyGame {
 
+  sealed trait JoinState
+
+  case object DISCONNECTED extends JoinState
+
+  case object CONNECTING extends JoinState
+
+  case object JOINING extends JoinState
+
+  case object JOINED extends JoinState
+
+  case object QUITTING extends JoinState
+
+  case object DISCONNECTING extends JoinState
+
   sealed trait Player extends Serializable {
 
     def memberId: MemberId
@@ -89,7 +103,7 @@ object MonopolyGame {
 
     def onIdentityRestored(identity: IdentityWithBalance)
 
-    def onJoined(zoneId: ZoneId)
+    def onJoinStateChanged(joinState: JoinState)
 
     def onPlayerAdded(addedPlayer: PlayerWithBalanceAndConnectionState)
 
@@ -100,8 +114,6 @@ object MonopolyGame {
     def onPlayerRemoved(removedPlayer: PlayerWithBalanceAndConnectionState)
 
     def onPlayersUpdated(players: Map[MemberId, PlayerWithBalanceAndConnectionState])
-
-    def onQuit()
 
     def onTransferAdded(addedTransfer: TransferWithCurrency)
 
@@ -268,12 +280,14 @@ class MonopolyGame private(context: Context,
   private val serverConnection = new ServerConnection(context, this, this)
   private val noopResponseCallback = new ResponseCallback with ResponseCallbackWithErrorForwarding
 
-  private var listener = Option.empty[Listener]
-
   private var state: State = _
 
+  private var _joinState: JoinState = MonopolyGame.DISCONNECTED
+
+  private var listener = Option.empty[Listener]
+
   def connectCreateAndOrJoinZone() =
-    if (serverConnection.isDisconnected) {
+    if (serverConnection.connectionState == ServerConnection.DISCONNECTED) {
       serverConnection.connect()
     }
 
@@ -373,23 +387,22 @@ class MonopolyGame private(context: Context,
 
   def getCurrency = state.currency
 
-  def getGameName =
-    if (state == null) {
-      null
-    } else {
-      state.zone.name
-    }
+  def getGameName = state.zone.name
 
   def getHiddenIdentities = state.hiddenIdentities.values
 
   def getIdentities = state.identities.values
 
+  def getJoinState = _joinState
+
   def getPlayers = state.players.values
+
+  def getZoneId = zoneId.get
 
   def isPublicKeyConnectedAndImplicitlyValid(publicKey: PublicKey) =
     state.connectedClients.contains(publicKey)
 
-  private def join(zoneId: ZoneId) =
+  private def join(zoneId: ZoneId) = {
     serverConnection.sendCommand(
       JoinZoneCommand(
         zoneId
@@ -468,7 +481,9 @@ class MonopolyGame private(context: Context,
                 transfers
               )
 
-              listener.foreach(_.onJoined(zoneId))
+              _joinState = JOINED
+              listener.foreach(_.onJoinStateChanged(_joinState))
+
               listener.foreach(_.onGameNameChanged(joinZoneResponse.zone.name))
               listener.foreach(_.onIdentitiesUpdated(identities))
               listener.foreach(_.onPlayersInitialized(players.values))
@@ -564,7 +579,11 @@ class MonopolyGame private(context: Context,
 
       }
     )
+    _joinState = JOINING
+    listener.foreach(_.onJoinStateChanged(_joinState))
+  }
 
+  // TODO: Need to acknowledge receipt so server can retransmit lost messages
   override def onNotificationReceived(notification: Notification) {
     log.debug("notification={}", notification)
 
@@ -701,9 +720,6 @@ class MonopolyGame private(context: Context,
           case zoneTerminatedNotification: ZoneTerminatedNotification =>
 
             state = null
-
-            listener.foreach(_.onQuit())
-
             join(zoneId)
 
           case zoneNameSetNotification: ZoneNameSetNotification =>
@@ -966,27 +982,38 @@ class MonopolyGame private(context: Context,
 
   }
 
-  override def onStateChanged(connectionState: ConnectionState) {
+  override def onConnectionStateChanged(connectionState: ConnectionState) {
     log.debug("connectionState={}", connectionState)
     connectionState match {
 
-      case CONNECTING =>
+      case ServerConnection.DISCONNECTED =>
+        state = null
+        _joinState = MonopolyGame.DISCONNECTED
+        listener.foreach(_.onJoinStateChanged(_joinState))
 
-      case CONNECTED =>
+      case ServerConnection.CONNECTING =>
+        state = null
+        _joinState = MonopolyGame.CONNECTING
+        listener.foreach(_.onJoinStateChanged(_joinState))
+
+      case ServerConnection.CONNECTED =>
+        state = null
         zoneId.fold(createAndThenJoinZone())(join)
+        _joinState = JOINING
+        listener.foreach(_.onJoinStateChanged(_joinState))
 
-      case DISCONNECTING =>
-
-      case DISCONNECTED =>
-
-      // TODO
+      case ServerConnection.DISCONNECTING =>
+        state = null
+        _joinState = MonopolyGame.DISCONNECTING
+        listener.foreach(_.onJoinStateChanged(_joinState))
 
     }
   }
 
   def quitAndOrDisconnect() =
-    if (!serverConnection.isDisconnected) {
-      if (state == null) {
+    if (serverConnection.connectionState == ServerConnection.CONNECTED
+      || serverConnection.connectionState == ServerConnection.CONNECTING) {
+      if (_joinState != MonopolyGame.JOINED) {
         disconnect()
       } else {
         serverConnection.sendCommand(
@@ -999,15 +1026,14 @@ class MonopolyGame private(context: Context,
               log.debug("resultResponse={}", resultResponse)
 
               state = null
-
-              listener.foreach(_.onQuit())
-
               disconnect()
 
             }
 
           }
         )
+        _joinState = QUITTING
+        listener.foreach(_.onJoinStateChanged(_joinState))
       }
     }
 
@@ -1047,10 +1073,10 @@ class MonopolyGame private(context: Context,
   def setListener(listener: Listener) {
     this.listener = Option(listener)
     this.listener.foreach(listener =>
-      if (state == null) {
-        listener.onQuit()
+      if (_joinState != MonopolyGame.JOINED) {
+        listener.onJoinStateChanged(_joinState)
       } else {
-        listener.onJoined(zoneId.get)
+        listener.onJoinStateChanged(_joinState)
         listener.onGameNameChanged(state.zone.name)
         listener.onIdentitiesUpdated(state.identities)
         listener.onPlayersInitialized(state.players.values)

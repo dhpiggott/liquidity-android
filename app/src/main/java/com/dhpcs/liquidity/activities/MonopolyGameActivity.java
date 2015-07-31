@@ -10,6 +10,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.dhpcs.liquidity.ClientKey;
@@ -182,6 +185,9 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     private MonopolyGame monopolyGame;
 
+    private TextView textViewState;
+    private ProgressBar progressBarState;
+    private Button buttonReconnect;
     private SlidingUpPanelLayout slidingUpPanelLayout;
 
     private IdentitiesFragment identitiesFragment;
@@ -189,36 +195,36 @@ public class MonopolyGameActivity extends AppCompatActivity
     private LastTransferFragment lastTransferFragment;
     private PlayersTransfersFragment playersTransfersFragment;
 
-    private ZoneId zoneId;
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
         if (result != null) {
             String contents = result.getContents();
             if (contents != null) {
-                Identity identity = identitiesFragment.getIdentity(
-                        identitiesFragment.getSelectedPage()
-                );
-                try {
-                    PublicKey publicKey = new PublicKey(
-                            BaseEncoding.base64().decode(
-                                    contents
-                            )
+                if (monopolyGame.getJoinState() == MonopolyGame.JOINED$.MODULE$) {
+                    Identity identity = identitiesFragment.getIdentity(
+                            identitiesFragment.getSelectedPage()
                     );
-                    if (!monopolyGame.isPublicKeyConnectedAndImplicitlyValid(publicKey)) {
-                        throw new IllegalArgumentException();
+                    try {
+                        PublicKey publicKey = new PublicKey(
+                                BaseEncoding.base64().decode(
+                                        contents
+                                )
+                        );
+                        if (!monopolyGame.isPublicKeyConnectedAndImplicitlyValid(publicKey)) {
+                            throw new IllegalArgumentException();
+                        }
+                        monopolyGame.transferIdentity(identity.memberId(), publicKey);
+                    } catch (IllegalArgumentException e) {
+                        Toast.makeText(
+                                this,
+                                getString(
+                                        R.string.transfer_identity_invalid_code_format_string,
+                                        monopolyGame.getGameName()
+                                ),
+                                Toast.LENGTH_LONG
+                        ).show();
                     }
-                    monopolyGame.transferIdentity(identity.memberId(), publicKey);
-                } catch (IllegalArgumentException e) {
-                    Toast.makeText(
-                            this,
-                            getString(
-                                    R.string.transfer_identity_invalid_code_format_string,
-                                    monopolyGame.getGameName()
-                            ),
-                            Toast.LENGTH_LONG
-                    ).show();
                 }
             }
         } else {
@@ -242,6 +248,65 @@ public class MonopolyGameActivity extends AppCompatActivity
         setContentView(R.layout.activity_monopoly_game);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+
+        setSupportActionBar(toolbar);
+        //noinspection ConstantConditions
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        textViewState = (TextView) findViewById(R.id.textview_state);
+        progressBarState = (ProgressBar) findViewById(R.id.progressbar_state);
+        buttonReconnect = (Button) findViewById(R.id.button_reconnect);
+        slidingUpPanelLayout = (SlidingUpPanelLayout) findViewById(R.id.slidinguppanellayout);
+
+        buttonReconnect.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                monopolyGame.connectCreateAndOrJoinZone();
+            }
+
+        });
+
+        slidingUpPanelLayout.setPanelSlideListener(new SlidingUpPanelLayout.PanelSlideListener() {
+
+            @Override
+            public void onPanelSlide(View view, float v) {
+            }
+
+            @Override
+            public void onPanelCollapsed(View view) {
+                setTitle(monopolyGame.getJoinState() == MonopolyGame.JOINED$.MODULE$
+                        ?
+                        monopolyGame.getGameName()
+                        :
+                        getString(R.string.title_activity_monopoly_game));
+            }
+
+            @Override
+            public void onPanelExpanded(View view) {
+                setTitle(R.string.transfers);
+            }
+
+            @Override
+            public void onPanelAnchored(View view) {
+            }
+
+            @Override
+            public void onPanelHidden(View view) {
+            }
+
+        });
+
+        identitiesFragment = (IdentitiesFragment)
+                getFragmentManager().findFragmentById(R.id.fragment_identities);
+        playersFragment = (PlayersFragment)
+                getFragmentManager().findFragmentById(R.id.fragment_players);
+        lastTransferFragment = (LastTransferFragment)
+                getFragmentManager().findFragmentById(R.id.fragment_last_transfer);
+        playersTransfersFragment = (PlayersTransfersFragment)
+                getFragmentManager().findFragmentById(R.id.fragment_players_transfers);
 
         monopolyGame = (MonopolyGame) getLastCustomNonConfigurationInstance();
 
@@ -269,57 +334,12 @@ public class MonopolyGameActivity extends AppCompatActivity
                 }
             }
 
+            monopolyGame.connectCreateAndOrJoinZone();
+
         }
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-
-        setSupportActionBar(toolbar);
-        //noinspection ConstantConditions
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
-        slidingUpPanelLayout = (SlidingUpPanelLayout) findViewById(R.id.slidinguppanellayout);
-        slidingUpPanelLayout.setPanelSlideListener(new SlidingUpPanelLayout.PanelSlideListener() {
-
-            @Override
-            public void onPanelSlide(View view, float v) {
-            }
-
-            @Override
-            public void onPanelCollapsed(View view) {
-                String gameName = monopolyGame.getGameName();
-                setTitle(gameName == null
-                        ?
-                        getString(R.string.title_activity_monopoly_game)
-                        :
-                        gameName);
-            }
-
-            @Override
-            public void onPanelExpanded(View view) {
-                setTitle(R.string.transfers);
-            }
-
-            @Override
-            public void onPanelAnchored(View view) {
-            }
-
-            @Override
-            public void onPanelHidden(View view) {
-            }
-
-        });
-
-        identitiesFragment = (IdentitiesFragment)
-                getFragmentManager().findFragmentById(R.id.fragment_identities);
-        playersFragment = (PlayersFragment)
-                getFragmentManager().findFragmentById(R.id.fragment_players);
-        lastTransferFragment = (LastTransferFragment)
-                getFragmentManager().findFragmentById(R.id.fragment_last_transfer);
-        playersTransfersFragment = (PlayersTransfersFragment)
-                getFragmentManager().findFragmentById(R.id.fragment_players_transfers);
-
-        monopolyGame.connectCreateAndOrJoinZone();
         monopolyGame.setListener(this);
+
     }
 
     @Override
@@ -422,8 +442,62 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onJoined(ZoneId zoneId) {
-        this.zoneId = zoneId;
+    public void onJoinStateChanged(MonopolyGame.JoinState joinState) {
+        if (joinState == MonopolyGame.DISCONNECTED$.MODULE$) {
+
+            slidingUpPanelLayout.setVisibility(View.GONE);
+            progressBarState.setVisibility(View.GONE);
+
+            textViewState.setVisibility(View.VISIBLE);
+            textViewState.setText(R.string.disconnected);
+            buttonReconnect.setVisibility(View.VISIBLE);
+
+        } else if (joinState == MonopolyGame.CONNECTING$.MODULE$) {
+
+            slidingUpPanelLayout.setVisibility(View.GONE);
+            buttonReconnect.setVisibility(View.GONE);
+
+            textViewState.setVisibility(View.VISIBLE);
+            textViewState.setText(R.string.connecting);
+            progressBarState.setVisibility(View.VISIBLE);
+
+        } else if (joinState == MonopolyGame.JOINING$.MODULE$) {
+
+            slidingUpPanelLayout.setVisibility(View.GONE);
+            buttonReconnect.setVisibility(View.GONE);
+
+            textViewState.setVisibility(View.VISIBLE);
+            textViewState.setText(R.string.joining);
+            progressBarState.setVisibility(View.VISIBLE);
+
+        } else if (joinState == MonopolyGame.JOINED$.MODULE$) {
+
+            buttonReconnect.setVisibility(View.GONE);
+            textViewState.setText(null);
+            textViewState.setVisibility(View.GONE);
+            progressBarState.setVisibility(View.GONE);
+
+            slidingUpPanelLayout.setVisibility(View.VISIBLE);
+
+        } else if (joinState == MonopolyGame.QUITTING$.MODULE$) {
+
+            slidingUpPanelLayout.setVisibility(View.GONE);
+            buttonReconnect.setVisibility(View.GONE);
+
+            textViewState.setVisibility(View.VISIBLE);
+            textViewState.setText(R.string.quitting);
+            progressBarState.setVisibility(View.VISIBLE);
+
+        } else if (joinState == MonopolyGame.DISCONNECTING$.MODULE$) {
+
+            slidingUpPanelLayout.setVisibility(View.GONE);
+            buttonReconnect.setVisibility(View.GONE);
+
+            textViewState.setVisibility(View.VISIBLE);
+            textViewState.setText(R.string.disconnecting);
+            progressBarState.setVisibility(View.VISIBLE);
+
+        }
         supportInvalidateOptionsMenu();
     }
 
@@ -438,20 +512,18 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public void onNoPlayersTextClicked() {
-        if (zoneId != null) {
-            startActivity(
-                    new Intent(
-                            this,
-                            AddPlayersActivity.class
-                    ).putExtra(
-                            AddPlayersActivity.EXTRA_GAME_NAME,
-                            monopolyGame.getGameName()
-                    ).putExtra(
-                            AddPlayersActivity.EXTRA_ZONE_ID,
-                            zoneId
-                    )
-            );
-        }
+        startActivity(
+                new Intent(
+                        this,
+                        AddPlayersActivity.class
+                ).putExtra(
+                        AddPlayersActivity.EXTRA_GAME_NAME,
+                        monopolyGame.getGameName()
+                ).putExtra(
+                        AddPlayersActivity.EXTRA_ZONE_ID,
+                        monopolyGame.getZoneId()
+                )
+        );
     }
 
     @Override
@@ -476,7 +548,7 @@ public class MonopolyGameActivity extends AppCompatActivity
                                 monopolyGame.getGameName()
                         ).putExtra(
                                 AddPlayersActivity.EXTRA_ZONE_ID,
-                                zoneId
+                                monopolyGame.getZoneId()
                         )
                 );
                 return true;
@@ -614,42 +686,37 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
+        boolean isJoined = monopolyGame.getJoinState() == MonopolyGame.JOINED$.MODULE$;
         Identity identity = identitiesFragment.getIdentity(identitiesFragment.getSelectedPage());
         boolean isPanelCollapsed = slidingUpPanelLayout.getPanelState() == PanelState.COLLAPSED;
         menu.findItem(R.id.action_add_players).setVisible(
-                zoneId != null
+                isJoined
         );
         menu.findItem(R.id.action_group_transfer).setVisible(
-                zoneId != null && identity != null && isPanelCollapsed
+                isJoined && identity != null && isPanelCollapsed
         );
         menu.findItem(R.id.action_change_game_name).setVisible(
-                zoneId != null
+                isJoined
         );
         menu.findItem(R.id.action_change_identity_name).setVisible(
-                zoneId != null && identity != null && isPanelCollapsed && !identity.isBanker()
+                isJoined && identity != null && isPanelCollapsed && !identity.isBanker()
         );
         menu.findItem(R.id.action_create_identity).setVisible(
-                zoneId != null && isPanelCollapsed
+                isJoined && isPanelCollapsed
         );
         menu.findItem(R.id.action_restore_identity).setVisible(
-                zoneId != null && isPanelCollapsed && monopolyGame.getHiddenIdentities().nonEmpty()
+                isJoined && isPanelCollapsed && monopolyGame.getHiddenIdentities().nonEmpty()
         );
         menu.findItem(R.id.action_delete_identity).setVisible(
-                zoneId != null && identity != null && isPanelCollapsed
+                isJoined && identity != null && isPanelCollapsed
         );
         menu.findItem(R.id.action_receive_identity).setVisible(
-                zoneId != null && isPanelCollapsed
+                isJoined && isPanelCollapsed
         );
         menu.findItem(R.id.action_transfer_identity).setVisible(
-                zoneId != null && identity != null && isPanelCollapsed
+                isJoined && identity != null && isPanelCollapsed
         );
         return true;
-    }
-
-    @Override
-    public void onQuit() {
-        this.zoneId = null;
-        supportInvalidateOptionsMenu();
     }
 
     @Override

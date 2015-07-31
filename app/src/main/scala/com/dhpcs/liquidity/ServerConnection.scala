@@ -23,17 +23,17 @@ object ServerConnection {
   // TODO: Check NetworkUtils.isNetworkAvailable somewhere
   sealed trait ConnectionState
 
-  case object CONNECTED extends ConnectionState
+  case object DISCONNECTED extends ConnectionState
 
   case object CONNECTING extends ConnectionState
 
-  case object DISCONNECTED extends ConnectionState
+  case object CONNECTED extends ConnectionState
 
   case object DISCONNECTING extends ConnectionState
 
   trait ConnectionStateListener {
 
-    def onStateChanged(connectionState: ConnectionState)
+    def onConnectionStateChanged(connectionState: ConnectionState)
 
   }
 
@@ -55,7 +55,13 @@ object ServerConnection {
 
   private sealed trait State
 
-  private case object DisconnectedState extends State
+  private case object DisconnectedIdleState extends State
+
+  private case class ActiveState(handler: Handler) extends State {
+
+    var subState: SubState = _
+
+  }
 
   private sealed trait SubState
 
@@ -64,12 +70,6 @@ object ServerConnection {
   private case class ConnectedSubState(webSocket: WebSocket) extends SubState
 
   private case object DisconnectingSubState extends SubState
-
-  private case class ActiveState(handler: Handler) extends State {
-
-    var subState: SubState = _
-
-  }
 
   private case class PendingRequest(requestMessage: JsonRpcRequestMessage,
                                     callback: ResponseCallback)
@@ -123,6 +123,9 @@ class ServerConnection(context: Context,
     override def run() =
       Try(state match {
 
+        case DisconnectedIdleState =>
+          sys.error("Scheduled while disconnected")
+
         case activeState: ActiveState =>
           activeState.subState match {
 
@@ -138,13 +141,11 @@ class ServerConnection(context: Context,
 
           }
 
-        case _ =>
-          sys.error("Scheduled while disconnected")
-
       }) match {
 
         case Failure(e) =>
           log.warn(s"Failed to send ping", e)
+          writerErrorClose()
 
         case _ =>
 
@@ -154,8 +155,9 @@ class ServerConnection(context: Context,
 
   private var pendingRequests = Map.empty[Int, PendingRequest]
   private var commandIdentifier = 0
+  private var state: State = DisconnectedIdleState
 
-  private var state: State = DisconnectedState
+  private var _connectionState: ConnectionState = DISCONNECTED
 
   def connect() =
     state match {
@@ -163,12 +165,13 @@ class ServerConnection(context: Context,
       case _: ActiveState =>
         sys.error("Already connecting/connected/disconnecting")
 
-      case DisconnectedState =>
+      case DisconnectedIdleState =>
         val handlerThread = new HandlerThread("ServerConnection")
         handlerThread.start()
         val handler = new Handler(handlerThread.getLooper)
         val activeState = ActiveState(handler)
         state = activeState
+        _connectionState = CONNECTING
 
         asyncPost(handler) {
           log.debug("Creating WebSocket call")
@@ -178,24 +181,27 @@ class ServerConnection(context: Context,
           )
           webSocketCall.enqueue(this)
           activeState.subState = ConnectingSubState(webSocketCall)
-          asyncPost(mainHandler)(
-            connectionStateListener.onStateChanged(CONNECTING)
-          )
         }
+        connectionStateListener.onConnectionStateChanged(_connectionState)
 
     }
 
-  def disconnect(): Unit = disconnect(1000, "Bye")
+  def connectionState = _connectionState
 
-  private def disconnect(code: Int, reason: String) =
+  def disconnect(): Unit = disconnect(1001)
+
+  private def disconnect(code: Int) {
     state match {
 
-      case DisconnectedState =>
+      case DisconnectedIdleState =>
         sys.error("Already disconnected")
 
       case activeState: ActiveState =>
         asyncPost(activeState.handler) {
           activeState.subState match {
+
+            case DisconnectingSubState =>
+              sys.error("Already disconnecting")
 
             case connectingState: ConnectingSubState =>
               log.debug("Cancelling WebSocket call")
@@ -204,7 +210,7 @@ class ServerConnection(context: Context,
             case connectedState: ConnectedSubState =>
               Try {
                 log.debug("Closing WebSocket")
-                connectedState.webSocket.close(code, reason)
+                connectedState.webSocket.close(code, null)
               } match {
 
                 case Failure(e) =>
@@ -214,25 +220,22 @@ class ServerConnection(context: Context,
 
               }
 
-            case DisconnectingSubState =>
-              sys.error("Already disconnecting")
-
           }
           activeState.subState = DisconnectingSubState
+          _connectionState = DISCONNECTING
           asyncPost(mainHandler)(
-            connectionStateListener.onStateChanged(DISCONNECTING)
+            connectionStateListener.onConnectionStateChanged(_connectionState)
           )
         }
 
     }
-
-  def isDisconnected = state == DisconnectedState
+  }
 
   override def onClose(code: Int, reason: String) {
     log.debug("WebSocket closed. Reason: {}, Code: {}", reason, code)
     state match {
 
-      case DisconnectedState =>
+      case DisconnectedIdleState =>
         sys.error("Already disconnected")
 
       case activeState: ActiveState =>
@@ -241,13 +244,14 @@ class ServerConnection(context: Context,
           case _: ConnectingSubState =>
             sys.error("Not connected or disconnecting")
 
-          case _ =>
+          case _: ConnectedSubState | DisconnectingSubState =>
             asyncPost(activeState.handler) {
               activeState.handler.removeCallbacks(pingRunnable)
               activeState.handler.getLooper.quit()
               asyncPost(mainHandler) {
-                state = DisconnectedState
-                connectionStateListener.onStateChanged(DISCONNECTED)
+                state = DisconnectedIdleState
+                _connectionState = DISCONNECTED
+                connectionStateListener.onConnectionStateChanged(_connectionState)
               }
             }
 
@@ -257,16 +261,39 @@ class ServerConnection(context: Context,
 
   override def onFailure(e: IOException, response: com.squareup.okhttp.Response) {
     log.warn("WebSocked failed. Response: {}, Exception: {}", response: Any, e: Any)
+    state match {
+
+      case DisconnectedIdleState =>
+        sys.error("Already disconnected")
+
+      case activeState: ActiveState =>
+        asyncPost(activeState.handler) {
+          activeState.handler.removeCallbacks(pingRunnable)
+          activeState.handler.getLooper.quit()
+          asyncPost(mainHandler) {
+            state = DisconnectedIdleState
+            _connectionState = DISCONNECTED
+            connectionStateListener.onConnectionStateChanged(_connectionState)
+          }
+        }
+
+    }
   }
 
   override def onMessage(payload: BufferedSource, `type`: WebSocket.PayloadType) =
     state match {
+
+      case DisconnectedIdleState =>
+        sys.error("Received message while disconnected")
 
       case activeState: ActiveState =>
         activeState.subState match {
 
           case _: ConnectingSubState =>
             sys.error("Received message while connecting")
+
+          case DisconnectingSubState =>
+            log.debug("Received message while disconnecting, dropping message")
 
           case _: ConnectedSubState =>
             `type` match {
@@ -275,37 +302,44 @@ class ServerConnection(context: Context,
                 Try(Json.parse(payload.readUtf8)) match {
 
                   case Failure(exception) =>
-                    log.warn("Invalid JSON: {}", exception)
+                    disconnect(1002)
+                    sys.error(s"Invalid JSON: $exception")
 
                   case Success(json) =>
 
-                    Json.fromJson[JsonRpcMessage](json).fold(
-                    errors => log.warn("Invalid JSON-RPC message: {}", errors), {
+                    Json.fromJson[JsonRpcMessage](json).fold({ errors =>
+                      disconnect(1002)
+                      sys.error(s"Invalid JSON-RPC message: $errors")
+                    }, {
 
-                      case _: JsonRpcRequestMessage =>
-                        sys.error("Received JsonRpcRequestMessage")
+                      case jsonRpcRequestMessage: JsonRpcRequestMessage =>
+                        disconnect(1002)
+                        sys.error(s"Received JsonRpcRequestMessage: $jsonRpcRequestMessage")
 
                       case jsonRpcResponseMessage: JsonRpcResponseMessage =>
-                        jsonRpcResponseMessage.id.fold(
-                          log.warn("JSON-RPC message ID missing, eitherErrorOrResult={}",
-                            jsonRpcResponseMessage.eitherErrorOrResult
-                          )
-                        ) { id =>
-                          id.right.toOption.fold(
-                            log.warn("JSON-RPC message ID was not an Int, id={}", id)
-                          ) { commandIdentifier =>
+                        jsonRpcResponseMessage.id.fold {
+                          disconnect(1002)
+                          sys.error(s"JSON-RPC message ID missing, jsonRpcResponseMessage" +
+                            s".eitherErrorOrResult=${jsonRpcResponseMessage.eitherErrorOrResult}")
+                        } { id =>
+                          id.right.toOption.fold {
+                            sys.error(s"JSON-RPC message ID was not an Int, id=$id")
+                            disconnect(1002)
+                          } { commandIdentifier =>
                             asyncPost(activeState.handler)(
-                              pendingRequests.get(commandIdentifier).fold(
-                                log.warn("No pending request exists with commandIdentifier={}",
-                                  commandIdentifier
-                                )
-                              ) { pendingRequest =>
+                              pendingRequests.get(commandIdentifier).fold {
+                                disconnect(1002)
+                                sys.error(s"No pending request exists with commandIdentifier" +
+                                  s"=$commandIdentifier")
+                              } { pendingRequest =>
                                 pendingRequests = pendingRequests - commandIdentifier
                                 Response.read(
                                   jsonRpcResponseMessage,
                                   pendingRequest.requestMessage.method
-                                ).fold(
-                                errors => log.warn("Invalid Response: {}", errors), {
+                                ).fold({ errors =>
+                                  disconnect(1002)
+                                  sys.error(s"Invalid Response: $errors")
+                                }, {
 
                                   case errorResponse: ErrorResponse =>
                                     asyncPost(mainHandler)(
@@ -324,19 +358,19 @@ class ServerConnection(context: Context,
                         }
 
                       case jsonRpcNotificationMessage: JsonRpcNotificationMessage =>
-                        Notification.read(jsonRpcNotificationMessage).fold(
-                          log.warn("No notification type exists with method={}",
-                            jsonRpcNotificationMessage.method
-                          )
-                        )(_.fold(
-                          errors =>
-                            log.warn("Invalid Notification: {}", errors),
-                          notification =>
-                            asyncPost(activeState.handler)(
-                              asyncPost(mainHandler)(
-                                notificationListener.onNotificationReceived(notification)
-                              )
+                        Notification.read(jsonRpcNotificationMessage).fold {
+                          disconnect(1002)
+                          sys.error(s"No notification type exists with method" +
+                            s"=${jsonRpcNotificationMessage.method}")
+                        }(_.fold({ errors =>
+                          disconnect(1002)
+                          sys.error(s"Invalid Notification: $errors")
+                        }, notification =>
+                          asyncPost(activeState.handler)(
+                            asyncPost(mainHandler)(
+                              notificationListener.onNotificationReceived(notification)
                             )
+                          )
                         ))
 
                     })
@@ -344,46 +378,38 @@ class ServerConnection(context: Context,
                 }
 
               case WebSocket.PayloadType.BINARY =>
-                disconnect(1003, "I don't support binary data")
-
-              case _ =>
-                sys.error("Unknown payload type: " + `type`)
+                disconnect(1003)
 
             }
 
-          case DisconnectingSubState =>
-            log.debug("Received while disconnecting, dropping message")
-
         }
         payload.close()
-
-      case _ =>
-        sys.error("Not connected")
 
     }
 
   override def onOpen(webSocket: WebSocket, response: com.squareup.okhttp.Response) =
     state match {
-      case activeState: ActiveState =>
 
+      case DisconnectedIdleState =>
+        sys.error("Not connecting")
+
+      case activeState: ActiveState =>
         activeState.subState match {
+
+          case _: ConnectedSubState | DisconnectingSubState =>
+            sys.error("Not connecting")
 
           case _: ConnectingSubState =>
             asyncPost(activeState.handler) {
               activeState.handler.postDelayed(pingRunnable, PingPeriod)
               activeState.subState = ConnectedSubState(webSocket)
+              _connectionState = CONNECTED
               asyncPost(mainHandler)(
-                connectionStateListener.onStateChanged(CONNECTED)
+                connectionStateListener.onConnectionStateChanged(_connectionState)
               )
             }
 
-          case _ =>
-            sys.error("Not connecting")
-
         }
-
-      case _ =>
-        sys.error("Not connecting")
 
     }
 
@@ -400,8 +426,14 @@ class ServerConnection(context: Context,
   def sendCommand(command: Command, responseCallback: ResponseCallback) {
     state match {
 
+      case DisconnectedIdleState =>
+        sys.error("Disconnected")
+
       case activeState: ActiveState =>
         activeState.subState match {
+
+          case _: ConnectingSubState | DisconnectingSubState =>
+            sys.error("Not connected")
 
           case connectedState: ConnectedSubState =>
             asyncPost(activeState.handler) {
@@ -423,18 +455,34 @@ class ServerConnection(context: Context,
 
                 case Failure(e) =>
                   log.warn(s"Failed to send: $jsonRpcRequestMessage", e)
+                  writerErrorClose()
 
                 case _ =>
 
               }
             }
 
-          case _ =>
-            sys.error("Not connected")
         }
 
-      case _ =>
-        sys.error("Not connected")
+    }
+  }
+
+  def writerErrorClose() {
+    state match {
+
+      case DisconnectedIdleState =>
+        sys.error("Already disconnected")
+
+      case activeState: ActiveState =>
+        asyncPost(activeState.handler) {
+          activeState.handler.removeCallbacks(pingRunnable)
+          activeState.handler.getLooper.quit()
+          asyncPost(mainHandler) {
+            state = DisconnectedIdleState
+            _connectionState = DISCONNECTED
+            connectionStateListener.onConnectionStateChanged(_connectionState)
+          }
+        }
 
     }
   }
