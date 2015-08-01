@@ -441,6 +441,7 @@ public class MonopolyGameActivity extends AppCompatActivity
         monopolyGame.restoreIdentity(identity);
     }
 
+    // TODO: Dismiss any open dialog fragments and child activities on disconnect
     @Override
     public void onJoinStateChanged(MonopolyGame.JoinState joinState) {
         if (joinState == MonopolyGame.DISCONNECTED$.MODULE$) {
