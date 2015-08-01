@@ -16,7 +16,8 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:gravity="center"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="24dp">
 
             <ProgressBar
                 android:id="@+id/progressbar_state"
@@ -30,7 +31,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                android:text="@string/connecting" />
+                android:gravity="center"
+                android:text="@string/join_state_connecting" />
 
             <Button
                 android:id="@+id/button_reconnect"

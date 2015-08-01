@@ -3,7 +3,8 @@ package com.dhpcs.liquidity
 import java.io.IOException
 import javax.net.ssl.SSLContext
 
-import android.content.Context
+import android.content.{BroadcastReceiver, Context, Intent, IntentFilter}
+import android.net.ConnectivityManager
 import android.os.{Handler, HandlerThread, Looper}
 import com.dhpcs.jsonrpc._
 import com.dhpcs.liquidity.ServerConnection._
@@ -20,10 +21,11 @@ import scala.util.{Failure, Right, Success, Try}
 
 object ServerConnection {
 
-  // TODO: Check NetworkUtils.isNetworkAvailable somewhere
   sealed trait ConnectionState
 
-  case object DISCONNECTED extends ConnectionState
+  case object UNAVAILABLE extends ConnectionState
+
+  case object AVAILABLE extends ConnectionState
 
   case object CONNECTING extends ConnectionState
 
@@ -55,7 +57,9 @@ object ServerConnection {
 
   private sealed trait State
 
-  private case object DisconnectedIdleState extends State
+  private case object AvailableIdleState extends State
+
+  private case object UnavailableIdleState extends State
 
   private case class ActiveState(handler: Handler) extends State {
 
@@ -105,11 +109,16 @@ class ServerConnection(context: Context,
   extends WebSocketListener {
 
   Try(ProviderInstaller.installIfNeeded(context)) match {
+
     case Failure(e: GooglePlayServicesRepairableException) =>
       GooglePlayServicesUtil.showErrorNotification(e.getConnectionStatusCode, context)
+
     case Failure(e: GooglePlayServicesNotAvailableException) =>
+
     case _ =>
+
   }
+
 
   private val log = LoggerFactory.getLogger(getClass)
 
@@ -118,34 +127,60 @@ class ServerConnection(context: Context,
     .setHostnameVerifier(ServerTrust.getHostnameVerifier(context))
 
   private val mainHandler = new Handler(Looper.getMainLooper)
+  private val connectivityStateIntentFilter = new IntentFilter(
+    ConnectivityManager.CONNECTIVITY_ACTION
+  )
+  private val connectivityStateReceiver = new BroadcastReceiver {
+
+    override def onReceive(context: Context, intent: Intent) {
+      intent.getAction match {
+
+        case ConnectivityManager.CONNECTIVITY_ACTION =>
+          handleConnectivityStateChange()
+
+        case unmatched =>
+          sys.error(s"Received unexpected broadcast for action $unmatched")
+
+      }
+    }
+
+  }
   private val pingRunnable: Runnable = new Runnable() {
 
     override def run() =
       Try(state match {
 
-        case DisconnectedIdleState =>
-          sys.error("Scheduled while disconnected")
+        case AvailableIdleState | UnavailableIdleState =>
+          sys.error("Not connected")
 
         case activeState: ActiveState =>
           activeState.subState match {
 
             case _: ConnectingSubState =>
-              sys.error("Scheduled while connecting")
+              sys.error("Not connected")
 
             case connectedState: ConnectedSubState =>
               connectedState.webSocket.sendPing(null)
               activeState.handler.postDelayed(pingRunnable, PingPeriod)
 
             case DisconnectingSubState =>
-              log.debug("Scheduled while disconnecting, doing nothing")
+              log.debug("Ping scheduled while disconnecting, doing nothing")
 
           }
 
       }) match {
 
         case Failure(e) =>
-          log.warn(s"Failed to send ping", e)
-          writerErrorClose()
+          log.warn("Failed to send ping", e)
+          state match {
+
+            case AvailableIdleState | UnavailableIdleState =>
+              sys.error("Already disconnected")
+
+            case activeState: ActiveState =>
+              doClose(activeState.handler)
+
+          }
 
         case _ =>
 
@@ -155,9 +190,9 @@ class ServerConnection(context: Context,
 
   private var pendingRequests = Map.empty[Int, PendingRequest]
   private var commandIdentifier = 0
-  private var state: State = DisconnectedIdleState
+  private var state: State = UnavailableIdleState
 
-  private var _connectionState: ConnectionState = DISCONNECTED
+  private var _connectionState: ConnectionState = UNAVAILABLE
 
   def connect() =
     state match {
@@ -165,7 +200,11 @@ class ServerConnection(context: Context,
       case _: ActiveState =>
         sys.error("Already connecting/connected/disconnecting")
 
-      case DisconnectedIdleState =>
+      case UnavailableIdleState =>
+        log.debug("Connection requested when unavailable, doing nothing")
+
+      case AvailableIdleState =>
+
         val handlerThread = new HandlerThread("ServerConnection")
         handlerThread.start()
         val handler = new Handler(handlerThread.getLooper)
@@ -193,7 +232,7 @@ class ServerConnection(context: Context,
   private def disconnect(code: Int) {
     state match {
 
-      case DisconnectedIdleState =>
+      case AvailableIdleState | UnavailableIdleState =>
         sys.error("Already disconnected")
 
       case activeState: ActiveState =>
@@ -231,11 +270,67 @@ class ServerConnection(context: Context,
     }
   }
 
+  def doClose(handler: Handler) {
+    asyncPost(handler) {
+      handler.removeCallbacks(pingRunnable)
+      handler.getLooper.quit()
+      asyncPost(mainHandler) {
+        if (!isConnectionAvailable) {
+          state = UnavailableIdleState
+          _connectionState = UNAVAILABLE
+        } else {
+          state = AvailableIdleState
+          _connectionState = AVAILABLE
+        }
+        connectionStateListener.onConnectionStateChanged(_connectionState)
+      }
+    }
+  }
+
+  def handleConnectivityStateChange() {
+    if (!isConnectionAvailable) {
+      state match {
+
+        case AvailableIdleState =>
+          state = UnavailableIdleState
+          _connectionState = UNAVAILABLE
+          connectionStateListener.onConnectionStateChanged(_connectionState)
+
+        case _ =>
+
+      }
+    } else {
+      state match {
+
+        case UnavailableIdleState =>
+          state = AvailableIdleState
+          _connectionState = AVAILABLE
+          connectionStateListener.onConnectionStateChanged(_connectionState)
+
+        case _ =>
+
+      }
+    }
+  }
+
+  def isConnectionAvailable = {
+    val activeNetwork = context
+      .getSystemService(Context.CONNECTIVITY_SERVICE)
+      .asInstanceOf[ConnectivityManager]
+      .getActiveNetworkInfo
+    activeNetwork != null && activeNetwork.isConnected
+  }
+
+  def onCreate() {
+    context.registerReceiver(connectivityStateReceiver, connectivityStateIntentFilter)
+    handleConnectivityStateChange()
+  }
+
   override def onClose(code: Int, reason: String) {
-    log.debug("WebSocket closed. Reason: {}, Code: {}", reason, code)
+    log.debug(s"WebSocket closed. Reason: $reason, Code: $code")
     state match {
 
-      case DisconnectedIdleState =>
+      case AvailableIdleState | UnavailableIdleState =>
         sys.error("Already disconnected")
 
       case activeState: ActiveState =>
@@ -245,37 +340,26 @@ class ServerConnection(context: Context,
             sys.error("Not connected or disconnecting")
 
           case _: ConnectedSubState | DisconnectingSubState =>
-            asyncPost(activeState.handler) {
-              activeState.handler.removeCallbacks(pingRunnable)
-              activeState.handler.getLooper.quit()
-              asyncPost(mainHandler) {
-                state = DisconnectedIdleState
-                _connectionState = DISCONNECTED
-                connectionStateListener.onConnectionStateChanged(_connectionState)
-              }
-            }
+            doClose(activeState.handler)
 
         }
     }
   }
 
+  def onDestroy() {
+    // TODO: Force closes due to no registration in some cases (also makes reported state wrong)
+    context.unregisterReceiver(connectivityStateReceiver)
+  }
+
   override def onFailure(e: IOException, response: com.squareup.okhttp.Response) {
-    log.warn("WebSocked failed. Response: {}, Exception: {}", response: Any, e: Any)
+    log.warn(s"WebSocked failed. Response: $response, Exception: $e")
     state match {
 
-      case DisconnectedIdleState =>
+      case AvailableIdleState | UnavailableIdleState =>
         sys.error("Already disconnected")
 
       case activeState: ActiveState =>
-        asyncPost(activeState.handler) {
-          activeState.handler.removeCallbacks(pingRunnable)
-          activeState.handler.getLooper.quit()
-          asyncPost(mainHandler) {
-            state = DisconnectedIdleState
-            _connectionState = DISCONNECTED
-            connectionStateListener.onConnectionStateChanged(_connectionState)
-          }
-        }
+        doClose(activeState.handler)
 
     }
   }
@@ -283,17 +367,17 @@ class ServerConnection(context: Context,
   override def onMessage(payload: BufferedSource, `type`: WebSocket.PayloadType) =
     state match {
 
-      case DisconnectedIdleState =>
-        sys.error("Received message while disconnected")
+      case AvailableIdleState | UnavailableIdleState =>
+        sys.error("Not connected")
 
       case activeState: ActiveState =>
         activeState.subState match {
 
           case _: ConnectingSubState =>
-            sys.error("Received message while connecting")
+            sys.error("Not connected")
 
           case DisconnectingSubState =>
-            log.debug("Received message while disconnecting, dropping message")
+            log.debug("Message received while disconnecting, dropping message")
 
           case _: ConnectedSubState =>
             `type` match {
@@ -314,7 +398,7 @@ class ServerConnection(context: Context,
 
                       case jsonRpcRequestMessage: JsonRpcRequestMessage =>
                         disconnect(1002)
-                        sys.error(s"Received JsonRpcRequestMessage: $jsonRpcRequestMessage")
+                        sys.error(s"Received $jsonRpcRequestMessage")
 
                       case jsonRpcResponseMessage: JsonRpcResponseMessage =>
                         jsonRpcResponseMessage.id.fold {
@@ -390,7 +474,7 @@ class ServerConnection(context: Context,
   override def onOpen(webSocket: WebSocket, response: com.squareup.okhttp.Response) =
     state match {
 
-      case DisconnectedIdleState =>
+      case AvailableIdleState | UnavailableIdleState =>
         sys.error("Not connecting")
 
       case activeState: ActiveState =>
@@ -420,14 +504,14 @@ class ServerConnection(context: Context,
       result
     }
     // TODO: Timeouts
-    log.trace("Received pong: {}", payloadString)
+    log.trace(s"Received pong: $payloadString")
   }
 
   def sendCommand(command: Command, responseCallback: ResponseCallback) {
     state match {
 
-      case DisconnectedIdleState =>
-        sys.error("Disconnected")
+      case AvailableIdleState | UnavailableIdleState =>
+        sys.error("Not connected")
 
       case activeState: ActiveState =>
         activeState.subState match {
@@ -454,34 +538,22 @@ class ServerConnection(context: Context,
               } match {
 
                 case Failure(e) =>
-                  log.warn(s"Failed to send: $jsonRpcRequestMessage", e)
-                  writerErrorClose()
+                  log.warn(s"Failed to send $jsonRpcRequestMessage", e)
+                  state match {
+
+                    case AvailableIdleState | UnavailableIdleState =>
+                      sys.error("Already disconnected")
+
+                    case activeState: ActiveState =>
+                      doClose(activeState.handler)
+
+                  }
 
                 case _ =>
 
               }
             }
 
-        }
-
-    }
-  }
-
-  def writerErrorClose() {
-    state match {
-
-      case DisconnectedIdleState =>
-        sys.error("Already disconnected")
-
-      case activeState: ActiveState =>
-        asyncPost(activeState.handler) {
-          activeState.handler.removeCallbacks(pingRunnable)
-          activeState.handler.getLooper.quit()
-          asyncPost(mainHandler) {
-            state = DisconnectedIdleState
-            _connectionState = DISCONNECTED
-            connectionStateListener.onConnectionStateChanged(_connectionState)
-          }
         }
 
     }

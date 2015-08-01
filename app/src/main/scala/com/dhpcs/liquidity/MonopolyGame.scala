@@ -19,7 +19,9 @@ object MonopolyGame {
 
   sealed trait JoinState
 
-  case object DISCONNECTED extends JoinState
+  case object UNAVAILABLE extends JoinState
+
+  case object AVAILABLE extends JoinState
 
   case object CONNECTING extends JoinState
 
@@ -282,12 +284,12 @@ class MonopolyGame private(context: Context,
 
   private var state: State = _
 
-  private var _joinState: JoinState = MonopolyGame.DISCONNECTED
+  private var _joinState: JoinState = MonopolyGame.UNAVAILABLE
 
   private var listener = Option.empty[Listener]
 
   def connectCreateAndOrJoinZone() =
-    if (serverConnection.connectionState == ServerConnection.DISCONNECTED) {
+    if (serverConnection.connectionState == ServerConnection.AVAILABLE) {
       serverConnection.connect()
     }
 
@@ -325,7 +327,7 @@ class MonopolyGame private(context: Context,
       new ResponseCallbackWithErrorForwarding {
 
         override def onResultReceived(resultResponse: ResultResponse) {
-          log.debug("resultResponse={}", resultResponse)
+          log.debug(s"resultResponse=$resultResponse")
 
           val createZoneResponse = resultResponse.asInstanceOf[CreateZoneResponse]
 
@@ -355,7 +357,7 @@ class MonopolyGame private(context: Context,
       new ResponseCallbackWithErrorForwarding {
 
         override def onResultReceived(resultResponse: ResultResponse) {
-          log.debug("resultResponse={}", resultResponse)
+          log.debug(s"resultResponse=$resultResponse")
 
           val createMemberResponse = resultResponse.asInstanceOf[CreateMemberResponse]
 
@@ -407,11 +409,11 @@ class MonopolyGame private(context: Context,
       JoinZoneCommand(
         zoneId
       ),
-      // TODO: Don't forward error - need to handle non-existent zone
+      // TODO: Don't forward error - need to handle non-existent zone (i.e. non-Liquidity UUID)
       new ResponseCallbackWithErrorForwarding {
 
         override def onResultReceived(resultResponse: ResultResponse) {
-          log.debug("resultResponse={}", resultResponse)
+          log.debug(s"resultResponse=$resultResponse")
 
           val joinZoneResponse = resultResponse.asInstanceOf[JoinZoneResponse]
 
@@ -585,7 +587,7 @@ class MonopolyGame private(context: Context,
 
   // TODO: Need to acknowledge receipt so server can retransmit lost messages
   override def onNotificationReceived(notification: Notification) {
-    log.debug("notification={}", notification)
+    log.debug(s"notification=$notification")
 
     notification match {
 
@@ -983,31 +985,40 @@ class MonopolyGame private(context: Context,
   }
 
   override def onConnectionStateChanged(connectionState: ConnectionState) {
-    log.debug("connectionState={}", connectionState)
+    log.debug(s"connectionState=$connectionState")
     connectionState match {
 
-      case ServerConnection.DISCONNECTED =>
+      case ServerConnection.UNAVAILABLE =>
         state = null
-        _joinState = MonopolyGame.DISCONNECTED
-        listener.foreach(_.onJoinStateChanged(_joinState))
+        _joinState = MonopolyGame.UNAVAILABLE
+
+      case ServerConnection.AVAILABLE =>
+        state = null
+        _joinState = MonopolyGame.AVAILABLE
 
       case ServerConnection.CONNECTING =>
         state = null
         _joinState = MonopolyGame.CONNECTING
-        listener.foreach(_.onJoinStateChanged(_joinState))
 
       case ServerConnection.CONNECTED =>
         state = null
         zoneId.fold(createAndThenJoinZone())(join)
         _joinState = JOINING
-        listener.foreach(_.onJoinStateChanged(_joinState))
 
       case ServerConnection.DISCONNECTING =>
         state = null
         _joinState = MonopolyGame.DISCONNECTING
-        listener.foreach(_.onJoinStateChanged(_joinState))
 
     }
+    listener.foreach(_.onJoinStateChanged(_joinState))
+  }
+
+  def onCreate() {
+    serverConnection.onCreate()
+  }
+
+  def onDestroy() {
+    serverConnection.onDestroy()
   }
 
   def quitAndOrDisconnect() =
@@ -1023,7 +1034,7 @@ class MonopolyGame private(context: Context,
           new ResponseCallbackWithErrorForwarding {
 
             override def onResultReceived(resultResponse: ResultResponse) {
-              log.debug("resultResponse={}", resultResponse)
+              log.debug(s"resultResponse=$resultResponse")
 
               state = null
               disconnect()

@@ -334,6 +334,7 @@ public class MonopolyGameActivity extends AppCompatActivity
                 }
             }
 
+            monopolyGame.onCreate();
             monopolyGame.connectCreateAndOrJoinZone();
 
         }
@@ -351,10 +352,14 @@ public class MonopolyGameActivity extends AppCompatActivity
     @Override
     public void onDestroy() {
         super.onDestroy();
+
         monopolyGame.setListener(null);
-        if (isFinishing()) {
+
+        if (!isChangingConfigurations()) {
             monopolyGame.quitAndOrDisconnect();
+            monopolyGame.onDestroy();
         }
+
     }
 
     @Override
@@ -444,13 +449,22 @@ public class MonopolyGameActivity extends AppCompatActivity
     // TODO: Dismiss any open dialog fragments and child activities on disconnect
     @Override
     public void onJoinStateChanged(MonopolyGame.JoinState joinState) {
-        if (joinState == MonopolyGame.DISCONNECTED$.MODULE$) {
+        if (joinState == MonopolyGame.UNAVAILABLE$.MODULE$) {
 
             slidingUpPanelLayout.setVisibility(View.GONE);
             progressBarState.setVisibility(View.GONE);
 
             textViewState.setVisibility(View.VISIBLE);
-            textViewState.setText(R.string.disconnected);
+            textViewState.setText(R.string.join_state_unavailable);
+            buttonReconnect.setVisibility(View.GONE);
+
+        } else if (joinState == MonopolyGame.AVAILABLE$.MODULE$) {
+
+            slidingUpPanelLayout.setVisibility(View.GONE);
+            progressBarState.setVisibility(View.GONE);
+
+            textViewState.setVisibility(View.VISIBLE);
+            textViewState.setText(R.string.join_state_available);
             buttonReconnect.setVisibility(View.VISIBLE);
 
         } else if (joinState == MonopolyGame.CONNECTING$.MODULE$) {
@@ -460,7 +474,7 @@ public class MonopolyGameActivity extends AppCompatActivity
 
             progressBarState.setVisibility(View.VISIBLE);
             textViewState.setVisibility(View.VISIBLE);
-            textViewState.setText(R.string.connecting);
+            textViewState.setText(R.string.join_state_connecting);
 
         } else if (joinState == MonopolyGame.JOINING$.MODULE$) {
 
@@ -469,7 +483,7 @@ public class MonopolyGameActivity extends AppCompatActivity
 
             progressBarState.setVisibility(View.VISIBLE);
             textViewState.setVisibility(View.VISIBLE);
-            textViewState.setText(R.string.joining);
+            textViewState.setText(R.string.join_state_joining);
 
         } else if (joinState == MonopolyGame.JOINED$.MODULE$) {
 
@@ -487,7 +501,7 @@ public class MonopolyGameActivity extends AppCompatActivity
 
             progressBarState.setVisibility(View.VISIBLE);
             textViewState.setVisibility(View.VISIBLE);
-            textViewState.setText(R.string.quitting);
+            textViewState.setText(R.string.join_state_quitting);
 
         } else if (joinState == MonopolyGame.DISCONNECTING$.MODULE$) {
 
@@ -496,7 +510,7 @@ public class MonopolyGameActivity extends AppCompatActivity
 
             progressBarState.setVisibility(View.VISIBLE);
             textViewState.setVisibility(View.VISIBLE);
-            textViewState.setText(R.string.disconnecting);
+            textViewState.setText(R.string.join_state_disconnecting);
 
         }
         supportInvalidateOptionsMenu();
