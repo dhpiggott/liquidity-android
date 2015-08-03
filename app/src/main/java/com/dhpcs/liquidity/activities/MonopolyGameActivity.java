@@ -23,6 +23,7 @@ import com.dhpcs.liquidity.MonopolyGame.Player;
 import com.dhpcs.liquidity.MonopolyGame.PlayerWithBalanceAndConnectionState;
 import com.dhpcs.liquidity.MonopolyGame.TransferWithCurrency;
 import com.dhpcs.liquidity.R;
+import com.dhpcs.liquidity.ServerConnection;
 import com.dhpcs.liquidity.fragments.ConfirmIdentityDeletionDialogFragment;
 import com.dhpcs.liquidity.fragments.CreateIdentityDialogFragment;
 import com.dhpcs.liquidity.fragments.EnterGameNameDialogFragment;
@@ -183,7 +184,10 @@ public class MonopolyGameActivity extends AppCompatActivity
                 && !identityName.toString().equals(context.getString(R.string.bank_member_name));
     }
 
+    private MonopolyGame.JoinRequestToken joinRequestToken;
     private MonopolyGame monopolyGame;
+
+    private boolean isStartingChildActivity;
 
     private ProgressBar progressBarState;
     private TextView textViewState;
@@ -245,9 +249,8 @@ public class MonopolyGameActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_monopoly_game);
-
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        setContentView(R.layout.activity_monopoly_game);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 
@@ -264,7 +267,7 @@ public class MonopolyGameActivity extends AppCompatActivity
 
             @Override
             public void onClick(View v) {
-                monopolyGame.connectCreateAndOrJoinZone();
+                monopolyGame.requestJoin(joinRequestToken, true);
             }
 
         });
@@ -308,39 +311,67 @@ public class MonopolyGameActivity extends AppCompatActivity
         playersTransfersFragment = (PlayersTransfersFragment)
                 getFragmentManager().findFragmentById(R.id.fragment_players_transfers);
 
-        monopolyGame = (MonopolyGame) getLastCustomNonConfigurationInstance();
+        joinRequestToken = (MonopolyGame.JoinRequestToken) getLastCustomNonConfigurationInstance();
 
-        if (monopolyGame == null) {
+        if (joinRequestToken == null) {
 
-            if (getIntent().getExtras() == null
-                    || !getIntent().getExtras().containsKey(EXTRA_ZONE_ID)) {
-                monopolyGame = new MonopolyGame(this);
-            } else {
-                ZoneId zoneId = (ZoneId) getIntent().getExtras().getSerializable(EXTRA_ZONE_ID);
-                if (!getIntent().getExtras().containsKey(EXTRA_GAME_ID)) {
-                    monopolyGame = new MonopolyGame(
-                            this,
-                            zoneId
-                    );
-                } else {
-                    monopolyGame = new MonopolyGame(
-                            this,
-                            zoneId,
-                            getIntent().getExtras().getLong(EXTRA_GAME_ID)
-                    );
-                }
-                if (getIntent().getExtras().containsKey(EXTRA_GAME_NAME)) {
-                    setTitle(getIntent().getExtras().getString(EXTRA_GAME_NAME));
-                }
-            }
-
-            monopolyGame.onCreate();
-            monopolyGame.connectCreateAndOrJoinZone();
+            joinRequestToken = new MonopolyGame.JoinRequestToken() {
+            };
 
         }
 
-        monopolyGame.setListener(this);
+        ZoneId zoneId = getIntent().getExtras() == null
+                ? null
+                :
+                (ZoneId) getIntent().getExtras().getSerializable(EXTRA_ZONE_ID);
 
+        if (savedInstanceState != null) {
+            zoneId = (ZoneId) savedInstanceState.getSerializable(EXTRA_ZONE_ID);
+        }
+
+        if (zoneId == null) {
+
+            monopolyGame = new MonopolyGame(
+                    this,
+                    ServerConnection.getInstance(getApplicationContext())
+            );
+
+        } else {
+
+            monopolyGame = MonopolyGame.getInstance(zoneId);
+
+            if (monopolyGame == null) {
+
+                if (!getIntent().getExtras().containsKey(EXTRA_GAME_ID)) {
+
+                    monopolyGame = new MonopolyGame(
+                            this,
+                            ServerConnection.getInstance(getApplicationContext()),
+                            zoneId
+                    );
+
+                } else {
+
+                    monopolyGame = new MonopolyGame(
+                            this,
+                            ServerConnection.getInstance(getApplicationContext()),
+                            zoneId,
+                            getIntent().getExtras().getLong(EXTRA_GAME_ID)
+                    );
+
+                }
+
+                if (getIntent().getExtras().containsKey(EXTRA_GAME_NAME)) {
+
+                    setTitle(getIntent().getExtras().getString(EXTRA_GAME_NAME));
+
+                }
+
+            }
+
+        }
+
+        monopolyGame.registerListener(this);
     }
 
     @Override
@@ -352,14 +383,7 @@ public class MonopolyGameActivity extends AppCompatActivity
     @Override
     public void onDestroy() {
         super.onDestroy();
-
-        monopolyGame.setListener(null);
-
-        if (!isChangingConfigurations()) {
-            monopolyGame.quitAndOrDisconnect();
-            monopolyGame.onDestroy();
-        }
-
+        monopolyGame.unregisterListener(this);
     }
 
     @Override
@@ -527,6 +551,7 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public void onNoPlayersTextClicked() {
+        isStartingChildActivity = true;
         startActivity(
                 new Intent(
                         this,
@@ -554,6 +579,7 @@ public class MonopolyGameActivity extends AppCompatActivity
                     return false;
                 }
             case R.id.action_add_players:
+                isStartingChildActivity = true;
                 startActivity(
                         new Intent(
                                 this,
@@ -624,10 +650,14 @@ public class MonopolyGameActivity extends AppCompatActivity
                 }
                 return true;
             case R.id.action_receive_identity:
+                isStartingChildActivity = true;
                 startActivityForResult(
                         new Intent(
                                 this,
                                 ReceiveIdentityActivity.class
+                        ).putExtra(
+                                ReceiveIdentityActivity.EXTRA_ZONE_ID,
+                                monopolyGame.getZoneId()
                         ).putExtra(
                                 ReceiveIdentityActivity.EXTRA_PUBLIC_KEY,
                                 ClientKey.getPublicKey(this)
@@ -636,12 +666,22 @@ public class MonopolyGameActivity extends AppCompatActivity
                 );
                 return true;
             case R.id.action_transfer_identity:
+                isStartingChildActivity = true;
+                Bundle zoneIdHolder = new Bundle();
+                zoneIdHolder.putSerializable(
+                        TransferIdentityActivity.EXTRA_ZONE_ID,
+                        monopolyGame.getZoneId()
+                );
                 new IntentIntegrator(MonopolyGameActivity.this)
                         .setCaptureActivity(TransferIdentityActivity.class)
                         .addExtra(
                                 TransferIdentityActivity.EXTRA_IDENTITY_NAME,
                                 identitiesFragment.getIdentity(identitiesFragment.getSelectedPage())
                                         .member().name()
+                        )
+                        .addExtra(
+                                TransferIdentityActivity.EXTRA_ZONE_ID_HOLDER,
+                                zoneIdHolder
                         )
                         .setDesiredBarcodeFormats(Collections.singleton("QR_CODE"))
                         .setBeepEnabled(false)
@@ -650,6 +690,17 @@ public class MonopolyGameActivity extends AppCompatActivity
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        monopolyGame.unregisterListener(this);
+        if (!isChangingConfigurations()) {
+            if (!isStartingChildActivity) {
+                monopolyGame.unrequestJoin(joinRequestToken);
+            }
+        }
     }
 
     @Override
@@ -735,8 +786,32 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public MonopolyGame onRetainCustomNonConfigurationInstance() {
-        return monopolyGame;
+    protected void onResume() {
+        super.onResume();
+        monopolyGame.requestJoin(joinRequestToken, false);
+        monopolyGame.registerListener(this);
+    }
+
+    @Override
+    public MonopolyGame.JoinRequestToken onRetainCustomNonConfigurationInstance() {
+        return joinRequestToken;
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putSerializable(EXTRA_ZONE_ID, monopolyGame.getZoneId());
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (!isChangingConfigurations()) {
+            if (isStartingChildActivity) {
+                monopolyGame.unrequestJoin(joinRequestToken);
+                isStartingChildActivity = false;
+            }
+        }
     }
 
     @Override

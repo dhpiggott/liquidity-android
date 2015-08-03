@@ -34,27 +34,9 @@ public class JoinGameActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        capture.onResume();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        capture.onPause();
-    }
-
-    @Override
     protected void onDestroy() {
         super.onDestroy();
         capture.onDestroy();
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        capture.onSaveInstanceState(outState);
     }
 
     @Override
@@ -69,6 +51,24 @@ public class JoinGameActivity extends AppCompatActivity {
                 return true;
         }
         return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        capture.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        capture.onResume();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        capture.onSaveInstanceState(outState);
     }
 
 }

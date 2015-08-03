@@ -22,12 +22,9 @@ object ClientKey {
   private val KeystoreFilename = "client.keystore"
   private val EntryAlias = "identity"
 
-  @volatile private var keyStore: KeyStore = _
-  private val KeyStoreMutex = new Object
-  @volatile private var publicKey: PublicKey = _
-  private val PublicKeyMutex = new Object
-  @volatile private var keyManagers: Array[KeyManager] = _
-  private val KeyManagersMutex = new Object
+  private var keyStore: KeyStore = _
+  private var publicKey: PublicKey = _
+  private var keyManagers: Array[KeyManager] = _
 
   private def generateCertKeyPair(context: Context) = {
     val androidId = Settings.Secure.getString(
@@ -65,54 +62,42 @@ object ClientKey {
 
   def getKeyManagers(context: Context) = {
     if (keyManagers == null) {
-      KeyManagersMutex.synchronized(
-        if (keyManagers == null) {
-          val keyStore = getOrLoadOrCreateKeyStore(context)
-          val keyManagerFactory = KeyManagerFactory.getInstance(
-            KeyManagerFactory.getDefaultAlgorithm
-          )
-          keyManagerFactory.init(keyStore, null)
-          keyManagers = keyManagerFactory.getKeyManagers
-        }
+      val keyStore = getOrLoadOrCreateKeyStore(context)
+      val keyManagerFactory = KeyManagerFactory.getInstance(
+        KeyManagerFactory.getDefaultAlgorithm
       )
+      keyManagerFactory.init(keyStore, null)
+      keyManagers = keyManagerFactory.getKeyManagers
     }
     keyManagers
   }
 
   private def getOrLoadOrCreateKeyStore(context: Context) = {
     if (keyStore == null) {
-      KeyStoreMutex.synchronized(
-        if (keyStore == null) {
-          keyStore = KeyStore.getInstance("BKS")
-          val keyStoreFile = new File(context.getFilesDir, KeystoreFilename)
-          if (!keyStoreFile.exists) {
-            val (certificate, privateKey) = generateCertKeyPair(context)
-            keyStore.load(null, null)
-            keyStore.setKeyEntry(
-              EntryAlias,
-              privateKey,
-              null,
-              Array[Certificate](certificate)
-            )
-            keyStore.store(new FileOutputStream(keyStoreFile), null)
-          } else {
-            keyStore.load(new FileInputStream(keyStoreFile), null)
-          }
-        }
-      )
+      keyStore = KeyStore.getInstance("BKS")
+      val keyStoreFile = new File(context.getFilesDir, KeystoreFilename)
+      if (!keyStoreFile.exists) {
+        val (certificate, privateKey) = generateCertKeyPair(context)
+        keyStore.load(null, null)
+        keyStore.setKeyEntry(
+          EntryAlias,
+          privateKey,
+          null,
+          Array[Certificate](certificate)
+        )
+        keyStore.store(new FileOutputStream(keyStoreFile), null)
+      } else {
+        keyStore.load(new FileInputStream(keyStoreFile), null)
+      }
     }
     keyStore
   }
 
   def getPublicKey(context: Context) = {
     if (publicKey == null) {
-      PublicKeyMutex.synchronized(
-        if (publicKey == null) {
-          val keyStore = getOrLoadOrCreateKeyStore(context)
-          publicKey = PublicKey(
-            keyStore.getCertificateChain(ClientKey.EntryAlias)(0).getPublicKey.getEncoded
-          )
-        }
+      val keyStore = getOrLoadOrCreateKeyStore(context)
+      publicKey = PublicKey(
+        keyStore.getCertificateChain(ClientKey.EntryAlias)(0).getPublicKey.getEncoded
       )
     }
     publicKey

@@ -39,11 +39,13 @@ object ServerConnection {
 
   }
 
-  trait NotificationListener {
+  trait NotificationReceiptListener {
 
     def onNotificationReceived(notification: Notification)
 
   }
+
+  class ConnectionRequestToken
 
   trait ResponseCallback {
 
@@ -51,7 +53,7 @@ object ServerConnection {
 
     def onResultReceived(resultResponse: ResultResponse) = ()
 
-    // TODO: Timeouts?
+    // TODO: Timeouts
 
   }
 
@@ -82,12 +84,21 @@ object ServerConnection {
   // TODO
   private val PingPeriod = 5000L
 
+  private var instance: ServerConnection = _
+
   private def asyncPost(handler: Handler)(body: => Unit) =
     handler.post(new Runnable() {
 
       override def run() = body
 
     })
+
+  def getInstance(context: Context) = {
+    if (instance == null) {
+      instance = new ServerConnection(context)
+    }
+    instance
+  }
 
   private def getSslSocketFactory(context: Context) = {
     val sslContext = SSLContext.getInstance("TLS")
@@ -103,22 +114,7 @@ object ServerConnection {
 
 }
 
-class ServerConnection(context: Context,
-                       connectionStateListener: ConnectionStateListener,
-                       notificationListener: NotificationListener)
-  extends WebSocketListener {
-
-  Try(ProviderInstaller.installIfNeeded(context)) match {
-
-    case Failure(e: GooglePlayServicesRepairableException) =>
-      GooglePlayServicesUtil.showErrorNotification(e.getConnectionStatusCode, context)
-
-    case Failure(e: GooglePlayServicesNotAvailableException) =>
-
-    case _ =>
-
-  }
-
+class ServerConnection private(context: Context) extends WebSocketListener {
 
   private val log = LoggerFactory.getLogger(getClass)
 
@@ -126,11 +122,8 @@ class ServerConnection(context: Context,
     .setSslSocketFactory(getSslSocketFactory(context))
     .setHostnameVerifier(ServerTrust.getHostnameVerifier(context))
 
-  private val mainHandler = new Handler(Looper.getMainLooper)
-  private val connectivityStateIntentFilter = new IntentFilter(
-    ConnectivityManager.CONNECTIVITY_ACTION
-  )
-  private val connectivityStateReceiver = new BroadcastReceiver {
+  private val connectionStateFilter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
+  private val connectionStateReceiver = new BroadcastReceiver {
 
     override def onReceive(context: Context, intent: Intent) {
       intent.getAction match {
@@ -145,6 +138,8 @@ class ServerConnection(context: Context,
     }
 
   }
+
+  private val mainHandler = new Handler(Looper.getMainLooper)
   private val pingRunnable: Runnable = new Runnable() {
 
     override def run() =
@@ -178,7 +173,7 @@ class ServerConnection(context: Context,
               sys.error("Already disconnected")
 
             case activeState: ActiveState =>
-              doClose(activeState.handler)
+              doClose(activeState.handler, wasFailure = true)
 
           }
 
@@ -191,10 +186,29 @@ class ServerConnection(context: Context,
   private var pendingRequests = Map.empty[Int, PendingRequest]
   private var commandIdentifier = 0
   private var state: State = UnavailableIdleState
+  private var failed: Boolean = _
 
   private var _connectionState: ConnectionState = UNAVAILABLE
 
-  def connect() =
+  private var connectionStateListeners = Set.empty[ConnectionStateListener]
+  private var connectRequestTokens = Set.empty[ConnectionRequestToken]
+
+  private var notificationReceiptListeners = Set.empty[NotificationReceiptListener]
+
+  Try(ProviderInstaller.installIfNeeded(context)) match {
+
+    case Failure(e: GooglePlayServicesRepairableException) =>
+      GooglePlayServicesUtil.showErrorNotification(e.getConnectionStatusCode, context)
+
+    case Failure(e: GooglePlayServicesNotAvailableException) =>
+
+    case _ =>
+
+  }
+
+  handleConnectivityStateChange()
+
+  private def connect() =
     state match {
 
       case _: ActiveState =>
@@ -204,30 +218,11 @@ class ServerConnection(context: Context,
         log.debug("Connection requested when unavailable, doing nothing")
 
       case AvailableIdleState =>
-
-        val handlerThread = new HandlerThread("ServerConnection")
-        handlerThread.start()
-        val handler = new Handler(handlerThread.getLooper)
-        val activeState = ActiveState(handler)
-        state = activeState
-        _connectionState = CONNECTING
-
-        asyncPost(handler) {
-          log.debug("Creating WebSocket call")
-          val webSocketCall = WebSocketCall.create(
-            client,
-            new com.squareup.okhttp.Request.Builder().url(ServerEndpoint).build
-          )
-          webSocketCall.enqueue(this)
-          activeState.subState = ConnectingSubState(webSocketCall)
-        }
-        connectionStateListener.onConnectionStateChanged(_connectionState)
+        doOpen()
 
     }
 
   def connectionState = _connectionState
-
-  def disconnect(): Unit = disconnect(1001)
 
   private def disconnect(code: Int) {
     state match {
@@ -263,28 +258,53 @@ class ServerConnection(context: Context,
           activeState.subState = DisconnectingSubState
           _connectionState = DISCONNECTING
           asyncPost(mainHandler)(
-            connectionStateListener.onConnectionStateChanged(_connectionState)
+            connectionStateListeners.foreach(_.onConnectionStateChanged(_connectionState))
           )
         }
 
     }
   }
 
-  def doClose(handler: Handler) {
+  def doClose(handler: Handler, wasFailure: Boolean, reconnect: Boolean = false) {
     asyncPost(handler) {
       handler.removeCallbacks(pingRunnable)
       handler.getLooper.quit()
       asyncPost(mainHandler) {
-        if (!isConnectionAvailable) {
-          state = UnavailableIdleState
-          _connectionState = UNAVAILABLE
+        failed = wasFailure
+        if (!reconnect) {
+          if (!isConnectionAvailable) {
+            state = UnavailableIdleState
+            _connectionState = UNAVAILABLE
+          } else {
+            state = AvailableIdleState
+            _connectionState = AVAILABLE
+          }
+          connectionStateListeners.foreach(_.onConnectionStateChanged(_connectionState))
         } else {
-          state = AvailableIdleState
-          _connectionState = AVAILABLE
+          doOpen()
         }
-        connectionStateListener.onConnectionStateChanged(_connectionState)
       }
     }
+  }
+
+  def doOpen() {
+    val handlerThread = new HandlerThread("ServerConnection")
+    handlerThread.start()
+    val handler = new Handler(handlerThread.getLooper)
+    val activeState = ActiveState(handler)
+    state = activeState
+    _connectionState = CONNECTING
+
+    asyncPost(handler) {
+      log.debug("Creating WebSocket call")
+      val webSocketCall = WebSocketCall.create(
+        client,
+        new com.squareup.okhttp.Request.Builder().url(ServerEndpoint).build
+      )
+      webSocketCall.enqueue(this)
+      activeState.subState = ConnectingSubState(webSocketCall)
+    }
+    connectionStateListeners.foreach(_.onConnectionStateChanged(_connectionState))
   }
 
   def handleConnectivityStateChange() {
@@ -294,7 +314,7 @@ class ServerConnection(context: Context,
         case AvailableIdleState =>
           state = UnavailableIdleState
           _connectionState = UNAVAILABLE
-          connectionStateListener.onConnectionStateChanged(_connectionState)
+          connectionStateListeners.foreach(_.onConnectionStateChanged(_connectionState))
 
         case _ =>
 
@@ -305,7 +325,7 @@ class ServerConnection(context: Context,
         case UnavailableIdleState =>
           state = AvailableIdleState
           _connectionState = AVAILABLE
-          connectionStateListener.onConnectionStateChanged(_connectionState)
+          connectionStateListeners.foreach(_.onConnectionStateChanged(_connectionState))
 
         case _ =>
 
@@ -321,11 +341,6 @@ class ServerConnection(context: Context,
     activeNetwork != null && activeNetwork.isConnected
   }
 
-  def onCreate() {
-    context.registerReceiver(connectivityStateReceiver, connectivityStateIntentFilter)
-    handleConnectivityStateChange()
-  }
-
   override def onClose(code: Int, reason: String) {
     log.debug(s"WebSocket closed. Reason: $reason, Code: $code")
     state match {
@@ -339,16 +354,14 @@ class ServerConnection(context: Context,
           case _: ConnectingSubState =>
             sys.error("Not connected or disconnecting")
 
-          case _: ConnectedSubState | DisconnectingSubState =>
-            doClose(activeState.handler)
+          case _: ConnectedSubState =>
+            doClose(activeState.handler, wasFailure = false)
+
+          case DisconnectingSubState =>
+            doClose(activeState.handler, wasFailure = false, connectRequestTokens.nonEmpty)
 
         }
     }
-  }
-
-  def onDestroy() {
-    // TODO: Force closes due to no registration in some cases (also makes reported state wrong)
-    context.unregisterReceiver(connectivityStateReceiver)
   }
 
   override def onFailure(e: IOException, response: com.squareup.okhttp.Response) {
@@ -359,7 +372,7 @@ class ServerConnection(context: Context,
         sys.error("Already disconnected")
 
       case activeState: ActiveState =>
-        doClose(activeState.handler)
+        doClose(activeState.handler, wasFailure = true)
 
     }
   }
@@ -452,7 +465,9 @@ class ServerConnection(context: Context,
                         }, notification =>
                           asyncPost(activeState.handler)(
                             asyncPost(mainHandler)(
-                              notificationListener.onNotificationReceived(notification)
+                              notificationReceiptListeners.foreach(
+                                _.onNotificationReceived(notification)
+                              )
                             )
                           )
                         ))
@@ -489,7 +504,7 @@ class ServerConnection(context: Context,
               activeState.subState = ConnectedSubState(webSocket)
               _connectionState = CONNECTED
               asyncPost(mainHandler)(
-                connectionStateListener.onConnectionStateChanged(_connectionState)
+                connectionStateListeners.foreach(_.onConnectionStateChanged(_connectionState))
               )
             }
 
@@ -505,6 +520,32 @@ class ServerConnection(context: Context,
     }
     // TODO: Timeouts
     log.trace(s"Received pong: $payloadString")
+  }
+
+  def registerListener(listener: ConnectionStateListener) =
+    if (!connectionStateListeners.contains(listener)) {
+      if (connectionStateListeners.isEmpty) {
+        context.registerReceiver(connectionStateReceiver, connectionStateFilter)
+        handleConnectivityStateChange()
+      }
+      connectionStateListeners = connectionStateListeners + listener
+      listener.onConnectionStateChanged(_connectionState)
+    }
+
+  def registerListener(listener: NotificationReceiptListener) =
+    if (!notificationReceiptListeners.contains(listener)) {
+      notificationReceiptListeners = notificationReceiptListeners + listener
+    }
+
+  def requestConnection(token: ConnectionRequestToken, retry: Boolean) {
+    if (!connectRequestTokens.contains(token)) {
+      connectRequestTokens = connectRequestTokens + token
+    }
+    if (_connectionState == ServerConnection.AVAILABLE && (!failed || retry)) {
+
+      connect()
+
+    }
   }
 
   def sendCommand(command: Command, responseCallback: ResponseCallback) {
@@ -545,7 +586,7 @@ class ServerConnection(context: Context,
                       sys.error("Already disconnected")
 
                     case activeState: ActiveState =>
-                      doClose(activeState.handler)
+                      doClose(activeState.handler, wasFailure = true)
 
                   }
 
@@ -558,5 +599,31 @@ class ServerConnection(context: Context,
 
     }
   }
+
+  def unregisterListener(listener: ConnectionStateListener) =
+    if (connectionStateListeners.contains(listener)) {
+      connectionStateListeners = connectionStateListeners - listener
+      if (connectionStateListeners.isEmpty) {
+        context.unregisterReceiver(connectionStateReceiver)
+      }
+    }
+
+  def unregisterListener(listener: NotificationReceiptListener) =
+    if (notificationReceiptListeners.contains(listener)) {
+      notificationReceiptListeners = notificationReceiptListeners - listener
+    }
+
+  def unrequestConnection(token: ConnectionRequestToken) =
+    if (connectRequestTokens.contains(token)) {
+      connectRequestTokens = connectRequestTokens - token
+      if (connectRequestTokens.isEmpty) {
+        if (connectionState == ServerConnection.CONNECTING
+          || connectionState == ServerConnection.CONNECTED) {
+
+          disconnect(1001)
+
+        }
+      }
+    }
 
 }

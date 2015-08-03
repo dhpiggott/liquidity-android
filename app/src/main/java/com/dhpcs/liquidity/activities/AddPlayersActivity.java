@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.dhpcs.liquidity.MonopolyGame;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.models.ZoneId;
 
@@ -16,6 +17,10 @@ public class AddPlayersActivity extends AppCompatActivity {
 
     public static final String EXTRA_GAME_NAME = "game_name";
     public static final String EXTRA_ZONE_ID = "zone_id";
+
+    private MonopolyGame.JoinRequestToken joinRequestToken;
+
+    private MonopolyGame monopolyGame;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +57,50 @@ public class AddPlayersActivity extends AppCompatActivity {
             }
 
         });
+
+        joinRequestToken = (MonopolyGame.JoinRequestToken) getLastCustomNonConfigurationInstance();
+
+        if (joinRequestToken == null) {
+
+            joinRequestToken = new MonopolyGame.JoinRequestToken() {
+            };
+
+        }
+
+        monopolyGame = MonopolyGame.getInstance(
+                (ZoneId) getIntent().getExtras().getSerializable(EXTRA_ZONE_ID)
+        );
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (!isChangingConfigurations()) {
+            if (!isFinishing()) {
+                monopolyGame.unrequestJoin(joinRequestToken);
+            }
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        monopolyGame.requestJoin(joinRequestToken, false);
+    }
+
+    @Override
+    public MonopolyGame.JoinRequestToken onRetainCustomNonConfigurationInstance() {
+        return joinRequestToken;
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (!isChangingConfigurations()) {
+            if (isFinishing()) {
+                monopolyGame.unrequestJoin(joinRequestToken);
+            }
+        }
     }
 
 }

@@ -5,14 +5,22 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.KeyEvent;
 
+import com.dhpcs.liquidity.MonopolyGame;
 import com.dhpcs.liquidity.R;
+import com.dhpcs.liquidity.models.ZoneId;
 import com.journeyapps.barcodescanner.CaptureManager;
 import com.journeyapps.barcodescanner.CompoundBarcodeView;
 
 public class TransferIdentityActivity extends AppCompatActivity {
 
-    public static final String EXTRA_IDENTITY_NAME = "identity_name";
+    public static final String EXTRA_ZONE_ID_HOLDER = "zone_id_holder";
 
+    public static final String EXTRA_IDENTITY_NAME = "identity_name";
+    public static final String EXTRA_ZONE_ID = "zone_id";
+
+    private MonopolyGame.JoinRequestToken joinRequestToken;
+
+    private MonopolyGame monopolyGame;
     private CaptureManager capture;
 
     @Override
@@ -37,33 +45,30 @@ public class TransferIdentityActivity extends AppCompatActivity {
                 )
         );
 
+        joinRequestToken = (MonopolyGame.JoinRequestToken) getLastCustomNonConfigurationInstance();
+
+        if (joinRequestToken == null) {
+
+            joinRequestToken = new MonopolyGame.JoinRequestToken() {
+            };
+
+        }
+
+        monopolyGame = MonopolyGame.getInstance(
+                (ZoneId) getIntent()
+                        .getBundleExtra(EXTRA_ZONE_ID_HOLDER)
+                        .getSerializable(EXTRA_ZONE_ID)
+        );
+
         capture = new CaptureManager(this, barcodeScannerView);
         capture.initializeFromIntent(getIntent(), savedInstanceState);
         capture.decode();
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        capture.onResume();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        capture.onPause();
-    }
-
-    @Override
     protected void onDestroy() {
         super.onDestroy();
         capture.onDestroy();
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        capture.onSaveInstanceState(outState);
     }
 
     @Override
@@ -78,6 +83,45 @@ public class TransferIdentityActivity extends AppCompatActivity {
                 return true;
         }
         return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (!isChangingConfigurations()) {
+            if (!isFinishing()) {
+                monopolyGame.unrequestJoin(joinRequestToken);
+            }
+        }
+        capture.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        monopolyGame.requestJoin(joinRequestToken, false);
+        capture.onResume();
+    }
+
+    @Override
+    public MonopolyGame.JoinRequestToken onRetainCustomNonConfigurationInstance() {
+        return joinRequestToken;
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        capture.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (!isChangingConfigurations()) {
+            if (isFinishing()) {
+                monopolyGame.unrequestJoin(joinRequestToken);
+            }
+        }
     }
 
 }

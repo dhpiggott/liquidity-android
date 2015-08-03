@@ -55,8 +55,7 @@ object ServerTrust {
     "liquidity.dhpcs.com" -> R.raw.liquidity_dhpcs_com
   )
 
-  @volatile private var trustedKeys: Map[String, PublicKey] = _
-  private val TrustedKeysMutex = new Object
+  private var trustedKeys: Map[String, PublicKey] = _
 
   def getHostnameVerifier(context: Context) = {
     loadTrustedKeys(context)
@@ -70,18 +69,14 @@ object ServerTrust {
 
   private def loadTrustedKeys(context: Context) {
     if (trustedKeys == null) {
-      TrustedKeysMutex.synchronized(
-        if (trustedKeys == null) {
-          trustedKeys = TrustedKeyResources.map { case (hostname, resourceId) =>
-            val publicKey = new JcaPEMKeyConverter().getPublicKey(
-              new PEMParser(
-                new InputStreamReader(context.getResources.openRawResource(resourceId))
-              ).readObject.asInstanceOf[SubjectPublicKeyInfo]
-            )
-            hostname -> publicKey
-          }
-        }
-      )
+      trustedKeys = TrustedKeyResources.map { case (hostname, resourceId) =>
+        val publicKey = new JcaPEMKeyConverter().getPublicKey(
+          new PEMParser(
+            new InputStreamReader(context.getResources.openRawResource(resourceId))
+          ).readObject.asInstanceOf[SubjectPublicKeyInfo]
+        )
+        hostname -> publicKey
+      }
     }
   }
 
