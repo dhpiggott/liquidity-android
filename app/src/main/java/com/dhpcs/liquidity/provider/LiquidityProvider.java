@@ -26,7 +26,6 @@ public class LiquidityProvider extends ContentProvider {
                 "CREATE TABLE " + GAMES_TABLE_NAME
                         + "("
                         + LiquidityContract.Games._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-                        + LiquidityContract.Games.GAME_TYPE + " TEXT NOT NULL, "
                         + LiquidityContract.Games.ZONE_ID + " TEXT NOT NULL,"
                         + LiquidityContract.Games.NAME + " TEXT NOT NULL,"
                         + LiquidityContract.Games.CREATED + " INTEGER NOT NULL,"

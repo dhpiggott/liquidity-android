@@ -454,6 +454,7 @@ class ServerConnection private(context: Context) extends WebSocketListener {
                           }
                         }
 
+                      // TODO: Need to acknowledge receipt so server can retransmit lost messages
                       case jsonRpcNotificationMessage: JsonRpcNotificationMessage =>
                         Notification.read(jsonRpcNotificationMessage).fold {
                           disconnect(1002)

@@ -31,8 +31,6 @@ public class LiquidityContract {
 
         public static final String ZONE_ID = "zone_id";
 
-        public static final String GAME_TYPE = "game_type";
-
         public static final String NAME = "name";
 
         public static final String CREATED = "created";
