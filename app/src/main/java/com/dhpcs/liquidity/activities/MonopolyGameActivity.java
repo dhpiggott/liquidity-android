@@ -493,6 +493,16 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
+    public void onJoinError() {
+        Toast.makeText(
+                this,
+                R.string.join_game_invalid_code,
+                Toast.LENGTH_LONG
+        ).show();
+        finish();
+    }
+
+    @Override
     public void onJoinStateChanged(MonopolyGame.JoinState joinState) {
         if (joinState == MonopolyGame.UNAVAILABLE$.MODULE$) {
 

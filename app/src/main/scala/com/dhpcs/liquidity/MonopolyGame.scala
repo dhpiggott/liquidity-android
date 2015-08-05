@@ -111,6 +111,8 @@ object MonopolyGame {
 
     def onIdentityRestored(identity: IdentityWithBalance)
 
+    def onJoinError()
+
     def onPlayerAdded(addedPlayer: PlayerWithBalanceAndConnectionState)
 
     def onPlayerChanged(changedPlayer: PlayerWithBalanceAndConnectionState)
@@ -419,8 +421,14 @@ class MonopolyGame private(context: Context,
       JoinZoneCommand(
         zoneId
       ),
-      // TODO: Don't forward error - need to handle non-existent zone (i.e. non-Liquidity UUID)
-      new ResponseCallbackWithErrorForwarding {
+      new ResponseCallback {
+
+        override def onErrorReceived(errorResponse: ErrorResponse) {
+          log.debug(s"errorResponse=$errorResponse")
+
+          gameActionListseners.foreach(_.onJoinError())
+
+        }
 
         override def onResultReceived(resultResponse: ResultResponse) {
           log.debug(s"resultResponse=$resultResponse")
