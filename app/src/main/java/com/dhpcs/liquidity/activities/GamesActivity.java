@@ -43,7 +43,7 @@ public class GamesActivity extends AppCompatActivity implements GamesFragment.Li
                 } catch (IllegalArgumentException e) {
                     Toast.makeText(
                             this,
-                            R.string.join_game_invalid_code,
+                            R.string.join_game_error,
                             Toast.LENGTH_LONG
                     ).show();
                 }

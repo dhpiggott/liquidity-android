@@ -29,7 +29,6 @@ import com.dhpcs.liquidity.fragments.ConfirmIdentityDeletionDialogFragment;
 import com.dhpcs.liquidity.fragments.CreateIdentityDialogFragment;
 import com.dhpcs.liquidity.fragments.EnterGameNameDialogFragment;
 import com.dhpcs.liquidity.fragments.EnterIdentityNameDialogFragment;
-import com.dhpcs.liquidity.fragments.ErrorResponseDialogFragment;
 import com.dhpcs.liquidity.fragments.IdentitiesFragment;
 import com.dhpcs.liquidity.fragments.LastTransferFragment;
 import com.dhpcs.liquidity.fragments.PlayersFragment;
@@ -38,7 +37,6 @@ import com.dhpcs.liquidity.fragments.RestoreIdentityDialogFragment;
 import com.dhpcs.liquidity.fragments.TransferToPlayerDialogFragment;
 import com.dhpcs.liquidity.models.Account;
 import com.dhpcs.liquidity.models.AccountId;
-import com.dhpcs.liquidity.models.ErrorResponse;
 import com.dhpcs.liquidity.models.MemberId;
 import com.dhpcs.liquidity.models.PublicKey;
 import com.dhpcs.liquidity.models.TransactionId;
@@ -207,7 +205,6 @@ public class MonopolyGameActivity extends AppCompatActivity
                 CreateIdentityDialogFragment.TAG,
                 EnterGameNameDialogFragment.TAG,
                 EnterIdentityNameDialogFragment.TAG,
-                ErrorResponseDialogFragment.TAG,
                 RestoreIdentityDialogFragment.TAG,
                 TransferToPlayerDialogFragment.TAG
         }) {
@@ -396,6 +393,16 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
+    public void onCreateError() {
+        Toast.makeText(
+                this,
+                R.string.create_game_error,
+                Toast.LENGTH_LONG
+        ).show();
+        finish();
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_monopoly_game, menu);
         return true;
@@ -406,15 +413,6 @@ public class MonopolyGameActivity extends AppCompatActivity
         super.onDestroy();
         monopolyGame.unregisterListener((MonopolyGame.GameActionListener) this);
         monopolyGame.unregisterListener((MonopolyGame.JoinStateListener) this);
-    }
-
-    @Override
-    public void onErrorResponse(ErrorResponse errorResponse) {
-        ErrorResponseDialogFragment.newInstance(errorResponse)
-                .show(
-                        getFragmentManager(),
-                        ErrorResponseDialogFragment.TAG
-                );
     }
 
     @Override
@@ -496,7 +494,7 @@ public class MonopolyGameActivity extends AppCompatActivity
     public void onJoinError() {
         Toast.makeText(
                 this,
-                R.string.join_game_invalid_code,
+                R.string.join_game_error,
                 Toast.LENGTH_LONG
         ).show();
         finish();

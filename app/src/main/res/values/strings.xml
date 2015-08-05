@@ -20,6 +20,7 @@
     <string name="choose_identity_to_restore">Choose identity to restore</string>
     <string name="confirm_delete">Confirm delete</string>
     <string name="confirm_delete_format_string">Are you sure you want to delete your identity %1$s? You can always restore deleted identities via the menu later.</string>
+    <string name="create_game_error">Couldn\'t create game!</string>
     <string name="create_identity">Create identity</string>
     <string name="created_format_string">Created %1$s</string>
     <string name="currency_code_format_string">"%1$s "</string>
@@ -33,8 +34,8 @@
     <string name="group_transfer">Group transfer</string>
     <string name="identity_format_string">%1$s (%2$s available)</string>
     <string name="join_game">Join game</string>
+    <string name="join_game_error">"That's not a Liquidity game!"</string>
     <string name="join_game_instruction">Scan the QR code on the host\'s phone.</string>
-    <string name="join_game_invalid_code">"That's not a Liquidity game!"</string>
     <string name="join_state_available">The connection was lost. Click the button to reconnect.</string>
     <string name="join_state_connecting">Connecting</string>
     <string name="join_state_disconnecting">Disconnecting</string>
