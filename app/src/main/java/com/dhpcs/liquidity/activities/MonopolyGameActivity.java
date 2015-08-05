@@ -1,5 +1,6 @@
 package com.dhpcs.liquidity.activities;
 
+import android.app.DialogFragment;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -67,7 +68,8 @@ public class MonopolyGameActivity extends AppCompatActivity
         ConfirmIdentityDeletionDialogFragment.Listener,
         CreateIdentityDialogFragment.Listener,
         IdentitiesFragment.Listener,
-        MonopolyGame.Listener,
+        MonopolyGame.GameActionListener,
+        MonopolyGame.JoinStateListener,
         PlayersFragment.Listener,
         RestoreIdentityDialogFragment.Listener,
         TransferToPlayerDialogFragment.Listener {
@@ -198,6 +200,24 @@ public class MonopolyGameActivity extends AppCompatActivity
     private PlayersFragment playersFragment;
     private LastTransferFragment lastTransferFragment;
     private PlayersTransfersFragment playersTransfersFragment;
+
+    private void closeDialogFragments() {
+        for (String tag : new String[]{
+                ConfirmIdentityDeletionDialogFragment.TAG,
+                CreateIdentityDialogFragment.TAG,
+                EnterGameNameDialogFragment.TAG,
+                EnterIdentityNameDialogFragment.TAG,
+                ErrorResponseDialogFragment.TAG,
+                RestoreIdentityDialogFragment.TAG,
+                TransferToPlayerDialogFragment.TAG
+        }) {
+            DialogFragment dialogFragment =
+                    (DialogFragment) getFragmentManager().findFragmentByTag(tag);
+            if (dialogFragment != null) {
+                dialogFragment.dismiss();
+            }
+        }
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -371,7 +391,8 @@ public class MonopolyGameActivity extends AppCompatActivity
 
         }
 
-        monopolyGame.registerListener(this);
+        monopolyGame.registerListener((MonopolyGame.JoinStateListener) this);
+        monopolyGame.registerListener((MonopolyGame.GameActionListener) this);
     }
 
     @Override
@@ -381,9 +402,10 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onDestroy() {
+    protected void onDestroy() {
         super.onDestroy();
-        monopolyGame.unregisterListener(this);
+        monopolyGame.unregisterListener((MonopolyGame.GameActionListener) this);
+        monopolyGame.unregisterListener((MonopolyGame.JoinStateListener) this);
     }
 
     @Override
@@ -391,7 +413,7 @@ public class MonopolyGameActivity extends AppCompatActivity
         ErrorResponseDialogFragment.newInstance(errorResponse)
                 .show(
                         getFragmentManager(),
-                        "error_dialog_fragment"
+                        ErrorResponseDialogFragment.TAG
                 );
     }
 
@@ -414,7 +436,7 @@ public class MonopolyGameActivity extends AppCompatActivity
         );
         TransferToPlayerDialogFragment transferToPlayerDialogFragment =
                 (TransferToPlayerDialogFragment) getFragmentManager()
-                        .findFragmentByTag("transfer_to_player_dialog_fragment");
+                        .findFragmentByTag(TransferToPlayerDialogFragment.TAG);
         if (transferToPlayerDialogFragment != null) {
             transferToPlayerDialogFragment.onIdentitiesUpdated(identities);
         }
@@ -456,7 +478,7 @@ public class MonopolyGameActivity extends AppCompatActivity
         CreateIdentityDialogFragment.newInstance(true)
                 .show(
                         getFragmentManager(),
-                        "create_identity_dialog_fragment"
+                        CreateIdentityDialogFragment.TAG
                 );
     }
 
@@ -470,10 +492,11 @@ public class MonopolyGameActivity extends AppCompatActivity
         monopolyGame.restoreIdentity(identity);
     }
 
-    // TODO: Dismiss any open dialog fragments and child activities on disconnect
     @Override
     public void onJoinStateChanged(MonopolyGame.JoinState joinState) {
         if (joinState == MonopolyGame.UNAVAILABLE$.MODULE$) {
+
+            closeDialogFragments();
 
             slidingUpPanelLayout.setVisibility(View.GONE);
             progressBarState.setVisibility(View.GONE);
@@ -484,6 +507,8 @@ public class MonopolyGameActivity extends AppCompatActivity
 
         } else if (joinState == MonopolyGame.AVAILABLE$.MODULE$) {
 
+            closeDialogFragments();
+
             slidingUpPanelLayout.setVisibility(View.GONE);
             progressBarState.setVisibility(View.GONE);
 
@@ -493,6 +518,8 @@ public class MonopolyGameActivity extends AppCompatActivity
 
         } else if (joinState == MonopolyGame.CONNECTING$.MODULE$) {
 
+            closeDialogFragments();
+
             slidingUpPanelLayout.setVisibility(View.GONE);
             buttonReconnect.setVisibility(View.GONE);
 
@@ -501,6 +528,8 @@ public class MonopolyGameActivity extends AppCompatActivity
             textViewState.setText(R.string.join_state_connecting);
 
         } else if (joinState == MonopolyGame.JOINING$.MODULE$) {
+
+            closeDialogFragments();
 
             slidingUpPanelLayout.setVisibility(View.GONE);
             buttonReconnect.setVisibility(View.GONE);
@@ -520,6 +549,8 @@ public class MonopolyGameActivity extends AppCompatActivity
 
         } else if (joinState == MonopolyGame.QUITTING$.MODULE$) {
 
+            closeDialogFragments();
+
             slidingUpPanelLayout.setVisibility(View.GONE);
             buttonReconnect.setVisibility(View.GONE);
 
@@ -528,6 +559,8 @@ public class MonopolyGameActivity extends AppCompatActivity
             textViewState.setText(R.string.join_state_quitting);
 
         } else if (joinState == MonopolyGame.DISCONNECTING$.MODULE$) {
+
+            closeDialogFragments();
 
             slidingUpPanelLayout.setVisibility(View.GONE);
             buttonReconnect.setVisibility(View.GONE);
@@ -545,23 +578,28 @@ public class MonopolyGameActivity extends AppCompatActivity
         CreateIdentityDialogFragment.newInstance(false)
                 .show(
                         getFragmentManager(),
-                        "create_identity_dialog_fragment"
+                        CreateIdentityDialogFragment.TAG
                 );
     }
 
     @Override
     public void onNoPlayersTextClicked() {
         isStartingChildActivity = true;
+        Bundle zoneIdHolder = new Bundle();
+        zoneIdHolder.putSerializable(
+                TransferIdentityActivity.EXTRA_ZONE_ID,
+                monopolyGame.getZoneId()
+        );
         startActivity(
                 new Intent(
                         this,
                         AddPlayersActivity.class
                 ).putExtra(
+                        AddPlayersActivity.EXTRA_ZONE_ID_HOLDER,
+                        zoneIdHolder
+                ).putExtra(
                         AddPlayersActivity.EXTRA_GAME_NAME,
                         monopolyGame.getGameName()
-                ).putExtra(
-                        AddPlayersActivity.EXTRA_ZONE_ID,
-                        monopolyGame.getZoneId()
                 )
         );
     }
@@ -569,6 +607,7 @@ public class MonopolyGameActivity extends AppCompatActivity
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         IdentityWithBalance identity;
+        Bundle zoneIdHolder;
         switch (item.getItemId()) {
             case android.R.id.home:
                 if (slidingUpPanelLayout.getPanelState() == PanelState.EXPANDED
@@ -580,16 +619,21 @@ public class MonopolyGameActivity extends AppCompatActivity
                 }
             case R.id.action_add_players:
                 isStartingChildActivity = true;
+                zoneIdHolder = new Bundle();
+                zoneIdHolder.putSerializable(
+                        TransferIdentityActivity.EXTRA_ZONE_ID,
+                        monopolyGame.getZoneId()
+                );
                 startActivity(
                         new Intent(
                                 this,
                                 AddPlayersActivity.class
                         ).putExtra(
+                                AddPlayersActivity.EXTRA_ZONE_ID_HOLDER,
+                                zoneIdHolder
+                        ).putExtra(
                                 AddPlayersActivity.EXTRA_GAME_NAME,
                                 monopolyGame.getGameName()
-                        ).putExtra(
-                                AddPlayersActivity.EXTRA_ZONE_ID,
-                                monopolyGame.getZoneId()
                         )
                 );
                 return true;
@@ -604,7 +648,7 @@ public class MonopolyGameActivity extends AppCompatActivity
                             null
                     ).show(
                             getFragmentManager(),
-                            "transfer_to_player_dialog_fragment"
+                            TransferToPlayerDialogFragment.TAG
                     );
                 }
                 return true;
@@ -612,7 +656,7 @@ public class MonopolyGameActivity extends AppCompatActivity
                 EnterGameNameDialogFragment.newInstance(getTitle().toString())
                         .show(
                                 getFragmentManager(),
-                                "enter_game_name_dialog_fragment"
+                                EnterGameNameDialogFragment.TAG
                         );
                 return true;
             case R.id.action_change_identity_name:
@@ -621,7 +665,7 @@ public class MonopolyGameActivity extends AppCompatActivity
                     EnterIdentityNameDialogFragment.newInstance(identity)
                             .show(
                                     getFragmentManager(),
-                                    "enter_identity_name_dialog_fragment"
+                                    EnterIdentityNameDialogFragment.TAG
                             );
                 }
                 return true;
@@ -629,14 +673,14 @@ public class MonopolyGameActivity extends AppCompatActivity
                 CreateIdentityDialogFragment.newInstance(false)
                         .show(
                                 getFragmentManager(),
-                                "create_identity_dialog_fragment"
+                                CreateIdentityDialogFragment.TAG
                         );
                 return true;
             case R.id.action_restore_identity:
                 RestoreIdentityDialogFragment.newInstance(monopolyGame.getHiddenIdentities())
                         .show(
                                 getFragmentManager(),
-                                "restore_identity_dialog_fragment"
+                                RestoreIdentityDialogFragment.TAG
                         );
                 return true;
             case R.id.action_delete_identity:
@@ -645,19 +689,24 @@ public class MonopolyGameActivity extends AppCompatActivity
                     ConfirmIdentityDeletionDialogFragment.newInstance(identity)
                             .show(
                                     getFragmentManager(),
-                                    "confirm_identity_deletion_dialog_fragment"
+                                    ConfirmIdentityDeletionDialogFragment.TAG
                             );
                 }
                 return true;
             case R.id.action_receive_identity:
                 isStartingChildActivity = true;
+                zoneIdHolder = new Bundle();
+                zoneIdHolder.putSerializable(
+                        TransferIdentityActivity.EXTRA_ZONE_ID,
+                        monopolyGame.getZoneId()
+                );
                 startActivityForResult(
                         new Intent(
                                 this,
                                 ReceiveIdentityActivity.class
                         ).putExtra(
-                                ReceiveIdentityActivity.EXTRA_ZONE_ID,
-                                monopolyGame.getZoneId()
+                                ReceiveIdentityActivity.EXTRA_ZONE_ID_HOLDER,
+                                zoneIdHolder
                         ).putExtra(
                                 ReceiveIdentityActivity.EXTRA_PUBLIC_KEY,
                                 ClientKey.getPublicKey(this)
@@ -667,7 +716,7 @@ public class MonopolyGameActivity extends AppCompatActivity
                 return true;
             case R.id.action_transfer_identity:
                 isStartingChildActivity = true;
-                Bundle zoneIdHolder = new Bundle();
+                zoneIdHolder = new Bundle();
                 zoneIdHolder.putSerializable(
                         TransferIdentityActivity.EXTRA_ZONE_ID,
                         monopolyGame.getZoneId()
@@ -695,7 +744,8 @@ public class MonopolyGameActivity extends AppCompatActivity
     @Override
     protected void onPause() {
         super.onPause();
-        monopolyGame.unregisterListener(this);
+        monopolyGame.unregisterListener((MonopolyGame.GameActionListener) this);
+        monopolyGame.unregisterListener((MonopolyGame.JoinStateListener) this);
         if (!isChangingConfigurations()) {
             if (!isStartingChildActivity) {
                 monopolyGame.unrequestJoin(joinRequestToken);
@@ -745,7 +795,7 @@ public class MonopolyGameActivity extends AppCompatActivity
                     player
             ).show(
                     getFragmentManager(),
-                    "transfer_to_player_dialog_fragment"
+                    TransferToPlayerDialogFragment.TAG
             );
         }
     }
@@ -789,7 +839,8 @@ public class MonopolyGameActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
         monopolyGame.requestJoin(joinRequestToken, false);
-        monopolyGame.registerListener(this);
+        monopolyGame.registerListener((MonopolyGame.JoinStateListener) this);
+        monopolyGame.registerListener((MonopolyGame.GameActionListener) this);
     }
 
     @Override

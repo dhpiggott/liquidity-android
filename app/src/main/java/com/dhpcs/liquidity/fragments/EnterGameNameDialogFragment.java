@@ -25,6 +25,8 @@ public class EnterGameNameDialogFragment extends DialogFragment {
 
     }
 
+    public static final String TAG = "enter_game_name_dialog_fragment";
+
     private static final String ARG_NAME = "name";
 
     public static EnterGameNameDialogFragment newInstance(String name) {

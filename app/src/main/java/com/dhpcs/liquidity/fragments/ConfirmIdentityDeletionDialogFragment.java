@@ -18,6 +18,8 @@ public class ConfirmIdentityDeletionDialogFragment extends DialogFragment {
 
     }
 
+    public static final String TAG = "confirm_identity_deletion_dialog_fragment";
+
     private static final String ARG_IDENTITY = "identity";
 
     public static ConfirmIdentityDeletionDialogFragment newInstance(Identity identity) {

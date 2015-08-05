@@ -31,6 +31,8 @@ public class RestoreIdentityDialogFragment extends DialogFragment {
 
     }
 
+    public static final String TAG = "restore_identity_dialog_fragment";
+
     private static class IdentitiesAdapter extends ArrayAdapter<IdentityWithBalance> {
 
         public IdentitiesAdapter(Context context) {

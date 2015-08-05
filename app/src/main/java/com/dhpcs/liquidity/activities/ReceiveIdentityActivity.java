@@ -1,27 +1,19 @@
 package com.dhpcs.liquidity.activities;
 
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.ImageView;
 
-import com.dhpcs.liquidity.MonopolyGame;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.models.PublicKey;
-import com.dhpcs.liquidity.models.ZoneId;
 import com.google.common.io.BaseEncoding;
 
 import net.glxn.qrgen.android.QRCode;
 
-public class ReceiveIdentityActivity extends AppCompatActivity {
+public class ReceiveIdentityActivity extends MonopolyGameChildActivity {
 
     public static final String EXTRA_PUBLIC_KEY = "public_key";
-    public static final String EXTRA_ZONE_ID = "zone_id";
-
-    private MonopolyGame.JoinRequestToken joinRequestToken;
-
-    private MonopolyGame monopolyGame;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,50 +43,6 @@ public class ReceiveIdentityActivity extends AppCompatActivity {
             }
 
         });
-
-        joinRequestToken = (MonopolyGame.JoinRequestToken) getLastCustomNonConfigurationInstance();
-
-        if (joinRequestToken == null) {
-
-            joinRequestToken = new MonopolyGame.JoinRequestToken() {
-            };
-
-        }
-
-        monopolyGame = MonopolyGame.getInstance(
-                (ZoneId) getIntent().getExtras().getSerializable(EXTRA_ZONE_ID)
-        );
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        if (!isChangingConfigurations()) {
-            if (!isFinishing()) {
-                monopolyGame.unrequestJoin(joinRequestToken);
-            }
-        }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        monopolyGame.requestJoin(joinRequestToken, false);
-    }
-
-    @Override
-    public MonopolyGame.JoinRequestToken onRetainCustomNonConfigurationInstance() {
-        return joinRequestToken;
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (!isChangingConfigurations()) {
-            if (isFinishing()) {
-                monopolyGame.unrequestJoin(joinRequestToken);
-            }
-        }
     }
 
 }

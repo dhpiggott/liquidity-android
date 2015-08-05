@@ -89,7 +89,13 @@ object MonopolyGame {
                                   currency: Option[Either[String, Currency]])
     extends Transfer
 
-  trait Listener {
+  trait JoinStateListener {
+
+    def onJoinStateChanged(joinState: JoinState)
+
+  }
+
+  trait GameActionListener {
 
     def onErrorResponse(errorResponse: ErrorResponse)
 
@@ -104,8 +110,6 @@ object MonopolyGame {
     def onIdentityRequired()
 
     def onIdentityRestored(identity: IdentityWithBalance)
-
-    def onJoinStateChanged(joinState: JoinState)
 
     def onPlayerAdded(addedPlayer: PlayerWithBalanceAndConnectionState)
 
@@ -269,7 +273,7 @@ class MonopolyGame private(context: Context,
   private trait ResponseCallbackWithErrorForwarding extends ResponseCallback {
 
     override def onErrorReceived(errorResponse: ErrorResponse) =
-      listeners.foreach(_.onErrorResponse(errorResponse))
+      gameActionListseners.foreach(_.onErrorResponse(errorResponse))
 
   }
 
@@ -282,8 +286,10 @@ class MonopolyGame private(context: Context,
 
   private var _joinState: JoinState = MonopolyGame.UNAVAILABLE
 
-  private var listeners = Set.empty[Listener]
+  private var joinStateListeners = Set.empty[JoinStateListener]
   private var joinRequestTokens = Set.empty[JoinRequestToken]
+
+  private var gameActionListseners = Set.empty[GameActionListener]
 
   def this(context: Context, serverConnection: ServerConnection) {
     this(context, serverConnection, None, None)
@@ -488,14 +494,14 @@ class MonopolyGame private(context: Context,
               )
 
               _joinState = JOINED
-              listeners.foreach(_.onJoinStateChanged(_joinState))
+              joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
 
-              listeners.foreach(_.onGameNameChanged(joinZoneResponse.zone.name))
-              listeners.foreach(_.onIdentitiesUpdated(identities))
-              listeners.foreach(_.onPlayersInitialized(players.values))
-              listeners.foreach(_.onPlayersUpdated(players))
-              listeners.foreach(_.onTransfersInitialized(transfers.values))
-              listeners.foreach(_.onTransfersUpdated(transfers))
+              gameActionListseners.foreach(_.onGameNameChanged(joinZoneResponse.zone.name))
+              gameActionListseners.foreach(_.onIdentitiesUpdated(identities))
+              gameActionListseners.foreach(_.onPlayersInitialized(players.values))
+              gameActionListseners.foreach(_.onPlayersUpdated(players))
+              gameActionListseners.foreach(_.onTransfersInitialized(transfers.values))
+              gameActionListseners.foreach(_.onTransfersUpdated(transfers))
 
               val partiallyCreatedIdentityIds = joinZoneResponse.zone.members.collect {
                 case (memberId, member) if ClientKey.getPublicKey(context) == member.publicKey
@@ -517,7 +523,7 @@ class MonopolyGame private(context: Context,
               if (gameId.isEmpty && !(identities ++ hiddenIdentities).values.exists(
                 _.accountId != joinZoneResponse.zone.equityAccountId
               )) {
-                listeners.foreach(_.onIdentityRequired())
+                gameActionListseners.foreach(_.onIdentityRequired())
               }
 
               def checkAndUpdateGameName(name: String): Option[Long] = {
@@ -586,7 +592,7 @@ class MonopolyGame private(context: Context,
       }
     )
     _joinState = JOINING
-    listeners.foreach(_.onJoinStateChanged(_joinState))
+    joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
   }
 
   // TODO: Need to acknowledge receipt so server can retransmit lost messages
@@ -617,22 +623,22 @@ class MonopolyGame private(context: Context,
               }
               val removedPlayers = state.players -- updatedPlayers.keys
               if (addedPlayers.nonEmpty) {
-                listeners.foreach(listener =>
+                gameActionListseners.foreach(listener =>
                   addedPlayers.values.foreach(listener.onPlayerAdded)
                 )
               }
               if (changedPlayers.nonEmpty) {
-                listeners.foreach(listener =>
+                gameActionListseners.foreach(listener =>
                   changedPlayers.values.foreach(listener.onPlayerChanged)
                 )
               }
               if (removedPlayers.nonEmpty) {
-                listeners.foreach(listener =>
+                gameActionListseners.foreach(listener =>
                   removedPlayers.values.foreach(listener.onPlayerRemoved)
                 )
               }
               state.players = updatedPlayers
-              listeners.foreach(_.onPlayersUpdated(updatedPlayers))
+              gameActionListseners.foreach(_.onPlayersUpdated(updatedPlayers))
             }
 
             if (updatedHiddenPlayers != state.hiddenPlayers) {
@@ -653,10 +659,10 @@ class MonopolyGame private(context: Context,
                 state.transfers.get(transactionId).fold(false)(_ != transfer)
               }
               if (changedTransfers.nonEmpty) {
-                listeners.foreach(_.onTransfersChanged(changedTransfers.values))
+                gameActionListseners.foreach(_.onTransfersChanged(changedTransfers.values))
               }
               state.transfers = updatedTransfers
-              listeners.foreach(_.onTransfersUpdated(updatedTransfers))
+              gameActionListseners.foreach(_.onTransfersUpdated(updatedTransfers))
             }
           }
 
@@ -681,10 +687,10 @@ class MonopolyGame private(context: Context,
 
               if (joinedPlayers.nonEmpty) {
                 state.players = state.players ++ joinedPlayers
-                listeners.foreach(listener =>
+                gameActionListseners.foreach(listener =>
                   joinedPlayers.values.foreach(listener.onPlayerChanged)
                 )
-                listeners.foreach(_.onPlayersUpdated(state.players))
+                gameActionListseners.foreach(_.onPlayersUpdated(state.players))
               }
 
               if (joinedHiddenPlayers.nonEmpty) {
@@ -709,10 +715,10 @@ class MonopolyGame private(context: Context,
 
               if (quitPlayers.nonEmpty) {
                 state.players = state.players ++ quitPlayers
-                listeners.foreach(listener =>
+                gameActionListseners.foreach(listener =>
                   quitPlayers.values.foreach(listener.onPlayerChanged)
                 )
-                listeners.foreach(_.onPlayersUpdated(state.players))
+                gameActionListseners.foreach(_.onPlayersUpdated(state.players))
               }
 
               if (quitHiddenPlayers.nonEmpty) {
@@ -728,7 +734,7 @@ class MonopolyGame private(context: Context,
 
               state.zone = state.zone.copy(name = zoneNameSetNotification.name)
 
-              listeners.foreach(_.onGameNameChanged(zoneNameSetNotification.name))
+              gameActionListseners.foreach(_.onGameNameChanged(zoneNameSetNotification.name))
 
               gameId.foreach(_.foreach { gameId =>
                 Future {
@@ -781,14 +787,14 @@ class MonopolyGame private(context: Context,
                   }
 
                 state.identities = updatedIdentities
-                listeners.foreach(_.onIdentitiesUpdated(updatedIdentities))
+                gameActionListseners.foreach(_.onIdentitiesUpdated(updatedIdentities))
 
                 receivedIdentity.foreach(receivedIdentity =>
-                  listeners.foreach(_.onIdentityReceived(receivedIdentity))
+                  gameActionListseners.foreach(_.onIdentityReceived(receivedIdentity))
                 )
 
                 restoredIdentity.foreach(restoredIdentity =>
-                  listeners.foreach(_.onIdentityRestored(restoredIdentity))
+                  gameActionListseners.foreach(_.onIdentityRestored(restoredIdentity))
                 )
 
               }
@@ -830,8 +836,8 @@ class MonopolyGame private(context: Context,
 
               if (createdIdentity.nonEmpty) {
                 state.identities = state.identities ++ createdIdentity
-                listeners.foreach(_.onIdentitiesUpdated(state.identities))
-                listeners.foreach(
+                gameActionListseners.foreach(_.onIdentitiesUpdated(state.identities))
+                gameActionListseners.foreach(
                   _.onIdentityCreated(
                     state.identities(accountCreatedNotification.account.owners.head)
                   )
@@ -854,10 +860,10 @@ class MonopolyGame private(context: Context,
 
               if (createdPlayer.nonEmpty) {
                 state.players = state.players ++ createdPlayer
-                listeners.foreach(listener =>
+                gameActionListseners.foreach(listener =>
                   createdPlayer.values.foreach(listener.onPlayerAdded)
                 )
-                listeners.foreach(_.onPlayersUpdated(state.players))
+                gameActionListseners.foreach(_.onPlayersUpdated(state.players))
               }
 
               if (createdHiddenPlayer.nonEmpty) {
@@ -887,7 +893,7 @@ class MonopolyGame private(context: Context,
 
               if (updatedIdentities != state.identities) {
                 state.identities = updatedIdentities
-                listeners.foreach(_.onIdentitiesUpdated(updatedIdentities))
+                gameActionListseners.foreach(_.onIdentitiesUpdated(updatedIdentities))
               }
 
               if (updatedHiddenIdentities != state.hiddenIdentities) {
@@ -929,7 +935,7 @@ class MonopolyGame private(context: Context,
 
               if (changedIdentities.nonEmpty) {
                 state.identities = state.identities ++ changedIdentities
-                listeners.foreach(_.onIdentitiesUpdated(state.identities))
+                gameActionListseners.foreach(_.onIdentitiesUpdated(state.identities))
               }
 
               if (changedHiddenIdentities.nonEmpty) {
@@ -948,10 +954,10 @@ class MonopolyGame private(context: Context,
 
               if (changedPlayers.nonEmpty) {
                 state.players = state.players ++ changedPlayers
-                listeners.foreach(listener =>
+                gameActionListseners.foreach(listener =>
                   changedPlayers.values.foreach(listener.onPlayerChanged)
                 )
-                listeners.foreach(_.onPlayersUpdated(state.players))
+                gameActionListseners.foreach(_.onPlayersUpdated(state.players))
               }
 
               if (changedHiddenPlayers.nonEmpty) {
@@ -972,10 +978,10 @@ class MonopolyGame private(context: Context,
 
               if (createdTransfer.nonEmpty) {
                 state.transfers = state.transfers ++ createdTransfer
-                listeners.foreach(listener =>
+                gameActionListseners.foreach(listener =>
                   createdTransfer.values.foreach(listener.onTransferAdded)
                 )
-                listeners.foreach(_.onTransfersUpdated(state.transfers))
+                gameActionListseners.foreach(_.onTransfersUpdated(state.transfers))
               }
 
           }
@@ -1012,20 +1018,27 @@ class MonopolyGame private(context: Context,
         _joinState = MonopolyGame.DISCONNECTING
 
     }
-    listeners.foreach(_.onJoinStateChanged(_joinState))
+    joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
   }
 
-  def registerListener(listener: Listener) =
-    if (!listeners.contains(listener)) {
-      if (listeners.isEmpty && joinRequestTokens.isEmpty) {
+  def registerListener(listener: JoinStateListener) =
+    if (!joinStateListeners.contains(listener)) {
+      if (joinStateListeners.isEmpty && gameActionListseners.isEmpty && joinRequestTokens.isEmpty) {
         serverConnection.registerListener(this: ConnectionStateListener)
         serverConnection.registerListener(this: NotificationReceiptListener)
       }
-      listeners = listeners + listener
-      if (_joinState != MonopolyGame.JOINED) {
-        listener.onJoinStateChanged(_joinState)
-      } else {
-        listener.onJoinStateChanged(_joinState)
+      joinStateListeners = joinStateListeners + listener
+      listener.onJoinStateChanged(_joinState)
+    }
+
+  def registerListener(listener: GameActionListener) =
+    if (!gameActionListseners.contains(listener)) {
+      if (joinStateListeners.isEmpty && gameActionListseners.isEmpty && joinRequestTokens.isEmpty) {
+        serverConnection.registerListener(this: ConnectionStateListener)
+        serverConnection.registerListener(this: NotificationReceiptListener)
+      }
+      gameActionListseners = gameActionListseners + listener
+      if (_joinState == MonopolyGame.JOINED) {
         listener.onGameNameChanged(state.zone.name)
         listener.onIdentitiesUpdated(state.identities)
         listener.onPlayersInitialized(state.players.values)
@@ -1041,7 +1054,7 @@ class MonopolyGame private(context: Context,
         instances = instances + (zoneId -> MonopolyGame.this)
       }
     )
-    if (listeners.isEmpty && joinRequestTokens.isEmpty) {
+    if (joinStateListeners.isEmpty && gameActionListseners.isEmpty && joinRequestTokens.isEmpty) {
       serverConnection.registerListener(this: ConnectionStateListener)
       serverConnection.registerListener(this: NotificationReceiptListener)
     }
@@ -1115,21 +1128,30 @@ class MonopolyGame private(context: Context,
       )
     )
 
-  def unregisterListener(listener: Listener) =
-    if (listeners.contains(listener)) {
-      listeners = listeners - listener
-      if (listeners.isEmpty && joinRequestTokens.isEmpty) {
-        serverConnection.unregisterListener(this: ConnectionStateListener)
+  def unregisterListener(listener: JoinStateListener) =
+    if (joinStateListeners.contains(listener)) {
+      joinStateListeners = joinStateListeners - listener
+      if (joinStateListeners.isEmpty && gameActionListseners.isEmpty && joinRequestTokens.isEmpty) {
         serverConnection.unregisterListener(this: NotificationReceiptListener)
+        serverConnection.unregisterListener(this: ConnectionStateListener)
+      }
+    }
+
+  def unregisterListener(listener: GameActionListener) =
+    if (gameActionListseners.contains(listener)) {
+      gameActionListseners = gameActionListseners - listener
+      if (joinStateListeners.isEmpty && gameActionListseners.isEmpty && joinRequestTokens.isEmpty) {
+        serverConnection.unregisterListener(this: NotificationReceiptListener)
+        serverConnection.unregisterListener(this: ConnectionStateListener)
       }
     }
 
   def unrequestJoin(token: JoinRequestToken) =
     if (joinRequestTokens.contains(token)) {
       joinRequestTokens = joinRequestTokens - token
-      if (listeners.isEmpty && joinRequestTokens.isEmpty) {
-        serverConnection.unregisterListener(this: ConnectionStateListener)
+      if (joinStateListeners.isEmpty && gameActionListseners.isEmpty && joinRequestTokens.isEmpty) {
         serverConnection.unregisterListener(this: NotificationReceiptListener)
+        serverConnection.unregisterListener(this: ConnectionStateListener)
       }
       if (joinRequestTokens.isEmpty) {
 
@@ -1164,7 +1186,7 @@ class MonopolyGame private(context: Context,
           )
 
           _joinState = QUITTING
-          listeners.foreach(_.onJoinStateChanged(_joinState))
+          joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
 
         }
 

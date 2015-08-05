@@ -48,6 +48,14 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
 
     }
 
+    public static final String TAG = "transfer_to_player_dialog_fragment";
+
+    private static final String ARG_IDENTITIES = "identities";
+    private static final String ARG_PLAYERS = "players";
+    private static final String ARG_CURRENCY = "currency";
+    private static final String ARG_FROM = "from";
+    private static final String ARG_TO = "to";
+
     private static class PlayersAdapter extends ArrayAdapter<Player> {
 
         public PlayersAdapter(Context context, int resource, List<Player> players) {
@@ -118,12 +126,6 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
         }
 
     }
-
-    private static final String ARG_IDENTITIES = "identities";
-    private static final String ARG_PLAYERS = "players";
-    private static final String ARG_CURRENCY = "currency";
-    private static final String ARG_FROM = "from";
-    private static final String ARG_TO = "to";
 
     public static TransferToPlayerDialogFragment newInstance(
             scala.collection.Iterable<IdentityWithBalance> identities,

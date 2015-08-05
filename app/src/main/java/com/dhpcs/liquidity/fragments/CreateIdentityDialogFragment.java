@@ -25,6 +25,8 @@ public class CreateIdentityDialogFragment extends DialogFragment {
 
     }
 
+    public static final String TAG = "create_identity_dialog_fragment";
+
     private static final String ARG_IS_INITIAL_PROMPT = "is_initial_prompt";
 
     public static CreateIdentityDialogFragment newInstance(boolean isInitialPrompt) {

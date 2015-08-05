@@ -26,6 +26,8 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
 
     }
 
+    public static final String TAG = "enter_identity_name_dialog_fragment";
+
     private static final String ARG_IDENTITY = "identity";
 
     public static EnterIdentityNameDialogFragment newInstance(Identity identity) {
