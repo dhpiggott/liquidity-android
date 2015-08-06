@@ -1,6 +1,6 @@
 package com.dhpcs.liquidity
 
-import java.util.{Currency, Locale}
+import java.util.Currency
 
 import android.content.{ContentUris, ContentValues, Context}
 import com.dhpcs.liquidity.MonopolyGame.{State, _}
@@ -266,6 +266,8 @@ object MonopolyGame {
 
 class MonopolyGame private(context: Context,
                            serverConnection: ServerConnection,
+                           currency: Option[Currency],
+                           name: Option[String],
                            private var zoneId: Option[ZoneId],
                            private var gameId: Option[Future[Long]])
   extends ServerConnection.ConnectionStateListener
@@ -293,16 +295,16 @@ class MonopolyGame private(context: Context,
 
   private var gameActionListeners = Set.empty[GameActionListener]
 
-  def this(context: Context, serverConnection: ServerConnection) {
-    this(context, serverConnection, None, None)
+  def this(context: Context, serverConnection: ServerConnection, currency: Currency, name: String) {
+    this(context, serverConnection, Some(currency), Some(name), None, None)
   }
 
   def this(context: Context, serverConnection: ServerConnection, zoneId: ZoneId) {
-    this(context, serverConnection, Some(zoneId), None)
+    this(context, serverConnection, None, None, Some(zoneId), None)
   }
 
   def this(context: Context, serverConnection: ServerConnection, zoneId: ZoneId, gameId: Long) {
-    this(context, serverConnection, Some(zoneId), Some(Future.successful(gameId)))
+    this(context, serverConnection, None, None, Some(zoneId), Some(Future.successful(gameId)))
   }
 
   private def createAccount(owner: MemberId) =
@@ -317,10 +319,10 @@ class MonopolyGame private(context: Context,
       noopResponseCallback
     )
 
-  private def createAndThenJoinZone() =
+  private def createAndThenJoinZone(currency: Currency, name: String) =
     serverConnection.sendCommand(
       CreateZoneCommand(
-        context.getString(R.string.new_monopoly_game_name),
+        name,
         Member(
           context.getString(R.string.bank_member_name),
           ClientKey.getPublicKey(context)
@@ -331,7 +333,7 @@ class MonopolyGame private(context: Context,
         ),
         Some(
           Json.obj(
-            CurrencyCodeKey -> Currency.getInstance(Locale.getDefault).getCurrencyCode
+            CurrencyCodeKey -> currency.getCurrencyCode
           )
         )
       ),
@@ -360,12 +362,7 @@ class MonopolyGame private(context: Context,
       }
     )
 
-  def createIdentity(isInitialPrompt: Boolean, name: String) {
-    if (isInitialPrompt
-      && state.identities.size == 1
-      && state.identities.values.head.accountId == state.zone.equityAccountId) {
-      setGameName(context.getString(R.string.game_name_format_string, name))
-    }
+  def createIdentity(name: String) {
     serverConnection.sendCommand(
       CreateMemberCommand(
         zoneId.get,
@@ -1014,7 +1011,7 @@ class MonopolyGame private(context: Context,
 
       case ServerConnection.CONNECTED =>
         state = null
-        zoneId.fold(createAndThenJoinZone())(join)
+        zoneId.fold(createAndThenJoinZone(currency.get, name.get))(join)
         _joinState = JOINING
 
       case ServerConnection.DISCONNECTING =>

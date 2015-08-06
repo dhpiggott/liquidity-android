@@ -72,8 +72,9 @@ public class MonopolyGameActivity extends AppCompatActivity
         RestoreIdentityDialogFragment.Listener,
         TransferToPlayerDialogFragment.Listener {
 
+    public static final String EXTRA_CURRENCY = "currency";
+    public static final String EXTRA_NAME = "name";
     public static final String EXTRA_GAME_ID = "game_id";
-    public static final String EXTRA_GAME_NAME = "game_name";
     public static final String EXTRA_ZONE_ID = "zone_id";
 
     private static final int REQUEST_CODE_RECEIVE_IDENTITY = 0;
@@ -100,7 +101,15 @@ public class MonopolyGameActivity extends AppCompatActivity
 
             Either<String, Currency> c = currency.get();
             if (c.isLeft()) {
-                result = context.getString(R.string.currency_code_format_string, c.left().get());
+                result = context.getString(
+                        R.string.currency_code_format_string,
+                        c.left().get()
+                );
+            } else if (c.right().get().getSymbol().equals(c.right().get().getCurrencyCode())) {
+                result = context.getString(
+                        R.string.currency_code_format_string,
+                        c.right().get().getCurrencyCode()
+                );
             } else {
                 result = c.right().get().getSymbol();
             }
@@ -337,10 +346,11 @@ public class MonopolyGameActivity extends AppCompatActivity
 
         }
 
-        ZoneId zoneId = getIntent().getExtras() == null
-                ? null
-                :
-                (ZoneId) getIntent().getExtras().getSerializable(EXTRA_ZONE_ID);
+        if (getIntent().getExtras() == null) {
+            throw new Error();
+        }
+
+        ZoneId zoneId = (ZoneId) getIntent().getExtras().getSerializable(EXTRA_ZONE_ID);
 
         if (savedInstanceState != null) {
             zoneId = (ZoneId) savedInstanceState.getSerializable(EXTRA_ZONE_ID);
@@ -348,9 +358,22 @@ public class MonopolyGameActivity extends AppCompatActivity
 
         if (zoneId == null) {
 
+
+            Currency currency = (Currency) getIntent().getExtras().getSerializable(EXTRA_CURRENCY);
+            String name = getIntent().getExtras().getString(EXTRA_NAME);
+
+            if (currency == null) {
+                throw new Error();
+            }
+            if (name == null) {
+                throw new Error();
+            }
+
             monopolyGame = new MonopolyGame(
                     this,
-                    ServerConnection.getInstance(getApplicationContext())
+                    ServerConnection.getInstance(getApplicationContext()),
+                    currency,
+                    name
             );
 
         } else {
@@ -378,9 +401,9 @@ public class MonopolyGameActivity extends AppCompatActivity
 
                 }
 
-                if (getIntent().getExtras().containsKey(EXTRA_GAME_NAME)) {
+                if (getIntent().getExtras().containsKey(EXTRA_NAME)) {
 
-                    setTitle(getIntent().getExtras().getString(EXTRA_GAME_NAME));
+                    setTitle(getIntent().getExtras().getString(EXTRA_NAME));
 
                 }
 
@@ -451,8 +474,8 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onIdentityNameEntered(boolean isInitialPrompt, String name) {
-        monopolyGame.createIdentity(isInitialPrompt, name);
+    public void onIdentityNameEntered(String name) {
+        monopolyGame.createIdentity(name);
     }
 
     @Override
@@ -473,7 +496,7 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public void onIdentityRequired() {
-        CreateIdentityDialogFragment.newInstance(true)
+        CreateIdentityDialogFragment.newInstance()
                 .show(
                         getFragmentManager(),
                         CreateIdentityDialogFragment.TAG
@@ -583,7 +606,7 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public void onNoIdentitiesTextClicked() {
-        CreateIdentityDialogFragment.newInstance(false)
+        CreateIdentityDialogFragment.newInstance()
                 .show(
                         getFragmentManager(),
                         CreateIdentityDialogFragment.TAG
@@ -678,7 +701,7 @@ public class MonopolyGameActivity extends AppCompatActivity
                 }
                 return true;
             case R.id.action_create_identity:
-                CreateIdentityDialogFragment.newInstance(false)
+                CreateIdentityDialogFragment.newInstance()
                         .show(
                                 getFragmentManager(),
                                 CreateIdentityDialogFragment.TAG

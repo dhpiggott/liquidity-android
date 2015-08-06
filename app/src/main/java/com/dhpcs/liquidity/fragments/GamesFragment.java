@@ -31,7 +31,7 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
 
     public interface Listener {
 
-        void onGameClicked(long gameId, ZoneId zoneId, String gameName);
+        void onGameClicked(long gameId, ZoneId zoneId, String name);
 
     }
 
@@ -150,7 +150,6 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
         }
     }
 
-    // TODO: Deferred
     @Override
     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
         getActivity().getContentResolver().delete(

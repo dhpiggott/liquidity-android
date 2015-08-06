@@ -11,6 +11,7 @@
     tools:context="com.dhpcs.liquidity.fragments.TransferToPlayerDialogFragment">
 
     <TextView
+        android:id="@+id/textview_value_label"
         style="@style/TextAppearance.AppCompat.Subhead"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -53,7 +54,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:inputType="numberDecimal"
-                android:labelFor="@id/textview_currency"
+                android:labelFor="@id/textview_value_label"
                 android:selectAllOnFocus="true" />
 
             <TextView
@@ -97,6 +98,7 @@
     </RelativeLayout>
 
     <TextView
+        android:id="@+id/textview_from_label"
         style="@style/TextAppearance.AppCompat.Subhead"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -116,9 +118,11 @@
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp" />
+        android:layout_marginTop="8dp"
+        android:labelFor="@id/textview_from_label" />
 
     <TextView
+        android:id="@+id/textview_to_label"
         style="@style/TextAppearance.AppCompat.Subhead"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -143,12 +147,14 @@
         <Spinner
             android:id="@+id/spinner_to"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:labelFor="@id/textview_to_label" />
 
         <ListView
             android:id="@+id/listview_to"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:labelFor="@id/textview_to_label"
             android:visibility="gone" />
 
     </LinearLayout>

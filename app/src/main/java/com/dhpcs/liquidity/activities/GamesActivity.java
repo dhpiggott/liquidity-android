@@ -9,15 +9,18 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.dhpcs.liquidity.R;
+import com.dhpcs.liquidity.fragments.CreateGameDialogFragment;
 import com.dhpcs.liquidity.fragments.GamesFragment;
 import com.dhpcs.liquidity.models.ZoneId;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
 import java.util.Collections;
+import java.util.Currency;
 import java.util.UUID;
 
-public class GamesActivity extends AppCompatActivity implements GamesFragment.Listener {
+public class GamesActivity extends AppCompatActivity implements CreateGameDialogFragment.Listener,
+        GamesFragment.Listener {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -70,7 +73,7 @@ public class GamesActivity extends AppCompatActivity implements GamesFragment.Li
     }
 
     @Override
-    public void onGameClicked(long gameId, ZoneId zoneId, String gameName) {
+    public void onGameClicked(long gameId, ZoneId zoneId, String name) {
         startActivity(
                 new Intent(
                         GamesActivity.this,
@@ -82,8 +85,24 @@ public class GamesActivity extends AppCompatActivity implements GamesFragment.Li
                         MonopolyGameActivity.EXTRA_ZONE_ID,
                         zoneId
                 ).putExtra(
-                        MonopolyGameActivity.EXTRA_GAME_NAME,
-                        gameName
+                        MonopolyGameActivity.EXTRA_NAME,
+                        name
+                )
+        );
+    }
+
+    @Override
+    public void onGameDetailsEntered(String name, Currency currency) {
+        startActivity(
+                new Intent(
+                        GamesActivity.this,
+                        MonopolyGameActivity.class
+                ).putExtra(
+                        MonopolyGameActivity.EXTRA_CURRENCY,
+                        currency
+                ).putExtra(
+                        MonopolyGameActivity.EXTRA_NAME,
+                        name
                 )
         );
     }
@@ -92,13 +111,11 @@ public class GamesActivity extends AppCompatActivity implements GamesFragment.Li
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_new_game:
-                // TODO: Prompt for currency? And name?
-                startActivity(
-                        new Intent(
-                                GamesActivity.this,
-                                MonopolyGameActivity.class
-                        )
-                );
+                CreateGameDialogFragment.newInstance()
+                        .show(
+                                getFragmentManager(),
+                                CreateGameDialogFragment.TAG
+                        );
                 return true;
             case R.id.action_join_game:
                 new IntentIntegrator(GamesActivity.this)

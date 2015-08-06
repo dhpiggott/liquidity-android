@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
 
     <string name="app_name">Liquidity</string>
 
@@ -27,10 +27,14 @@
     <string name="currency_none" />
     <string name="currency_value_format_string">%1$s%2$s%3$s</string>
     <string name="delete_identity">Delete identity</string>
+    <string name="enter_game_details">Enter game details</string>
     <string name="enter_game_name">Enter game name</string>
     <string name="enter_identity_name">Enter identity name</string>
     <string name="enter_transfer_details">Enter transfer details</string>
-    <string name="game_name_format_string" tools:ignore="UnusedResources">%1$s\'s Game</string>
+    <string name="game_currency">Currency</string>
+    <string name="game_currency_format_string">%1$s (%2$s)</string>
+    <string name="game_currency_symbol_and_name_format_string">%1$s, %2$s</string>
+    <string name="game_name">Name</string>
     <string name="group_transfer">Group transfer</string>
     <string name="identity_format_string">%1$s (%2$s available)</string>
     <string name="join_game">Join game</string>
@@ -43,7 +47,6 @@
     <string name="join_state_quitting">Quitting game</string>
     <string name="join_state_unavailable">Liquidity requires a data connection, but none is available.</string>
     <string name="new_game">New game</string>
-    <string name="new_monopoly_game_name" tools:ignore="UnusedResources">New Monopoly Game</string>
     <string name="no_games">You don\'t have any saved games. Use the menu above to create or join one.</string>
     <string name="no_identities">You don\'t have any identities. Touch here to create one.</string>
     <string name="no_last_transfer">Click a player to send money to them.</string>

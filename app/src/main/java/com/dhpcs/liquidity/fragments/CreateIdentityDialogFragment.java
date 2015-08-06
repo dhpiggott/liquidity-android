@@ -21,21 +21,14 @@ public class CreateIdentityDialogFragment extends DialogFragment {
 
     public interface Listener {
 
-        void onIdentityNameEntered(boolean isInitialPrompt, String name);
+        void onIdentityNameEntered(String name);
 
     }
 
     public static final String TAG = "create_identity_dialog_fragment";
 
-    private static final String ARG_IS_INITIAL_PROMPT = "is_initial_prompt";
-
-    public static CreateIdentityDialogFragment newInstance(boolean isInitialPrompt) {
-        CreateIdentityDialogFragment createIdentityDialogFragment =
-                new CreateIdentityDialogFragment();
-        Bundle args = new Bundle();
-        args.putBoolean(ARG_IS_INITIAL_PROMPT, isInitialPrompt);
-        createIdentityDialogFragment.setArguments(args);
-        return createIdentityDialogFragment;
+    public static CreateIdentityDialogFragment newInstance() {
+        return new CreateIdentityDialogFragment();
     }
 
     private Listener listener;
@@ -53,8 +46,6 @@ public class CreateIdentityDialogFragment extends DialogFragment {
                 null
         );
 
-        final boolean isInitialPrompt = getArguments().getBoolean(ARG_IS_INITIAL_PROMPT);
-
         final EditText editTextIdentityName = (EditText) view.findViewById(
                 R.id.edittext_identity_name
         );
@@ -71,7 +62,6 @@ public class CreateIdentityDialogFragment extends DialogFragment {
                             public void onClick(DialogInterface dialog, int whichButton) {
                                 if (listener != null) {
                                     listener.onIdentityNameEntered(
-                                            isInitialPrompt,
                                             editTextIdentityName.getText().toString()
                                     );
                                 }
