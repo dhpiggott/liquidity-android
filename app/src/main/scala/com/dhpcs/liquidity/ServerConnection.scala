@@ -53,8 +53,6 @@ object ServerConnection {
 
     def onResultReceived(resultResponse: ResultResponse) = ()
 
-    // TODO: Timeouts
-
   }
 
   private sealed trait State
@@ -81,8 +79,6 @@ object ServerConnection {
                                     callback: ResponseCallback)
 
   private val ServerEndpoint = "https://liquidity.dhpcs.com/ws"
-  // TODO
-  private val PingPeriod = 5000L
 
   private var instance: ServerConnection = _
 
@@ -116,11 +112,13 @@ object ServerConnection {
 
 class ServerConnection private(context: Context) extends WebSocketListener {
 
-  private val log = LoggerFactory.getLogger(getClass)
-
   private lazy val client = new OkHttpClient()
     .setSslSocketFactory(getSslSocketFactory(context))
     .setHostnameVerifier(ServerTrust.getHostnameVerifier(context))
+
+  private val log = LoggerFactory.getLogger(getClass)
+
+  private val mainHandler = new Handler(Looper.getMainLooper)
 
   private val connectionStateFilter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
   private val connectionStateReceiver = new BroadcastReceiver {
@@ -136,50 +134,6 @@ class ServerConnection private(context: Context) extends WebSocketListener {
 
       }
     }
-
-  }
-
-  private val mainHandler = new Handler(Looper.getMainLooper)
-  private val pingRunnable: Runnable = new Runnable() {
-
-    override def run() =
-      Try(state match {
-
-        case AvailableIdleState | UnavailableIdleState =>
-          sys.error("Not connected")
-
-        case activeState: ActiveState =>
-          activeState.subState match {
-
-            case _: ConnectingSubState =>
-              sys.error("Not connected")
-
-            case connectedState: ConnectedSubState =>
-              connectedState.webSocket.sendPing(null)
-              activeState.handler.postDelayed(pingRunnable, PingPeriod)
-
-            case DisconnectingSubState =>
-              log.debug("Ping scheduled while disconnecting, doing nothing")
-
-          }
-
-      }) match {
-
-        case Failure(e) =>
-          log.warn("Failed to send ping", e)
-          state match {
-
-            case AvailableIdleState | UnavailableIdleState =>
-              sys.error("Already disconnected")
-
-            case activeState: ActiveState =>
-              doClose(activeState.handler, wasFailure = true)
-
-          }
-
-        case _ =>
-
-      }
 
   }
 
@@ -267,7 +221,6 @@ class ServerConnection private(context: Context) extends WebSocketListener {
 
   def doClose(handler: Handler, wasFailure: Boolean, reconnect: Boolean = false) {
     asyncPost(handler) {
-      handler.removeCallbacks(pingRunnable)
       handler.getLooper.quit()
       asyncPost(mainHandler) {
         failed = wasFailure
@@ -454,7 +407,6 @@ class ServerConnection private(context: Context) extends WebSocketListener {
                           }
                         }
 
-                      // TODO: Need to acknowledge receipt so server can retransmit lost messages
                       case jsonRpcNotificationMessage: JsonRpcNotificationMessage =>
                         Notification.read(jsonRpcNotificationMessage).fold {
                           disconnect(1002)
@@ -501,7 +453,6 @@ class ServerConnection private(context: Context) extends WebSocketListener {
 
           case _: ConnectingSubState =>
             asyncPost(activeState.handler) {
-              activeState.handler.postDelayed(pingRunnable, PingPeriod)
               activeState.subState = ConnectedSubState(webSocket)
               _connectionState = CONNECTED
               asyncPost(mainHandler)(
@@ -514,12 +465,13 @@ class ServerConnection private(context: Context) extends WebSocketListener {
     }
 
   override def onPong(payload: Buffer) {
-    val payloadString = if (payload != null) {
+    val payloadString = if (payload == null) {
+      null
+    } else {
       val result = payload.readUtf8
       payload.close()
       result
     }
-    // TODO: Timeouts
     log.trace(s"Received pong: $payloadString")
   }
 

@@ -602,6 +602,9 @@ class MonopolyGame private(context: Context,
 
     notification match {
 
+      case KeepAliveNotification =>
+        log.debug("Received KeepAliveNotification")
+
       case zoneNotification: ZoneNotification =>
 
         if (zoneId.get == zoneNotification.zoneId) {
