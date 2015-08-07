@@ -54,8 +54,6 @@ public class Identicon extends View {
             for (int c = 0; c < COLUMN_COUNT; c++) {
                 if (isCellVisible(hash, r, c)) {
                     result[r][c] = colorVisible;
-                } else {
-                    result[r][c] = 0xFFF0F0F0;
                 }
             }
         }

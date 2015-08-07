@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <dimen name="sliding_up_panel_shadow_height">4dp</dimen>
+
+</resources>

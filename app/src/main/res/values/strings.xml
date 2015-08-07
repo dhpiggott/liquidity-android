@@ -55,7 +55,6 @@
     <string name="non_player_transfer_location_format_string">%1$s (%2$s)</string>
     <string name="ok">OK</string>
     <string name="player_disconnected">Disconnected</string>
-    <string name="previous_games">Previous games</string>
     <string name="receive_identity">Receive identity</string>
     <string name="receive_identity_instruction">Show the QR code to the sender.</string>
     <string name="reconnect">Reconnect</string>

@@ -104,6 +104,7 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
 
         });
 
+        assert identity != null;
         editTextIdentityName.setText(identity.member().name());
 
         alertDialog.setOnShowListener(new DialogInterface.OnShowListener() {

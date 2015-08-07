@@ -1,111 +1,94 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/coordinatorlayout"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
     tools:context="com.dhpcs.liquidity.activities.MonopolyGameActivity">
 
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="24dp">
 
-        <LinearLayout
+        <ProgressBar
+            android:id="@+id/progressbar_state"
+            style="@style/Base.Widget.AppCompat.ProgressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/textview_state"
+            style="@style/TextAppearance.AppCompat.Title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
+            android:layout_marginTop="24dp"
             android:gravity="center"
+            android:text="@string/join_state_connecting" />
+
+        <Button
+            android:id="@+id/button_reconnect"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="@string/reconnect"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+    <com.sothree.slidinguppanel.SlidingUpPanelLayout
+        android:id="@+id/slidinguppanellayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="bottom"
+        android:visibility="gone"
+        app:umanoPanelHeight="?attr/actionBarSize"
+        app:umanoShadowHeight="@dimen/sliding_up_panel_shadow_height">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:orientation="vertical"
-            android:padding="24dp">
+            android:paddingTop="?attr/actionBarSize">
 
-            <ProgressBar
-                android:id="@+id/progressbar_state"
-                style="@style/Base.Widget.AppCompat.ProgressBar"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+            <fragment
+                android:id="@+id/fragment_identities"
+                android:name="com.dhpcs.liquidity.fragments.IdentitiesFragment"
+                android:layout_width="match_parent"
+                android:layout_height="128dp"
+                tools:layout="@layout/fragment_identities" />
 
-            <TextView
-                android:id="@+id/textview_state"
-                style="@style/TextAppearance.AppCompat.Title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:gravity="center"
-                android:text="@string/join_state_connecting" />
-
-            <Button
-                android:id="@+id/button_reconnect"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:text="@string/reconnect"
-                android:visibility="gone" />
+            <fragment
+                android:id="@+id/fragment_players"
+                android:name="com.dhpcs.liquidity.fragments.PlayersFragment"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:layout="@layout/fragment_players" />
 
         </LinearLayout>
 
-        <com.sothree.slidinguppanel.SlidingUpPanelLayout
-            android:id="@+id/slidinguppanellayout"
+        <fragment
+            android:id="@+id/fragment_players_transfers"
+            android:name="com.dhpcs.liquidity.fragments.PlayersTransfersFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:gravity="bottom"
-            android:visibility="gone"
-            app:umanoPanelHeight="?attr/actionBarSize"
-            app:umanoShadowHeight="4dp">
+            tools:layout="@layout/fragment_players_transfers" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:paddingTop="?attr/actionBarSize">
+    </com.sothree.slidinguppanel.SlidingUpPanelLayout>
 
-                <fragment
-                    android:id="@+id/fragment_identities"
-                    android:name="com.dhpcs.liquidity.fragments.IdentitiesFragment"
-                    android:layout_width="match_parent"
-                    android:layout_height="128dp"
-                    tools:layout="@layout/fragment_identities" />
-
-                <fragment
-                    android:id="@+id/fragment_players"
-                    android:name="com.dhpcs.liquidity.fragments.PlayersFragment"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    tools:layout="@layout/fragment_players" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical">
-
-                <fragment
-                    android:id="@+id/fragment_last_transfer"
-                    android:name="com.dhpcs.liquidity.fragments.LastTransferFragment"
-                    android:layout_width="match_parent"
-                    android:layout_height="?attr/actionBarSize"
-                    tools:layout="@layout/fragment_last_transfer" />
-
-                <fragment
-                    android:id="@+id/fragment_players_transfers"
-                    android:name="com.dhpcs.liquidity.fragments.PlayersTransfersFragment"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    tools:layout="@layout/fragment_players_transfers" />
-
-            </LinearLayout>
-
-        </com.sothree.slidinguppanel.SlidingUpPanelLayout>
-
-    </FrameLayout>
-
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/toolbar"
+    <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="@color/background_material_dark"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+        android:layout_height="wrap_content">
 
-</android.support.design.widget.CoordinatorLayout>
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+
+    </android.support.design.widget.AppBarLayout>
+
+</merge>

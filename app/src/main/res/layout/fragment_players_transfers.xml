@@ -7,13 +7,25 @@
     android:orientation="vertical"
     tools:context="com.dhpcs.liquidity.fragments.PlayersTransfersFragment">
 
-    <android.support.design.widget.TabLayout
-        android:id="@+id/tablayout_players"
+    <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/background_material_dark"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-        app:tabMode="scrollable" />
+        android:layout_height="wrap_content">
+
+        <fragment
+            android:id="@+id/fragment_last_transfer"
+            android:name="com.dhpcs.liquidity.fragments.LastTransferFragment"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            tools:layout="@layout/fragment_last_transfer" />
+
+        <android.support.design.widget.TabLayout
+            android:id="@+id/tablayout_players"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+            app:tabMode="scrollable" />
+
+    </android.support.design.widget.AppBarLayout>
 
     <android.support.v4.view.ViewPager
         android:id="@+id/viewpager_players_transfers"

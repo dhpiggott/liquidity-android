@@ -3,15 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_material_dark"
+    android:background="?attr/selectableItemBackground"
     android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
     tools:context="com.dhpcs.liquidity.fragments.LastTransferFragment"
     tools:ignore="Overdraw">
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="?attr/selectableItemBackground" />
 
     <TextView
         android:id="@+id/textview_empty"
