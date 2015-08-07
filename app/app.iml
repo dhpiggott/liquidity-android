@@ -76,6 +76,7 @@
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/dex" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/dex-cache" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/exploded-aar/com.android.support/appcompat-v7/22.2.1/jars" />
+      <excludeFolder url="file://$MODULE_DIR$/build/intermediates/exploded-aar/com.android.support/cardview-v7/22.2.1/jars" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/exploded-aar/com.android.support/design/22.2.1/jars" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/exploded-aar/com.android.support/multidex-instrumentation/1.0.1/jars" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/exploded-aar/com.android.support/multidex/1.0.1/jars" />
@@ -121,8 +122,8 @@
     <orderEntry type="library" exported="" name="play-services-base-7.5.0" level="project" />
     <orderEntry type="library" exported="" name="scala-stm_2.11-0.7" level="project" />
     <orderEntry type="library" exported="" name="prov-1.52.0.0" level="project" />
-    <orderEntry type="library" exported="" name="okio-1.4.0" level="project" />
     <orderEntry type="library" exported="" name="play-functional_2.11-2.3.9" level="project" />
+    <orderEntry type="library" exported="" name="okio-1.4.0" level="project" />
     <orderEntry type="library" exported="" scope="TEST" name="multidex-instrumentation-1.0.1" level="project" />
     <orderEntry type="library" exported="" name="library-2.4.0" level="project" />
     <orderEntry type="library" exported="" name="guava-18.0" level="project" />
@@ -132,8 +133,8 @@
     <orderEntry type="library" exported="" name="zxing-android-embedded-3.0.2" level="project" />
     <orderEntry type="library" exported="" name="jackson-core-2.3.2" level="project" />
     <orderEntry type="library" exported="" name="play-json-rpc_2.11-0.2.0-tests" level="project" />
-    <orderEntry type="library" exported="" name="scala-reflect-2.11.1" level="project" />
     <orderEntry type="library" exported="" name="apktool-lib-1.4.4-3" level="project" />
+    <orderEntry type="library" exported="" name="scala-reflect-2.11.1" level="project" />
     <orderEntry type="library" exported="" name="play-json-rpc_2.11-0.2.0" level="project" />
     <orderEntry type="library" exported="" name="joda-time-2.3" level="project" />
     <orderEntry type="library" exported="" name="jackson-databind-2.3.2" level="project" />
@@ -143,8 +144,9 @@
     <orderEntry type="library" exported="" name="logback-android-classic-1.1.1-4" level="project" />
     <orderEntry type="library" exported="" name="support-v13-22.2.1" level="project" />
     <orderEntry type="library" exported="" name="design-22.2.1" level="project" />
-    <orderEntry type="library" exported="" name="slf4j-api-1.7.12" level="project" />
     <orderEntry type="library" exported="" name="play-json_2.11-2.3.9" level="project" />
+    <orderEntry type="library" exported="" name="slf4j-api-1.7.12" level="project" />
+    <orderEntry type="library" exported="" name="cardview-v7-22.2.1" level="project" />
     <orderEntry type="library" exported="" name="library-3.1.1" level="project" />
   </component>
 </module>

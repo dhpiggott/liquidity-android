@@ -14,10 +14,12 @@ import java.security.NoSuchAlgorithmException;
 
 public class Identicon extends View {
 
-    private static final int ROW_COUNT = 5;
-    private static final int COLUMN_COUNT = 5;
+    private static final float COLOUR_SATURATION = 1f;
+    private static final float COLOUR_VALUE = 0.8f;
 
-    private static final int CENTER_COLUMN_INDEX = COLUMN_COUNT / 2;
+    private static final int GRID_ROW_COUNT = 5;
+    private static final int GRID_COLUMN_COUNT = 5;
+    private static final int GRID_CENTER_COLUMN_INDEX = GRID_COLUMN_COUNT / 2;
 
     private final Paint paint;
 
@@ -40,18 +42,15 @@ public class Identicon extends View {
     }
 
     private int getCellColor(byte[] hash) {
-        return Color.rgb(
-                getModuloHashByte(hash, 0),
-                getModuloHashByte(hash, 1),
-                getModuloHashByte(hash, 2)
-        );
+        float hue = (float) ((getModuloHashByte(hash, 0) / 256d) * 360d);
+        return Color.HSVToColor(new float[]{hue, COLOUR_SATURATION, COLOUR_VALUE});
     }
 
     private int[][] getCellColors(byte[] hash) {
-        int[][] result = new int[ROW_COUNT][COLUMN_COUNT];
+        int[][] result = new int[GRID_ROW_COUNT][GRID_COLUMN_COUNT];
         int colorVisible = getCellColor(hash);
-        for (int r = 0; r < ROW_COUNT; r++) {
-            for (int c = 0; c < COLUMN_COUNT; c++) {
+        for (int r = 0; r < GRID_ROW_COUNT; r++) {
+            for (int c = 0; c < GRID_COLUMN_COUNT; c++) {
                 if (isCellVisible(hash, r, c)) {
                     result[r][c] = colorVisible;
                 }
@@ -70,10 +69,10 @@ public class Identicon extends View {
     }
 
     private int getSymmetricColumnIndex(int columnIndex) {
-        if (columnIndex < CENTER_COLUMN_INDEX) {
+        if (columnIndex < GRID_CENTER_COLUMN_INDEX) {
             return columnIndex;
         } else {
-            return COLUMN_COUNT - (columnIndex + 1);
+            return GRID_COLUMN_COUNT - (columnIndex + 1);
         }
     }
 
@@ -81,7 +80,7 @@ public class Identicon extends View {
         return getModuloHashBit(
                 hash,
                 3,
-                (row * CENTER_COLUMN_INDEX + 1) + getSymmetricColumnIndex(column)
+                (row * GRID_CENTER_COLUMN_INDEX + 1) + getSymmetricColumnIndex(column)
         );
     }
 
@@ -101,8 +100,8 @@ public class Identicon extends View {
         super.onDraw(canvas);
         if (cellColours != null) {
             int x, y;
-            for (int rowIndex = 0; rowIndex < ROW_COUNT; rowIndex++) {
-                for (int columnIndex = 0; columnIndex < COLUMN_COUNT; columnIndex++) {
+            for (int rowIndex = 0; rowIndex < GRID_ROW_COUNT; rowIndex++) {
+                for (int columnIndex = 0; columnIndex < GRID_COLUMN_COUNT; columnIndex++) {
                     x = cellWidth * columnIndex;
                     y = cellHeight * rowIndex;
                     paint.setColor(cellColours[rowIndex][columnIndex]);
@@ -121,8 +120,8 @@ public class Identicon extends View {
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        cellWidth = w / COLUMN_COUNT;
-        cellHeight = h / ROW_COUNT;
+        cellWidth = w / GRID_COLUMN_COUNT;
+        cellHeight = h / GRID_ROW_COUNT;
     }
 
 }

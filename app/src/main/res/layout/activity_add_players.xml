@@ -23,10 +23,11 @@
         style="@style/TextAppearance.AppCompat.Subhead"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?android:colorBackground"
+        android:background="?attr/colorAccent"
         android:elevation="2dp"
         android:gravity="center_horizontal"
         android:padding="16dp"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         tools:ignore="UnusedAttribute" />
 
     <ImageView

@@ -101,9 +101,10 @@ public class RestoreIdentityDialogFragment extends DialogFragment {
         final ArrayAdapter<IdentityWithBalance> identitiesAdapter = new IdentitiesAdapter(
                 getActivity()
         );
-        identitiesAdapter.addAll(
-                (ArrayList<IdentityWithBalance>) getArguments().getSerializable(ARG_IDENTITIES)
-        );
+        ArrayList<IdentityWithBalance> identities =
+                (ArrayList<IdentityWithBalance>) getArguments().getSerializable(ARG_IDENTITIES);
+        assert identities != null;
+        identitiesAdapter.addAll(identities);
         identitiesAdapter.sort(MonopolyGameActivity.playerComparator);
         return new AlertDialog.Builder(getActivity())
                 .setTitle(R.string.choose_identity_to_restore)
