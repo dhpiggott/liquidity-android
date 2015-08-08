@@ -120,7 +120,6 @@ public class RestoreIdentityDialogFragment extends DialogFragment {
                     }
 
                 })
-                .setNegativeButton(R.string.cancel, null)
                 .create();
     }
 

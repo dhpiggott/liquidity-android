@@ -44,16 +44,21 @@ public class ConfirmIdentityDeletionDialogFragment extends DialogFragment {
         Identity identity = (Identity) getArguments().getSerializable(ARG_IDENTITY);
         assert identity != null;
         return new AlertDialog.Builder(getActivity())
-                .setTitle(R.string.confirm_delete)
+                .setTitle(
+                        getString(
+                                R.string.delete_identity_title_format_string,
+                                identity.member().name()
+                        )
+                )
                 .setMessage(
                         getString(
-                                R.string.confirm_delete_format_string,
+                                R.string.delete_identity_message_format_string,
                                 identity.member().name()
                         )
                 )
                 .setNegativeButton(R.string.cancel, null)
                 .setPositiveButton(
-                        R.string.ok,
+                        R.string.delete,
                         new DialogInterface.OnClickListener() {
 
                             @Override
