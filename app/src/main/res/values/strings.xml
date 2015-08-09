@@ -3,12 +3,12 @@
 
     <string name="app_name">Liquidity</string>
 
-    <string name="title_activity_add_players">Add Players</string>
-    <string name="title_activity_games">Liquidity</string>
-    <string name="title_activity_join_game">Join Game</string>
-    <string name="title_activity_monopoly_game">Monopoly Game</string>
-    <string name="title_activity_receive_identity">Receive Identity</string>
-    <string name="title_activity_transfer_identity">Transfer Identity</string>
+    <string name="activity_add_players_title">Add Players</string>
+    <string name="activity_games_title">Liquidity</string>
+    <string name="activity_join_game_title">Join Game</string>
+    <string name="activity_monopoly_game_title">Monopoly Game</string>
+    <string name="activity_receive_identity_title">Receive Identity</string>
+    <string name="activity_transfer_identity_title">Transfer Identity</string>
 
     <string name="add_players">Add players</string>
     <string name="add_players_game_name_format_string">Show the QR code to the joining players to admit them to %1$s.</string>

@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.dhpcs.liquidity">
 
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.INTERNET" />
 
@@ -12,13 +12,13 @@
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:supportsRtl="true"
+        android:supportsRtl="false"
         android:theme="@style/AppTheme"
         tools:ignore="UnusedAttribute">
 
         <activity
             android:name=".activities.AddPlayersActivity"
-            android:label="@string/title_activity_add_players"
+            android:label="@string/activity_add_players_title"
             android:launchMode="standard"
             android:parentActivityName=".activities.MonopolyGameActivity"
             tools:ignore="UnusedAttribute">
@@ -28,7 +28,7 @@
         </activity>
         <activity
             android:name=".activities.GamesActivity"
-            android:label="@string/title_activity_games"
+            android:label="@string/activity_games_title"
             android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -38,7 +38,7 @@
         </activity>
         <activity
             android:name=".activities.JoinGameActivity"
-            android:label="@string/title_activity_join_game"
+            android:label="@string/activity_join_game_title"
             android:launchMode="standard"
             android:parentActivityName=".activities.GamesActivity"
             tools:ignore="UnusedAttribute">
@@ -48,7 +48,7 @@
         </activity>
         <activity
             android:name=".activities.MonopolyGameActivity"
-            android:label="@string/title_activity_monopoly_game"
+            android:label="@string/activity_monopoly_game_title"
             android:launchMode="singleTop"
             android:parentActivityName=".activities.GamesActivity"
             tools:ignore="UnusedAttribute">
@@ -58,7 +58,7 @@
         </activity>
         <activity
             android:name=".activities.ReceiveIdentityActivity"
-            android:label="@string/title_activity_receive_identity"
+            android:label="@string/activity_receive_identity_title"
             android:launchMode="standard"
             android:parentActivityName=".activities.MonopolyGameActivity"
             tools:ignore="UnusedAttribute">
@@ -68,7 +68,7 @@
         </activity>
         <activity
             android:name=".activities.TransferIdentityActivity"
-            android:label="@string/title_activity_transfer_identity"
+            android:label="@string/activity_transfer_identity_title"
             android:launchMode="standard"
             android:parentActivityName=".activities.MonopolyGameActivity"
             tools:ignore="UnusedAttribute">

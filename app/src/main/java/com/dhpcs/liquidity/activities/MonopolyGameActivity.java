@@ -310,7 +310,7 @@ public class MonopolyGameActivity extends AppCompatActivity
                         ?
                         monopolyGame.getGameName()
                         :
-                        getString(R.string.title_activity_monopoly_game));
+                        getString(R.string.activity_monopoly_game_title));
             }
 
             @Override
