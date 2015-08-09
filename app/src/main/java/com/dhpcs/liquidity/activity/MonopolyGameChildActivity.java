@@ -1,4 +1,4 @@
-package com.dhpcs.liquidity.activities;
+package com.dhpcs.liquidity.activity;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;

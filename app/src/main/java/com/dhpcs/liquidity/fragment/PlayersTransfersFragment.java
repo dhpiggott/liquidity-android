@@ -1,4 +1,4 @@
-package com.dhpcs.liquidity.fragments;
+package com.dhpcs.liquidity.fragment;
 
 import android.app.Fragment;
 import android.app.FragmentManager;
@@ -14,7 +14,7 @@ import android.view.ViewGroup;
 import com.dhpcs.liquidity.MonopolyGame.Player;
 import com.dhpcs.liquidity.MonopolyGame.TransferWithCurrency;
 import com.dhpcs.liquidity.R;
-import com.dhpcs.liquidity.activities.MonopolyGameActivity;
+import com.dhpcs.liquidity.activity.MonopolyGameActivity;
 import com.dhpcs.liquidity.models.MemberId;
 import com.dhpcs.liquidity.models.TransactionId;
 

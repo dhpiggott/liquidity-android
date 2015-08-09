@@ -1,4 +1,4 @@
-package com.dhpcs.liquidity.views;
+package com.dhpcs.liquidity.view;
 
 import android.content.Context;
 import android.graphics.Canvas;

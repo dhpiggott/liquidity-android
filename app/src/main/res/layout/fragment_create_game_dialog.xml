@@ -8,7 +8,7 @@
     android:paddingLeft="24dp"
     android:paddingRight="24dp"
     android:paddingStart="24dp"
-    tools:context="com.dhpcs.liquidity.fragments.CreateGameDialogFragment">
+    tools:context="com.dhpcs.liquidity.fragment.CreateGameDialogFragment">
 
     <TextView
         android:id="@+id/textview_game_name_label"

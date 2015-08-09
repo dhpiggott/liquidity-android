@@ -1,6 +1,7 @@
-package com.dhpcs.liquidity.activities;
+package com.dhpcs.liquidity.activity;
 
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.KeyEvent;
 
@@ -8,16 +9,14 @@ import com.dhpcs.liquidity.R;
 import com.journeyapps.barcodescanner.CaptureManager;
 import com.journeyapps.barcodescanner.CompoundBarcodeView;
 
-public class TransferIdentityActivity extends MonopolyGameChildActivity {
-
-    public static final String EXTRA_IDENTITY_NAME = "identity_name";
+public class JoinGameActivity extends AppCompatActivity {
 
     private CaptureManager capture;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_transfer_identity);
+        setContentView(R.layout.activity_join_game);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 
@@ -25,16 +24,9 @@ public class TransferIdentityActivity extends MonopolyGameChildActivity {
         //noinspection ConstantConditions
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        String identityName = getIntent().getStringExtra(EXTRA_IDENTITY_NAME);
-
         CompoundBarcodeView barcodeScannerView = (CompoundBarcodeView)
                 findViewById(R.id.zxing_barcode_scanner);
-        barcodeScannerView.setStatusText(
-                getString(
-                        R.string.transfer_identity_identity_name_format_string,
-                        identityName
-                )
-        );
+        barcodeScannerView.setStatusText(getString(R.string.join_game_instruction));
 
         capture = new CaptureManager(this, barcodeScannerView);
         capture.initializeFromIntent(getIntent(), savedInstanceState);

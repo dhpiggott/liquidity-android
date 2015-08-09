@@ -1,4 +1,4 @@
-package com.dhpcs.liquidity.fragments;
+package com.dhpcs.liquidity.fragment;
 
 import android.app.Activity;
 import android.app.Dialog;
@@ -15,9 +15,9 @@ import android.widget.TextView;
 import com.dhpcs.liquidity.MonopolyGame.Identity;
 import com.dhpcs.liquidity.MonopolyGame.IdentityWithBalance;
 import com.dhpcs.liquidity.R;
-import com.dhpcs.liquidity.activities.MonopolyGameActivity;
+import com.dhpcs.liquidity.activity.MonopolyGameActivity;
 import com.dhpcs.liquidity.models.Identifier;
-import com.dhpcs.liquidity.views.Identicon;
+import com.dhpcs.liquidity.view.Identicon;
 
 import java.util.ArrayList;
 

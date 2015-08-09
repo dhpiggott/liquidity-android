@@ -1,4 +1,4 @@
-package com.dhpcs.liquidity.fragments;
+package com.dhpcs.liquidity.fragment;
 
 import android.app.Fragment;
 import android.content.Context;
@@ -19,7 +19,7 @@ import android.widget.TextView;
 import com.dhpcs.liquidity.MonopolyGame.Player;
 import com.dhpcs.liquidity.MonopolyGame.TransferWithCurrency;
 import com.dhpcs.liquidity.R;
-import com.dhpcs.liquidity.activities.MonopolyGameActivity;
+import com.dhpcs.liquidity.activity.MonopolyGameActivity;
 
 import java.text.DateFormat;
 import java.util.ArrayList;

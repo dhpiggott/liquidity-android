@@ -8,7 +8,7 @@
     android:paddingLeft="24dp"
     android:paddingRight="24dp"
     android:paddingStart="24dp"
-    tools:context="com.dhpcs.liquidity.fragments.TransferToPlayerDialogFragment">
+    tools:context="com.dhpcs.liquidity.fragment.TransferToPlayerDialogFragment">
 
     <TextView
         android:id="@+id/textview_value_label"

@@ -8,7 +8,7 @@
     android:paddingLeft="24dp"
     android:paddingRight="24dp"
     android:paddingStart="24dp"
-    tools:context="com.dhpcs.liquidity.fragments.EnterIdentityNameDialogFragment">
+    tools:context="com.dhpcs.liquidity.fragment.EnterIdentityNameDialogFragment">
 
     <EditText
         android:id="@+id/edittext_identity_name"

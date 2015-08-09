@@ -17,17 +17,17 @@
         tools:ignore="UnusedAttribute">
 
         <activity
-            android:name=".activities.AddPlayersActivity"
+            android:name=".activity.AddPlayersActivity"
             android:label="@string/activity_add_players_title"
             android:launchMode="standard"
-            android:parentActivityName=".activities.MonopolyGameActivity"
+            android:parentActivityName=".activity.MonopolyGameActivity"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.dhpcs.liquidity.activities.MonopolyGameActivity" />
+                android:value="com.dhpcs.liquidity.activity.MonopolyGameActivity" />
         </activity>
         <activity
-            android:name=".activities.GamesActivity"
+            android:name=".activity.GamesActivity"
             android:label="@string/activity_games_title"
             android:launchMode="singleTask">
             <intent-filter>
@@ -37,44 +37,44 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activities.JoinGameActivity"
+            android:name=".activity.JoinGameActivity"
             android:label="@string/activity_join_game_title"
             android:launchMode="standard"
-            android:parentActivityName=".activities.GamesActivity"
+            android:parentActivityName=".activity.GamesActivity"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.dhpcs.liquidity.activities.GamesActivity" />
+                android:value="com.dhpcs.liquidity.activity.GamesActivity" />
         </activity>
         <activity
-            android:name=".activities.MonopolyGameActivity"
+            android:name=".activity.MonopolyGameActivity"
             android:label="@string/activity_monopoly_game_title"
             android:launchMode="singleTop"
-            android:parentActivityName=".activities.GamesActivity"
+            android:parentActivityName=".activity.GamesActivity"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.dhpcs.liquidity.activities.GamesActivity" />
+                android:value="com.dhpcs.liquidity.activity.GamesActivity" />
         </activity>
         <activity
-            android:name=".activities.ReceiveIdentityActivity"
+            android:name=".activity.ReceiveIdentityActivity"
             android:label="@string/activity_receive_identity_title"
             android:launchMode="standard"
-            android:parentActivityName=".activities.MonopolyGameActivity"
+            android:parentActivityName=".activity.MonopolyGameActivity"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.dhpcs.liquidity.activities.MonopolyGameActivity" />
+                android:value="com.dhpcs.liquidity.activity.MonopolyGameActivity" />
         </activity>
         <activity
-            android:name=".activities.TransferIdentityActivity"
+            android:name=".activity.TransferIdentityActivity"
             android:label="@string/activity_transfer_identity_title"
             android:launchMode="standard"
-            android:parentActivityName=".activities.MonopolyGameActivity"
+            android:parentActivityName=".activity.MonopolyGameActivity"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.dhpcs.liquidity.activities.MonopolyGameActivity" />
+                android:value="com.dhpcs.liquidity.activity.MonopolyGameActivity" />
         </activity>
 
         <provider

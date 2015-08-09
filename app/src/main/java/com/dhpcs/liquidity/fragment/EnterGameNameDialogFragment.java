@@ -1,4 +1,4 @@
-package com.dhpcs.liquidity.fragments;
+package com.dhpcs.liquidity.fragment;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;

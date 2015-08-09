@@ -16,7 +16,7 @@
         android:layout_marginRight="8dp"
         android:background="@android:color/white">
 
-        <com.dhpcs.liquidity.views.Identicon
+        <com.dhpcs.liquidity.view.Identicon
             android:id="@+id/identicon_id"
             android:layout_width="48dp"
             android:layout_height="48dp"

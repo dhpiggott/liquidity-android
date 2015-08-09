@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.dhpcs.liquidity.activities.GamesActivity">
+    tools:context="com.dhpcs.liquidity.activity.GamesActivity">
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
@@ -20,7 +20,7 @@
 
     <fragment
         android:id="@+id/fragment_games"
-        android:name="com.dhpcs.liquidity.fragments.GamesFragment"
+        android:name="com.dhpcs.liquidity.fragment.GamesFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:layout="@layout/fragment_games" />

@@ -1,4 +1,4 @@
-package com.dhpcs.liquidity.fragments;
+package com.dhpcs.liquidity.fragment;
 
 import android.app.Fragment;
 import android.os.Bundle;
@@ -9,9 +9,9 @@ import android.widget.TextView;
 
 import com.dhpcs.liquidity.MonopolyGame.IdentityWithBalance;
 import com.dhpcs.liquidity.R;
-import com.dhpcs.liquidity.activities.MonopolyGameActivity;
+import com.dhpcs.liquidity.activity.MonopolyGameActivity;
 import com.dhpcs.liquidity.models.Identifier;
-import com.dhpcs.liquidity.views.Identicon;
+import com.dhpcs.liquidity.view.Identicon;
 
 public class IdentityFragment extends Fragment {
 

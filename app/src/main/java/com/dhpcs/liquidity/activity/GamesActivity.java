@@ -1,4 +1,4 @@
-package com.dhpcs.liquidity.activities;
+package com.dhpcs.liquidity.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -9,8 +9,8 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.dhpcs.liquidity.R;
-import com.dhpcs.liquidity.fragments.CreateGameDialogFragment;
-import com.dhpcs.liquidity.fragments.GamesFragment;
+import com.dhpcs.liquidity.fragment.CreateGameDialogFragment;
+import com.dhpcs.liquidity.fragment.GamesFragment;
 import com.dhpcs.liquidity.models.ZoneId;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;

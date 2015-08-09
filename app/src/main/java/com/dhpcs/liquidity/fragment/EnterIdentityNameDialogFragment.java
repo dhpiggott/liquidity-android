@@ -1,4 +1,4 @@
-package com.dhpcs.liquidity.fragments;
+package com.dhpcs.liquidity.fragment;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -16,7 +16,7 @@ import android.widget.EditText;
 
 import com.dhpcs.liquidity.MonopolyGame.Identity;
 import com.dhpcs.liquidity.R;
-import com.dhpcs.liquidity.activities.MonopolyGameActivity;
+import com.dhpcs.liquidity.activity.MonopolyGameActivity;
 
 public class EnterIdentityNameDialogFragment extends DialogFragment {
 

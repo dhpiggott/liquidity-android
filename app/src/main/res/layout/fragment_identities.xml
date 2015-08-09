@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="?attr/colorAccent"
     android:elevation="4dp"
-    tools:context="com.dhpcs.liquidity.fragments.IdentitiesFragment"
+    tools:context="com.dhpcs.liquidity.fragment.IdentitiesFragment"
     tools:ignore="UnusedAttribute">
 
     <TextView

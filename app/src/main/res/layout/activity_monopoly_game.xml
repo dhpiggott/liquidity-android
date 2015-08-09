@@ -2,7 +2,7 @@
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.dhpcs.liquidity.activities.MonopolyGameActivity">
+    tools:context="com.dhpcs.liquidity.activity.MonopolyGameActivity">
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -54,14 +54,14 @@
 
             <fragment
                 android:id="@+id/fragment_identities"
-                android:name="com.dhpcs.liquidity.fragments.IdentitiesFragment"
+                android:name="com.dhpcs.liquidity.fragment.IdentitiesFragment"
                 android:layout_width="match_parent"
                 android:layout_height="144dp"
                 tools:layout="@layout/fragment_identities" />
 
             <fragment
                 android:id="@+id/fragment_players"
-                android:name="com.dhpcs.liquidity.fragments.PlayersFragment"
+                android:name="com.dhpcs.liquidity.fragment.PlayersFragment"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 tools:layout="@layout/fragment_players" />
@@ -70,7 +70,7 @@
 
         <fragment
             android:id="@+id/fragment_players_transfers"
-            android:name="com.dhpcs.liquidity.fragments.PlayersTransfersFragment"
+            android:name="com.dhpcs.liquidity.fragment.PlayersTransfersFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             tools:layout="@layout/fragment_players_transfers" />

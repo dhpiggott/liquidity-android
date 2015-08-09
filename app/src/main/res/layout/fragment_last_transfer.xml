@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="?attr/selectableItemBackground"
     android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-    tools:context="com.dhpcs.liquidity.fragments.LastTransferFragment"
+    tools:context="com.dhpcs.liquidity.fragment.LastTransferFragment"
     tools:ignore="Overdraw">
 
     <TextView

@@ -6,7 +6,7 @@
     android:gravity="center_vertical"
     android:orientation="horizontal"
     android:padding="16dp"
-    tools:context="com.dhpcs.liquidity.fragments.IdentityFragment">
+    tools:context="com.dhpcs.liquidity.fragment.IdentityFragment">
 
     <LinearLayout
         android:layout_width="0dp"
@@ -39,7 +39,7 @@
         android:layout_marginStart="8dp"
         android:background="@android:color/white">
 
-        <com.dhpcs.liquidity.views.Identicon
+        <com.dhpcs.liquidity.view.Identicon
             android:id="@+id/identicon_id"
             android:layout_width="96dp"
             android:layout_height="96dp"

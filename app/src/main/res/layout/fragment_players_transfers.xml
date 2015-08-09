@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.dhpcs.liquidity.fragments.PlayersTransfersFragment">
+    tools:context="com.dhpcs.liquidity.fragment.PlayersTransfersFragment">
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
@@ -13,7 +13,7 @@
 
         <fragment
             android:id="@+id/fragment_last_transfer"
-            android:name="com.dhpcs.liquidity.fragments.LastTransferFragment"
+            android:name="com.dhpcs.liquidity.fragment.LastTransferFragment"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             tools:layout="@layout/fragment_last_transfer" />
