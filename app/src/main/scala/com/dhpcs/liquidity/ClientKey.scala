@@ -32,7 +32,9 @@ object ClientKey {
       Settings.Secure.ANDROID_ID
     )
     val clientIdentity = new X500NameBuilder().addRDN(BCStyle.CN, androidId).build
-    val keyPair = KeyPairGenerator.getInstance("RSA").generateKeyPair
+    val keyPairGenerator = KeyPairGenerator.getInstance("RSA")
+    keyPairGenerator.initialize(2048)
+    val keyPair = keyPairGenerator.generateKeyPair
     val certificate = new JcaX509CertificateConverter().getCertificate(
       new JcaX509v3CertificateBuilder(
         clientIdentity,
@@ -66,7 +68,7 @@ object ClientKey {
       val keyManagerFactory = KeyManagerFactory.getInstance(
         KeyManagerFactory.getDefaultAlgorithm
       )
-      keyManagerFactory.init(keyStore, null)
+      keyManagerFactory.init(keyStore, Array.emptyCharArray)
       keyManagers = keyManagerFactory.getKeyManagers
     }
     keyManagers
@@ -85,9 +87,19 @@ object ClientKey {
           null,
           Array[Certificate](certificate)
         )
-        keyStore.store(new FileOutputStream(keyStoreFile), null)
+        val keyStoreFileOutputStream = new FileOutputStream(keyStoreFile)
+        try {
+          keyStore.store(keyStoreFileOutputStream, Array.emptyCharArray)
+        } finally {
+          keyStoreFileOutputStream.close()
+        }
       } else {
-        keyStore.load(new FileInputStream(keyStoreFile), null)
+        val keyStoreFileInputStream = new FileInputStream(keyStoreFile)
+        try {
+          keyStore.load(keyStoreFileInputStream, Array.emptyCharArray)
+        } finally {
+          keyStoreFileInputStream.close()
+        }
       }
     }
     keyStore

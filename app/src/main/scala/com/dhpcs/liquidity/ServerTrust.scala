@@ -70,12 +70,17 @@ object ServerTrust {
   private def loadTrustedKeys(context: Context) {
     if (trustedKeys == null) {
       trustedKeys = TrustedKeyResources.map { case (hostname, resourceId) =>
-        val publicKey = new JcaPEMKeyConverter().getPublicKey(
-          new PEMParser(
-            new InputStreamReader(context.getResources.openRawResource(resourceId))
-          ).readObject.asInstanceOf[SubjectPublicKeyInfo]
+        val pemParser = new PEMParser(
+          new InputStreamReader(context.getResources.openRawResource(resourceId))
         )
-        hostname -> publicKey
+        try {
+          val publicKey = new JcaPEMKeyConverter().getPublicKey(
+            pemParser.readObject.asInstanceOf[SubjectPublicKeyInfo]
+          )
+          hostname -> publicKey
+        } finally {
+          pemParser.close()
+        }
       }
     }
   }
