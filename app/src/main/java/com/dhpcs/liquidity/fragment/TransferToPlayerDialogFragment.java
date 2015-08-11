@@ -33,6 +33,7 @@ import com.dhpcs.liquidity.models.MemberId;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Currency;
 import java.util.List;
 
@@ -63,7 +64,9 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
         }
 
         private View bindView(TextView textView, Player player) {
-            textView.setText(player.member().name());
+            textView.setText(
+                    MonopolyGameActivity.formatNullable(getContext(), player.member().name())
+            );
             return textView;
         }
 
@@ -95,10 +98,18 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
 
         private View bindView(TextView textView, IdentityWithBalance identity) {
             textView.setText(
-                    identity.isBanker() ? identity.member().name() :
+                    identity.isBanker() ?
+                            MonopolyGameActivity.formatNullable(
+                                    getContext(),
+                                    identity.member().name()
+                            )
+                            :
                             getContext().getString(
                                     R.string.identity_format_string,
-                                    identity.member().name(),
+                                    MonopolyGameActivity.formatNullable(
+                                            getContext(),
+                                            identity.member().name()
+                                    ),
                                     MonopolyGameActivity.formatCurrencyValue(
                                             getContext(),
                                             identity.balanceWithCurrency()._2(),
@@ -200,6 +211,7 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
         to = initialTo == null ? Collections.<Player>emptyList() :
                 Collections.singletonList(initialTo);
 
+        Comparator<Player> playerComparator = MonopolyGameActivity.playerComparator(getActivity());
         identitiesSpinnerAdapter = new IdentitiesAdapter(
                 getActivity(),
                 android.R.layout.simple_spinner_item,
@@ -208,7 +220,7 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
         identitiesSpinnerAdapter.setDropDownViewResource(
                 android.R.layout.simple_spinner_dropdown_item
         );
-        identitiesSpinnerAdapter.sort(MonopolyGameActivity.playerComparator);
+        identitiesSpinnerAdapter.sort(playerComparator);
         final ArrayAdapter<Player> playersSpinnerAdapter = new PlayersAdapter(
                 getActivity(),
                 android.R.layout.simple_spinner_item,
@@ -217,13 +229,13 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
         playersSpinnerAdapter.setDropDownViewResource(
                 android.R.layout.simple_spinner_dropdown_item
         );
-        playersSpinnerAdapter.sort(MonopolyGameActivity.playerComparator);
+        playersSpinnerAdapter.sort(playerComparator);
         final ArrayAdapter<Player> playersListAdapter = new PlayersAdapter(
                 getActivity(),
                 android.R.layout.simple_list_item_multiple_choice,
                 players
         );
-        playersListAdapter.sort(MonopolyGameActivity.playerComparator);
+        playersListAdapter.sort(playerComparator);
 
         TextView textViewCurrency = (TextView) view.findViewById(R.id.textview_currency);
         editTextValue = (EditText) view.findViewById(R.id.edittext_value);
@@ -426,10 +438,6 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
         if (value == null) {
             scaledValue = null;
             editTextValue.setError(null);
-            buttonPositive.setEnabled(false);
-        } else if (value.equals(BigDecimal.ZERO)) {
-            scaledValue = null;
-            editTextValue.setError(getString(R.string.transfer_value_error_zero));
             buttonPositive.setEnabled(false);
         } else {
             scaledValue = value.scaleByPowerOfTen(scale);

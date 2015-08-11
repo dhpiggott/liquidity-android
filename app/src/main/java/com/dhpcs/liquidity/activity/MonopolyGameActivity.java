@@ -79,18 +79,6 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     private static final int REQUEST_CODE_RECEIVE_IDENTITY = 0;
 
-    public static final Comparator<Player> playerComparator = new Comparator<Player>() {
-
-        private final Collator collator = Collator.getInstance();
-
-        @Override
-        public int compare(Player lhs,
-                           Player rhs) {
-            return collator.compare(lhs.member().name(), rhs.member().name());
-        }
-
-    };
-
     public static String formatCurrency(Context context,
                                         Option<Either<String, Currency>> currency) {
 
@@ -170,7 +158,7 @@ public class MonopolyGameActivity extends AppCompatActivity
         );
     }
 
-    public static String formatMemberOrAccount(Context context,
+    public static String formatMemberOrAccount(final Context context,
                                                Either<Tuple2<AccountId, Account>, Player>
                                                        eitherAccountTupleOrMember) {
         String result;
@@ -183,14 +171,42 @@ public class MonopolyGameActivity extends AppCompatActivity
                     account.name()
             );
         } else {
-            result = eitherAccountTupleOrMember.right().get().member().name();
+            result = formatNullable(
+                    context,
+                    eitherAccountTupleOrMember.right().get().member().name()
+            );
         }
         return result;
+    }
+
+    public static String formatNullable(Context context, Option<String> nullable) {
+        if (!nullable.isDefined()) {
+            return context.getString(R.string.unnamed);
+        } else {
+            return nullable.get();
+        }
     }
 
     public static boolean isIdentityNameValid(Context context, CharSequence identityName) {
         return !TextUtils.isEmpty(identityName)
                 && !identityName.toString().equals(context.getString(R.string.bank_member_name));
+    }
+
+    public static Comparator<Player> playerComparator(final Context context) {
+        return new Comparator<Player>() {
+
+            private final Collator collator = Collator.getInstance();
+
+            @Override
+            public int compare(Player lhs,
+                               Player rhs) {
+                return collator.compare(
+                        MonopolyGameActivity.formatNullable(context, lhs.member().name()),
+                        MonopolyGameActivity.formatNullable(context, rhs.member().name())
+                );
+            }
+
+        };
     }
 
     private MonopolyGame.JoinRequestToken joinRequestToken;
@@ -308,7 +324,7 @@ public class MonopolyGameActivity extends AppCompatActivity
             public void onPanelCollapsed(View view) {
                 setTitle(monopolyGame.getJoinState() == MonopolyGame.JOINED$.MODULE$
                         ?
-                        monopolyGame.getGameName()
+                        formatNullable(MonopolyGameActivity.this, monopolyGame.getGameName())
                         :
                         getString(R.string.activity_monopoly_game_title));
             }
@@ -439,8 +455,8 @@ public class MonopolyGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onGameNameChanged(String name) {
-        setTitle(name);
+    public void onGameNameChanged(Option<String> name) {
+        setTitle(formatNullable(this, name));
     }
 
     @Override
@@ -652,7 +668,7 @@ public class MonopolyGameActivity extends AppCompatActivity
                 isStartingChildActivity = true;
                 zoneIdHolder = new Bundle();
                 zoneIdHolder.putSerializable(
-                        TransferIdentityActivity.EXTRA_ZONE_ID,
+                        AddPlayersActivity.EXTRA_ZONE_ID,
                         monopolyGame.getZoneId()
                 );
                 startActivity(
@@ -728,7 +744,7 @@ public class MonopolyGameActivity extends AppCompatActivity
                 isStartingChildActivity = true;
                 zoneIdHolder = new Bundle();
                 zoneIdHolder.putSerializable(
-                        TransferIdentityActivity.EXTRA_ZONE_ID,
+                        ReceiveIdentityActivity.EXTRA_ZONE_ID,
                         monopolyGame.getZoneId()
                 );
                 startActivityForResult(
@@ -747,6 +763,12 @@ public class MonopolyGameActivity extends AppCompatActivity
                 return true;
             case R.id.action_transfer_identity:
                 isStartingChildActivity = true;
+                Bundle identityNameHolder = new Bundle();
+                identityNameHolder.putSerializable(
+                        TransferIdentityActivity.EXTRA_IDENTITY_NAME,
+                        identitiesFragment.getIdentity(identitiesFragment.getSelectedPage())
+                                .member().name()
+                );
                 zoneIdHolder = new Bundle();
                 zoneIdHolder.putSerializable(
                         TransferIdentityActivity.EXTRA_ZONE_ID,
@@ -755,9 +777,8 @@ public class MonopolyGameActivity extends AppCompatActivity
                 new IntentIntegrator(MonopolyGameActivity.this)
                         .setCaptureActivity(TransferIdentityActivity.class)
                         .addExtra(
-                                TransferIdentityActivity.EXTRA_IDENTITY_NAME,
-                                identitiesFragment.getIdentity(identitiesFragment.getSelectedPage())
-                                        .member().name()
+                                TransferIdentityActivity.EXTRA_IDENTITY_NAME_HOLDER,
+                                identityNameHolder
                         )
                         .addExtra(
                                 TransferIdentityActivity.EXTRA_ZONE_ID_HOLDER,
@@ -923,7 +944,7 @@ public class MonopolyGameActivity extends AppCompatActivity
 
     @Override
     public void onTransferValueEntered(Identity from, List<Player> to, BigDecimal transferValue) {
-        monopolyGame.transfer(
+        monopolyGame.transferToPlayer(
                 from,
                 from,
                 JavaConversions.asScalaBuffer(to),

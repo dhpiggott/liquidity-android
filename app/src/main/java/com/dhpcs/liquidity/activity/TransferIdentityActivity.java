@@ -8,8 +8,11 @@ import com.dhpcs.liquidity.R;
 import com.journeyapps.barcodescanner.CaptureManager;
 import com.journeyapps.barcodescanner.CompoundBarcodeView;
 
+import scala.Option;
+
 public class TransferIdentityActivity extends MonopolyGameChildActivity {
 
+    public static final String EXTRA_IDENTITY_NAME_HOLDER = "identity_name_holder";
     public static final String EXTRA_IDENTITY_NAME = "identity_name";
 
     private CaptureManager capture;
@@ -25,14 +28,16 @@ public class TransferIdentityActivity extends MonopolyGameChildActivity {
         //noinspection ConstantConditions
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        String identityName = getIntent().getStringExtra(EXTRA_IDENTITY_NAME);
+        @SuppressWarnings("unchecked") Option<String> identityName = (Option<String>) getIntent()
+                .getBundleExtra(EXTRA_IDENTITY_NAME_HOLDER)
+                .getSerializable(EXTRA_IDENTITY_NAME);
 
         CompoundBarcodeView barcodeScannerView = (CompoundBarcodeView)
                 findViewById(R.id.zxing_barcode_scanner);
         barcodeScannerView.setStatusText(
                 getString(
                         R.string.transfer_identity_identity_name_format_string,
-                        identityName
+                        MonopolyGameActivity.formatNullable(this, identityName)
                 )
         );
 

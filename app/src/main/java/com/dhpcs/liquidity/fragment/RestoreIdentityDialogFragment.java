@@ -52,7 +52,10 @@ public class RestoreIdentityDialogFragment extends DialogFragment {
             TextView textViewBalance = (TextView) view.findViewById(R.id.textview_balance);
 
             Identifier identifier = identity.memberId();
-            String name = identity.member().name();
+            String name = MonopolyGameActivity.formatNullable(
+                    getContext(),
+                    identity.member().name()
+            );
             String balance = MonopolyGameActivity.formatCurrencyValue(
                     getContext(),
                     identity.balanceWithCurrency()._2(),
@@ -105,7 +108,7 @@ public class RestoreIdentityDialogFragment extends DialogFragment {
                 (ArrayList<IdentityWithBalance>) getArguments().getSerializable(ARG_IDENTITIES);
         assert identities != null;
         identitiesAdapter.addAll(identities);
-        identitiesAdapter.sort(MonopolyGameActivity.playerComparator);
+        identitiesAdapter.sort(MonopolyGameActivity.playerComparator(getActivity()));
         return new AlertDialog.Builder(getActivity())
                 .setTitle(R.string.choose_identity_to_restore)
                 .setAdapter(identitiesAdapter, new DialogInterface.OnClickListener() {

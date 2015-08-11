@@ -38,8 +38,9 @@ public class IdentityFragment extends Fragment {
         TextView textViewName = (TextView) view.findViewById(R.id.textview_name);
         TextView textViewBalance = (TextView) view.findViewById(R.id.textview_balance);
 
+        assert identity != null;
         Identifier identifier = identity.memberId();
-        String name = identity.member().name();
+        String name = MonopolyGameActivity.formatNullable(getActivity(), identity.member().name());
         String balance = MonopolyGameActivity.formatCurrencyValue(
                 getActivity(),
                 identity.balanceWithCurrency()._2(),

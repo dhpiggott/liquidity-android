@@ -188,7 +188,9 @@ public class IdentitiesFragment extends Fragment {
         while (iterator.hasNext()) {
             identitiesFragmentStatePagerAdapter.add(iterator.next());
         }
-        identitiesFragmentStatePagerAdapter.sort(MonopolyGameActivity.playerComparator);
+        identitiesFragmentStatePagerAdapter.sort(
+                MonopolyGameActivity.playerComparator(getActivity())
+        );
         identitiesFragmentStatePagerAdapter.notifyDataSetChanged();
         textViewEmpty.setVisibility(
                 identitiesFragmentStatePagerAdapter.getCount() == 0 ? View.VISIBLE : View.GONE

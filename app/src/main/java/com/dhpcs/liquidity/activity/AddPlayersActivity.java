@@ -11,6 +11,8 @@ import com.dhpcs.liquidity.models.ZoneId;
 
 import net.glxn.qrgen.android.QRCode;
 
+import scala.Option;
+
 public class AddPlayersActivity extends MonopolyGameChildActivity {
 
     public static final String EXTRA_GAME_NAME = "game_name";
@@ -29,12 +31,13 @@ public class AddPlayersActivity extends MonopolyGameChildActivity {
         final ZoneId zoneId = (ZoneId) getIntent()
                 .getBundleExtra(EXTRA_ZONE_ID_HOLDER)
                 .getSerializable(EXTRA_ZONE_ID);
-        final String gameName = getIntent().getStringExtra(EXTRA_GAME_NAME);
+        @SuppressWarnings("unchecked") Option<String> gameName = (Option<String>) getIntent()
+                .getSerializableExtra(EXTRA_GAME_NAME);
 
         ((TextView) findViewById(R.id.textview_game_name)).setText(
                 getString(
                         R.string.add_players_game_name_format_string,
-                        gameName
+                        MonopolyGameActivity.formatNullable(this, gameName)
                 )
         );
         final ImageView imageViewQrCode = (ImageView) findViewById(R.id.imageview_qr_code);

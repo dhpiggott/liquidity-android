@@ -66,7 +66,7 @@ public class PlayersFragment extends Fragment {
                 this.player = player;
 
                 Identifier identifier = player.memberId();
-                String name = player.member().name();
+                String name = MonopolyGameActivity.formatNullable(context, player.member().name());
                 String balance = MonopolyGameActivity.formatCurrencyValue(
                         context,
                         player.balanceWithCurrency()._2(),
@@ -100,7 +100,10 @@ public class PlayersFragment extends Fragment {
                     @Override
                     public int compare(PlayerWithBalanceAndConnectionState o1,
                                        PlayerWithBalanceAndConnectionState o2) {
-                        return collator.compare(o1.member().name(), o2.member().name());
+                        return collator.compare(
+                                MonopolyGameActivity.formatNullable(context, o1.member().name()),
+                                MonopolyGameActivity.formatNullable(context, o2.member().name())
+                        );
                     }
 
                     @Override

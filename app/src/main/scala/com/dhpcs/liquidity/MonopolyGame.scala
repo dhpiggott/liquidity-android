@@ -99,7 +99,7 @@ object MonopolyGame {
 
     def onCreateError()
 
-    def onGameNameChanged(name: String)
+    def onGameNameChanged(name: Option[String])
 
     def onIdentitiesUpdated(identities: Map[MemberId, IdentityWithBalance])
 
@@ -312,7 +312,7 @@ class MonopolyGame private(context: Context,
       CreateAccountCommand(
         zoneId.get,
         Account(
-          "capital",
+          None,
           Set(owner)
         )
       ),
@@ -322,13 +322,13 @@ class MonopolyGame private(context: Context,
   private def createAndThenJoinZone(currency: Currency, name: String) =
     serverConnection.sendCommand(
       CreateZoneCommand(
-        name,
+        Some(name),
         Member(
-          context.getString(R.string.bank_member_name),
+          Some(context.getString(R.string.bank_member_name)),
           ClientKey.getPublicKey(context)
         ),
         Account(
-          context.getString(R.string.bank_member_name),
+          None,
           Set.empty
         ),
         Some(
@@ -367,7 +367,7 @@ class MonopolyGame private(context: Context,
       CreateMemberCommand(
         zoneId.get,
         Member(
-          name,
+          Some(name),
           ClientKey.getPublicKey(context)
         )
       ),
@@ -564,10 +564,10 @@ class MonopolyGame private(context: Context,
                * entry as that would silently fail (as it happens on the Future's worker
                * thread), but we may need to update the existing entries name.
                */
-              checkAndUpdateGameName(joinZoneResponse.zone.name).getOrElse {
+              checkAndUpdateGameName(joinZoneResponse.zone.name.orNull).getOrElse {
                 val contentValues = new ContentValues
                 contentValues.put(Games.ZONE_ID, zoneId.id.toString)
-                contentValues.put(Games.NAME, joinZoneResponse.zone.name)
+                contentValues.put(Games.NAME, joinZoneResponse.zone.name.orNull)
                 contentValues.put(Games.CREATED, joinZoneResponse.zone.created: java.lang.Long)
                 ContentUris.parseId(
                   context.getContentResolver.insert(
@@ -580,7 +580,7 @@ class MonopolyGame private(context: Context,
           ) { gameId =>
             gameId.foreach(_ =>
               Future(
-                checkAndUpdateGameName(joinZoneResponse.zone.name)
+                checkAndUpdateGameName(joinZoneResponse.zone.name.orNull)
               )
             )
             Some(gameId)
@@ -731,15 +731,15 @@ class MonopolyGame private(context: Context,
               state = null
               join(zoneNotification.zoneId)
 
-            case zoneNameSetNotification: ZoneNameSetNotification =>
+            case zoneNameChangedNotification: ZoneNameChangedNotification =>
 
-              state.zone = state.zone.copy(name = zoneNameSetNotification.name)
+              state.zone = state.zone.copy(name = zoneNameChangedNotification.name)
 
-              gameActionListeners.foreach(_.onGameNameChanged(zoneNameSetNotification.name))
+              gameActionListeners.foreach(_.onGameNameChanged(zoneNameChangedNotification.name))
 
               gameId.foreach(_.foreach { gameId =>
                 Future {
-                  updateGameName(gameId, zoneNameSetNotification.name)
+                  updateGameName(gameId, zoneNameChangedNotification.name.orNull)
                 }
               })
 
@@ -1085,9 +1085,9 @@ class MonopolyGame private(context: Context,
 
   def setGameName(name: String) =
     serverConnection.sendCommand(
-      SetZoneNameCommand(
+      ChangeZoneNameCommand(
         zoneId.get,
-        name
+        Some(name)
       ),
       noopResponseCallback
     )
@@ -1097,7 +1097,7 @@ class MonopolyGame private(context: Context,
       UpdateMemberCommand(
         zoneId.get,
         identity.memberId,
-        state.zone.members(identity.memberId).copy(name = name)
+        state.zone.members(identity.memberId).copy(name = Some(name))
       ),
       noopResponseCallback
     )
@@ -1114,13 +1114,13 @@ class MonopolyGame private(context: Context,
     )
   }
 
-  def transfer(actingAs: Identity, from: Identity, to: Seq[Player], value: BigDecimal) =
+  def transferToPlayer(actingAs: Identity, from: Identity, to: Seq[Player], value: BigDecimal) =
     to.foreach(to =>
       serverConnection.sendCommand(
         AddTransactionCommand(
           zoneId.get,
           actingAs.memberId,
-          "transfer",
+          None,
           from.accountId,
           to.accountId,
           value
@@ -1156,7 +1156,11 @@ class MonopolyGame private(context: Context,
       }
       if (joinRequestTokens.isEmpty) {
 
-        instances = instances - zoneId.get
+        zoneId.foreach(zoneId =>
+          if (instances.contains(zoneId)) {
+            instances = instances - zoneId
+          }
+        )
 
         if (_joinState == MonopolyGame.CONNECTING || _joinState == MonopolyGame.JOINING) {
 

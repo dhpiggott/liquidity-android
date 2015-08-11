@@ -85,7 +85,11 @@ public class PlayersTransfersFragment extends Fragment {
         @Override
         public CharSequence getPageTitle(int position) {
             Player player = get(position);
-            return player == null ? context.getString(R.string.all) : player.member().name();
+            return player == null
+                    ?
+                    context.getString(R.string.all)
+                    :
+                    MonopolyGameActivity.formatNullable(context, player.member().name());
         }
 
         public int getPosition(Player player) {
@@ -198,7 +202,9 @@ public class PlayersTransfersFragment extends Fragment {
         while (iterator.hasNext()) {
             playersTransfersFragmentStatePagerAdapter.add(iterator.next());
         }
-        playersTransfersFragmentStatePagerAdapter.sort(MonopolyGameActivity.playerComparator);
+        playersTransfersFragmentStatePagerAdapter.sort(
+                MonopolyGameActivity.playerComparator(getActivity())
+        );
         playersTransfersFragmentStatePagerAdapter.notifyDataSetChanged();
 
         /*
