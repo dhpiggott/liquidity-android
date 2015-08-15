@@ -368,8 +368,8 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
                 SparseBooleanArray checkedPositions = listViewTo.getCheckedItemPositions();
                 to = new ArrayList<>();
                 for (int i = 0; i < checkedPositions.size(); i++) {
-                    if (checkedPositions.get(i)) {
-                        to.add(playersListAdapter.getItem(i));
+                    if (checkedPositions.valueAt(i)) {
+                        to.add(playersListAdapter.getItem(checkedPositions.keyAt(i)));
                     }
                 }
                 validateInput();
