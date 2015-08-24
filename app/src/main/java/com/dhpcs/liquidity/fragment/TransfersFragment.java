@@ -98,10 +98,10 @@ public class TransfersFragment extends Fragment {
                     @Override
                     public int compare(TransferWithCurrency o1,
                                        TransferWithCurrency o2) {
-                        long lhsCreated = o1.transaction().created();
-                        long rhsCreated = o2.transaction().created();
+                        long lhsId = o1.transactionId().id();
+                        long rhsId = o2.transactionId().id();
                         return -1 *
-                                (lhsCreated < rhsCreated ? -1 : (lhsCreated == rhsCreated ? 0 : 1));
+                                (lhsId < rhsId ? -1 : (lhsId == rhsId ? 0 : 1));
                     }
 
                     @Override
