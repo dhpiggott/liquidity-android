@@ -44,17 +44,19 @@ public class Identicon extends View {
     }
 
     private int getCellColor(byte[] hash) {
-        float hue = (float) ((getModuloHashByte(hash, 0) / 256d) * 360d);
+        byte hueMsb = getModuloHashByte(hash, 0);
+        byte hueLsb = getModuloHashByte(hash, 1);
+        float hue = (float) ((((((0xFF & hueMsb) << 8) | (0xFF & hueLsb)) / 65536d) * 360d));
         return Color.HSVToColor(new float[]{hue, COLOUR_SATURATION, COLOUR_VALUE});
     }
 
     private int[][] getCellColors(byte[] hash) {
         int[][] result = new int[GRID_ROW_COUNT][GRID_COLUMN_COUNT];
-        int colorVisible = getCellColor(hash);
+        int color = getCellColor(hash);
         for (int r = 0; r < GRID_ROW_COUNT; r++) {
             for (int c = 0; c < GRID_COLUMN_COUNT; c++) {
                 if (isCellVisible(hash, r, c)) {
-                    result[r][c] = colorVisible;
+                    result[r][c] = color;
                 }
             }
         }
@@ -66,8 +68,8 @@ public class Identicon extends View {
         return (1 & (bits >>> (index % 8))) == 1;
     }
 
-    private int getModuloHashByte(byte[] hash, int index) {
-        return 0xFF & hash[index % hash.length];
+    private byte getModuloHashByte(byte[] hash, int index) {
+        return hash[index % hash.length];
     }
 
     private int getSymmetricColumnIndex(int columnIndex) {
@@ -81,7 +83,7 @@ public class Identicon extends View {
     private boolean isCellVisible(byte[] hash, int row, int column) {
         return getModuloHashBit(
                 hash,
-                3,
+                2,
                 (row * GRID_CENTER_COLUMN_INDEX + 1) + getSymmetricColumnIndex(column)
         );
     }
