@@ -10,7 +10,8 @@ import android.widget.TextView;
 import com.dhpcs.liquidity.MonopolyGame.IdentityWithBalance;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activity.MonopolyGameActivity;
-import com.dhpcs.liquidity.models.Identifier;
+import com.dhpcs.liquidity.models.MemberId;
+import com.dhpcs.liquidity.models.ZoneId;
 import com.dhpcs.liquidity.view.Identicon;
 
 public class IdentityFragment extends Fragment {
@@ -39,7 +40,8 @@ public class IdentityFragment extends Fragment {
         TextView textViewBalance = (TextView) view.findViewById(R.id.textview_balance);
 
         assert identity != null;
-        Identifier identifier = identity.memberId();
+        ZoneId zoneId = identity.zoneId();
+        MemberId memberId = identity.memberId();
         String name = MonopolyGameActivity.formatNullable(getActivity(), identity.member().name());
         String balance = MonopolyGameActivity.formatCurrencyValue(
                 getActivity(),
@@ -47,7 +49,7 @@ public class IdentityFragment extends Fragment {
                 identity.balanceWithCurrency()._1()
         );
 
-        identiconId.show(identifier);
+        identiconId.show(zoneId, memberId);
         textViewName.setText(name);
         textViewBalance.setText(balance);
 

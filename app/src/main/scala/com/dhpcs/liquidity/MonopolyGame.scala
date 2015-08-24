@@ -35,6 +35,8 @@ object MonopolyGame {
 
   sealed trait Player extends Serializable {
 
+    def zoneId: ZoneId
+
     def memberId: MemberId
 
     def member: Member
@@ -63,7 +65,8 @@ object MonopolyGame {
 
   }
 
-  case class PlayerWithBalanceAndConnectionState(memberId: MemberId,
+  case class PlayerWithBalanceAndConnectionState(zoneId: ZoneId,
+                                                 memberId: MemberId,
                                                  member: Member,
                                                  accountId: AccountId,
                                                  account: Account,
@@ -72,7 +75,8 @@ object MonopolyGame {
                                                  isBanker: Boolean,
                                                  isConnected: Boolean) extends Player
 
-  case class IdentityWithBalance(memberId: MemberId,
+  case class IdentityWithBalance(zoneId: ZoneId,
+                                 memberId: MemberId,
                                  member: Member,
                                  accountId: AccountId,
                                  account: Account,
@@ -165,7 +169,8 @@ object MonopolyGame {
 
   def getInstance(zoneId: ZoneId) = instances.get(zoneId).orNull
 
-  private def identitiesFromMembersAccounts(membersAccounts: Map[MemberId, AccountId],
+  private def identitiesFromMembersAccounts(zoneId: ZoneId,
+                                            membersAccounts: Map[MemberId, AccountId],
                                             accounts: Map[AccountId, Account],
                                             balances: Map[AccountId, BigDecimal],
                                             currency: Option[Either[String, Currency]],
@@ -176,6 +181,7 @@ object MonopolyGame {
       case (memberId, accountId) if members(memberId).publicKey == clientPublicKey =>
 
         memberId -> IdentityWithBalance(
+          zoneId,
           memberId,
           members(memberId),
           accountId,
@@ -205,7 +211,8 @@ object MonopolyGame {
       memberId -> accountId
     }
 
-  private def playersFromMembersAccounts(membersAccounts: Map[MemberId, AccountId],
+  private def playersFromMembersAccounts(zoneId: ZoneId,
+                                         membersAccounts: Map[MemberId, AccountId],
                                          accounts: Map[AccountId, Account],
                                          balances: Map[AccountId, BigDecimal],
                                          currency: Option[Either[String, Currency]],
@@ -217,6 +224,7 @@ object MonopolyGame {
 
         val member = members(memberId)
         memberId -> PlayerWithBalanceAndConnectionState(
+          zoneId,
           memberId,
           member,
           accountId,
@@ -453,6 +461,7 @@ class MonopolyGame private(context: Context,
           val accountIdsToMemberIds = memberIdsToAccountIds.map(_.swap)
 
           val (identities, hiddenIdentities) = identitiesFromMembersAccounts(
+            zoneId,
             memberIdsToAccountIds,
             joinZoneResponse.zone.accounts,
             balances,
@@ -463,6 +472,7 @@ class MonopolyGame private(context: Context,
           )
 
           val (players, hiddenPlayers) = playersFromMembersAccounts(
+            zoneId,
             memberIdsToAccountIds,
             joinZoneResponse.zone.accounts,
             balances,
@@ -608,6 +618,7 @@ class MonopolyGame private(context: Context,
 
           def updatePlayersAndTransactions() {
             val (updatedPlayers, updatedHiddenPlayers) = playersFromMembersAccounts(
+              zoneNotification.zoneId,
               state.memberIdsToAccountIds,
               state.zone.accounts,
               state.balances,
@@ -675,6 +686,7 @@ class MonopolyGame private(context: Context,
                 clientJoinedZoneNotification.publicKey
 
               val (joinedPlayers, joinedHiddenPlayers) = playersFromMembersAccounts(
+                zoneNotification.zoneId,
                 state.memberIdsToAccountIds.filterKeys(
                   state.zone.members(_).publicKey == clientJoinedZoneNotification.publicKey
                 ),
@@ -703,6 +715,7 @@ class MonopolyGame private(context: Context,
               state.connectedClients = state.connectedClients - clientQuitZoneNotification.publicKey
 
               val (quitPlayers, quitHiddenPlayers) = playersFromMembersAccounts(
+                zoneNotification.zoneId,
                 state.memberIdsToAccountIds.filterKeys(
                   state.zone.members(_).publicKey == clientQuitZoneNotification.publicKey
                 ),
@@ -760,6 +773,7 @@ class MonopolyGame private(context: Context,
               )
 
               val (updatedIdentities, updatedHiddenIdentities) = identitiesFromMembersAccounts(
+                zoneNotification.zoneId,
                 state.memberIdsToAccountIds,
                 state.zone.accounts,
                 state.balances,
@@ -826,6 +840,7 @@ class MonopolyGame private(context: Context,
                 createdMembersAccounts.map(_.swap)
 
               val (createdIdentity, createdHiddenIdentity) = identitiesFromMembersAccounts(
+                zoneNotification.zoneId,
                 createdMembersAccounts,
                 state.zone.accounts,
                 state.balances,
@@ -850,6 +865,7 @@ class MonopolyGame private(context: Context,
               }
 
               val (createdPlayer, createdHiddenPlayer) = playersFromMembersAccounts(
+                zoneNotification.zoneId,
                 createdMembersAccounts,
                 state.zone.accounts,
                 state.balances,
@@ -883,6 +899,7 @@ class MonopolyGame private(context: Context,
               state.accountIdsToMemberIds = state.memberIdsToAccountIds.map(_.swap)
 
               val (updatedIdentities, updatedHiddenIdentities) = identitiesFromMembersAccounts(
+                zoneNotification.zoneId,
                 state.memberIdsToAccountIds,
                 state.zone.accounts,
                 state.balances,
@@ -925,6 +942,7 @@ class MonopolyGame private(context: Context,
               )
 
               val (changedIdentities, changedHiddenIdentities) = identitiesFromMembersAccounts(
+                zoneNotification.zoneId,
                 changedMembersAccounts,
                 state.zone.accounts,
                 state.balances,
@@ -944,6 +962,7 @@ class MonopolyGame private(context: Context,
               }
 
               val (changedPlayers, changedHiddenPlayers) = playersFromMembersAccounts(
+                zoneNotification.zoneId,
                 changedMembersAccounts,
                 state.zone.accounts,
                 state.balances,

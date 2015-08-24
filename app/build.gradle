@@ -51,7 +51,7 @@ dependencies {
     compile 'com.squareup.okhttp:okhttp-ws:2.4.0'
     compile 'commons-io:commons-io:2.4'
 
-    compile 'com.dhpcs:liquidity-common_2.11:0.28.0'
+    compile 'com.dhpcs:liquidity-common_2.11:0.30.0'
 
     compile 'com.android.support:design:22.2.0'
     compile 'com.android.support:appcompat-v7:22.2.1'

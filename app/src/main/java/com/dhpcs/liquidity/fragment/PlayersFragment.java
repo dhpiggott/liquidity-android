@@ -22,8 +22,8 @@ import com.dhpcs.liquidity.MonopolyGame.Player;
 import com.dhpcs.liquidity.MonopolyGame.PlayerWithBalanceAndConnectionState;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activity.MonopolyGameActivity;
-import com.dhpcs.liquidity.models.Identifier;
 import com.dhpcs.liquidity.models.MemberId;
+import com.dhpcs.liquidity.models.ZoneId;
 import com.dhpcs.liquidity.view.Identicon;
 
 import java.text.Collator;
@@ -65,7 +65,8 @@ public class PlayersFragment extends Fragment {
             public void bindPlayer(PlayerWithBalanceAndConnectionState player) {
                 this.player = player;
 
-                Identifier identifier = player.memberId();
+                ZoneId zoneId = player.zoneId();
+                MemberId memberId = player.memberId();
                 String name = MonopolyGameActivity.formatNullable(context, player.member().name());
                 String balance = MonopolyGameActivity.formatCurrencyValue(
                         context,
@@ -75,7 +76,7 @@ public class PlayersFragment extends Fragment {
                 String status = player.isConnected() ?
                         null : context.getString(R.string.player_disconnected);
 
-                identiconId.show(identifier);
+                identiconId.show(zoneId, memberId);
                 textViewName.setText(name);
                 textViewBalance.setText(balance);
                 textViewStatus.setText(status);

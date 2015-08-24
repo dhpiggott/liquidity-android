@@ -7,8 +7,10 @@ import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.view.View;
 
-import com.dhpcs.liquidity.models.Identifier;
+import com.dhpcs.liquidity.models.MemberId;
+import com.dhpcs.liquidity.models.ZoneId;
 
+import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -84,10 +86,20 @@ public class Identicon extends View {
         );
     }
 
-    public void show(Identifier identifier) {
+    public void show(ZoneId zoneId, MemberId memberId) {
         byte[] hash;
         try {
-            hash = MessageDigest.getInstance("SHA-1").digest(identifier.id().toString().getBytes());
+            MessageDigest messageDigest = MessageDigest.getInstance("SHA-1");
+            messageDigest.update(
+                    ByteBuffer.allocate(8).putLong(zoneId.id().getMostSignificantBits()).array()
+            );
+            messageDigest.update(
+                    ByteBuffer.allocate(8).putLong(zoneId.id().getLeastSignificantBits()).array()
+            );
+            messageDigest.update(
+                    ByteBuffer.allocate(4).putInt(memberId.id()).array()
+            );
+            hash = messageDigest.digest();
         } catch (NoSuchAlgorithmException e) {
             throw new Error(e);
         }

@@ -16,7 +16,8 @@ import com.dhpcs.liquidity.MonopolyGame.Identity;
 import com.dhpcs.liquidity.MonopolyGame.IdentityWithBalance;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activity.MonopolyGameActivity;
-import com.dhpcs.liquidity.models.Identifier;
+import com.dhpcs.liquidity.models.MemberId;
+import com.dhpcs.liquidity.models.ZoneId;
 import com.dhpcs.liquidity.view.Identicon;
 
 import java.util.ArrayList;
@@ -51,7 +52,8 @@ public class RestoreIdentityDialogFragment extends DialogFragment {
             TextView textViewName = (TextView) view.findViewById(R.id.textview_name);
             TextView textViewBalance = (TextView) view.findViewById(R.id.textview_balance);
 
-            Identifier identifier = identity.memberId();
+            ZoneId zoneId = identity.zoneId();
+            MemberId memberId = identity.memberId();
             String name = MonopolyGameActivity.formatNullable(
                     getContext(),
                     identity.member().name()
@@ -62,7 +64,7 @@ public class RestoreIdentityDialogFragment extends DialogFragment {
                     identity.balanceWithCurrency()._1()
             );
 
-            identiconId.show(identifier);
+            identiconId.show(zoneId, memberId);
             textViewName.setText(name);
             textViewBalance.setText(balance);
 

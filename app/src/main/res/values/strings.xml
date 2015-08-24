@@ -53,7 +53,7 @@
     <string name="no_last_transfer">Click a player to send money to them.</string>
     <string name="no_other_players">No one else has joined yet. Touch here to invite them.</string>
     <string name="no_transfers">No transfers have been made yet.</string>
-    <string name="non_player_transfer_location_format_string">%1$s (%2$s)</string>
+    <string name="non_player_transfer_location_format_string">account %1$s (%2$s)</string>
     <string name="ok">OK</string>
     <string name="player_disconnected">Disconnected</string>
     <string name="receive_identity">Receive identity</string>

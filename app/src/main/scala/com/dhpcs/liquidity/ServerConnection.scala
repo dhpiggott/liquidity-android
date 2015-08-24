@@ -21,6 +21,8 @@ import scala.util.{Failure, Right, Success, Try}
 
 object ServerConnection {
 
+  PRNGFixes.apply()
+
   sealed trait ConnectionState
 
   case object UNAVAILABLE extends ConnectionState
@@ -105,8 +107,6 @@ object ServerConnection {
     )
     sslContext.getSocketFactory
   }
-
-  PRNGFixes.apply()
 
 }
 

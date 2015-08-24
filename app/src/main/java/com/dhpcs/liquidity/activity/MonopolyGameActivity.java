@@ -158,7 +158,7 @@ public class MonopolyGameActivity extends AppCompatActivity
         );
     }
 
-    public static String formatMemberOrAccount(final Context context,
+    public static String formatMemberOrAccount(Context context,
                                                Either<Tuple2<AccountId, Account>, Player>
                                                        eitherAccountTupleOrMember) {
         String result;
@@ -167,8 +167,8 @@ public class MonopolyGameActivity extends AppCompatActivity
             Account account = eitherAccountTupleOrMember.left().get()._2();
             result = context.getString(
                     R.string.non_player_transfer_location_format_string,
-                    accountId.id().toString(),
-                    account.name()
+                    accountId.id(),
+                    formatNullable(context, account.name())
             );
         } else {
             result = formatNullable(

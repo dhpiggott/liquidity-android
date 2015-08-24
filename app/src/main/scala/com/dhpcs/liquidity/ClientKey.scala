@@ -65,9 +65,7 @@ object ClientKey {
   def getKeyManagers(context: Context) = {
     if (keyManagers == null) {
       val keyStore = getOrLoadOrCreateKeyStore(context)
-      val keyManagerFactory = KeyManagerFactory.getInstance(
-        KeyManagerFactory.getDefaultAlgorithm
-      )
+      val keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm)
       keyManagerFactory.init(keyStore, Array.emptyCharArray)
       keyManagers = keyManagerFactory.getKeyManagers
     }
