@@ -3,6 +3,7 @@ package com.dhpcs.liquidity.activity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.ImageView;
 
 import com.dhpcs.liquidity.R;
@@ -18,6 +19,7 @@ public class ReceiveIdentityActivity extends MonopolyGameChildActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_receive_identity);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
