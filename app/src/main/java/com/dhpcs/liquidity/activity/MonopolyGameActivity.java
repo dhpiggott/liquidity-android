@@ -200,10 +200,17 @@ public class MonopolyGameActivity extends AppCompatActivity
             @Override
             public int compare(Player lhs,
                                Player rhs) {
-                return collator.compare(
+                int nameOrdered = collator.compare(
                         MonopolyGameActivity.formatNullable(context, lhs.member().name()),
                         MonopolyGameActivity.formatNullable(context, rhs.member().name())
                 );
+                if (nameOrdered == 0) {
+                    long lhsId = lhs.memberId().id();
+                    long rhsId = rhs.memberId().id();
+                    return lhsId < rhsId ? -1 : (lhsId == rhsId ? 0 : 1);
+                } else {
+                    return nameOrdered;
+                }
             }
 
         };

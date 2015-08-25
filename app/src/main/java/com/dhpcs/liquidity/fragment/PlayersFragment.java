@@ -26,7 +26,7 @@ import com.dhpcs.liquidity.models.MemberId;
 import com.dhpcs.liquidity.models.ZoneId;
 import com.dhpcs.liquidity.view.Identicon;
 
-import java.text.Collator;
+import java.util.Comparator;
 
 import scala.Option;
 import scala.collection.Iterator;
@@ -92,38 +92,37 @@ public class PlayersFragment extends Fragment {
         }
 
         private final Context context;
-        private final SortedList<PlayerWithBalanceAndConnectionState> players = new SortedList<>(
-                PlayerWithBalanceAndConnectionState.class,
-                new SortedListAdapterCallback<PlayerWithBalanceAndConnectionState>(this) {
+        private final SortedList<PlayerWithBalanceAndConnectionState> players;
 
-                    private final Collator collator = Collator.getInstance();
-
-                    @Override
-                    public int compare(PlayerWithBalanceAndConnectionState o1,
-                                       PlayerWithBalanceAndConnectionState o2) {
-                        return collator.compare(
-                                MonopolyGameActivity.formatNullable(context, o1.member().name()),
-                                MonopolyGameActivity.formatNullable(context, o2.member().name())
-                        );
-                    }
-
-                    @Override
-                    public boolean areContentsTheSame(PlayerWithBalanceAndConnectionState oldItem,
-                                                      PlayerWithBalanceAndConnectionState newItem) {
-                        return oldItem.equals(newItem);
-                    }
-
-                    @Override
-                    public boolean areItemsTheSame(PlayerWithBalanceAndConnectionState item1,
-                                                   PlayerWithBalanceAndConnectionState item2) {
-                        return item1.memberId().equals(item2.memberId());
-                    }
-
-                }
-        );
-
-        public PlayersAdapter(Context context) {
+        public PlayersAdapter(final Context context) {
             this.context = context;
+            this.players = new SortedList<>(
+                    PlayerWithBalanceAndConnectionState.class,
+                    new SortedListAdapterCallback<PlayerWithBalanceAndConnectionState>(this) {
+
+                        private final Comparator<Player> playerComparator =
+                                MonopolyGameActivity.playerComparator(context);
+
+                        @Override
+                        public int compare(PlayerWithBalanceAndConnectionState o1,
+                                           PlayerWithBalanceAndConnectionState o2) {
+                            return playerComparator.compare(o1, o2);
+                        }
+
+                        @Override
+                        public boolean areContentsTheSame(PlayerWithBalanceAndConnectionState oldItem,
+                                                          PlayerWithBalanceAndConnectionState newItem) {
+                            return oldItem.equals(newItem);
+                        }
+
+                        @Override
+                        public boolean areItemsTheSame(PlayerWithBalanceAndConnectionState item1,
+                                                       PlayerWithBalanceAndConnectionState item2) {
+                            return item1.memberId().equals(item2.memberId());
+                        }
+
+                    }
+            );
         }
 
         @Override
