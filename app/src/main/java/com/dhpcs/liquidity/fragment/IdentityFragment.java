@@ -41,7 +41,7 @@ public class IdentityFragment extends Fragment {
 
         assert identity != null;
         ZoneId zoneId = identity.zoneId();
-        MemberId memberId = identity.memberId();
+        MemberId memberId = identity.member().id();
         String name = MonopolyGameActivity.formatNullable(getActivity(), identity.member().name());
         String balance = MonopolyGameActivity.formatCurrencyValue(
                 getActivity(),

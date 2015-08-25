@@ -434,7 +434,7 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
     private void validateInput() {
         scala.math.BigDecimal currentBalance = identities == null ?
                 from.balanceWithCurrency()._1() :
-                identities.apply(from.memberId()).balanceWithCurrency()._1();
+                identities.apply(from.member().id()).balanceWithCurrency()._1();
         if (value == null) {
             scaledValue = null;
             editTextValue.setError(null);

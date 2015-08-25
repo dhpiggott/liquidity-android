@@ -47,15 +47,15 @@ public class TransfersFragment extends Fragment {
 
             public void bindTransfer(TransferWithCurrency transfer) {
 
-                boolean isFromPlayer = player != null && transfer.from().right().get().memberId()
-                        .equals(player.memberId());
+                boolean isFromPlayer = player != null && transfer.from().right().get().member().id()
+                        .equals(player.member().id());
                 String value = MonopolyGameActivity.formatCurrencyValue(
                         context,
                         transfer.currency(),
                         transfer.transaction().value()
                 );
-                boolean isToPlayer = player != null && transfer.to().right().get().memberId()
-                        .equals(player.memberId());
+                boolean isToPlayer = player != null && transfer.to().right().get().member().id()
+                        .equals(player.member().id());
                 String summary;
                 if (isFromPlayer && !isToPlayer) {
                     summary = context.getString(
@@ -98,8 +98,8 @@ public class TransfersFragment extends Fragment {
                     @Override
                     public int compare(TransferWithCurrency o1,
                                        TransferWithCurrency o2) {
-                        long lhsId = o1.transactionId().id();
-                        long rhsId = o2.transactionId().id();
+                        long lhsId = o1.transaction().id().id();
+                        long rhsId = o2.transaction().id().id();
                         return -1 *
                                 (lhsId < rhsId ? -1 : (lhsId == rhsId ? 0 : 1));
                     }
@@ -113,7 +113,7 @@ public class TransfersFragment extends Fragment {
                     @Override
                     public boolean areItemsTheSame(TransferWithCurrency item1,
                                                    TransferWithCurrency item2) {
-                        return item1.transactionId().equals(item2.transactionId());
+                        return item1.transaction().id().equals(item2.transaction().id());
                     }
 
                 }
@@ -280,9 +280,9 @@ public class TransfersFragment extends Fragment {
 
     private void replaceOrAddTransfer(Player player, TransferWithCurrency transfer) {
         if (player == null || (transfer.from().isRight()
-                && player.memberId().equals(transfer.from().right().get().memberId()))
+                && player.member().id().equals(transfer.from().right().get().member().id()))
                 || (transfer.to().isRight()
-                && player.memberId().equals(transfer.to().right().get().memberId()))) {
+                && player.member().id().equals(transfer.to().right().get().member().id()))) {
             transfersAdapter.addOrReplace(transfer);
         }
     }

@@ -217,10 +217,10 @@ public class PlayersTransfersFragment extends Fragment {
         viewPagerPlayersTransfers.removeOnPageChangeListener(pageChangeListener);
         tabLayoutPlayers.setTabsFromPagerAdapter(playersTransfersFragmentStatePagerAdapter);
         viewPagerPlayersTransfers.addOnPageChangeListener(pageChangeListener);
-        if (selectedPlayer != null && players.contains(selectedPlayer.memberId())) {
+        if (selectedPlayer != null && players.contains(selectedPlayer.member().id())) {
             viewPagerPlayersTransfers.setCurrentItem(
                     playersTransfersFragmentStatePagerAdapter.getPosition(
-                            players.apply(selectedPlayer.memberId())
+                            players.apply(selectedPlayer.member().id())
                     ),
                     false
             );

@@ -52,7 +52,7 @@ public class LastTransferFragment extends Fragment {
         Iterator<TransferWithCurrency> iterator = changedTransfers.iterator();
         while (iterator.hasNext()) {
             TransferWithCurrency transfer = iterator.next();
-            if (transfer.transactionId().equals(lastTransfer.transactionId())) {
+            if (transfer.transaction().id().equals(lastTransfer.transaction().id())) {
                 lastTransfer = transfer;
                 showTransfer(lastTransfer, false);
                 break;

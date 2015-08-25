@@ -37,11 +37,7 @@ object MonopolyGame {
 
     def zoneId: ZoneId
 
-    def memberId: MemberId
-
     def member: Member
-
-    def accountId: AccountId
 
     def account: Account
 
@@ -59,16 +55,12 @@ object MonopolyGame {
 
     def to: Either[(AccountId, Account), Player]
 
-    def transactionId: TransactionId
-
     def transaction: Transaction
 
   }
 
   case class PlayerWithBalanceAndConnectionState(zoneId: ZoneId,
-                                                 memberId: MemberId,
                                                  member: Member,
-                                                 accountId: AccountId,
                                                  account: Account,
                                                  balanceWithCurrency:
                                                  (BigDecimal, Option[Either[String, Currency]]),
@@ -76,9 +68,7 @@ object MonopolyGame {
                                                  isConnected: Boolean) extends Player
 
   case class IdentityWithBalance(zoneId: ZoneId,
-                                 memberId: MemberId,
                                  member: Member,
-                                 accountId: AccountId,
                                  account: Account,
                                  balanceWithCurrency:
                                  (BigDecimal, Option[Either[String, Currency]]),
@@ -88,7 +78,6 @@ object MonopolyGame {
   case class TransferWithCurrency(from: Either[(AccountId, Account), Player],
                                   to: Either[(AccountId, Account), Player],
                                   creator: Either[(MemberId, Member), Player],
-                                  transactionId: TransactionId,
                                   transaction: Transaction,
                                   currency: Option[Either[String, Currency]])
     extends Transfer
@@ -182,9 +171,7 @@ object MonopolyGame {
 
         memberId -> IdentityWithBalance(
           zoneId,
-          memberId,
           members(memberId),
-          accountId,
           accounts(accountId),
           (balances(accountId).bigDecimal, currency),
           accountId == equityAccountId
@@ -225,9 +212,7 @@ object MonopolyGame {
         val member = members(memberId)
         memberId -> PlayerWithBalanceAndConnectionState(
           zoneId,
-          memberId,
           member,
-          accountId,
           accounts(accountId),
           (balances(accountId).bigDecimal, currency),
           accountId == equityAccountId,
@@ -263,7 +248,6 @@ object MonopolyGame {
           from,
           to,
           creator,
-          transactionId,
           transaction,
           currency
         )
@@ -396,7 +380,7 @@ class MonopolyGame private(context: Context,
   }
 
   def deleteIdentity(identity: Identity) {
-    val member = state.zone.members(identity.memberId)
+    val member = state.identities(identity.member.id).member
     serverConnection.sendCommand(
       UpdateMemberCommand(
         zoneId.get,
@@ -533,7 +517,7 @@ class MonopolyGame private(context: Context,
            * code again rather than by clicking its list item.
            */
           if (gameId.isEmpty && !(identities ++ hiddenIdentities).values.exists(
-            _.accountId != joinZoneResponse.zone.equityAccountId
+            _.account.id != joinZoneResponse.zone.equityAccountId
           )) {
             gameActionListeners.foreach(_.onIdentityRequired())
           }
@@ -1072,7 +1056,7 @@ class MonopolyGame private(context: Context,
   }
 
   def restoreIdentity(identity: Identity) {
-    val member = state.zone.members(identity.memberId)
+    val member = state.hiddenIdentities(identity.member.id).member
     serverConnection.sendCommand(
       UpdateMemberCommand(
         zoneId.get,
@@ -1097,31 +1081,29 @@ class MonopolyGame private(context: Context,
     serverConnection.sendCommand(
       UpdateMemberCommand(
         zoneId.get,
-        state.zone.members(identity.memberId).copy(name = Some(name))
+        state.identities(identity.member.id).member.copy(name = Some(name))
       ),
       noopResponseCallback
     )
 
-  def transferIdentity(identityId: MemberId, toPublicKey: PublicKey) {
-    val identity = state.identities(identityId)
+  def transferIdentity(identity: Identity, toPublicKey: PublicKey) =
     serverConnection.sendCommand(
       UpdateMemberCommand(
         zoneId.get,
-        identity.member.copy(ownerPublicKey = toPublicKey)
+        state.identities(identity.member.id).member.copy(ownerPublicKey = toPublicKey)
       ),
       noopResponseCallback
     )
-  }
 
   def transferToPlayer(actingAs: Identity, from: Identity, to: Seq[Player], value: BigDecimal) =
     to.foreach(to =>
       serverConnection.sendCommand(
         AddTransactionCommand(
           zoneId.get,
-          actingAs.memberId,
+          actingAs.member.id,
           None,
-          from.accountId,
-          to.accountId,
+          from.account.id,
+          to.account.id,
           value
         ),
         noopResponseCallback

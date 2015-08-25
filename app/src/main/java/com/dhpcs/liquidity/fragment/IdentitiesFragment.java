@@ -198,10 +198,10 @@ public class IdentitiesFragment extends Fragment {
         viewPagerIdentities.setVisibility(
                 identitiesFragmentStatePagerAdapter.getCount() == 0 ? View.GONE : View.VISIBLE
         );
-        if (selectedIdentity != null && identities.contains(selectedIdentity.memberId())) {
+        if (selectedIdentity != null && identities.contains(selectedIdentity.member().id())) {
             viewPagerIdentities.setCurrentItem(
                     identitiesFragmentStatePagerAdapter.getPosition(
-                            identities.apply(selectedIdentity.memberId())
+                            identities.apply(selectedIdentity.member().id())
                     ),
                     false
             );

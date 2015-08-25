@@ -66,7 +66,7 @@ public class PlayersFragment extends Fragment {
                 this.player = player;
 
                 ZoneId zoneId = player.zoneId();
-                MemberId memberId = player.memberId();
+                MemberId memberId = player.member().id();
                 String name = MonopolyGameActivity.formatNullable(context, player.member().name());
                 String balance = MonopolyGameActivity.formatCurrencyValue(
                         context,
@@ -118,7 +118,7 @@ public class PlayersFragment extends Fragment {
                         @Override
                         public boolean areItemsTheSame(PlayerWithBalanceAndConnectionState item1,
                                                        PlayerWithBalanceAndConnectionState item2) {
-                            return item1.memberId().equals(item2.memberId());
+                            return item1.member().id().equals(item2.member().id());
                         }
 
                     }
@@ -267,8 +267,8 @@ public class PlayersFragment extends Fragment {
 
     public void onPlayerChanged(PlayerWithBalanceAndConnectionState changedPlayer) {
         if (selectedIdentity == null
-                || !changedPlayer.memberId().equals(selectedIdentity.memberId())) {
-            playersAdapter.replace(players.apply(changedPlayer.memberId()), changedPlayer);
+                || !changedPlayer.member().id().equals(selectedIdentity.member().id())) {
+            playersAdapter.replace(players.apply(changedPlayer.member().id()), changedPlayer);
         }
     }
 
@@ -286,7 +286,7 @@ public class PlayersFragment extends Fragment {
 
     public void onPlayerRemoved(PlayerWithBalanceAndConnectionState removedPlayer) {
         if (selectedIdentity == null
-                || !removedPlayer.memberId().equals(selectedIdentity.memberId())) {
+                || !removedPlayer.member().id().equals(selectedIdentity.member().id())) {
             playersAdapter.remove(removedPlayer);
         }
         if (playersAdapter.getItemCount() == 0) {
@@ -303,7 +303,7 @@ public class PlayersFragment extends Fragment {
     public void onSelectedIdentityChanged(Identity selectedIdentity) {
         if (this.selectedIdentity != null && players != null) {
             Option<PlayerWithBalanceAndConnectionState> player =
-                    players.get(this.selectedIdentity.memberId());
+                    players.get(this.selectedIdentity.member().id());
             if (player.isDefined()) {
                 playersAdapter.addOrReplace(player.get());
             }
@@ -311,7 +311,7 @@ public class PlayersFragment extends Fragment {
         this.selectedIdentity = selectedIdentity;
         if (this.selectedIdentity != null && players != null) {
             Option<PlayerWithBalanceAndConnectionState> player =
-                    players.get(this.selectedIdentity.memberId());
+                    players.get(this.selectedIdentity.member().id());
             if (player.isDefined()) {
                 playersAdapter.remove(player.get());
             }
@@ -326,7 +326,7 @@ public class PlayersFragment extends Fragment {
 
     private void replaceOrAddPlayer(PlayerWithBalanceAndConnectionState player) {
         if (selectedIdentity == null
-                || !player.memberId().equals(selectedIdentity.memberId())) {
+                || !player.member().id().equals(selectedIdentity.member().id())) {
             playersAdapter.addOrReplace(player);
         }
     }

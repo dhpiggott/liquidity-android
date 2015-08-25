@@ -53,7 +53,7 @@ public class RestoreIdentityDialogFragment extends DialogFragment {
             TextView textViewBalance = (TextView) view.findViewById(R.id.textview_balance);
 
             ZoneId zoneId = identity.zoneId();
-            MemberId memberId = identity.memberId();
+            MemberId memberId = identity.member().id();
             String name = MonopolyGameActivity.formatNullable(
                     getContext(),
                     identity.member().name()

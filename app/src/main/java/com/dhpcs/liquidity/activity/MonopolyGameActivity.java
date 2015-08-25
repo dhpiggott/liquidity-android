@@ -205,8 +205,8 @@ public class MonopolyGameActivity extends AppCompatActivity
                         MonopolyGameActivity.formatNullable(context, rhs.member().name())
                 );
                 if (nameOrdered == 0) {
-                    long lhsId = lhs.memberId().id();
-                    long rhsId = rhs.memberId().id();
+                    long lhsId = lhs.member().id().id();
+                    long rhsId = rhs.member().id().id();
                     return lhsId < rhsId ? -1 : (lhsId == rhsId ? 0 : 1);
                 } else {
                     return nameOrdered;
@@ -267,7 +267,7 @@ public class MonopolyGameActivity extends AppCompatActivity
                         if (!monopolyGame.isPublicKeyConnectedAndImplicitlyValid(publicKey)) {
                             throw new IllegalArgumentException();
                         }
-                        monopolyGame.transferIdentity(identity.memberId(), publicKey);
+                        monopolyGame.transferIdentity(identity, publicKey);
                     } catch (IllegalArgumentException e) {
                         Toast.makeText(
                                 this,
