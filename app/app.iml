@@ -111,18 +111,18 @@
     <orderEntry type="library" exported="" name="okhttp-2.4.0" level="project" />
     <orderEntry type="library" exported="" name="support-annotations-22.2.1" level="project" />
     <orderEntry type="library" exported="" name="jsr305-3.0.0" level="project" />
-    <orderEntry type="library" exported="" name="liquidity-common_2.11-0.30.0" level="project" />
+    <orderEntry type="library" exported="" name="liquidity-common_2.11-0.31.0" level="project" />
     <orderEntry type="library" exported="" name="appcompat-v7-22.2.1" level="project" />
     <orderEntry type="library" exported="" name="logback-android-core-1.1.1-4" level="project" />
     <orderEntry type="library" exported="" name="core-2.0" level="project" />
     <orderEntry type="library" exported="" name="config-1.2.1" level="project" />
-    <orderEntry type="library" exported="" name="jackson-annotations-2.3.2" level="project" />
     <orderEntry type="library" exported="" name="pkix-1.52.0.0" level="project" />
+    <orderEntry type="library" exported="" name="jackson-annotations-2.3.2" level="project" />
     <orderEntry type="library" exported="" name="core-3.2.0" level="project" />
     <orderEntry type="library" exported="" name="android-2.0" level="project" />
     <orderEntry type="library" exported="" name="play-services-base-7.5.0" level="project" />
-    <orderEntry type="library" exported="" name="prov-1.52.0.0" level="project" />
     <orderEntry type="library" exported="" name="scala-stm_2.11-0.7" level="project" />
+    <orderEntry type="library" exported="" name="prov-1.52.0.0" level="project" />
     <orderEntry type="library" exported="" name="play-json-rpc_2.11-0.4.0-tests" level="project" />
     <orderEntry type="library" exported="" name="okio-1.4.0" level="project" />
     <orderEntry type="library" exported="" name="play-functional_2.11-2.3.9" level="project" />
@@ -133,10 +133,10 @@
     <orderEntry type="library" exported="" name="support-v4-22.2.1" level="project" />
     <orderEntry type="library" exported="" name="zxing-android-embedded-3.0.3" level="project" />
     <orderEntry type="library" exported="" name="jackson-core-2.3.2" level="project" />
-    <orderEntry type="library" exported="" name="scala-reflect-2.11.1" level="project" />
     <orderEntry type="library" exported="" name="apktool-lib-1.4.4-3" level="project" />
-    <orderEntry type="library" exported="" name="jackson-databind-2.3.2" level="project" />
+    <orderEntry type="library" exported="" name="scala-reflect-2.11.1" level="project" />
     <orderEntry type="library" exported="" name="joda-time-2.3" level="project" />
+    <orderEntry type="library" exported="" name="jackson-databind-2.3.2" level="project" />
     <orderEntry type="library" exported="" name="play-iteratees_2.11-2.3.9" level="project" />
     <orderEntry type="library" exported="" name="multidex-1.0.1" level="project" />
     <orderEntry type="library" exported="" name="scala-library-2.11.7" level="project" />

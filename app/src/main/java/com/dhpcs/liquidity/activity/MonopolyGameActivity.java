@@ -73,7 +73,7 @@ public class MonopolyGameActivity extends AppCompatActivity
         TransferToPlayerDialogFragment.Listener {
 
     public static final String EXTRA_CURRENCY = "currency";
-    public static final String EXTRA_NAME = "name";
+    public static final String EXTRA_GAME_NAME = "game_name";
     public static final String EXTRA_GAME_ID = "game_id";
     public static final String EXTRA_ZONE_ID = "zone_id";
 
@@ -376,12 +376,12 @@ public class MonopolyGameActivity extends AppCompatActivity
 
 
             Currency currency = (Currency) getIntent().getExtras().getSerializable(EXTRA_CURRENCY);
-            String name = getIntent().getExtras().getString(EXTRA_NAME);
+            String gameName = getIntent().getExtras().getString(EXTRA_GAME_NAME);
 
             if (currency == null) {
                 throw new Error();
             }
-            if (name == null) {
+            if (gameName == null) {
                 throw new Error();
             }
 
@@ -389,7 +389,7 @@ public class MonopolyGameActivity extends AppCompatActivity
                     this,
                     ServerConnection.getInstance(getApplicationContext()),
                     currency,
-                    name
+                    gameName
             );
 
         } else {
@@ -417,9 +417,9 @@ public class MonopolyGameActivity extends AppCompatActivity
 
                 }
 
-                if (getIntent().getExtras().containsKey(EXTRA_NAME)) {
+                if (getIntent().getExtras().containsKey(EXTRA_GAME_NAME)) {
 
-                    setTitle(getIntent().getExtras().getString(EXTRA_NAME));
+                    setTitle(getIntent().getExtras().getString(EXTRA_GAME_NAME));
 
                 }
 

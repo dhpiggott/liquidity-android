@@ -73,7 +73,7 @@ public class GamesActivity extends AppCompatActivity implements CreateGameDialog
     }
 
     @Override
-    public void onGameClicked(long gameId, ZoneId zoneId, String name) {
+    public void onGameClicked(long gameId, ZoneId zoneId, String gameName) {
         startActivity(
                 new Intent(
                         GamesActivity.this,
@@ -85,8 +85,8 @@ public class GamesActivity extends AppCompatActivity implements CreateGameDialog
                         MonopolyGameActivity.EXTRA_ZONE_ID,
                         zoneId
                 ).putExtra(
-                        MonopolyGameActivity.EXTRA_NAME,
-                        name
+                        MonopolyGameActivity.EXTRA_GAME_NAME,
+                        gameName
                 )
         );
     }
@@ -101,7 +101,7 @@ public class GamesActivity extends AppCompatActivity implements CreateGameDialog
                         MonopolyGameActivity.EXTRA_CURRENCY,
                         currency
                 ).putExtra(
-                        MonopolyGameActivity.EXTRA_NAME,
+                        MonopolyGameActivity.EXTRA_GAME_NAME,
                         name
                 )
         );

@@ -31,7 +31,7 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
 
     public interface Listener {
 
-        void onGameClicked(long gameId, ZoneId zoneId, String name);
+        void onGameClicked(long gameId, ZoneId zoneId, String gameName);
 
     }
 
