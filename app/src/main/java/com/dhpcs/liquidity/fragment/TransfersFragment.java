@@ -16,10 +16,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.dhpcs.liquidity.MonopolyGame.Player;
-import com.dhpcs.liquidity.MonopolyGame.TransferWithCurrency;
+import com.dhpcs.liquidity.BoardGame.Player;
+import com.dhpcs.liquidity.BoardGame.TransferWithCurrency;
 import com.dhpcs.liquidity.R;
-import com.dhpcs.liquidity.activity.MonopolyGameActivity;
+import com.dhpcs.liquidity.activity.BoardGameActivity;
 
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -49,7 +49,7 @@ public class TransfersFragment extends Fragment {
 
                 boolean isFromPlayer = player != null && transfer.from().right().get().member().id()
                         .equals(player.member().id());
-                String value = MonopolyGameActivity.formatCurrencyValue(
+                String value = BoardGameActivity.formatCurrencyValue(
                         context,
                         transfer.currency(),
                         transfer.transaction().value()
@@ -61,20 +61,20 @@ public class TransfersFragment extends Fragment {
                     summary = context.getString(
                             R.string.transfer_summary_sent_to_format_string,
                             value,
-                            MonopolyGameActivity.formatMemberOrAccount(context, transfer.to())
+                            BoardGameActivity.formatMemberOrAccount(context, transfer.to())
                     );
                 } else if (!isFromPlayer && isToPlayer) {
                     summary = context.getString(
                             R.string.transfer_summary_received_from_format_string,
                             value,
-                            MonopolyGameActivity.formatMemberOrAccount(context, transfer.from())
+                            BoardGameActivity.formatMemberOrAccount(context, transfer.from())
                     );
                 } else {
                     summary = context.getString(
                             R.string.transfer_summary_format_string,
-                            MonopolyGameActivity.formatMemberOrAccount(context, transfer.from()),
+                            BoardGameActivity.formatMemberOrAccount(context, transfer.from()),
                             value,
-                            MonopolyGameActivity.formatMemberOrAccount(context, transfer.to())
+                            BoardGameActivity.formatMemberOrAccount(context, transfer.to())
                     );
                 }
                 String createdTime = timeFormat.format(transfer.transaction().created());

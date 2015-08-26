@@ -37,9 +37,9 @@ public class GamesActivity extends AppCompatActivity implements CreateGameDialog
                     startActivity(
                             new Intent(
                                     GamesActivity.this,
-                                    MonopolyGameActivity.class
+                                    BoardGameActivity.class
                             ).putExtra(
-                                    MonopolyGameActivity.EXTRA_ZONE_ID,
+                                    BoardGameActivity.EXTRA_ZONE_ID,
                                     zoneId
                             )
                     );
@@ -77,15 +77,15 @@ public class GamesActivity extends AppCompatActivity implements CreateGameDialog
         startActivity(
                 new Intent(
                         GamesActivity.this,
-                        MonopolyGameActivity.class
+                        BoardGameActivity.class
                 ).putExtra(
-                        MonopolyGameActivity.EXTRA_GAME_ID,
+                        BoardGameActivity.EXTRA_GAME_ID,
                         gameId
                 ).putExtra(
-                        MonopolyGameActivity.EXTRA_ZONE_ID,
+                        BoardGameActivity.EXTRA_ZONE_ID,
                         zoneId
                 ).putExtra(
-                        MonopolyGameActivity.EXTRA_GAME_NAME,
+                        BoardGameActivity.EXTRA_GAME_NAME,
                         gameName
                 )
         );
@@ -96,12 +96,12 @@ public class GamesActivity extends AppCompatActivity implements CreateGameDialog
         startActivity(
                 new Intent(
                         GamesActivity.this,
-                        MonopolyGameActivity.class
+                        BoardGameActivity.class
                 ).putExtra(
-                        MonopolyGameActivity.EXTRA_CURRENCY,
+                        BoardGameActivity.EXTRA_CURRENCY,
                         currency
                 ).putExtra(
-                        MonopolyGameActivity.EXTRA_GAME_NAME,
+                        BoardGameActivity.EXTRA_GAME_NAME,
                         name
                 )
         );

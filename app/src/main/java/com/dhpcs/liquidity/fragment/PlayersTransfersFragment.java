@@ -11,10 +11,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.dhpcs.liquidity.MonopolyGame.Player;
-import com.dhpcs.liquidity.MonopolyGame.TransferWithCurrency;
+import com.dhpcs.liquidity.BoardGame.Player;
+import com.dhpcs.liquidity.BoardGame.TransferWithCurrency;
 import com.dhpcs.liquidity.R;
-import com.dhpcs.liquidity.activity.MonopolyGameActivity;
+import com.dhpcs.liquidity.activity.BoardGameActivity;
 import com.dhpcs.liquidity.models.MemberId;
 import com.dhpcs.liquidity.models.TransactionId;
 
@@ -89,7 +89,7 @@ public class PlayersTransfersFragment extends Fragment {
                     ?
                     context.getString(R.string.all)
                     :
-                    MonopolyGameActivity.formatNullable(context, player.member().name());
+                    BoardGameActivity.formatNullable(context, player.member().name());
         }
 
         public int getPosition(Player player) {
@@ -203,7 +203,7 @@ public class PlayersTransfersFragment extends Fragment {
             playersTransfersFragmentStatePagerAdapter.add(iterator.next());
         }
         playersTransfersFragmentStatePagerAdapter.sort(
-                MonopolyGameActivity.playerComparator(getActivity())
+                BoardGameActivity.playerComparator(getActivity())
         );
         playersTransfersFragmentStatePagerAdapter.notifyDataSetChanged();
 

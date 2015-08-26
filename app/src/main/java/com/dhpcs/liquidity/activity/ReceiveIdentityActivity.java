@@ -12,7 +12,7 @@ import com.google.common.io.BaseEncoding;
 
 import net.glxn.qrgen.android.QRCode;
 
-public class ReceiveIdentityActivity extends MonopolyGameChildActivity {
+public class ReceiveIdentityActivity extends BoardGameChildActivity {
 
     public static final String EXTRA_PUBLIC_KEY = "public_key";
 

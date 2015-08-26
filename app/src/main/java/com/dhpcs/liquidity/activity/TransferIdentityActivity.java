@@ -10,7 +10,7 @@ import com.journeyapps.barcodescanner.CompoundBarcodeView;
 
 import scala.Option;
 
-public class TransferIdentityActivity extends MonopolyGameChildActivity {
+public class TransferIdentityActivity extends BoardGameChildActivity {
 
     public static final String EXTRA_IDENTITY_NAME_HOLDER = "identity_name_holder";
     public static final String EXTRA_IDENTITY_NAME = "identity_name";
@@ -37,7 +37,7 @@ public class TransferIdentityActivity extends MonopolyGameChildActivity {
         barcodeScannerView.setStatusText(
                 getString(
                         R.string.transfer_identity_identity_name_format_string,
-                        MonopolyGameActivity.formatNullable(this, identityName)
+                        BoardGameActivity.formatNullable(this, identityName)
                 )
         );
 

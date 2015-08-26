@@ -23,11 +23,11 @@ import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.dhpcs.liquidity.MonopolyGame.Identity;
-import com.dhpcs.liquidity.MonopolyGame.IdentityWithBalance;
-import com.dhpcs.liquidity.MonopolyGame.Player;
+import com.dhpcs.liquidity.BoardGame.Identity;
+import com.dhpcs.liquidity.BoardGame.IdentityWithBalance;
+import com.dhpcs.liquidity.BoardGame.Player;
 import com.dhpcs.liquidity.R;
-import com.dhpcs.liquidity.activity.MonopolyGameActivity;
+import com.dhpcs.liquidity.activity.BoardGameActivity;
 import com.dhpcs.liquidity.models.MemberId;
 
 import java.math.BigDecimal;
@@ -65,7 +65,7 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
 
         private View bindView(TextView textView, Player player) {
             textView.setText(
-                    MonopolyGameActivity.formatNullable(getContext(), player.member().name())
+                    BoardGameActivity.formatNullable(getContext(), player.member().name())
             );
             return textView;
         }
@@ -99,18 +99,18 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
         private View bindView(TextView textView, IdentityWithBalance identity) {
             textView.setText(
                     identity.isBanker() ?
-                            MonopolyGameActivity.formatNullable(
+                            BoardGameActivity.formatNullable(
                                     getContext(),
                                     identity.member().name()
                             )
                             :
                             getContext().getString(
                                     R.string.identity_format_string,
-                                    MonopolyGameActivity.formatNullable(
+                                    BoardGameActivity.formatNullable(
                                             getContext(),
                                             identity.member().name()
                                     ),
-                                    MonopolyGameActivity.formatCurrencyValue(
+                                    BoardGameActivity.formatCurrencyValue(
                                             getContext(),
                                             identity.balanceWithCurrency()._2(),
                                             identity.balanceWithCurrency()._1()
@@ -211,7 +211,7 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
         to = initialTo == null ? Collections.<Player>emptyList() :
                 Collections.singletonList(initialTo);
 
-        Comparator<Player> playerComparator = MonopolyGameActivity.playerComparator(getActivity());
+        Comparator<Player> playerComparator = BoardGameActivity.playerComparator(getActivity());
         identitiesSpinnerAdapter = new IdentitiesAdapter(
                 getActivity(),
                 android.R.layout.simple_spinner_item,
@@ -378,7 +378,7 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
         });
 
         textViewCurrency.setText(
-                MonopolyGameActivity.formatCurrency(
+                BoardGameActivity.formatCurrency(
                         getActivity(),
                         currency
                 )
@@ -448,12 +448,12 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
                 editTextValue.setError(
                         getString(
                                 R.string.transfer_value_error_invalid_format_string,
-                                MonopolyGameActivity.formatCurrencyValue(
+                                BoardGameActivity.formatCurrencyValue(
                                         getActivity(),
                                         currency,
                                         currentBalance
                                 ),
-                                MonopolyGameActivity.formatCurrencyValue(
+                                BoardGameActivity.formatCurrencyValue(
                                         getActivity(),
                                         currency,
                                         requiredBalance

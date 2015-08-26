@@ -7,9 +7,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.dhpcs.liquidity.MonopolyGame.IdentityWithBalance;
+import com.dhpcs.liquidity.BoardGame.IdentityWithBalance;
 import com.dhpcs.liquidity.R;
-import com.dhpcs.liquidity.activity.MonopolyGameActivity;
+import com.dhpcs.liquidity.activity.BoardGameActivity;
 import com.dhpcs.liquidity.models.MemberId;
 import com.dhpcs.liquidity.models.ZoneId;
 import com.dhpcs.liquidity.view.Identicon;
@@ -42,8 +42,8 @@ public class IdentityFragment extends Fragment {
         assert identity != null;
         ZoneId zoneId = identity.zoneId();
         MemberId memberId = identity.member().id();
-        String name = MonopolyGameActivity.formatNullable(getActivity(), identity.member().name());
-        String balance = MonopolyGameActivity.formatCurrencyValue(
+        String name = BoardGameActivity.formatNullable(getActivity(), identity.member().name());
+        String balance = BoardGameActivity.formatCurrencyValue(
                 getActivity(),
                 identity.balanceWithCurrency()._2(),
                 identity.balanceWithCurrency()._1()

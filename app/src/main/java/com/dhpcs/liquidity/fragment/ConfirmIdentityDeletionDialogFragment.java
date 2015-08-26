@@ -7,9 +7,9 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 
-import com.dhpcs.liquidity.MonopolyGame.Identity;
+import com.dhpcs.liquidity.BoardGame.Identity;
 import com.dhpcs.liquidity.R;
-import com.dhpcs.liquidity.activity.MonopolyGameActivity;
+import com.dhpcs.liquidity.activity.BoardGameActivity;
 
 public class ConfirmIdentityDeletionDialogFragment extends DialogFragment {
 
@@ -48,7 +48,7 @@ public class ConfirmIdentityDeletionDialogFragment extends DialogFragment {
                 .setTitle(
                         getString(
                                 R.string.delete_identity_title_format_string,
-                                MonopolyGameActivity.formatNullable(
+                                BoardGameActivity.formatNullable(
                                         getActivity(),
                                         identity.member().name()
                                 )
@@ -57,7 +57,7 @@ public class ConfirmIdentityDeletionDialogFragment extends DialogFragment {
                 .setMessage(
                         getString(
                                 R.string.delete_identity_message_format_string,
-                                MonopolyGameActivity.formatNullable(
+                                BoardGameActivity.formatNullable(
                                         getActivity(),
                                         identity.member().name()
                                 )

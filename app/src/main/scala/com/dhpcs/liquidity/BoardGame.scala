@@ -3,7 +3,7 @@ package com.dhpcs.liquidity
 import java.util.Currency
 
 import android.content.{ContentUris, ContentValues, Context}
-import com.dhpcs.liquidity.MonopolyGame.{State, _}
+import com.dhpcs.liquidity.BoardGame.{State, _}
 import com.dhpcs.liquidity.ServerConnection._
 import com.dhpcs.liquidity.models._
 import com.dhpcs.liquidity.provider.LiquidityContract
@@ -15,7 +15,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.Try
 
-object MonopolyGame {
+object BoardGame {
 
   sealed trait JoinState
 
@@ -143,7 +143,7 @@ object MonopolyGame {
   private val CurrencyCodeKey = "currency"
   private val HiddenFlagKey = "hidden"
 
-  private var instances = Map.empty[ZoneId, MonopolyGame]
+  private var instances = Map.empty[ZoneId, BoardGame]
 
   private def currencyFromMetadata(metadata: Option[JsObject]) =
     metadata.flatMap(
@@ -256,12 +256,12 @@ object MonopolyGame {
 
 }
 
-class MonopolyGame private(context: Context,
-                           serverConnection: ServerConnection,
-                           currency: Option[Currency],
-                           gameName: Option[String],
-                           private var zoneId: Option[ZoneId],
-                           private var gameId: Option[Future[Long]])
+class BoardGame private(context: Context,
+                        serverConnection: ServerConnection,
+                        currency: Option[Currency],
+                        gameName: Option[String],
+                        private var zoneId: Option[ZoneId],
+                        private var gameId: Option[Future[Long]])
   extends ServerConnection.ConnectionStateListener
   with ServerConnection.NotificationReceiptListener {
 
@@ -280,7 +280,7 @@ class MonopolyGame private(context: Context,
 
   private var state: State = _
 
-  private var _joinState: JoinState = MonopolyGame.UNAVAILABLE
+  private var _joinState: JoinState = BoardGame.UNAVAILABLE
 
   private var joinStateListeners = Set.empty[JoinStateListener]
   private var joinRequestTokens = Set.empty[JoinRequestToken]
@@ -346,7 +346,7 @@ class MonopolyGame private(context: Context,
 
           val createZoneResponse = resultResponse.asInstanceOf[CreateZoneResponse]
 
-          instances = instances + (createZoneResponse.zoneId -> MonopolyGame.this)
+          instances = instances + (createZoneResponse.zoneId -> BoardGame.this)
 
           zoneId = Some(createZoneResponse.zoneId)
 
@@ -508,13 +508,13 @@ class MonopolyGame private(context: Context,
           partiallyCreatedIdentityIds.foreach(createAccount)
 
           /*
-           * Since we must only prompt for a required identity if none exist yet and since
-           * having one or more partially created identities implies that gameId would be set,
-           * we can proceed here without checking that partiallyCreatedIdentityIds is non empty.
+           * Since we must only prompt for a required identity if none exist yet and since having
+           * one or more partially created identities implies that gameId would be set, we can
+           * proceed here without checking that partiallyCreatedIdentityIds is non empty.
            *
-           * The second condition isn't usually of significance but exists to prevent
-           * incorrectly prompting for an identity if a user rejoins a game by scanning its
-           * code again rather than by clicking its list item.
+           * The second condition isn't usually of significance but exists to prevent incorrectly
+           * prompting for an identity if a user rejoins a game by scanning its code again rather
+           * than by clicking its list item.
            */
           if (gameId.isEmpty && !(identities ++ hiddenIdentities).values.exists(
             _.account.id != joinZoneResponse.zone.equityAccountId
@@ -546,17 +546,17 @@ class MonopolyGame private(context: Context,
           }
 
           /*
-           * We don't set gameId until now as it also indicates above whether we've prompted
-           * for the required identity - which we must do at most once.
+           * We don't set gameId until now as it also indicates above whether we've prompted for
+           * the required identity - which we must do at most once.
            */
           gameId = gameId.fold(
             Some(Future(
 
               /*
-               * This is in case a user rejoins a game by scanning its code again rather than
-               * by clicking its list item - in such cases we mustn't attempt to insert an
-               * entry as that would silently fail (as it happens on the Future's worker
-               * thread), but we may need to update the existing entries name.
+               * This is in case a user rejoins a game by scanning its code again rather than by
+               * clicking its list item - in such cases we mustn't attempt to insert an entry as
+               * that would silently fail (as it happens on the Future's worker thread), but we may
+               * need to update the existing entries name.
                */
               checkAndUpdateGameName(joinZoneResponse.zone.name.orNull).getOrElse {
                 val contentValues = new ContentValues
@@ -985,15 +985,15 @@ class MonopolyGame private(context: Context,
 
       case ServerConnection.UNAVAILABLE =>
         state = null
-        _joinState = MonopolyGame.UNAVAILABLE
+        _joinState = BoardGame.UNAVAILABLE
 
       case ServerConnection.AVAILABLE =>
         state = null
-        _joinState = MonopolyGame.AVAILABLE
+        _joinState = BoardGame.AVAILABLE
 
       case ServerConnection.CONNECTING =>
         state = null
-        _joinState = MonopolyGame.CONNECTING
+        _joinState = BoardGame.CONNECTING
 
       case ServerConnection.CONNECTED =>
         state = null
@@ -1002,7 +1002,7 @@ class MonopolyGame private(context: Context,
 
       case ServerConnection.DISCONNECTING =>
         state = null
-        _joinState = MonopolyGame.DISCONNECTING
+        _joinState = BoardGame.DISCONNECTING
 
     }
     joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
@@ -1025,7 +1025,7 @@ class MonopolyGame private(context: Context,
         serverConnection.registerListener(this: NotificationReceiptListener)
       }
       gameActionListeners = gameActionListeners + listener
-      if (_joinState == MonopolyGame.JOINED) {
+      if (_joinState == BoardGame.JOINED) {
         listener.onGameNameChanged(state.zone.name)
         listener.onIdentitiesUpdated(state.identities)
         listener.onPlayersInitialized(state.players.values)
@@ -1038,7 +1038,7 @@ class MonopolyGame private(context: Context,
   def requestJoin(token: JoinRequestToken, retry: Boolean) = {
     zoneId.foreach(zoneId =>
       if (!instances.contains(zoneId)) {
-        instances = instances + (zoneId -> MonopolyGame.this)
+        instances = instances + (zoneId -> BoardGame.this)
       }
     )
     if (joinStateListeners.isEmpty && gameActionListeners.isEmpty && joinRequestTokens.isEmpty) {
@@ -1048,7 +1048,7 @@ class MonopolyGame private(context: Context,
     if (!joinRequestTokens.contains(token)) {
       joinRequestTokens = joinRequestTokens + token
     }
-    if (_joinState == MonopolyGame.AVAILABLE) {
+    if (_joinState == BoardGame.AVAILABLE) {
 
       serverConnection.requestConnection(connectionRequestToken, retry)
 
@@ -1143,11 +1143,11 @@ class MonopolyGame private(context: Context,
           }
         )
 
-        if (_joinState == MonopolyGame.CONNECTING || _joinState == MonopolyGame.JOINING) {
+        if (_joinState == BoardGame.CONNECTING || _joinState == BoardGame.JOINING) {
 
           serverConnection.unrequestConnection(connectionRequestToken)
 
-        } else if (_joinState == MonopolyGame.JOINED) {
+        } else if (_joinState == BoardGame.JOINED) {
 
           serverConnection.sendCommand(
             QuitZoneCommand(

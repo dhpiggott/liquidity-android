@@ -8,9 +8,9 @@ import android.view.ViewGroup;
 import android.widget.TextSwitcher;
 import android.widget.TextView;
 
-import com.dhpcs.liquidity.MonopolyGame.TransferWithCurrency;
+import com.dhpcs.liquidity.BoardGame.TransferWithCurrency;
 import com.dhpcs.liquidity.R;
-import com.dhpcs.liquidity.activity.MonopolyGameActivity;
+import com.dhpcs.liquidity.activity.BoardGameActivity;
 
 import java.text.DateFormat;
 
@@ -77,13 +77,13 @@ public class LastTransferFragment extends Fragment {
     private void showTransfer(TransferWithCurrency transfer, boolean animate) {
         String summary = getString(
                 R.string.transfer_summary_format_string,
-                MonopolyGameActivity.formatMemberOrAccount(getActivity(), lastTransfer.from()),
-                MonopolyGameActivity.formatCurrencyValue(
+                BoardGameActivity.formatMemberOrAccount(getActivity(), lastTransfer.from()),
+                BoardGameActivity.formatCurrencyValue(
                         getActivity(),
                         transfer.currency(),
                         transfer.transaction().value()
                 ),
-                MonopolyGameActivity.formatMemberOrAccount(getActivity(), lastTransfer.to())
+                BoardGameActivity.formatMemberOrAccount(getActivity(), lastTransfer.to())
         );
         String created = timeFormat.format(transfer.transaction().created());
 

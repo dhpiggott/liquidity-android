@@ -12,10 +12,10 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-import com.dhpcs.liquidity.MonopolyGame.Identity;
-import com.dhpcs.liquidity.MonopolyGame.IdentityWithBalance;
+import com.dhpcs.liquidity.BoardGame.Identity;
+import com.dhpcs.liquidity.BoardGame.IdentityWithBalance;
 import com.dhpcs.liquidity.R;
-import com.dhpcs.liquidity.activity.MonopolyGameActivity;
+import com.dhpcs.liquidity.activity.BoardGameActivity;
 import com.dhpcs.liquidity.models.MemberId;
 import com.dhpcs.liquidity.models.ZoneId;
 import com.dhpcs.liquidity.view.Identicon;
@@ -54,11 +54,11 @@ public class RestoreIdentityDialogFragment extends DialogFragment {
 
             ZoneId zoneId = identity.zoneId();
             MemberId memberId = identity.member().id();
-            String name = MonopolyGameActivity.formatNullable(
+            String name = BoardGameActivity.formatNullable(
                     getContext(),
                     identity.member().name()
             );
-            String balance = MonopolyGameActivity.formatCurrencyValue(
+            String balance = BoardGameActivity.formatCurrencyValue(
                     getContext(),
                     identity.balanceWithCurrency()._2(),
                     identity.balanceWithCurrency()._1()
@@ -110,7 +110,7 @@ public class RestoreIdentityDialogFragment extends DialogFragment {
                 (ArrayList<IdentityWithBalance>) getArguments().getSerializable(ARG_IDENTITIES);
         assert identities != null;
         identitiesAdapter.addAll(identities);
-        identitiesAdapter.sort(MonopolyGameActivity.playerComparator(getActivity()));
+        identitiesAdapter.sort(BoardGameActivity.playerComparator(getActivity()));
         return new AlertDialog.Builder(getActivity())
                 .setTitle(R.string.choose_identity_to_restore)
                 .setAdapter(identitiesAdapter, new DialogInterface.OnClickListener() {

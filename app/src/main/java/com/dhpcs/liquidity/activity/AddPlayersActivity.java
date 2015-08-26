@@ -14,7 +14,7 @@ import net.glxn.qrgen.android.QRCode;
 
 import scala.Option;
 
-public class AddPlayersActivity extends MonopolyGameChildActivity {
+public class AddPlayersActivity extends BoardGameChildActivity {
 
     public static final String EXTRA_GAME_NAME = "game_name";
 
@@ -39,7 +39,7 @@ public class AddPlayersActivity extends MonopolyGameChildActivity {
         ((TextView) findViewById(R.id.textview_game_name)).setText(
                 getString(
                         R.string.add_players_game_name_format_string,
-                        MonopolyGameActivity.formatNullable(this, gameName)
+                        BoardGameActivity.formatNullable(this, gameName)
                 )
         );
         final ImageView imageViewQrCode = (ImageView) findViewById(R.id.imageview_qr_code);

@@ -11,11 +11,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.dhpcs.liquidity.MonopolyGame.Identity;
-import com.dhpcs.liquidity.MonopolyGame.IdentityWithBalance;
-import com.dhpcs.liquidity.MonopolyGame.Player;
+import com.dhpcs.liquidity.BoardGame.Identity;
+import com.dhpcs.liquidity.BoardGame.IdentityWithBalance;
+import com.dhpcs.liquidity.BoardGame.Player;
 import com.dhpcs.liquidity.R;
-import com.dhpcs.liquidity.activity.MonopolyGameActivity;
+import com.dhpcs.liquidity.activity.BoardGameActivity;
 import com.dhpcs.liquidity.models.MemberId;
 
 import java.util.ArrayList;
@@ -189,7 +189,7 @@ public class IdentitiesFragment extends Fragment {
             identitiesFragmentStatePagerAdapter.add(iterator.next());
         }
         identitiesFragmentStatePagerAdapter.sort(
-                MonopolyGameActivity.playerComparator(getActivity())
+                BoardGameActivity.playerComparator(getActivity())
         );
         identitiesFragmentStatePagerAdapter.notifyDataSetChanged();
         textViewEmpty.setVisibility(

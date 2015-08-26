@@ -3,18 +3,18 @@ package com.dhpcs.liquidity.activity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
-import com.dhpcs.liquidity.MonopolyGame;
+import com.dhpcs.liquidity.BoardGame;
 import com.dhpcs.liquidity.models.ZoneId;
 
-public class MonopolyGameChildActivity extends AppCompatActivity
-        implements MonopolyGame.JoinStateListener {
+public class BoardGameChildActivity extends AppCompatActivity
+        implements BoardGame.JoinStateListener {
 
     public static final String EXTRA_ZONE_ID_HOLDER = "zone_id_holder";
     public static final String EXTRA_ZONE_ID = "zone_id";
 
-    private MonopolyGame.JoinRequestToken joinRequestToken;
+    private BoardGame.JoinRequestToken joinRequestToken;
 
-    private MonopolyGame monopolyGame;
+    private BoardGame boardGame;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,27 +24,28 @@ public class MonopolyGameChildActivity extends AppCompatActivity
                 .getBundleExtra(EXTRA_ZONE_ID_HOLDER)
                 .getSerializable(EXTRA_ZONE_ID);
 
-        joinRequestToken = (MonopolyGame.JoinRequestToken) getLastCustomNonConfigurationInstance();
+        joinRequestToken = (BoardGame.JoinRequestToken) getLastCustomNonConfigurationInstance();
 
         if (joinRequestToken == null) {
-            joinRequestToken = new MonopolyGame.JoinRequestToken() {
-            };
+
+            joinRequestToken = new BoardGame.JoinRequestToken();
+
         }
 
-        monopolyGame = MonopolyGame.getInstance(zoneId);
+        boardGame = BoardGame.getInstance(zoneId);
 
-        monopolyGame.registerListener(this);
+        boardGame.registerListener(this);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        monopolyGame.unregisterListener(this);
+        boardGame.unregisterListener(this);
     }
 
     @Override
-    public void onJoinStateChanged(MonopolyGame.JoinState joinState) {
-        if (joinState != MonopolyGame.JOINED$.MODULE$) {
+    public void onJoinStateChanged(BoardGame.JoinState joinState) {
+        if (joinState != BoardGame.JOINED$.MODULE$) {
             finish();
         }
     }
@@ -52,10 +53,10 @@ public class MonopolyGameChildActivity extends AppCompatActivity
     @Override
     protected void onPause() {
         super.onPause();
-        monopolyGame.unregisterListener(this);
+        boardGame.unregisterListener(this);
         if (!isChangingConfigurations()) {
             if (!isFinishing()) {
-                monopolyGame.unrequestJoin(joinRequestToken);
+                boardGame.unrequestJoin(joinRequestToken);
             }
         }
     }
@@ -63,12 +64,12 @@ public class MonopolyGameChildActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
-        monopolyGame.requestJoin(joinRequestToken, false);
-        monopolyGame.registerListener(this);
+        boardGame.requestJoin(joinRequestToken, false);
+        boardGame.registerListener(this);
     }
 
     @Override
-    public MonopolyGame.JoinRequestToken onRetainCustomNonConfigurationInstance() {
+    public BoardGame.JoinRequestToken onRetainCustomNonConfigurationInstance() {
         return joinRequestToken;
     }
 
@@ -77,7 +78,7 @@ public class MonopolyGameChildActivity extends AppCompatActivity
         super.onStop();
         if (!isChangingConfigurations()) {
             if (isFinishing()) {
-                monopolyGame.unrequestJoin(joinRequestToken);
+                boardGame.unrequestJoin(joinRequestToken);
             }
         }
     }

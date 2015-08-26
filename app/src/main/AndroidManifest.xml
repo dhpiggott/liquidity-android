@@ -20,11 +20,11 @@
             android:name=".activity.AddPlayersActivity"
             android:label="@string/activity_add_players_title"
             android:launchMode="standard"
-            android:parentActivityName=".activity.MonopolyGameActivity"
+            android:parentActivityName=".activity.BoardGameActivity"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.dhpcs.liquidity.activity.MonopolyGameActivity" />
+                android:value=".activity.BoardGameActivity" />
         </activity>
         <activity
             android:name=".activity.GamesActivity"
@@ -47,8 +47,8 @@
                 android:value="com.dhpcs.liquidity.activity.GamesActivity" />
         </activity>
         <activity
-            android:name=".activity.MonopolyGameActivity"
-            android:label="@string/activity_monopoly_game_title"
+            android:name=".activity.BoardGameActivity"
+            android:label="@string/activity_board_game_title"
             android:launchMode="singleTop"
             android:parentActivityName=".activity.GamesActivity"
             tools:ignore="UnusedAttribute">
@@ -60,21 +60,21 @@
             android:name=".activity.ReceiveIdentityActivity"
             android:label="@string/activity_receive_identity_title"
             android:launchMode="standard"
-            android:parentActivityName=".activity.MonopolyGameActivity"
+            android:parentActivityName=".activity.BoardGameActivity"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.dhpcs.liquidity.activity.MonopolyGameActivity" />
+                android:value=".activity.BoardGameActivity" />
         </activity>
         <activity
             android:name=".activity.TransferIdentityActivity"
             android:label="@string/activity_transfer_identity_title"
             android:launchMode="standard"
-            android:parentActivityName=".activity.MonopolyGameActivity"
+            android:parentActivityName=".activity.BoardGameActivity"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.dhpcs.liquidity.activity.MonopolyGameActivity" />
+                android:value=".activity.BoardGameActivity" />
         </activity>
 
         <provider

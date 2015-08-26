@@ -17,11 +17,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.dhpcs.liquidity.MonopolyGame.Identity;
-import com.dhpcs.liquidity.MonopolyGame.Player;
-import com.dhpcs.liquidity.MonopolyGame.PlayerWithBalanceAndConnectionState;
+import com.dhpcs.liquidity.BoardGame.Identity;
+import com.dhpcs.liquidity.BoardGame.Player;
+import com.dhpcs.liquidity.BoardGame.PlayerWithBalanceAndConnectionState;
 import com.dhpcs.liquidity.R;
-import com.dhpcs.liquidity.activity.MonopolyGameActivity;
+import com.dhpcs.liquidity.activity.BoardGameActivity;
 import com.dhpcs.liquidity.models.MemberId;
 import com.dhpcs.liquidity.models.ZoneId;
 import com.dhpcs.liquidity.view.Identicon;
@@ -67,8 +67,8 @@ public class PlayersFragment extends Fragment {
 
                 ZoneId zoneId = player.zoneId();
                 MemberId memberId = player.member().id();
-                String name = MonopolyGameActivity.formatNullable(context, player.member().name());
-                String balance = MonopolyGameActivity.formatCurrencyValue(
+                String name = BoardGameActivity.formatNullable(context, player.member().name());
+                String balance = BoardGameActivity.formatCurrencyValue(
                         context,
                         player.balanceWithCurrency()._2(),
                         player.balanceWithCurrency()._1()
@@ -101,7 +101,7 @@ public class PlayersFragment extends Fragment {
                     new SortedListAdapterCallback<PlayerWithBalanceAndConnectionState>(this) {
 
                         private final Comparator<Player> playerComparator =
-                                MonopolyGameActivity.playerComparator(context);
+                                BoardGameActivity.playerComparator(context);
 
                         @Override
                         public int compare(PlayerWithBalanceAndConnectionState o1,

@@ -15,7 +15,7 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import com.dhpcs.liquidity.R;
-import com.dhpcs.liquidity.activity.MonopolyGameActivity;
+import com.dhpcs.liquidity.activity.BoardGameActivity;
 
 public class CreateIdentityDialogFragment extends DialogFragment {
 
@@ -86,7 +86,7 @@ public class CreateIdentityDialogFragment extends DialogFragment {
                 Button buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
                 if (buttonPositive != null) {
                     buttonPositive.setEnabled(
-                            MonopolyGameActivity.isIdentityNameValid(getActivity(), s)
+                            BoardGameActivity.isIdentityNameValid(getActivity(), s)
                     );
                 }
             }
@@ -98,7 +98,7 @@ public class CreateIdentityDialogFragment extends DialogFragment {
             @Override
             public void onShow(DialogInterface dialog) {
                 alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(
-                        MonopolyGameActivity.isIdentityNameValid(
+                        BoardGameActivity.isIdentityNameValid(
                                 getActivity(),
                                 editTextIdentityName.getText()
                         )
