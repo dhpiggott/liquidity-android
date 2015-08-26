@@ -1,6 +1,7 @@
 package com.dhpcs.liquidity
 
 import java.io.IOException
+import java.security.Security
 import javax.net.ssl.SSLContext
 
 import android.content.{BroadcastReceiver, Context, Intent, IntentFilter}
@@ -9,12 +10,11 @@ import android.os.{Handler, HandlerThread, Looper}
 import com.dhpcs.jsonrpc._
 import com.dhpcs.liquidity.ServerConnection._
 import com.dhpcs.liquidity.models._
-import com.google.android.gms.common.{GooglePlayServicesNotAvailableException, GooglePlayServicesRepairableException, GooglePlayServicesUtil}
-import com.google.android.gms.security.ProviderInstaller
 import com.squareup.okhttp.OkHttpClient
 import com.squareup.okhttp.ws.{WebSocket, WebSocketCall, WebSocketListener}
 import okio.{Buffer, BufferedSource}
 import org.slf4j.LoggerFactory
+import org.spongycastle.jce.provider.BouncyCastleProvider
 import play.api.libs.json.Json
 
 import scala.util.{Failure, Right, Success, Try}
@@ -22,6 +22,8 @@ import scala.util.{Failure, Right, Success, Try}
 object ServerConnection {
 
   PRNGFixes.apply()
+
+  Security.insertProviderAt(new BouncyCastleProvider, 1)
 
   sealed trait ConnectionState
 
@@ -148,17 +150,6 @@ class ServerConnection private(context: Context) extends WebSocketListener {
   private var connectRequestTokens = Set.empty[ConnectionRequestToken]
 
   private var notificationReceiptListeners = Set.empty[NotificationReceiptListener]
-
-  Try(ProviderInstaller.installIfNeeded(context)) match {
-
-    case Failure(e: GooglePlayServicesRepairableException) =>
-      GooglePlayServicesUtil.showErrorNotification(e.getConnectionStatusCode, context)
-
-    case Failure(e: GooglePlayServicesNotAvailableException) =>
-
-    case _ =>
-
-  }
 
   handleConnectivityStateChange()
 

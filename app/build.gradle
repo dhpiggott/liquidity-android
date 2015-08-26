@@ -29,7 +29,9 @@ android {
         exclude 'META-INF/NOTICE.txt'
     }
 
-    lintOptions.disable 'InvalidPackage'
+    lintOptions{
+        disable 'InvalidPackage'
+    }
 }
 
 dependencies {
@@ -43,8 +45,6 @@ dependencies {
     compile 'org.slf4j:slf4j-api:1.7.12'
     compile 'com.github.tony19:logback-android-core:1.1.1-4'
     compile 'com.github.tony19:logback-android-classic:1.1.1-4'
-
-    compile 'com.google.android.gms:play-services-base:7.5.0'
 
     compile 'com.madgag.spongycastle:pkix:1.52.0.0'
     compile 'com.squareup.okhttp:okhttp:2.4.0'
