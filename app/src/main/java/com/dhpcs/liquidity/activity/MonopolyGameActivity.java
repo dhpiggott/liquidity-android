@@ -273,7 +273,7 @@ public class MonopolyGameActivity extends AppCompatActivity
                                 this,
                                 getString(
                                         R.string.transfer_identity_invalid_code_format_string,
-                                        monopolyGame.getGameName()
+                                        formatNullable(this, monopolyGame.getGameName())
                                 ),
                                 Toast.LENGTH_LONG
                         ).show();
