@@ -82,7 +82,7 @@ object ClientKey {
         keyStore.setKeyEntry(
           EntryAlias,
           privateKey,
-          null,
+          Array.emptyCharArray,
           Array[Certificate](certificate)
         )
         val keyStoreFileOutputStream = new FileOutputStream(keyStoreFile)
@@ -107,7 +107,7 @@ object ClientKey {
     if (publicKey == null) {
       val keyStore = getOrLoadOrCreateKeyStore(context)
       publicKey = PublicKey(
-        keyStore.getCertificateChain(ClientKey.EntryAlias)(0).getPublicKey.getEncoded
+        keyStore.getCertificate(ClientKey.EntryAlias).getPublicKey.getEncoded
       )
     }
     publicKey

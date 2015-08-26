@@ -1,31 +1,16 @@
 package com.dhpcs.liquidity
 
-import java.io.InputStreamReader
-import java.security.PublicKey
 import java.security.cert.{CertificateException, X509Certificate}
-import javax.net.ssl.{HostnameVerifier, SSLPeerUnverifiedException, SSLSession, TrustManager, X509TrustManager}
+import java.security.{KeyStore, PublicKey}
+import javax.net.ssl.{TrustManager, X509TrustManager}
 
 import android.content.Context
 import android.util.Base64
-import org.spongycastle.asn1.x509.SubjectPublicKeyInfo
-import org.spongycastle.openssl.PEMParser
-import org.spongycastle.openssl.jcajce.JcaPEMKeyConverter
 
 object ServerTrust {
 
-  private val HostnameVerifier = new HostnameVerifier() {
-
-    override def verify(hostname: String, session: SSLSession) =
-      trustedKeys.get(hostname).fold(false)(expectedPublicKey =>
-        try {
-          val publicKey = session.getPeerCertificates()(0).getPublicKey
-          publicKey == expectedPublicKey
-        } catch {
-          case e: SSLPeerUnverifiedException => false
-        }
-      )
-
-  }
+  private val TrustStoreResources = Set(R.raw.liquidity_dhpcs_com)
+  private val EntryAlias = "identity"
 
   private val TrustManagers = Array[TrustManager](new X509TrustManager() {
 
@@ -40,7 +25,7 @@ object ServerTrust {
     @throws(classOf[CertificateException])
     private def checkTrusted(chain: Array[X509Certificate]) {
       val publicKey = chain(0).getPublicKey
-      if (!trustedKeys.values.exists(_ == publicKey)) {
+      if (!trustedKeys.contains(publicKey)) {
         throw new CertificateException(
           "Unknown public key: " + Base64.encodeToString(publicKey.getEncoded, Base64.DEFAULT)
         )
@@ -51,16 +36,7 @@ object ServerTrust {
 
   })
 
-  private val TrustedKeyResources = Map(
-    "liquidity.dhpcs.com" -> R.raw.liquidity_dhpcs_com
-  )
-
-  private var trustedKeys: Map[String, PublicKey] = _
-
-  def getHostnameVerifier(context: Context) = {
-    loadTrustedKeys(context)
-    HostnameVerifier
-  }
+  private var trustedKeys: Set[PublicKey] = _
 
   def getTrustManagers(context: Context) = {
     loadTrustedKeys(context)
@@ -69,18 +45,15 @@ object ServerTrust {
 
   private def loadTrustedKeys(context: Context) {
     if (trustedKeys == null) {
-      trustedKeys = TrustedKeyResources.map { case (hostname, resourceId) =>
-        val pemParser = new PEMParser(
-          new InputStreamReader(context.getResources.openRawResource(resourceId))
-        )
+      trustedKeys = TrustStoreResources.map { trustStoreResource =>
+        val keyStore = KeyStore.getInstance("BKS")
+        val keyStoreInputStream = context.getResources.openRawResource(trustStoreResource)
         try {
-          val publicKey = new JcaPEMKeyConverter().getPublicKey(
-            pemParser.readObject.asInstanceOf[SubjectPublicKeyInfo]
-          )
-          hostname -> publicKey
+          keyStore.load(keyStoreInputStream, Array.emptyCharArray)
         } finally {
-          pemParser.close()
+          keyStoreInputStream.close()
         }
+        keyStore.getCertificate(EntryAlias).getPublicKey
       }
     }
   }

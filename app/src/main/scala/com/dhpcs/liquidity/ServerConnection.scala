@@ -116,7 +116,6 @@ class ServerConnection private(context: Context) extends WebSocketListener {
 
   private lazy val client = new OkHttpClient()
     .setSslSocketFactory(getSslSocketFactory(context))
-    .setHostnameVerifier(ServerTrust.getHostnameVerifier(context))
 
   private val log = LoggerFactory.getLogger(getClass)
 
