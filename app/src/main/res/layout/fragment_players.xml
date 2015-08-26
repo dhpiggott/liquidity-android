@@ -7,7 +7,7 @@
 
     <TextView
         android:id="@+id/textview_empty"
-        style="@style/TextAppearance.AppCompat.Caption"
+        style="@style/TextAppearance.AppCompat.Body1"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
