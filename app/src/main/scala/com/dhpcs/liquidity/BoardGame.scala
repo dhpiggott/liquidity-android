@@ -25,6 +25,8 @@ object BoardGame {
 
   case object CONNECTING extends JoinState
 
+  case object RECONNECTING extends JoinState
+
   case object JOINING extends JoinState
 
   case object JOINED extends JoinState
@@ -993,7 +995,11 @@ class BoardGame private(context: Context,
 
       case ServerConnection.CONNECTING =>
         state = null
-        _joinState = BoardGame.CONNECTING
+        _joinState = if (!gameId.isDefined) {
+          BoardGame.CONNECTING
+        } else {
+          BoardGame.RECONNECTING
+        }
 
       case ServerConnection.CONNECTED =>
         state = null

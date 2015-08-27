@@ -579,6 +579,17 @@ public class BoardGameActivity extends AppCompatActivity
             textViewState.setVisibility(View.VISIBLE);
             textViewState.setText(R.string.join_state_connecting);
 
+        } else if (joinState == BoardGame.RECONNECTING$.MODULE$) {
+
+            closeDialogFragments();
+
+            slidingUpPanelLayout.setVisibility(View.GONE);
+            buttonReconnect.setVisibility(View.GONE);
+
+            progressBarState.setVisibility(View.VISIBLE);
+            textViewState.setVisibility(View.VISIBLE);
+            textViewState.setText(R.string.join_state_reconnecting);
+
         } else if (joinState == BoardGame.JOINING$.MODULE$) {
 
             closeDialogFragments();
