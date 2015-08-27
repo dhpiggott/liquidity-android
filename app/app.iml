@@ -115,8 +115,8 @@
     <orderEntry type="library" exported="" name="logback-android-core-1.1.1-4" level="project" />
     <orderEntry type="library" exported="" name="core-2.0" level="project" />
     <orderEntry type="library" exported="" name="config-1.2.1" level="project" />
-    <orderEntry type="library" exported="" name="pkix-1.52.0.0" level="project" />
     <orderEntry type="library" exported="" name="jackson-annotations-2.3.2" level="project" />
+    <orderEntry type="library" exported="" name="pkix-1.52.0.0" level="project" />
     <orderEntry type="library" exported="" name="core-3.2.0" level="project" />
     <orderEntry type="library" exported="" name="android-2.0" level="project" />
     <orderEntry type="library" exported="" name="prov-1.52.0.0" level="project" />

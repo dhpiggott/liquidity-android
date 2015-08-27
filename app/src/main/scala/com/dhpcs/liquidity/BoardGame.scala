@@ -1143,11 +1143,11 @@ class BoardGame private(context: Context,
           }
         )
 
-        if (_joinState == BoardGame.CONNECTING || _joinState == BoardGame.JOINING) {
+        if (_joinState != BoardGame.JOINING && _joinState != BoardGame.JOINED) {
 
           serverConnection.unrequestConnection(connectionRequestToken)
 
-        } else if (_joinState == BoardGame.JOINED) {
+        } else {
 
           serverConnection.sendCommand(
             QuitZoneCommand(

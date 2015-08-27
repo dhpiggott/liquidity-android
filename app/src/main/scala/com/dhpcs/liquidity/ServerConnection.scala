@@ -565,6 +565,7 @@ class ServerConnection private(context: Context) extends WebSocketListener {
 
         }
       }
+      failed = false
     }
 
 }
