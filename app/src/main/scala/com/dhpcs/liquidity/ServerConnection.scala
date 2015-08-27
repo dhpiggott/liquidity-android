@@ -124,16 +124,14 @@ class ServerConnection private(context: Context) extends WebSocketListener {
   private val connectionStateFilter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
   private val connectionStateReceiver = new BroadcastReceiver {
 
-    override def onReceive(context: Context, intent: Intent) {
-      intent.getAction match {
+    override def onReceive(context: Context, intent: Intent) = intent.getAction match {
 
-        case ConnectivityManager.CONNECTIVITY_ACTION =>
-          handleConnectivityStateChange()
+      case ConnectivityManager.CONNECTIVITY_ACTION =>
+        handleConnectivityStateChange()
 
-        case unmatched =>
-          sys.error(s"Received unexpected broadcast for action $unmatched")
+      case unmatched =>
+        sys.error(s"Received unexpected broadcast for action $unmatched")
 
-      }
     }
 
   }
