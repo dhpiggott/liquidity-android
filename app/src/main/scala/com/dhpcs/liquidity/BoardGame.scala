@@ -479,7 +479,7 @@ class BoardGame private(context: Context,
             transfers
           )
 
-          _joinState = JOINED
+          _joinState = BoardGame.JOINED
           joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
 
           gameActionListeners.foreach(_.onGameNameChanged(joinZoneResponse.zone.name))
@@ -574,7 +574,7 @@ class BoardGame private(context: Context,
 
       }
     )
-    _joinState = JOINING
+    _joinState = BoardGame.JOINING
     joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
   }
 
@@ -989,7 +989,7 @@ class BoardGame private(context: Context,
 
         state = null
         zoneId.fold(createAndThenJoinZone(currency.get, gameName.get))(join)
-        _joinState = JOINING
+        _joinState = BoardGame.JOINING
 
       case ServerConnection.DISCONNECTING =>
 
@@ -1135,7 +1135,8 @@ class BoardGame private(context: Context,
           }
         )
 
-        if (_joinState != BoardGame.JOINING && _joinState != BoardGame.JOINED) {
+        if ((_joinState != BoardGame.JOINING && _joinState != BoardGame.JOINED)
+          || zoneId.isEmpty) {
 
           serverConnection.unrequestConnection(connectionRequestToken)
 
@@ -1164,7 +1165,7 @@ class BoardGame private(context: Context,
             }
           )
 
-          _joinState = QUITTING
+          _joinState = BoardGame.QUITTING
           joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
 
         }
