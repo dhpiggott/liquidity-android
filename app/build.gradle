@@ -13,12 +13,19 @@ android {
         versionName "1.0"
         multiDexEnabled true
         testInstrumentationRunner "com.android.test.runner.MultiDexTestRunner"
+        resConfigs "en"
     }
 
     buildTypes {
-        release {
-            minifyEnabled false
+        debug {
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            shrinkResources true
+        }
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            shrinkResources true
         }
     }
 
@@ -47,7 +54,7 @@ dependencies {
     compile 'com.squareup.okhttp:okhttp-ws:2.5.0'
     compile 'commons-io:commons-io:2.4'
 
-    compile 'com.dhpcs:liquidity-common_2.11:0.31.0'
+    compile 'com.dhpcs:liquidity-common_2.11:0.32.0'
 
     compile 'com.android.support:design:22.2.0'
     compile 'com.android.support:appcompat-v7:22.2.1'
