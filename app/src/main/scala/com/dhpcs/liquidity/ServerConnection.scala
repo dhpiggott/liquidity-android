@@ -2,6 +2,7 @@ package com.dhpcs.liquidity
 
 import java.io.IOException
 import java.security.Security
+import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLContext
 
 import android.content.{BroadcastReceiver, Context, Intent, IntentFilter}
@@ -114,8 +115,13 @@ object ServerConnection {
 
 class ServerConnection private(context: Context) extends WebSocketListener {
 
-  private lazy val client = new OkHttpClient()
-    .setSslSocketFactory(getSslSocketFactory(context))
+  private lazy val client = {
+    val client = new OkHttpClient()
+      .setSslSocketFactory(getSslSocketFactory(context))
+    client.setReadTimeout(0, TimeUnit.SECONDS)
+    client.setWriteTimeout(0, TimeUnit.SECONDS)
+    client
+  }
 
   private val mainHandler = new Handler(Looper.getMainLooper)
 
