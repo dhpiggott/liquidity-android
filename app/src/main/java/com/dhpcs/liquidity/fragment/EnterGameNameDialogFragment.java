@@ -52,7 +52,7 @@ public class EnterGameNameDialogFragment extends DialogFragment {
                 null
         );
 
-        final String name = getArguments().getString(ARG_NAME);
+        String name = getArguments().getString(ARG_NAME);
 
         final EditText editTextGameName = (EditText) view.findViewById(R.id.edittext_game_name);
 

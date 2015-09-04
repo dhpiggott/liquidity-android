@@ -17,6 +17,16 @@
         tools:ignore="UnusedAttribute">
 
         <activity
+            android:name=".activity.AboutActivity"
+            android:label="@string/activity_about_title"
+            android:launchMode="standard"
+            android:parentActivityName=".activity.GamesActivity"
+            tools:ignore="UnusedAttribute">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activity.GamesActivity" />
+        </activity>
+        <activity
             android:name=".activity.AddPlayersActivity"
             android:label="@string/activity_add_players_title"
             android:launchMode="standard"
@@ -25,6 +35,16 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".activity.BoardGameActivity" />
+        </activity>
+        <activity
+            android:name=".activity.BoardGameActivity"
+            android:label="@string/activity_board_game_title"
+            android:launchMode="singleTop"
+            android:parentActivityName=".activity.GamesActivity"
+            tools:ignore="UnusedAttribute">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.dhpcs.liquidity.activity.GamesActivity" />
         </activity>
         <activity
             android:name=".activity.GamesActivity"
@@ -40,16 +60,6 @@
             android:name=".activity.JoinGameActivity"
             android:label="@string/activity_join_game_title"
             android:launchMode="standard"
-            android:parentActivityName=".activity.GamesActivity"
-            tools:ignore="UnusedAttribute">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.dhpcs.liquidity.activity.GamesActivity" />
-        </activity>
-        <activity
-            android:name=".activity.BoardGameActivity"
-            android:label="@string/activity_board_game_title"
-            android:launchMode="singleTop"
             android:parentActivityName=".activity.GamesActivity"
             tools:ignore="UnusedAttribute">
             <meta-data

@@ -9,6 +9,7 @@
 -dontwarn org.w3c.dom.bootstrap.DOMImplementationRegistry
 -dontwarn scala.reflect.internal.*
 -dontwarn sun.**
+-keep class android.support.design.widget.AppBarLayout** { *; }
 -keep class scala.collection.SeqLike {
     public protected *;
 }

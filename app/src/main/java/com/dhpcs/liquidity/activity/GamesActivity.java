@@ -125,6 +125,14 @@ public class GamesActivity extends AppCompatActivity implements CreateGameDialog
                         .setOrientationLocked(false)
                         .initiateScan();
                 return true;
+            case R.id.action_about:
+                startActivity(
+                        new Intent(
+                                GamesActivity.this,
+                                AboutActivity.class
+                        )
+                );
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }

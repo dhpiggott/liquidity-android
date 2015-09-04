@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<notices>
+    <!-- @formatter:off -->
+    <notice>
+        <name>The Scala Language libraries</name>
+        <url>http://www.scala-lang.org/</url>
+        <copyright>Copyright (c) 2002-2015 EPFL&#10;Copyright (c) 2011-2015 Typesafe, Inc.</copyright>
+        <license>BSD 3-Clause License</license>
+    </notice>
+    <notice>
+        <name>Spongy Castle</name>
+        <url>http://rtyley.github.io/spongycastle/</url>
+        <copyright>Copyright (c) 2000-2015 The Legion of the Bouncy Castle Inc. (http://www.bouncycastle.org)</copyright>
+        <license>MIT License</license>
+    </notice>
+    <notice>
+        <name>OkHttp</name>
+        <url>http://square.github.io/okhttp/</url>
+        <copyright>Copyright 2014 Square, Inc.</copyright>
+        <license>Apache Software License 2.0</license>
+    </notice>
+    <notice>
+        <name>The Play JSON library and its dependencies</name>
+        <url>https://www.playframework.com/</url>
+        <copyright>Copyright 2009-2015 Typesafe (http://www.typesafe.com).</copyright>
+        <license>Apache Software License 2.0</license>
+    </notice>
+    <notice>
+        <name>The Android Support libraries</name>
+        <url>http://developer.android.com/tools/support-library/index.html</url>
+        <copyright>Copyright (C) 2011-2015 The Android Open Source Project</copyright>
+        <license>Apache Software License 2.0</license>
+    </notice>
+    <notice>
+        <name>ZXing Android Embedded</name>
+        <url>https://github.com/journeyapps/zxing-android-embedded</url>
+        <license>Apache Software License 2.0</license>
+    </notice>
+    <notice>
+        <name>QRGen</name>
+        <url>https://github.com/kenglxn/QRGen</url>
+        <license>Apache Software License 2.0</license>
+    </notice>
+    <notice>
+        <name>Android Sliding Up Panel</name>
+        <url>https://github.com/umano/AndroidSlidingUpPanel</url>
+        <license>Apache Software License 2.0</license>
+    </notice>
+    <notice>
+        <name>LicensesDialog</name>
+        <url>http://psdev.de/LicensesDialog</url>
+        <copyright>Copyright 2013 Philip Schiffer</copyright>
+        <license>Apache Software License 2.0</license>
+    </notice>
+    <!-- @formatter:on -->
+</notices>

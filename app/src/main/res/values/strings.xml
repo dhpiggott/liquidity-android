@@ -3,6 +3,7 @@
 
     <string name="app_name">Liquidity</string>
 
+    <string name="activity_about_title">About Liquidity</string>
     <string name="activity_add_players_title">Add Players</string>
     <string name="activity_games_title">Liquidity</string>
     <string name="activity_join_game_title">Join Game</string>
@@ -10,6 +11,10 @@
     <string name="activity_receive_identity_title">Receive Identity</string>
     <string name="activity_transfer_identity_title">Transfer Identity</string>
 
+    <string name="about">About</string>
+    <string name="acknowledgement_copyright_and_license_format_string">%1$s\n\n%2$s</string>
+    <string name="acknowledgements_content">Liquidity is built around the following open source libraries. Big thanks go to these giants whose shoulders we stand on:</string>
+    <string name="acknowledgements_title">Acknowledgements &amp; Licences</string>
     <string name="add_players">Add players</string>
     <string name="add_players_game_name_format_string">Show the QR code to the joining players to admit them to %1$s.</string>
     <string name="all">All</string>
@@ -68,6 +73,8 @@
     <string name="reconnect">Reconnect</string>
     <string name="restore_identity">Restore identity</string>
     <string name="restore_identity_error_format_string">Couldn\'t restore identity \"%1$s\"!</string>
+    <string name="terminology_content"><i>Identities</i> are accounts that you control. In-game, they\'re displayed on the blue-grey area. If you have multiple identities you can switch between them by swiping the current identity left/right.\n\nGenerally the creator of a game will have two identities (one representing the bank, and one representing his/herself) and everyone else will have one identity. However, identities can be created at any point as required (or deleted, or transferred between devices). This allows one phone to represent multiple players in the case where not everyone has a suitable phone.\n\nOther players\' accounts are shown in the white area below your currently selected identity.\n\nA <i>transfer</i> is a payment from one account to another. The simplest way to make a transfer is to tap the name of the intended recipient in the players list. It\'s also possible to make a single payment to multiple recipients by clicking the \"Group transfer\" option in the menu.\n\nThe money supply is limitless. This means the bank starts with a balance of zero and it can always make payments.</string>
+    <string name="terminology_title">Terminology</string>
     <string name="transfers">Transfers</string>
     <string name="transfer_amount">Amount</string>
     <string name="transfer_from">From</string>
