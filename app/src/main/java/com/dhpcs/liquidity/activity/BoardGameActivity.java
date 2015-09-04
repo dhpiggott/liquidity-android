@@ -296,6 +296,30 @@ public class BoardGameActivity extends AppCompatActivity
     }
 
     @Override
+    public void onChangeGameNameError(Option<String> name) {
+        Toast.makeText(
+                this,
+                getString(
+                        R.string.change_game_name_error_format_string,
+                        formatNullable(this, name)
+                ),
+                Toast.LENGTH_LONG
+        ).show();
+    }
+
+    @Override
+    public void onChangeIdentityNameError(Option<String> name) {
+        Toast.makeText(
+                this,
+                getString(
+                        R.string.change_identity_name_error_format_string,
+                        formatNullable(this, name)
+                ),
+                Toast.LENGTH_LONG
+        ).show();
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -437,13 +461,52 @@ public class BoardGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onCreateError() {
+    public void onCreateGameError(Option<String> name) {
         Toast.makeText(
                 this,
-                R.string.create_game_error,
+                getString(
+                        R.string.create_game_error_format_string,
+                        formatNullable(this, name)
+                ),
                 Toast.LENGTH_LONG
         ).show();
         finish();
+    }
+
+    @Override
+    public void onCreateIdentityAccountError(Option<String> name) {
+        Toast.makeText(
+                this,
+                getString(
+                        R.string.create_identity_account_error_format_string,
+                        formatNullable(this, name)
+                ),
+                Toast.LENGTH_LONG
+        ).show();
+    }
+
+    @Override
+    public void onCreateIdentityMemberError(Option<String> name) {
+        Toast.makeText(
+                this,
+                getString(
+                        R.string.create_identity_member_error_format_string,
+                        formatNullable(this, name)
+                ),
+                Toast.LENGTH_LONG
+        ).show();
+    }
+
+    @Override
+    public void onDeleteIdentityError(Option<String> name) {
+        Toast.makeText(
+                this,
+                getString(
+                        R.string.delete_identity_error_format_string,
+                        formatNullable(this, name)
+                ),
+                Toast.LENGTH_LONG
+        ).show();
     }
 
     @Override
@@ -466,7 +529,7 @@ public class BoardGameActivity extends AppCompatActivity
 
     @Override
     public void onGameNameEntered(String name) {
-        boardGame.setGameName(name);
+        boardGame.changeGameName(name);
     }
 
     @Override
@@ -501,7 +564,7 @@ public class BoardGameActivity extends AppCompatActivity
 
     @Override
     public void onIdentityNameEntered(Identity identity, String name) {
-        boardGame.setIdentityName(identity, name);
+        boardGame.changeIdentityName(identity, name);
     }
 
     @Override
@@ -535,7 +598,7 @@ public class BoardGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onJoinError() {
+    public void onJoinGameError() {
         Toast.makeText(
                 this,
                 R.string.join_game_error,
@@ -850,6 +913,28 @@ public class BoardGameActivity extends AppCompatActivity
     }
 
     @Override
+    public void onQuitGameError() {
+        Toast.makeText(
+                this,
+                R.string.join_game_error,
+                Toast.LENGTH_LONG
+        ).show();
+        finish();
+    }
+
+    @Override
+    public void onRestoreIdentityError(Option<String> name) {
+        Toast.makeText(
+                this,
+                getString(
+                        R.string.restore_identity_error_format_string,
+                        formatNullable(this, name)
+                ),
+                Toast.LENGTH_LONG
+        ).show();
+    }
+
+    @Override
     public void onPlayerClicked(Player player) {
         IdentityWithBalance identity = identitiesFragment.getIdentity(
                 identitiesFragment.getSelectedPage()
@@ -937,6 +1022,30 @@ public class BoardGameActivity extends AppCompatActivity
     public void onTransferAdded(TransferWithCurrency addedTransfer) {
         lastTransferFragment.onTransferAdded(addedTransfer);
         playersTransfersFragment.onTransferAdded(addedTransfer);
+    }
+
+    @Override
+    public void onTransferIdentityError(Option<String> name) {
+        Toast.makeText(
+                this,
+                getString(
+                        R.string.transfer_identity_error_format_string,
+                        formatNullable(this, name)
+                ),
+                Toast.LENGTH_LONG
+        ).show();
+    }
+
+    @Override
+    public void onTransferToPlayerError(Option<String> name) {
+        Toast.makeText(
+                this,
+                getString(
+                        R.string.transfer_to_player_error_format_string,
+                        formatNullable(this, name)
+                ),
+                Toast.LENGTH_LONG
+        ).show();
     }
 
     @Override

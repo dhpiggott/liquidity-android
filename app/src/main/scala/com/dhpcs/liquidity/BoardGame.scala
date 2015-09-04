@@ -91,7 +91,17 @@ object BoardGame {
 
   trait GameActionListener {
 
-    def onCreateError()
+    def onChangeGameNameError(name: Option[String])
+
+    def onChangeIdentityNameError(name: Option[String])
+
+    def onCreateIdentityAccountError(name: Option[String])
+
+    def onCreateIdentityMemberError(name: Option[String])
+
+    def onCreateGameError(name: Option[String])
+
+    def onDeleteIdentityError(name: Option[String])
 
     def onGameNameChanged(name: Option[String])
 
@@ -105,7 +115,7 @@ object BoardGame {
 
     def onIdentityRestored(identity: IdentityWithBalance)
 
-    def onJoinError()
+    def onJoinGameError()
 
     def onPlayerAdded(addedPlayer: PlayerWithBalanceAndConnectionState)
 
@@ -117,7 +127,15 @@ object BoardGame {
 
     def onPlayersUpdated(players: Map[MemberId, PlayerWithBalanceAndConnectionState])
 
+    def onQuitGameError()
+
+    def onRestoreIdentityError(name: Option[String])
+
     def onTransferAdded(addedTransfer: TransferWithCurrency)
+
+    def onTransferIdentityError(name: Option[String])
+
+    def onTransferToPlayerError(name: Option[String])
 
     def onTransfersChanged(changedTransfers: Iterable[TransferWithCurrency])
 
@@ -266,14 +284,6 @@ class BoardGame private(context: Context,
   extends ServerConnection.ConnectionStateListener
   with ServerConnection.NotificationReceiptListener {
 
-  private trait ResponseCallbackWithDefaultErrorHandling extends ResponseCallback {
-
-    override def onErrorReceived(errorResponse: ErrorResponse) = ()
-
-  }
-
-  private val noopResponseCallback = new ResponseCallback
-    with ResponseCallbackWithDefaultErrorHandling
   private val connectionRequestToken = new ConnectionRequestToken
 
   private var state: State = _
@@ -305,14 +315,47 @@ class BoardGame private(context: Context,
     this(context, serverConnection, None, None, Some(zoneId), Some(Future.successful(gameId)))
   }
 
-  private def createAccount(ownerMemberId: MemberId) =
+  def changeGameName(name: String) =
+    serverConnection.sendCommand(
+      ChangeZoneNameCommand(
+        zoneId.get,
+        Some(name)
+      ),
+      new ResponseCallback {
+
+        override def onErrorReceived(errorResponse: ErrorResponse) =
+          gameActionListeners.foreach(_.onChangeGameNameError(Some(name)))
+
+      }
+    )
+
+  def changeIdentityName(identity: Identity, name: String) =
+    serverConnection.sendCommand(
+      UpdateMemberCommand(
+        zoneId.get,
+        state.identities(identity.member.id).member.copy(name = Some(name))
+      ),
+      new ResponseCallback {
+
+        override def onErrorReceived(errorResponse: ErrorResponse) =
+          gameActionListeners.foreach(_.onChangeIdentityNameError(Some(name)))
+
+      }
+    )
+
+  private def createAccount(ownerMember: Member) =
     serverConnection.sendCommand(
       CreateAccountCommand(
         zoneId.get,
         None,
-        Set(ownerMemberId)
+        Set(ownerMember.id)
       ),
-      noopResponseCallback
+      new ResponseCallback {
+
+        override def onErrorReceived(errorResponse: ErrorResponse) =
+          gameActionListeners.foreach(_.onCreateIdentityAccountError(ownerMember.name))
+
+      }
     )
 
   private def createAndThenJoinZone(currency: Currency, name: String) =
@@ -332,11 +375,8 @@ class BoardGame private(context: Context,
       ),
       new ResponseCallback {
 
-        override def onErrorReceived(errorResponse: ErrorResponse) {
-
-          gameActionListeners.foreach(_.onCreateError())
-
-        }
+        override def onErrorReceived(errorResponse: ErrorResponse) =
+          gameActionListeners.foreach(_.onCreateGameError(Some(name)))
 
         override def onResultReceived(resultResponse: ResultResponse) {
 
@@ -360,13 +400,16 @@ class BoardGame private(context: Context,
         Some(name),
         ClientKey.getPublicKey(context)
       ),
-      new ResponseCallbackWithDefaultErrorHandling {
+      new ResponseCallback {
+
+        override def onErrorReceived(errorResponse: ErrorResponse) =
+          gameActionListeners.foreach(_.onCreateIdentityMemberError(Some(name)))
 
         override def onResultReceived(resultResponse: ResultResponse) {
 
           val createMemberResponse = resultResponse.asInstanceOf[CreateMemberResponse]
 
-          createAccount(createMemberResponse.member.id)
+          createAccount(createMemberResponse.member)
 
         }
 
@@ -385,7 +428,12 @@ class BoardGame private(context: Context,
           )
         )
       ),
-      noopResponseCallback
+      new ResponseCallback {
+
+        override def onErrorReceived(errorResponse: ErrorResponse) =
+          gameActionListeners.foreach(_.onDeleteIdentityError(member.name))
+
+      }
     )
   }
 
@@ -414,7 +462,7 @@ class BoardGame private(context: Context,
       new ResponseCallback {
 
         override def onErrorReceived(errorResponse: ErrorResponse) =
-          gameActionListeners.foreach(_.onJoinError())
+          gameActionListeners.foreach(_.onJoinGameError())
 
         override def onResultReceived(resultResponse: ResultResponse) {
 
@@ -489,13 +537,13 @@ class BoardGame private(context: Context,
           gameActionListeners.foreach(_.onTransfersInitialized(transfers.values))
           gameActionListeners.foreach(_.onTransfersUpdated(transfers))
 
-          val partiallyCreatedIdentityIds = joinZoneResponse.zone.members.collect {
+          val partiallyCreatedIdentities = joinZoneResponse.zone.members.collect {
             case (memberId, member) if ClientKey.getPublicKey(context) == member.ownerPublicKey
               && !joinZoneResponse.zone.accounts.values.exists(_.ownerMemberIds == Set(memberId)) =>
-              memberId
+              member
           }
 
-          partiallyCreatedIdentityIds.foreach(createAccount)
+          partiallyCreatedIdentities.foreach(createAccount)
 
           /*
            * Since we must only prompt for a required identity if none exist yet and since having
@@ -1056,27 +1104,14 @@ class BoardGame private(context: Context,
           metadata = member.metadata.map(_ - HiddenFlagKey)
         )
       ),
-      noopResponseCallback
+      new ResponseCallback {
+
+        override def onErrorReceived(errorResponse: ErrorResponse) =
+          gameActionListeners.foreach(_.onRestoreIdentityError(member.name))
+
+      }
     )
   }
-
-  def setGameName(name: String) =
-    serverConnection.sendCommand(
-      ChangeZoneNameCommand(
-        zoneId.get,
-        Some(name)
-      ),
-      noopResponseCallback
-    )
-
-  def setIdentityName(identity: Identity, name: String) =
-    serverConnection.sendCommand(
-      UpdateMemberCommand(
-        zoneId.get,
-        state.identities(identity.member.id).member.copy(name = Some(name))
-      ),
-      noopResponseCallback
-    )
 
   def transferIdentity(identity: Identity, toPublicKey: PublicKey) =
     serverConnection.sendCommand(
@@ -1084,7 +1119,12 @@ class BoardGame private(context: Context,
         zoneId.get,
         state.identities(identity.member.id).member.copy(ownerPublicKey = toPublicKey)
       ),
-      noopResponseCallback
+      new ResponseCallback {
+
+        override def onErrorReceived(errorResponse: ErrorResponse) =
+          gameActionListeners.foreach(_.onTransferIdentityError(identity.member.name))
+
+      }
     )
 
   def transferToPlayer(actingAs: Identity, from: Identity, to: Seq[Player], value: BigDecimal) =
@@ -1098,7 +1138,12 @@ class BoardGame private(context: Context,
           to.account.id,
           value
         ),
-        noopResponseCallback
+        new ResponseCallback {
+
+          override def onErrorReceived(errorResponse: ErrorResponse) =
+            gameActionListeners.foreach(_.onTransferToPlayerError(to.member.name))
+
+        }
       )
     )
 
@@ -1158,7 +1203,10 @@ class BoardGame private(context: Context,
                 }
               }
 
-              override def onErrorReceived(errorResponse: ErrorResponse) = doDisconnect()
+              override def onErrorReceived(errorResponse: ErrorResponse) {
+                gameActionListeners.foreach(_.onQuitGameError())
+                doDisconnect()
+              }
 
               override def onResultReceived(resultResponse: ResultResponse) = doDisconnect()
 
