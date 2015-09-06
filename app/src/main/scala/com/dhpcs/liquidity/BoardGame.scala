@@ -347,7 +347,6 @@ class BoardGame private(context: Context,
     serverConnection.sendCommand(
       CreateAccountCommand(
         zoneId.get,
-        None,
         Set(ownerMember.id)
       ),
       new ResponseCallback {
@@ -361,12 +360,12 @@ class BoardGame private(context: Context,
   private def createAndThenJoinZone(currency: Currency, name: String) =
     serverConnection.sendCommand(
       CreateZoneCommand(
-        Some(name),
-        Some(context.getString(R.string.bank_member_name)),
         ClientKey.getPublicKey(context),
+        Some(context.getString(R.string.bank_member_name)),
         None,
         None,
         None,
+        Some(name),
         Some(
           Json.obj(
             CurrencyCodeKey -> currency.getCurrencyCode
@@ -382,11 +381,11 @@ class BoardGame private(context: Context,
 
           val createZoneResponse = resultResponse.asInstanceOf[CreateZoneResponse]
 
-          instances = instances + (createZoneResponse.zoneId -> BoardGame.this)
+          instances = instances + (createZoneResponse.zone.id -> BoardGame.this)
 
-          zoneId = Some(createZoneResponse.zoneId)
+          zoneId = Some(createZoneResponse.zone.id)
 
-          join(createZoneResponse.zoneId)
+          join(createZoneResponse.zone.id)
 
         }
 
@@ -397,8 +396,8 @@ class BoardGame private(context: Context,
     serverConnection.sendCommand(
       CreateMemberCommand(
         zoneId.get,
-        Some(name),
-        ClientKey.getPublicKey(context)
+        ClientKey.getPublicKey(context),
+        Some(name)
       ),
       new ResponseCallback {
 
@@ -1133,7 +1132,6 @@ class BoardGame private(context: Context,
         AddTransactionCommand(
           zoneId.get,
           actingAs.member.id,
-          None,
           from.account.id,
           to.account.id,
           value
