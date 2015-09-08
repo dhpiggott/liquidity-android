@@ -8,6 +8,7 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
+import android.text.InputFilter;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.WindowManager;
@@ -82,6 +83,11 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
                 )
                 .create();
 
+        editTextIdentityName.setFilters(new InputFilter[]{
+                new InputFilter.LengthFilter(
+                        com.dhpcs.liquidity.models.package$.MODULE$.MaxStringLength()
+                )
+        });
         editTextIdentityName.addTextChangedListener(new TextWatcher() {
 
             @Override

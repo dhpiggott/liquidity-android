@@ -11,6 +11,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
+import android.text.InputFilter;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.View;
@@ -181,6 +182,11 @@ public class CreateGameDialogFragment extends DialogFragment {
                 )
                 .create();
 
+        editTextGameName.setFilters(new InputFilter[]{
+                new InputFilter.LengthFilter(
+                        com.dhpcs.liquidity.models.package$.MODULE$.MaxStringLength()
+                )
+        });
         editTextGameName.addTextChangedListener(new TextWatcher() {
 
             @Override
