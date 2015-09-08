@@ -29,6 +29,7 @@ public class LiquidityProvider extends ContentProvider {
                         + LiquidityContract.Games.ZONE_ID + " TEXT NOT NULL,"
                         + LiquidityContract.Games.NAME + " TEXT,"
                         + LiquidityContract.Games.CREATED + " INTEGER NOT NULL,"
+                        + LiquidityContract.Games.EXPIRES + " INTEGER NOT NULL,"
                         + "UNIQUE(" + LiquidityContract.Games.ZONE_ID + ")"
                         + ");";
 

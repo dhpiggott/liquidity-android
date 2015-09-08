@@ -42,6 +42,7 @@
     <string name="enter_game_name">Enter game name</string>
     <string name="enter_identity_name">Enter identity name</string>
     <string name="enter_transfer_details">Enter transfer details</string>
+    <string name="expires_format_string">(expires %1$s)</string>
     <string name="game_currency">Currency</string>
     <string name="game_currency_format_string">%1$s (%2$s)</string>
     <string name="game_currency_symbol_and_name_format_string">%1$s, %2$s</string>

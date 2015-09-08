@@ -3,11 +3,12 @@ package com.dhpcs.liquidity.fragment;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.LoaderManager;
-import android.content.ContentUris;
 import android.content.CursorLoader;
 import android.content.Loader;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.Handler;
+import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,14 +21,14 @@ import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.models.ZoneId;
 import com.dhpcs.liquidity.provider.LiquidityContract;
 
-import java.text.DateFormat;
 import java.util.UUID;
 
 public class GamesFragment extends Fragment implements AdapterView.OnItemClickListener,
-        AdapterView.OnItemLongClickListener,
         LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final int GAMES_LOADER = 0;
+
+    private static final long REFRESH_INTERVAL = DateUtils.MINUTE_IN_MILLIS;
 
     public interface Listener {
 
@@ -36,6 +37,16 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
     }
 
     private Listener listener;
+
+    private final Handler refreshHandler = new Handler();
+    private final Runnable refreshRunnable = new Runnable() {
+
+        @Override
+        public void run() {
+            getLoaderManager().restartLoader(GAMES_LOADER, null, GamesFragment.this);
+        }
+
+    };
 
     private SimpleCursorAdapter gamesAdapter;
 
@@ -57,16 +68,17 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
                 null,
                 new String[]{
                         LiquidityContract.Games.NAME,
-                        LiquidityContract.Games.CREATED
+                        LiquidityContract.Games.CREATED,
+                        LiquidityContract.Games.EXPIRES
                 },
                 new int[]{
                         R.id.textview_name,
-                        R.id.textview_created
+                        R.id.textview_created,
+                        R.id.textview_expires
                 },
                 0
         );
 
-        final DateFormat dateFormat = DateFormat.getDateTimeInstance();
         gamesAdapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
 
             @Override
@@ -77,7 +89,24 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
                     ((TextView) view).setText(
                             getActivity().getString(
                                     R.string.created_format_string,
-                                    dateFormat.format(cursor.getLong(columnIndex))
+                                    DateUtils.getRelativeTimeSpanString(
+                                            cursor.getLong(columnIndex),
+                                            System.currentTimeMillis(),
+                                            REFRESH_INTERVAL
+                                    )
+                            )
+                    );
+                }
+                if (columnIndex == cursor.getColumnIndexOrThrow(LiquidityContract.Games.EXPIRES)) {
+                    bound = true;
+                    ((TextView) view).setText(
+                            getActivity().getString(
+                                    R.string.expires_format_string,
+                                    DateUtils.getRelativeTimeSpanString(
+                                            cursor.getLong(columnIndex),
+                                            System.currentTimeMillis(),
+                                            REFRESH_INTERVAL
+                                    )
                             )
                     );
                 }
@@ -99,10 +128,13 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
                                 LiquidityContract.Games._ID,
                                 LiquidityContract.Games.ZONE_ID,
                                 LiquidityContract.Games.NAME,
-                                LiquidityContract.Games.CREATED
+                                LiquidityContract.Games.CREATED,
+                                LiquidityContract.Games.EXPIRES
                         },
-                        null,
-                        null,
+                        LiquidityContract.Games.EXPIRES + " > ?",
+                        new String[]{
+                                Long.toString(System.currentTimeMillis())
+                        },
                         LiquidityContract.Games.CREATED + " DESC"
                 );
 
@@ -121,9 +153,14 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
         listViewGames.setAdapter(gamesAdapter);
         listViewGames.setEmptyView(view.findViewById(R.id.textview_empty));
         listViewGames.setOnItemClickListener(this);
-        listViewGames.setOnItemLongClickListener(this);
 
         return view;
+    }
+
+    @Override
+    public void onDestroy() {
+        refreshHandler.removeCallbacks(refreshRunnable);
+        super.onDestroy();
     }
 
     @Override
@@ -151,16 +188,6 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
     }
 
     @Override
-    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-        getActivity().getContentResolver().delete(
-                ContentUris.withAppendedId(LiquidityContract.Games.CONTENT_URI, id),
-                null,
-                null
-        );
-        return true;
-    }
-
-    @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         gamesAdapter.changeCursor(null);
     }
@@ -168,6 +195,7 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         gamesAdapter.changeCursor(data);
+        refreshHandler.postDelayed(refreshRunnable, REFRESH_INTERVAL);
     }
 
 }

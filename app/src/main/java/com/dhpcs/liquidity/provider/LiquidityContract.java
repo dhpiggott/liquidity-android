@@ -35,6 +35,8 @@ public class LiquidityContract {
 
         public static final String CREATED = "created";
 
+        public static final String EXPIRES = "expires";
+
         public static final String SORT_ORDER_DEFAULT = CREATED + " ASC";
 
     }

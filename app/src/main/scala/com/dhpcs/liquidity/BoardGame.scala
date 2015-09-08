@@ -600,6 +600,7 @@ class BoardGame private(context: Context,
                 contentValues.put(Games.ZONE_ID, zoneId.id.toString)
                 contentValues.put(Games.NAME, joinZoneResponse.zone.name.orNull)
                 contentValues.put(Games.CREATED, joinZoneResponse.zone.created: java.lang.Long)
+                contentValues.put(Games.EXPIRES, joinZoneResponse.zone.expires: java.lang.Long)
                 ContentUris.parseId(
                   context.getContentResolver.insert(
                     Games.CONTENT_URI,
