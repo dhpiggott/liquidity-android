@@ -23,8 +23,6 @@ object ServerConnection {
 
   PRNGFixes.apply()
 
-  Security.insertProviderAt(new BouncyCastleProvider, 1)
-
   sealed trait ConnectionState
 
   case object UNAVAILABLE extends ConnectionState
