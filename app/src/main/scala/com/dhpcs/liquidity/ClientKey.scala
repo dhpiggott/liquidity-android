@@ -21,6 +21,7 @@ object ClientKey {
 
   private val KeystoreFilename = "client.keystore"
   private val EntryAlias = "identity"
+  private val KeyLength = 2048
 
   private var keyStore: KeyStore = _
   private var publicKey: PublicKey = _
@@ -33,7 +34,7 @@ object ClientKey {
     )
     val clientIdentity = new X500NameBuilder().addRDN(BCStyle.CN, androidId).build
     val keyPairGenerator = KeyPairGenerator.getInstance("RSA")
-    keyPairGenerator.initialize(2048)
+    keyPairGenerator.initialize(KeyLength)
     val keyPair = keyPairGenerator.generateKeyPair
     val certificate = new JcaX509CertificateConverter().getCertificate(
       new JcaX509v3CertificateBuilder(
