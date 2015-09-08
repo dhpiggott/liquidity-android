@@ -41,7 +41,6 @@ import com.dhpcs.liquidity.models.MemberId;
 import com.dhpcs.liquidity.models.PublicKey;
 import com.dhpcs.liquidity.models.TransactionId;
 import com.dhpcs.liquidity.models.ZoneId;
-import com.google.common.io.BaseEncoding;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
@@ -55,6 +54,7 @@ import java.util.Comparator;
 import java.util.Currency;
 import java.util.List;
 
+import okio.ByteString;
 import scala.Option;
 import scala.Tuple2;
 import scala.collection.JavaConversions;
@@ -260,9 +260,9 @@ public class BoardGameActivity extends AppCompatActivity
                     );
                     try {
                         PublicKey publicKey = new PublicKey(
-                                BaseEncoding.base64().decode(
+                                ByteString.decodeBase64(
                                         contents
-                                )
+                                ).toByteArray()
                         );
                         if (!boardGame.isPublicKeyConnectedAndImplicitlyValid(publicKey)) {
                             throw new IllegalArgumentException();

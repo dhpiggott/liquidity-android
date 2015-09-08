@@ -3,7 +3,6 @@
 -dontwarn java.beans.SimpleBeanInfo
 -dontwarn java.lang.management.*
 -dontwarn java.nio.file.*
--dontwarn java.rmi.*
 -dontwarn javax.**
 -dontwarn org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement
 -dontwarn org.w3c.dom.bootstrap.DOMImplementationRegistry

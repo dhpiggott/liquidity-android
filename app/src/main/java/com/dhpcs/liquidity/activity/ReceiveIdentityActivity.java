@@ -8,9 +8,10 @@ import android.widget.ImageView;
 
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.models.PublicKey;
-import com.google.common.io.BaseEncoding;
 
 import net.glxn.qrgen.android.QRCode;
+
+import okio.ByteString;
 
 public class ReceiveIdentityActivity extends BoardGameChildActivity {
 
@@ -38,7 +39,7 @@ public class ReceiveIdentityActivity extends BoardGameChildActivity {
                                        int left, int top, int right, int bottom,
                                        int oldLeft, int oldTop, int oldRight, int oldBottom) {
                 imageViewQrCode.setImageBitmap(
-                        ((QRCode) QRCode.from(BaseEncoding.base64().encode(publicKey.value()))
+                        ((QRCode) QRCode.from(ByteString.of(publicKey.value()).base64())
                                 .withSize(right - left, bottom - top))
                                 .bitmap()
                 );
