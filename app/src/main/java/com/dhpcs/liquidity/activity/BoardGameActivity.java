@@ -875,8 +875,6 @@ public class BoardGameActivity extends AppCompatActivity
     @Override
     protected void onPause() {
         super.onPause();
-        boardGame.unregisterListener((BoardGame.GameActionListener) this);
-        boardGame.unregisterListener((BoardGame.JoinStateListener) this);
         if (!isChangingConfigurations()) {
             if (!isStartingChildActivity) {
                 boardGame.unrequestJoin(joinRequestToken);
@@ -992,8 +990,6 @@ public class BoardGameActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
         boardGame.requestJoin(joinRequestToken, false);
-        boardGame.registerListener((BoardGame.JoinStateListener) this);
-        boardGame.registerListener((BoardGame.GameActionListener) this);
     }
 
     @Override

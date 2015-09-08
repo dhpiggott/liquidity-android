@@ -53,7 +53,6 @@ public class BoardGameChildActivity extends AppCompatActivity
     @Override
     protected void onPause() {
         super.onPause();
-        boardGame.unregisterListener(this);
         if (!isChangingConfigurations()) {
             if (!isFinishing()) {
                 boardGame.unrequestJoin(joinRequestToken);
@@ -65,7 +64,6 @@ public class BoardGameChildActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
         boardGame.requestJoin(joinRequestToken, false);
-        boardGame.registerListener(this);
     }
 
     @Override
