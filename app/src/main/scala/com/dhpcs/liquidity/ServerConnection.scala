@@ -1,9 +1,8 @@
 package com.dhpcs.liquidity
 
 import java.io.IOException
-import java.security.Security
 import java.util.concurrent.TimeUnit
-import javax.net.ssl.SSLContext
+import javax.net.ssl.{SSLContext, SSLException}
 
 import android.content.{BroadcastReceiver, Context, Intent, IntentFilter}
 import android.net.ConnectivityManager
@@ -14,7 +13,6 @@ import com.dhpcs.liquidity.models._
 import com.squareup.okhttp.OkHttpClient
 import com.squareup.okhttp.ws.{WebSocket, WebSocketCall, WebSocketListener}
 import okio.{Buffer, BufferedSource}
-import org.spongycastle.jce.provider.BouncyCastleProvider
 import play.api.libs.json.Json
 
 import scala.util.{Failure, Right, Success, Try}
@@ -26,6 +24,10 @@ object ServerConnection {
   sealed trait ConnectionState
 
   case object UNAVAILABLE extends ConnectionState
+
+  case object GENERAL_FAILURE extends ConnectionState
+
+  case object TLS_ERROR extends ConnectionState
 
   case object AVAILABLE extends ConnectionState
 
@@ -59,9 +61,15 @@ object ServerConnection {
 
   private sealed trait State
 
-  private case object AvailableIdleState extends State
+  private sealed trait IdleState extends State
 
-  private case object UnavailableIdleState extends State
+  private case object UnavailableIdleState extends IdleState
+
+  private case object GeneralFailureIdleState extends IdleState
+
+  private case object TlsErrorIdleState extends IdleState
+
+  private case object AvailableIdleState extends IdleState
 
   private case class ActiveState(handler: Handler) extends State {
 
@@ -143,7 +151,7 @@ class ServerConnection private(context: Context) extends WebSocketListener {
   private var pendingRequests = Map.empty[Int, PendingRequest]
   private var commandIdentifier = 0
   private var state: State = UnavailableIdleState
-  private var failed: Boolean = _
+  private var hasFailed: Boolean = _
 
   private var _connectionState: ConnectionState = UNAVAILABLE
 
@@ -160,7 +168,7 @@ class ServerConnection private(context: Context) extends WebSocketListener {
 
       sys.error("Already connecting/connected/disconnecting")
 
-    case UnavailableIdleState =>
+    case GeneralFailureIdleState | TlsErrorIdleState | UnavailableIdleState =>
 
     case AvailableIdleState =>
 
@@ -172,10 +180,12 @@ class ServerConnection private(context: Context) extends WebSocketListener {
 
   private def disconnect(code: Int) = state match {
 
-    case AvailableIdleState | UnavailableIdleState =>
+    case _: IdleState =>
+
       sys.error("Already disconnected")
 
     case activeState: ActiveState =>
+
       asyncPost(activeState.handler) {
         activeState.subState match {
 
@@ -209,15 +219,21 @@ class ServerConnection private(context: Context) extends WebSocketListener {
 
   }
 
-  def doClose(handler: Handler, wasFailure: Boolean, reconnect: Boolean = false) =
+  def doClose(handler: Handler,
+              dueToGeneralFailure: Boolean,
+              dueToTlsError: Boolean,
+              reconnect: Boolean = false) =
     asyncPost(handler) {
       handler.getLooper.quit()
       asyncPost(mainHandler) {
-        failed = wasFailure
+        hasFailed = dueToGeneralFailure || dueToTlsError
         if (!reconnect) {
-          if (!isConnectionAvailable) {
-            state = UnavailableIdleState
-            _connectionState = UNAVAILABLE
+          if (dueToTlsError) {
+            state = TlsErrorIdleState
+            _connectionState = TLS_ERROR
+          } else if (dueToGeneralFailure) {
+            state = GeneralFailureIdleState
+            _connectionState = GENERAL_FAILURE
           } else {
             state = AvailableIdleState
             _connectionState = AVAILABLE
@@ -252,7 +268,7 @@ class ServerConnection private(context: Context) extends WebSocketListener {
     if (!isConnectionAvailable) {
       state match {
 
-        case AvailableIdleState =>
+        case AvailableIdleState | GeneralFailureIdleState | TlsErrorIdleState =>
 
           state = UnavailableIdleState
           _connectionState = UNAVAILABLE
@@ -285,10 +301,12 @@ class ServerConnection private(context: Context) extends WebSocketListener {
 
   override def onClose(code: Int, reason: String) = state match {
 
-    case AvailableIdleState | UnavailableIdleState =>
+    case _: IdleState =>
+
       sys.error("Already disconnected")
 
     case activeState: ActiveState =>
+
       activeState.subState match {
 
         case _: ConnectingSubState =>
@@ -297,30 +315,88 @@ class ServerConnection private(context: Context) extends WebSocketListener {
 
         case _: ConnectedSubState =>
 
-          doClose(activeState.handler, wasFailure = false)
+          doClose(
+            activeState.handler,
+            dueToGeneralFailure = false,
+            dueToTlsError = false
+          )
 
         case DisconnectingSubState =>
 
-          doClose(activeState.handler, wasFailure = false, connectRequestTokens.nonEmpty)
+          doClose(
+            activeState.handler,
+            dueToGeneralFailure = false,
+            dueToTlsError = false,
+            reconnect = connectRequestTokens.nonEmpty
+          )
 
       }
+
   }
 
   override def onFailure(e: IOException, response: com.squareup.okhttp.Response) = state match {
 
-    case AvailableIdleState | UnavailableIdleState =>
+    case _: IdleState =>
 
       sys.error("Already disconnected")
 
     case activeState: ActiveState =>
 
-      doClose(activeState.handler, wasFailure = true)
+      if (response == null) {
+
+        e match {
+
+          case _: SSLException =>
+
+            /*
+             * Client rejected server certificate.
+             */
+            doClose(
+              activeState.handler,
+              dueToGeneralFailure = false,
+              dueToTlsError = true
+            )
+
+          case _ =>
+
+            doClose(
+              activeState.handler,
+              dueToGeneralFailure = true,
+              dueToTlsError = false
+            )
+
+        }
+
+      } else {
+
+        if (response.code == 400) {
+
+          /*
+           * Server rejected client certificate.
+           */
+          doClose(
+            activeState.handler,
+            dueToGeneralFailure = false,
+            dueToTlsError = true
+          )
+
+        } else {
+
+          doClose(
+            activeState.handler,
+            dueToGeneralFailure = true,
+            dueToTlsError = false
+          )
+
+        }
+
+      }
 
   }
 
   override def onMessage(payload: BufferedSource, `type`: WebSocket.PayloadType) = state match {
 
-    case AvailableIdleState | UnavailableIdleState =>
+    case _: IdleState =>
 
       sys.error("Not connected")
 
@@ -440,7 +516,10 @@ class ServerConnection private(context: Context) extends WebSocketListener {
   override def onOpen(webSocket: WebSocket, response: com.squareup.okhttp.Response) =
     state match {
 
-      case AvailableIdleState | UnavailableIdleState =>
+      case AvailableIdleState
+           | GeneralFailureIdleState
+           | TlsErrorIdleState
+           | UnavailableIdleState =>
 
         sys.error("Not connecting")
 
@@ -487,7 +566,7 @@ class ServerConnection private(context: Context) extends WebSocketListener {
     if (!connectRequestTokens.contains(token)) {
       connectRequestTokens = connectRequestTokens + token
     }
-    if (_connectionState == ServerConnection.AVAILABLE && (!failed || retry)) {
+    if (_connectionState == ServerConnection.AVAILABLE && (!hasFailed || retry)) {
 
       connect()
 
@@ -496,7 +575,7 @@ class ServerConnection private(context: Context) extends WebSocketListener {
 
   def sendCommand(command: Command, responseCallback: ResponseCallback) = state match {
 
-    case AvailableIdleState | UnavailableIdleState =>
+    case _: IdleState =>
 
       sys.error("Not connected")
 
@@ -531,13 +610,17 @@ class ServerConnection private(context: Context) extends WebSocketListener {
 
                 state match {
 
-                  case AvailableIdleState | UnavailableIdleState =>
+                  case _: IdleState =>
 
                     sys.error("Already disconnected")
 
                   case activeState: ActiveState =>
 
-                    doClose(activeState.handler, wasFailure = true)
+                    doClose(
+                      activeState.handler,
+                      dueToGeneralFailure = true,
+                      dueToTlsError = false
+                    )
 
                 }
 
@@ -574,7 +657,7 @@ class ServerConnection private(context: Context) extends WebSocketListener {
 
         }
       }
-      failed = false
+      hasFailed = false
     }
 
 }

@@ -52,12 +52,13 @@
     <string name="join_game">Join game</string>
     <string name="join_game_error">"Couldn't join game - are you sure it\'s a Liquidity game?"</string>
     <string name="join_game_instruction">Scan the QR code on the host\'s phone.</string>
-    <string name="join_state_available">The connection was lost. Click the button to reconnect.</string>
+    <string name="join_state_available">The connection was closed.</string>
     <string name="join_state_connecting">Connecting</string>
     <string name="join_state_disconnecting">Disconnecting</string>
+    <string name="join_state_general_failure">The connection failed.</string>
     <string name="join_state_joining">Joining game</string>
     <string name="join_state_quitting">Quitting game</string>
-    <string name="join_state_reconnecting">Reconnecting</string>
+    <string name="join_state_tls_error">Could not establish a secure connection. Check you are using the latest version of Liquidity.</string>
     <string name="join_state_unavailable">Liquidity requires a data connection, but none is available.</string>
     <string name="new_game">New game</string>
     <string name="no_games">You don\'t have any saved games. Use the menu above to create or join one.</string>

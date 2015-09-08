@@ -20,11 +20,13 @@ object BoardGame {
 
   case object UNAVAILABLE extends JoinState
 
+  case object GENERAL_FAILURE extends JoinState
+
+  case object TLS_ERROR extends JoinState
+
   case object AVAILABLE extends JoinState
 
   case object CONNECTING extends JoinState
-
-  case object RECONNECTING extends JoinState
 
   case object JOINING extends JoinState
 
@@ -1019,6 +1021,16 @@ class BoardGame private(context: Context,
         state = null
         _joinState = BoardGame.UNAVAILABLE
 
+      case ServerConnection.GENERAL_FAILURE =>
+
+        state = null
+        _joinState = BoardGame.GENERAL_FAILURE
+
+      case ServerConnection.TLS_ERROR =>
+
+        state = null
+        _joinState = BoardGame.TLS_ERROR
+
       case ServerConnection.AVAILABLE =>
 
         state = null
@@ -1027,11 +1039,7 @@ class BoardGame private(context: Context,
       case ServerConnection.CONNECTING =>
 
         state = null
-        _joinState = if (!gameId.isDefined) {
-          BoardGame.CONNECTING
-        } else {
-          BoardGame.RECONNECTING
-        }
+        _joinState = BoardGame.CONNECTING
 
       case ServerConnection.CONNECTED =>
 
