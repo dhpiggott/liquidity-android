@@ -30,7 +30,6 @@ import com.dhpcs.liquidity.fragment.CreateIdentityDialogFragment;
 import com.dhpcs.liquidity.fragment.EnterGameNameDialogFragment;
 import com.dhpcs.liquidity.fragment.EnterIdentityNameDialogFragment;
 import com.dhpcs.liquidity.fragment.IdentitiesFragment;
-import com.dhpcs.liquidity.fragment.LastTransferFragment;
 import com.dhpcs.liquidity.fragment.PlayersFragment;
 import com.dhpcs.liquidity.fragment.PlayersTransfersFragment;
 import com.dhpcs.liquidity.fragment.RestoreIdentityDialogFragment;
@@ -228,7 +227,6 @@ public class BoardGameActivity extends AppCompatActivity
 
     private IdentitiesFragment identitiesFragment;
     private PlayersFragment playersFragment;
-    private LastTransferFragment lastTransferFragment;
     private PlayersTransfersFragment playersTransfersFragment;
 
     private void closeDialogFragments() {
@@ -379,8 +377,6 @@ public class BoardGameActivity extends AppCompatActivity
                 getFragmentManager().findFragmentById(R.id.fragment_identities);
         playersFragment = (PlayersFragment)
                 getFragmentManager().findFragmentById(R.id.fragment_players);
-        lastTransferFragment = (LastTransferFragment)
-                getFragmentManager().findFragmentById(R.id.fragment_last_transfer);
         playersTransfersFragment = (PlayersTransfersFragment)
                 getFragmentManager().findFragmentById(R.id.fragment_players_transfers);
 
@@ -1027,7 +1023,6 @@ public class BoardGameActivity extends AppCompatActivity
 
     @Override
     public void onTransferAdded(TransferWithCurrency addedTransfer) {
-        lastTransferFragment.onTransferAdded(addedTransfer);
         playersTransfersFragment.onTransferAdded(addedTransfer);
     }
 
@@ -1058,13 +1053,11 @@ public class BoardGameActivity extends AppCompatActivity
     @Override
     public void onTransfersChanged(
             scala.collection.Iterable<TransferWithCurrency> changedTransfers) {
-        lastTransferFragment.onTransfersChanged(changedTransfers);
         playersTransfersFragment.onTransfersChanged(changedTransfers);
     }
 
     @Override
     public void onTransfersInitialized(scala.collection.Iterable<TransferWithCurrency> transfers) {
-        lastTransferFragment.onTransfersInitialized(transfers);
         playersTransfersFragment.onTransfersInitialized(transfers);
     }
 

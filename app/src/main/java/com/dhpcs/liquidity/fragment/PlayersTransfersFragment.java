@@ -152,6 +152,8 @@ public class PlayersTransfersFragment extends Fragment {
 
             };
 
+    private LastTransferFragment lastTransferFragment;
+
     private PlayersTransfersFragmentStatePagerAdapter playersTransfersFragmentStatePagerAdapter;
 
     private TabLayout tabLayoutPlayers;
@@ -178,6 +180,9 @@ public class PlayersTransfersFragment extends Fragment {
                              ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_players_transfers, container, false);
+
+        lastTransferFragment = (LastTransferFragment) getChildFragmentManager()
+                .findFragmentById(R.id.fragment_last_transfer);
 
         tabLayoutPlayers = (TabLayout) view.findViewById(R.id.tablayout_players);
         viewPagerPlayersTransfers = (ViewPager) view.findViewById(R.id.viewpager_players_transfers);
@@ -211,8 +216,8 @@ public class PlayersTransfersFragment extends Fragment {
          * The call to setTabsFromPagerAdapter first removes all existing tabs. The first tab
          * re-added is consequently also automatically selected for us. That's not so helpful here
          * as it would cause selectedPlayer to be set to null (the value corresponding to the
-         * always-present, always-first 'ALL' tab). We could just store the fields value in a local
-         * here, but this somehow seems to read better.
+         * always-present, always-first 'ALL' tab). We could just store the field's value in a
+         * local here, but this somehow seems to read better.
          */
         viewPagerPlayersTransfers.removeOnPageChangeListener(pageChangeListener);
         tabLayoutPlayers.setTabsFromPagerAdapter(playersTransfersFragmentStatePagerAdapter);
@@ -234,15 +239,18 @@ public class PlayersTransfersFragment extends Fragment {
     }
 
     public void onTransferAdded(TransferWithCurrency addedTransfer) {
+        lastTransferFragment.onTransferAdded(addedTransfer);
         playersTransfersFragmentStatePagerAdapter.onTransferAdded(addedTransfer);
     }
 
     public void onTransfersChanged(
             scala.collection.Iterable<TransferWithCurrency> changedTransfers) {
+        lastTransferFragment.onTransfersChanged(changedTransfers);
         playersTransfersFragmentStatePagerAdapter.onTransfersChanged(changedTransfers);
     }
 
     public void onTransfersInitialized(scala.collection.Iterable<TransferWithCurrency> transfers) {
+        lastTransferFragment.onTransfersInitialized(transfers);
         playersTransfersFragmentStatePagerAdapter.onTransfersInitialized(transfers);
     }
 
