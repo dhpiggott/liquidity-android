@@ -11,11 +11,11 @@
     tools:context="com.dhpcs.liquidity.fragment.CreateGameDialogFragment">
 
     <TextView
-        android:id="@+id/textview_game_name_label"
         style="@style/TextAppearance.AppCompat.Body2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
+        android:labelFor="@+id/edittext_game_name"
         android:text="@string/game_name"
         android:textColor="?android:attr/textColorSecondary" />
 
@@ -25,7 +25,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:inputType="textCapWords"
-        android:labelFor="@id/textview_game_name_label"
         android:selectAllOnFocus="true" />
 
     <TextView
@@ -33,6 +32,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
+        android:labelFor="@+id/spinner_game_currency"
         android:text="@string/game_currency"
         android:textColor="?android:attr/textColorSecondary" />
 
