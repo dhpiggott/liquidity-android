@@ -12,16 +12,12 @@
 
     <TextView
         android:id="@+id/textview_value_label"
-        style="@style/TextAppearance.AppCompat.Subhead"
+        style="@style/TextAppearance.AppCompat.Body2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="@string/transfer_amount" />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="?android:attr/dividerHorizontal" />
+        android:text="@string/transfer_amount"
+        android:textColor="?android:textColorSecondary" />
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -44,13 +40,13 @@
 
             <TextView
                 android:id="@+id/textview_currency"
-                style="@style/TextAppearance.AppCompat.Title"
+                style="@style/TextAppearance.AppCompat.Subhead"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
 
             <EditText
                 android:id="@+id/edittext_value"
-                style="@style/TextAppearance.AppCompat.Title"
+                style="@style/TextAppearance.AppCompat.Subhead"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:inputType="numberDecimal"
@@ -59,7 +55,7 @@
 
             <TextView
                 android:id="@+id/textview_multiplier"
-                style="@style/TextAppearance.AppCompat.Title"
+                style="@style/TextAppearance.AppCompat.Subhead"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
 
@@ -97,18 +93,20 @@
 
     </RelativeLayout>
 
-    <TextView
-        android:id="@+id/textview_from_label"
-        style="@style/TextAppearance.AppCompat.Subhead"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/transfer_from" />
-
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
+        android:layout_marginTop="8dp"
         android:background="?android:attr/dividerHorizontal" />
+
+    <TextView
+        android:id="@+id/textview_from_label"
+        style="@style/TextAppearance.AppCompat.Body2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/transfer_from"
+        android:textColor="?android:attr/textColorSecondary" />
 
     <Spinner
         android:id="@+id/spinner_from"
@@ -121,18 +119,20 @@
         android:layout_marginTop="8dp"
         android:labelFor="@id/textview_from_label" />
 
-    <TextView
-        android:id="@+id/textview_to_label"
-        style="@style/TextAppearance.AppCompat.Subhead"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/transfer_to" />
-
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
+        android:layout_marginTop="8dp"
         android:background="?android:attr/dividerHorizontal" />
+
+    <TextView
+        android:id="@+id/textview_to_label"
+        style="@style/TextAppearance.AppCompat.Body2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/transfer_to"
+        android:textColor="?android:attr/textColorSecondary" />
 
     <LinearLayout
         android:layout_width="match_parent"

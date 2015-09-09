@@ -12,19 +12,16 @@
 
     <TextView
         android:id="@+id/textview_game_name_label"
-        style="@style/TextAppearance.AppCompat.Subhead"
+        style="@style/TextAppearance.AppCompat.Body2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="@string/game_name" />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="?android:attr/dividerHorizontal" />
+        android:text="@string/game_name"
+        android:textColor="?android:attr/textColorSecondary" />
 
     <EditText
         android:id="@+id/edittext_game_name"
+        style="@style/TextAppearance.AppCompat.Subhead"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:inputType="textCapWords"
@@ -32,16 +29,12 @@
         android:selectAllOnFocus="true" />
 
     <TextView
-        style="@style/TextAppearance.AppCompat.Subhead"
+        style="@style/TextAppearance.AppCompat.Body2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="@string/game_currency" />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="?android:attr/dividerHorizontal" />
+        android:text="@string/game_currency"
+        android:textColor="?android:attr/textColorSecondary" />
 
     <Spinner
         android:id="@+id/spinner_game_currency"
