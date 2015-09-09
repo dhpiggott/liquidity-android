@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:orientation="vertical"
     android:paddingEnd="24dp"
     android:paddingLeft="24dp"
@@ -28,10 +28,17 @@
         android:selectAllOnFocus="true" />
 
     <TextView
+        android:id="@+id/textview_game_name_character_count"
+        style="@style/TextAppearance.AppCompat.Caption"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:padding="4dp" />
+
+    <TextView
         style="@style/TextAppearance.AppCompat.Body2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
         android:labelFor="@+id/spinner_game_currency"
         android:text="@string/game_currency"
         android:textColor="?android:attr/textColorSecondary" />

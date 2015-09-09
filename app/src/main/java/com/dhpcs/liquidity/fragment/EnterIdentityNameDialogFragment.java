@@ -8,16 +8,17 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
-import android.text.InputFilter;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import com.dhpcs.liquidity.BoardGame.Identity;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activity.BoardGameActivity;
+import com.dhpcs.liquidity.models.package$;
 
 public class EnterIdentityNameDialogFragment extends DialogFragment {
 
@@ -28,6 +29,8 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
     }
 
     public static final String TAG = "enter_identity_name_dialog_fragment";
+
+    private static final int MAXIMUM_NAME_LENGTH = package$.MODULE$.MaxStringLength();
 
     private static final String ARG_IDENTITY = "identity";
 
@@ -41,6 +44,8 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
     }
 
     private Listener listener;
+
+    private Button buttonPositive;
 
     @Override
     public void onAttach(Activity activity) {
@@ -57,6 +62,8 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
 
         final Identity identity = (Identity) getArguments().getSerializable(ARG_IDENTITY);
 
+        final TextView textViewIdentityNameCharacterCount = (TextView)
+                view.findViewById(R.id.textview_identity_name_character_count);
         final EditText editTextIdentityName = (EditText) view.findViewById(
                 R.id.edittext_identity_name
         );
@@ -83,12 +90,11 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
                 )
                 .create();
 
-        editTextIdentityName.setFilters(new InputFilter[]{
-                new InputFilter.LengthFilter(
-                        com.dhpcs.liquidity.models.package$.MODULE$.MaxStringLength()
-                )
-        });
         editTextIdentityName.addTextChangedListener(new TextWatcher() {
+
+            {
+                updateCharacterCount(editTextIdentityName.getText());
+            }
 
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -100,12 +106,20 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
 
             @Override
             public void afterTextChanged(Editable s) {
-                Button buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
+                updateCharacterCount(s);
                 if (buttonPositive != null) {
-                    buttonPositive.setEnabled(
-                            BoardGameActivity.isIdentityNameValid(getActivity(), s)
-                    );
+                    validateInput(s);
                 }
+            }
+
+            private void updateCharacterCount(Editable s) {
+                textViewIdentityNameCharacterCount.setText(
+                        getString(
+                                R.string.character_count_format_string,
+                                s.length(),
+                                MAXIMUM_NAME_LENGTH
+                        )
+                );
             }
 
         });
@@ -119,12 +133,8 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
 
             @Override
             public void onShow(DialogInterface dialog) {
-                alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(
-                        BoardGameActivity.isIdentityNameValid(
-                                getActivity(),
-                                editTextIdentityName.getText()
-                        )
-                );
+                buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
+                validateInput(editTextIdentityName.getText());
             }
 
         });
@@ -140,6 +150,15 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
     public void onDetach() {
         super.onDetach();
         listener = null;
+    }
+
+    private void validateInput(CharSequence identityName) {
+        buttonPositive.setEnabled(
+                BoardGameActivity.isIdentityNameValid(
+                        getActivity(),
+                        identityName
+                ) && identityName.length() <= MAXIMUM_NAME_LENGTH
+        );
     }
 
 }

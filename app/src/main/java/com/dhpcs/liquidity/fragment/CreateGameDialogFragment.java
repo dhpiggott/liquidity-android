@@ -11,7 +11,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
-import android.text.InputFilter;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.View;
@@ -24,6 +23,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.dhpcs.liquidity.R;
+import com.dhpcs.liquidity.models.package$;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -42,6 +42,8 @@ public class CreateGameDialogFragment extends DialogFragment {
     }
 
     public static final String TAG = "create_game_dialog_fragment";
+
+    private static final int MAXIMUM_NAME_LENGTH = package$.MODULE$.MaxStringLength();
 
     private static class CurrenciesAdapter extends ArrayAdapter<Currency> {
 
@@ -109,6 +111,8 @@ public class CreateGameDialogFragment extends DialogFragment {
 
     private Listener listener;
 
+    private Button buttonPositive;
+
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
@@ -116,7 +120,6 @@ public class CreateGameDialogFragment extends DialogFragment {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         @SuppressLint("InflateParams") View view = getActivity().getLayoutInflater().inflate(
                 R.layout.fragment_create_game_dialog,
@@ -152,6 +155,8 @@ public class CreateGameDialogFragment extends DialogFragment {
         });
 
         final EditText editTextGameName = (EditText) view.findViewById(R.id.edittext_game_name);
+        final TextView textViewGameNameCharacterCount = (TextView)
+                view.findViewById(R.id.textview_game_name_character_count);
         final Spinner spinnerCurrency = (Spinner) view.findViewById(R.id.spinner_game_currency);
 
         final AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
@@ -182,12 +187,11 @@ public class CreateGameDialogFragment extends DialogFragment {
                 )
                 .create();
 
-        editTextGameName.setFilters(new InputFilter[]{
-                new InputFilter.LengthFilter(
-                        com.dhpcs.liquidity.models.package$.MODULE$.MaxStringLength()
-                )
-        });
         editTextGameName.addTextChangedListener(new TextWatcher() {
+
+            {
+                updateCharacterCount(editTextGameName.getText());
+            }
 
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -199,12 +203,20 @@ public class CreateGameDialogFragment extends DialogFragment {
 
             @Override
             public void afterTextChanged(Editable s) {
-                Button buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
+                updateCharacterCount(s);
                 if (buttonPositive != null) {
-                    buttonPositive.setEnabled(
-                            !TextUtils.isEmpty(s)
-                    );
+                    validateInput(s);
                 }
+            }
+
+            private void updateCharacterCount(Editable s) {
+                textViewGameNameCharacterCount.setText(
+                        getString(
+                                R.string.character_count_format_string,
+                                s.length(),
+                                MAXIMUM_NAME_LENGTH
+                        )
+                );
             }
 
         });
@@ -220,9 +232,8 @@ public class CreateGameDialogFragment extends DialogFragment {
 
             @Override
             public void onShow(DialogInterface dialog) {
-                alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(
-                        !TextUtils.isEmpty(editTextGameName.getText())
-                );
+                buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
+                validateInput(editTextGameName.getText());
             }
 
         });
@@ -238,6 +249,12 @@ public class CreateGameDialogFragment extends DialogFragment {
     public void onDetach() {
         super.onDetach();
         listener = null;
+    }
+
+    private void validateInput(CharSequence gameName) {
+        buttonPositive.setEnabled(
+                !TextUtils.isEmpty(gameName) && gameName.length() <= MAXIMUM_NAME_LENGTH
+        );
     }
 
 }
