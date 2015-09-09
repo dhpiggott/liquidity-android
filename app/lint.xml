@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <lint>
     <issue id="UnusedResources">
-        <ignore path="src/main/res/raw/liquidity_dhpcs_com.pub" />
+        <ignore path="src/main/res/raw/liquidity_dhpcs_com.truststore" />
     </issue>
 </lint>
 
