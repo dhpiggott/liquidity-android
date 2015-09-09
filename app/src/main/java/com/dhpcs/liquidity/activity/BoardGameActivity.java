@@ -921,7 +921,7 @@ public class BoardGameActivity extends AppCompatActivity
     public void onQuitGameError() {
         Toast.makeText(
                 this,
-                R.string.join_game_error,
+                R.string.quit_game_error,
                 Toast.LENGTH_LONG
         ).show();
         finish();
