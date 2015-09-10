@@ -624,6 +624,7 @@ class BoardGame private(context: Context,
 
       }
     )
+    state = null
     _joinState = BoardGame.JOINING
     joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
   }
@@ -760,7 +761,6 @@ class BoardGame private(context: Context,
 
           case ZoneTerminatedNotification(_) =>
 
-            state = null
             join(zoneNotification.zoneId)
 
           case ZoneNameChangedNotification(_, name) =>
@@ -1200,14 +1200,8 @@ class BoardGame private(context: Context,
             ),
             new ResponseCallback {
 
-              private def doDisconnect() {
-                if (joinRequestTokens.isEmpty) {
-
-                  serverConnection.unrequestConnection(connectionRequestToken)
-
-                  state = null
-
-                }
+              private def doDisconnect() = if (joinRequestTokens.isEmpty) {
+                serverConnection.unrequestConnection(connectionRequestToken)
               }
 
               override def onErrorReceived(errorResponse: ErrorResponse) {
@@ -1220,6 +1214,7 @@ class BoardGame private(context: Context,
             }
           )
 
+          state = null
           _joinState = BoardGame.QUITTING
           joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
 
