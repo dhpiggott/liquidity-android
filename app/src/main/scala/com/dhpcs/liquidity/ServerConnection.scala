@@ -168,9 +168,9 @@ class ServerConnection private(context: Context) extends WebSocketListener {
 
       sys.error("Already connecting/connected/disconnecting")
 
-    case GeneralFailureIdleState | TlsErrorIdleState | UnavailableIdleState =>
+    case UnavailableIdleState =>
 
-    case AvailableIdleState =>
+    case AvailableIdleState | GeneralFailureIdleState | TlsErrorIdleState =>
 
       doOpen()
 
@@ -195,26 +195,29 @@ class ServerConnection private(context: Context) extends WebSocketListener {
 
           case connectingState: ConnectingSubState =>
 
+            activeState.subState = DisconnectingSubState
+            _connectionState = DISCONNECTING
+            asyncPost(mainHandler)(
+              connectionStateListeners.foreach(_.onConnectionStateChanged(_connectionState))
+            )
+
             connectingState.webSocketCall.cancel()
 
           case connectedState: ConnectedSubState =>
 
-            Try {
+            activeState.subState = DisconnectingSubState
+            _connectionState = DISCONNECTING
+            asyncPost(mainHandler)(
+              connectionStateListeners.foreach(_.onConnectionStateChanged(_connectionState))
+            )
+
+            try {
               connectedState.webSocket.close(code, null)
-            } match {
-
-              case Failure(e) =>
-
-              case _ =>
-
+            } catch {
+              case _: IOException =>
             }
 
         }
-        activeState.subState = DisconnectingSubState
-        _connectionState = DISCONNECTING
-        asyncPost(mainHandler)(
-          connectionStateListeners.foreach(_.onConnectionStateChanged(_connectionState))
-        )
       }
 
   }
@@ -330,6 +333,8 @@ class ServerConnection private(context: Context) extends WebSocketListener {
             reconnect = connectRequestTokens.nonEmpty
           )
 
+          hasFailed = false
+
       }
 
   }
@@ -342,53 +347,69 @@ class ServerConnection private(context: Context) extends WebSocketListener {
 
     case activeState: ActiveState =>
 
-      if (response == null) {
+      activeState.subState match {
 
-        e match {
+        case DisconnectingSubState =>
 
-          case _: SSLException =>
-
-            /*
-             * Client rejected server certificate.
-             */
-            doClose(
-              activeState.handler,
-              dueToGeneralFailure = false,
-              dueToTlsError = true
-            )
-
-          case _ =>
-
-            doClose(
-              activeState.handler,
-              dueToGeneralFailure = true,
-              dueToTlsError = false
-            )
-
-        }
-
-      } else {
-
-        if (response.code == 400) {
-
-          /*
-           * Server rejected client certificate.
-           */
           doClose(
             activeState.handler,
             dueToGeneralFailure = false,
-            dueToTlsError = true
-          )
-
-        } else {
-
-          doClose(
-            activeState.handler,
-            dueToGeneralFailure = true,
             dueToTlsError = false
           )
 
-        }
+          hasFailed = false
+
+        case _ =>
+
+          if (response == null) {
+
+            e match {
+
+              case _: SSLException =>
+
+                /*
+                 * Client rejected server certificate.
+                 */
+                doClose(
+                  activeState.handler,
+                  dueToGeneralFailure = false,
+                  dueToTlsError = true
+                )
+
+              case _ =>
+
+                doClose(
+                  activeState.handler,
+                  dueToGeneralFailure = true,
+                  dueToTlsError = false
+                )
+
+            }
+
+          } else {
+
+            if (response.code == 400) {
+
+              /*
+               * Server rejected client certificate.
+               */
+              doClose(
+                activeState.handler,
+                dueToGeneralFailure = false,
+                dueToTlsError = true
+              )
+
+            } else {
+
+              doClose(
+                activeState.handler,
+                dueToGeneralFailure = true,
+                dueToTlsError = false
+              )
+
+            }
+
+          }
 
       }
 
@@ -566,7 +587,10 @@ class ServerConnection private(context: Context) extends WebSocketListener {
     if (!connectRequestTokens.contains(token)) {
       connectRequestTokens = connectRequestTokens + token
     }
-    if (_connectionState == ServerConnection.AVAILABLE && (!hasFailed || retry)) {
+    if ((_connectionState == ServerConnection.AVAILABLE
+      || _connectionState == ServerConnection.GENERAL_FAILURE
+      || _connectionState == ServerConnection.TLS_ERROR)
+      && (!hasFailed || retry)) {
 
       connect()
 
@@ -657,7 +681,6 @@ class ServerConnection private(context: Context) extends WebSocketListener {
 
         }
       }
-      hasFailed = false
     }
 
 }

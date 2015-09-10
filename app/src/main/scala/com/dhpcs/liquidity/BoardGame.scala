@@ -1096,11 +1096,7 @@ class BoardGame private(context: Context,
     if (!joinRequestTokens.contains(token)) {
       joinRequestTokens = joinRequestTokens + token
     }
-    if (_joinState == BoardGame.AVAILABLE) {
-
-      serverConnection.requestConnection(connectionRequestToken, retry)
-
-    }
+    serverConnection.requestConnection(connectionRequestToken, retry)
   }
 
   def restoreIdentity(identity: Identity) {
