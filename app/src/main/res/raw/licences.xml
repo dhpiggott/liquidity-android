@@ -37,6 +37,11 @@
         <license>Apache Software License 2.0</license>
     </notice>
     <notice>
+        <name>joda-time-android</name>
+        <url>https://github.com/dlew/joda-time-android</url>
+        <license>Apache Software License 2.0</license>
+    </notice>
+    <notice>
         <name>QRGen</name>
         <url>https://github.com/kenglxn/QRGen</url>
         <license>Apache Software License 2.0</license>

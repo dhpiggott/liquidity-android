@@ -78,7 +78,6 @@
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/exploded-aar/com.android.support/appcompat-v7/23.0.1/jars" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/exploded-aar/com.android.support/cardview-v7/23.0.1/jars" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/exploded-aar/com.android.support/design/23.0.1/jars" />
-      <excludeFolder url="file://$MODULE_DIR$/build/intermediates/exploded-aar/com.android.support/multidex-instrumentation/1.0.1/jars" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/exploded-aar/com.android.support/multidex/1.0.1/jars" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/exploded-aar/com.android.support/recyclerview-v7/23.0.1/jars" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/exploded-aar/com.android.support/support-v13/23.0.1/jars" />
@@ -86,6 +85,7 @@
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/exploded-aar/com.journeyapps/zxing-android-embedded/3.0.3/jars" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/exploded-aar/com.sothree.slidinguppanel/library/3.1.1/jars" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/exploded-aar/de.psdev.licensesdialog/licensesdialog/1.8.0/jars" />
+      <excludeFolder url="file://$MODULE_DIR$/build/intermediates/exploded-aar/net.danlew/android.joda/2.8.2/jars" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/incremental" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/jacoco" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/javaResources" />
@@ -113,8 +113,9 @@
     <orderEntry type="library" exported="" name="core-2.0" level="project" />
     <orderEntry type="library" exported="" name="recyclerview-v7-23.0.1" level="project" />
     <orderEntry type="library" exported="" name="config-1.2.1" level="project" />
-    <orderEntry type="library" exported="" name="pkix-1.52.0.0" level="project" />
+    <orderEntry type="library" exported="" name="android.joda-2.8.2" level="project" />
     <orderEntry type="library" exported="" name="jackson-annotations-2.3.2" level="project" />
+    <orderEntry type="library" exported="" name="pkix-1.52.0.0" level="project" />
     <orderEntry type="library" exported="" name="core-3.2.0" level="project" />
     <orderEntry type="library" exported="" name="android-2.0" level="project" />
     <orderEntry type="library" exported="" name="scala-stm_2.11-0.7" level="project" />
@@ -123,7 +124,7 @@
     <orderEntry type="library" exported="" name="play-functional_2.11-2.3.9" level="project" />
     <orderEntry type="library" exported="" name="appcompat-v7-23.0.1" level="project" />
     <orderEntry type="library" exported="" name="support-annotations-23.0.1" level="project" />
-    <orderEntry type="library" exported="" scope="TEST" name="multidex-instrumentation-1.0.1" level="project" />
+    <orderEntry type="library" exported="" name="joda-time-2.8.2-no-tzdb" level="project" />
     <orderEntry type="library" exported="" name="library-2.4.0" level="project" />
     <orderEntry type="library" exported="" name="core-1.52.0.0" level="project" />
     <orderEntry type="library" exported="" name="licensesdialog-1.8.0" level="project" />
@@ -133,7 +134,6 @@
     <orderEntry type="library" exported="" name="design-23.0.1" level="project" />
     <orderEntry type="library" exported="" name="scala-reflect-2.11.1" level="project" />
     <orderEntry type="library" exported="" name="jackson-databind-2.3.2" level="project" />
-    <orderEntry type="library" exported="" name="joda-time-2.3" level="project" />
     <orderEntry type="library" exported="" name="play-iteratees_2.11-2.3.9" level="project" />
     <orderEntry type="library" exported="" name="multidex-1.0.1" level="project" />
     <orderEntry type="library" exported="" name="scala-library-2.11.7" level="project" />
@@ -141,6 +141,5 @@
     <orderEntry type="library" exported="" name="support-v13-23.0.1" level="project" />
     <orderEntry type="library" exported="" name="play-json_2.11-2.3.9" level="project" />
     <orderEntry type="library" exported="" name="library-3.1.1" level="project" />
-    <orderEntry type="library" name="scala-sdk-2.11.7" level="application" />
   </component>
 </module>

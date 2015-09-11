@@ -8,7 +8,6 @@ import android.content.Loader;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
-import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,6 +20,10 @@ import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.models.ZoneId;
 import com.dhpcs.liquidity.provider.LiquidityContract;
 
+import net.danlew.android.joda.DateUtils;
+
+import org.joda.time.Instant;
+
 import java.util.UUID;
 
 public class GamesFragment extends Fragment implements AdapterView.OnItemClickListener,
@@ -28,7 +31,7 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
 
     private static final int GAMES_LOADER = 0;
 
-    private static final long REFRESH_INTERVAL = DateUtils.MINUTE_IN_MILLIS;
+    private static final long REFRESH_INTERVAL = 60_000;
 
     public interface Listener {
 
@@ -90,9 +93,8 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
                             getActivity().getString(
                                     R.string.created_format_string,
                                     DateUtils.getRelativeTimeSpanString(
-                                            cursor.getLong(columnIndex),
-                                            System.currentTimeMillis(),
-                                            REFRESH_INTERVAL
+                                            getActivity(),
+                                            new Instant(cursor.getLong(columnIndex))
                                     )
                             )
                     );
@@ -103,9 +105,8 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
                             getActivity().getString(
                                     R.string.expires_format_string,
                                     DateUtils.getRelativeTimeSpanString(
-                                            cursor.getLong(columnIndex),
-                                            System.currentTimeMillis(),
-                                            REFRESH_INTERVAL
+                                            getActivity(),
+                                            new Instant(cursor.getLong(columnIndex))
                                     )
                             )
                     );
