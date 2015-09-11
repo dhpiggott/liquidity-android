@@ -561,26 +561,33 @@ class BoardGame private(context: Context,
             gameActionListeners.foreach(_.onIdentityRequired())
           }
 
-          def checkAndUpdateGameName(name: String): Option[Long] = {
+          def checkAndUpdateGame(expires: Long, name: String): Option[Long] = {
             val existingEntry = context.getContentResolver.query(
               Games.CONTENT_URI,
-              Array(LiquidityContract.Games._ID, LiquidityContract.Games.NAME),
+              Array(
+                LiquidityContract.Games._ID,
+                LiquidityContract.Games.NAME
+              ),
               LiquidityContract.Games.ZONE_ID + " = ?",
               Array(zoneId.id.toString),
               null
             )
-            if (!existingEntry.moveToFirst()) {
-              None
-            } else {
-              val gameId = existingEntry.getLong(
-                existingEntry.getColumnIndexOrThrow(LiquidityContract.Games._ID)
-              )
-              if (existingEntry.getString(
-                existingEntry.getColumnIndexOrThrow(LiquidityContract.Games.NAME)
-              ) != name) {
-                updateGameName(gameId, name)
+            try {
+              if (!existingEntry.moveToFirst()) {
+                None
+              } else {
+                val gameId = existingEntry.getLong(
+                  existingEntry.getColumnIndexOrThrow(LiquidityContract.Games._ID)
+                )
+                if (existingEntry.getString(
+                  existingEntry.getColumnIndexOrThrow(LiquidityContract.Games.NAME)
+                ) != name) {
+                  updateGameName(gameId, name)
+                }
+                Some(gameId)
               }
-              Some(gameId)
+            } finally {
+              existingEntry.close()
             }
           }
 
@@ -589,32 +596,40 @@ class BoardGame private(context: Context,
            * the required identity - which we must do at most once.
            */
           gameId = gameId.fold(
-            Some(Future(
+            Some(
+              Future(
 
-              /*
-               * This is in case a user rejoins a game by scanning its code again rather than by
-               * clicking its list item - in such cases we mustn't attempt to insert an entry as
-               * that would silently fail (as it happens on the Future's worker thread), but we may
-               * need to update the existing entries name.
-               */
-              checkAndUpdateGameName(joinZoneResponse.zone.name.orNull).getOrElse {
-                val contentValues = new ContentValues
-                contentValues.put(Games.ZONE_ID, zoneId.id.toString)
-                contentValues.put(Games.NAME, joinZoneResponse.zone.name.orNull)
-                contentValues.put(Games.CREATED, joinZoneResponse.zone.created: java.lang.Long)
-                contentValues.put(Games.EXPIRES, joinZoneResponse.zone.expires: java.lang.Long)
-                ContentUris.parseId(
-                  context.getContentResolver.insert(
-                    Games.CONTENT_URI,
-                    contentValues
+                /*
+                 * This is in case a user rejoins a game by scanning its code again rather than by
+                 * clicking its list item - in such cases we mustn't attempt to insert an entry as
+                 * that would silently fail (as it happens on the Future's worker thread), but we
+                 * may need to update the existing entries name.
+                 */
+                checkAndUpdateGame(
+                  joinZoneResponse.zone.expires,
+                  joinZoneResponse.zone.name.orNull
+                ).getOrElse {
+                  val contentValues = new ContentValues
+                  contentValues.put(Games.ZONE_ID, zoneId.id.toString)
+                  contentValues.put(Games.CREATED, joinZoneResponse.zone.created: java.lang.Long)
+                  contentValues.put(Games.EXPIRES, joinZoneResponse.zone.expires: java.lang.Long)
+                  contentValues.put(Games.NAME, joinZoneResponse.zone.name.orNull)
+                  ContentUris.parseId(
+                    context.getContentResolver.insert(
+                      Games.CONTENT_URI,
+                      contentValues
+                    )
                   )
-                )
-              }
-            ))
+                }
+              )
+            )
           ) { gameId =>
             gameId.foreach(_ =>
               Future(
-                checkAndUpdateGameName(joinZoneResponse.zone.name.orNull)
+                checkAndUpdateGame(
+                  joinZoneResponse.zone.expires,
+                  joinZoneResponse.zone.name.orNull
+                )
               )
             )
             Some(gameId)
@@ -769,11 +784,13 @@ class BoardGame private(context: Context,
 
             gameActionListeners.foreach(_.onGameNameChanged(name))
 
-            gameId.foreach(_.foreach { gameId =>
-              Future {
-                updateGameName(gameId, name.orNull)
+            gameId.foreach(
+              _.foreach { gameId =>
+                Future(
+                  updateGameName(gameId, name.orNull)
+                )
               }
-            })
+            )
 
           case MemberCreatedNotification(_, member) =>
 

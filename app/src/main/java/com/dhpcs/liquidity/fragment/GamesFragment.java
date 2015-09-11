@@ -127,9 +127,9 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
                         new String[]{
                                 LiquidityContract.Games._ID,
                                 LiquidityContract.Games.ZONE_ID,
-                                LiquidityContract.Games.NAME,
                                 LiquidityContract.Games.CREATED,
-                                LiquidityContract.Games.EXPIRES
+                                LiquidityContract.Games.EXPIRES,
+                                LiquidityContract.Games.NAME
                         },
                         LiquidityContract.Games.EXPIRES + " > ?",
                         new String[]{
