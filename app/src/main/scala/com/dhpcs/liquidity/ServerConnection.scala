@@ -176,8 +176,6 @@ class ServerConnection private(context: Context) extends WebSocketListener {
 
   }
 
-  def connectionState = _connectionState
-
   private def disconnect(code: Int) = state match {
 
     case _: IdleState =>
@@ -222,7 +220,7 @@ class ServerConnection private(context: Context) extends WebSocketListener {
 
   }
 
-  def doClose(handler: Handler,
+  private def doClose(handler: Handler,
               dueToGeneralFailure: Boolean,
               dueToTlsError: Boolean,
               reconnect: Boolean = false) =
@@ -248,7 +246,7 @@ class ServerConnection private(context: Context) extends WebSocketListener {
       }
     }
 
-  def doOpen() {
+  private def doOpen() {
     val handlerThread = new HandlerThread("ServerConnection")
     handlerThread.start()
     val handler = new Handler(handlerThread.getLooper)
@@ -267,7 +265,7 @@ class ServerConnection private(context: Context) extends WebSocketListener {
     connectionStateListeners.foreach(_.onConnectionStateChanged(_connectionState))
   }
 
-  def handleConnectivityStateChange() =
+  private def handleConnectivityStateChange() =
     if (!isConnectionAvailable) {
       state match {
 
@@ -674,8 +672,8 @@ class ServerConnection private(context: Context) extends WebSocketListener {
     if (connectRequestTokens.contains(token)) {
       connectRequestTokens = connectRequestTokens - token
       if (connectRequestTokens.isEmpty) {
-        if (connectionState == ServerConnection.CONNECTING
-          || connectionState == ServerConnection.CONNECTED) {
+        if (_connectionState == ServerConnection.CONNECTING
+          || _connectionState == ServerConnection.CONNECTED) {
 
           disconnect(1001)
 
