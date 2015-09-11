@@ -1,3 +1,4 @@
+# Various superfluous inferred dependencies that don't exist on Android
 -dontwarn java.beans.MethodDescriptor
 -dontwarn java.beans.PropertyDescriptor
 -dontwarn java.beans.SimpleBeanInfo
@@ -8,8 +9,17 @@
 -dontwarn org.w3c.dom.bootstrap.DOMImplementationRegistry
 -dontwarn scala.reflect.internal.*
 -dontwarn sun.**
--keep class android.support.design.widget.AppBarLayout** { *; }
+
+# Scala Fork/Join
+-keep class scala.concurrent.forkjoin.** { *; }
+
+# See https://issues.scala-lang.org/browse/SI-5397
 -keep class scala.collection.SeqLike {
     public protected *;
 }
--keepnames class com.fasterxml.jackson.** { *; }
+
+# JSON
+-keep class com.fasterxml.jackson.** { *; }
+
+# Design support behaviours are referenced in layout XML
+-keep class android.support.design.widget.** { *; }
