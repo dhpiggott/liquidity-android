@@ -378,7 +378,7 @@ public class BoardGameActivity extends AppCompatActivity
         playersFragment = (PlayersFragment)
                 getFragmentManager().findFragmentById(R.id.fragment_players);
         playersTransfersFragment = (PlayersTransfersFragment)
-                getFragmentManager().findFragmentById(R.id.fragment_players_transfers);
+                getSupportFragmentManager().findFragmentById(R.id.fragment_players_transfers);
 
         joinRequestToken = (BoardGame.JoinRequestToken) getLastCustomNonConfigurationInstance();
 
