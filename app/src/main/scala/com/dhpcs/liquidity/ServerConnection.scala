@@ -221,9 +221,9 @@ class ServerConnection private(context: Context) extends WebSocketListener {
   }
 
   private def doClose(handler: Handler,
-              dueToGeneralFailure: Boolean,
-              dueToTlsError: Boolean,
-              reconnect: Boolean = false) =
+                      dueToGeneralFailure: Boolean,
+                      dueToTlsError: Boolean,
+                      reconnect: Boolean = false) =
     asyncPost(handler) {
       handler.getLooper.quit()
       asyncPost(mainHandler) {

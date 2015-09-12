@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -186,11 +185,6 @@ public class BoardGameActivity extends AppCompatActivity
         }
     }
 
-    public static boolean isIdentityNameValid(Context context, CharSequence identityName) {
-        return !TextUtils.isEmpty(identityName)
-                && !identityName.toString().equals(context.getString(R.string.bank_member_name));
-    }
-
     public static Comparator<Player> playerComparator(final Context context) {
         return new Comparator<Player>() {
 
@@ -244,6 +238,10 @@ public class BoardGameActivity extends AppCompatActivity
                 dialogFragment.dismiss();
             }
         }
+    }
+
+    public boolean isIdentityNameValid(CharSequence name) {
+        return boardGame.isIdentityNameValid(name);
     }
 
     @Override

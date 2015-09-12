@@ -8,7 +8,6 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
-import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.WindowManager;
@@ -16,6 +15,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.dhpcs.liquidity.BoardGame$;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.models.package$;
 
@@ -146,7 +146,7 @@ public class EnterGameNameDialogFragment extends DialogFragment {
 
     private void validateInput(CharSequence gameName) {
         buttonPositive.setEnabled(
-                !TextUtils.isEmpty(gameName) && gameName.length() <= MAXIMUM_NAME_LENGTH
+                BoardGame$.MODULE$.isGameNameValid(gameName)
         );
     }
 

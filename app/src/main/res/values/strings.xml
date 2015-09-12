@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <string name="app_name">Liquidity</string>
 
@@ -18,7 +18,7 @@
     <string name="add_players">Add players</string>
     <string name="add_players_game_name_format_string">Show the QR code to the joining players to admit them to %1$s.</string>
     <string name="all">All</string>
-    <string name="bank_member_name">Bank</string>
+    <string name="bank_member_name" tools:ignore="UnusedResources">Bank</string>
     <string name="cancel">Cancel</string>
     <string name="change_game_name">Change game name</string>
     <string name="change_game_name_error_format_string">Couldn\'t change game name to \"%1$s\"!</string>

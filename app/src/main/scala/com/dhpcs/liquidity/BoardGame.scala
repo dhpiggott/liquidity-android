@@ -202,12 +202,16 @@ object BoardGame {
       !isHidden(identity.member)
     }
 
+  def isGameNameValid(name: CharSequence) = isTagValid(name)
+
   private def isHidden(member: Member) =
     member.metadata.fold(false)(
       _.value.get(HiddenFlagKey).fold(false)(
         _.asOpt[Boolean].getOrElse(false)
       )
     )
+
+  def isTagValid(tag: CharSequence) = tag.length > 0 && tag.length <= MaxStringLength
 
   private def membersAccountsFromAccounts(accounts: Map[AccountId, Account]) =
     accounts.filter { case (_, account) =>
@@ -451,6 +455,10 @@ class BoardGame private(context: Context,
   def getPlayers = state.players.values
 
   def getZoneId = zoneId.orNull
+
+  def isIdentityNameValid(name: CharSequence) = isTagValid(name) && state.zone.members(
+    state.accountIdsToMemberIds(state.zone.equityAccountId)
+  ).name.fold(true)(_ != name.toString)
 
   def isPublicKeyConnectedAndImplicitlyValid(publicKey: PublicKey) =
     state.connectedClients.contains(publicKey)

@@ -138,10 +138,9 @@ public class CreateIdentityDialogFragment extends DialogFragment {
 
     private void validateInput(CharSequence identityName) {
         buttonPositive.setEnabled(
-                BoardGameActivity.isIdentityNameValid(
-                        getActivity(),
+                ((BoardGameActivity) getActivity()).isIdentityNameValid(
                         identityName
-                ) && identityName.length() <= MAXIMUM_NAME_LENGTH
+                )
         );
     }
 
