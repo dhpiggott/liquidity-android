@@ -177,6 +177,8 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
     private List<Player> to;
 
     private ArrayAdapter<IdentityWithBalance> identitiesSpinnerAdapter;
+    private ArrayAdapter<Player> playersSpinnerAdapter;
+    private ArrayAdapter<Player> playersListAdapter;
 
     private TextView textViewValueError;
     private ListView listViewTo;
@@ -196,11 +198,8 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
 
     @Override
     @SuppressWarnings("unchecked")
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-        @SuppressLint("InflateParams") View view = getActivity().getLayoutInflater().inflate(
-                R.layout.fragment_transfer_to_player_dialog,
-                null
-        );
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
         List<IdentityWithBalance> identities = (List<IdentityWithBalance>)
                 getArguments().getSerializable(ARG_IDENTITIES);
@@ -221,7 +220,7 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
                 android.R.layout.simple_spinner_dropdown_item
         );
         identitiesSpinnerAdapter.sort(playerComparator);
-        final ArrayAdapter<Player> playersSpinnerAdapter = new PlayersAdapter(
+        playersSpinnerAdapter = new PlayersAdapter(
                 getActivity(),
                 android.R.layout.simple_spinner_item,
                 players
@@ -230,12 +229,20 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
                 android.R.layout.simple_spinner_dropdown_item
         );
         playersSpinnerAdapter.sort(playerComparator);
-        final ArrayAdapter<Player> playersListAdapter = new PlayersAdapter(
+        playersListAdapter = new PlayersAdapter(
                 getActivity(),
                 android.R.layout.simple_list_item_multiple_choice,
                 players
         );
         playersListAdapter.sort(playerComparator);
+    }
+
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        @SuppressLint("InflateParams") View view = getActivity().getLayoutInflater().inflate(
+                R.layout.fragment_transfer_to_player_dialog,
+                null
+        );
 
         TextView textViewCurrency = (TextView) view.findViewById(R.id.textview_currency);
         final EditText editTextValue = (EditText) view.findViewById(R.id.edittext_value);
