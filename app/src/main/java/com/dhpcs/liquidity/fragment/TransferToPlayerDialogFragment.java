@@ -178,7 +178,7 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
 
     private ArrayAdapter<IdentityWithBalance> identitiesSpinnerAdapter;
 
-    private EditText editTextValue;
+    private TextView textViewValueError;
     private ListView listViewTo;
     private Button buttonPositive;
 
@@ -238,7 +238,8 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
         playersListAdapter.sort(playerComparator);
 
         TextView textViewCurrency = (TextView) view.findViewById(R.id.textview_currency);
-        editTextValue = (EditText) view.findViewById(R.id.edittext_value);
+        final EditText editTextValue = (EditText) view.findViewById(R.id.edittext_value);
+        textViewValueError = (TextView) view.findViewById(R.id.textview_value_error);
         final TextView textViewMultiplier = (TextView) view.findViewById(R.id.textview_multiplier);
         RadioGroup radioGroupValueMultiplier =
                 (RadioGroup) view.findViewById(R.id.radiogroup_value_multiplier);
@@ -437,7 +438,7 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
                 identities.apply(from.member().id()).balanceWithCurrency()._1();
         if (value == null) {
             scaledValue = null;
-            editTextValue.setError(null);
+            textViewValueError.setText(null);
             buttonPositive.setEnabled(false);
         } else {
             scaledValue = value.scaleByPowerOfTen(scale);
@@ -445,7 +446,7 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
                     scaledValue.multiply(new BigDecimal(to.size()));
             if (requiredBalance != null
                     && currentBalance.bigDecimal().compareTo(requiredBalance) < 0) {
-                editTextValue.setError(
+                textViewValueError.setText(
                         getString(
                                 R.string.transfer_value_error_invalid_format_string,
                                 BoardGameActivity.formatCurrencyValue(
@@ -462,7 +463,7 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
                 );
                 buttonPositive.setEnabled(false);
             } else {
-                editTextValue.setError(null);
+                textViewValueError.setText(null);
                 buttonPositive.setEnabled(true);
             }
         }

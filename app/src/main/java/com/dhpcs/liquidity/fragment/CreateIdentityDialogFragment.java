@@ -102,6 +102,17 @@ public class CreateIdentityDialogFragment extends DialogFragment {
             }
 
             private void updateCharacterCount(Editable s) {
+                //noinspection deprecation
+                textViewIdentityNameCharacterCount.setTextColor(
+                        s.length() <= MAXIMUM_NAME_LENGTH
+                                ?
+                                getResources().getColor(
+                                        android.support.design.
+                                                R.color.secondary_text_default_material_light
+                                )
+                                :
+                                0xffdd2c00
+                );
                 textViewIdentityNameCharacterCount.setText(
                         getString(
                                 R.string.character_count_format_string,
