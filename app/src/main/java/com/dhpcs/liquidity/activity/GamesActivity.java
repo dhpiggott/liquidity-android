@@ -1,13 +1,16 @@
 package com.dhpcs.liquidity.activity;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Toast;
 
+import com.cocosw.bottomsheet.BottomSheet;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.fragment.CreateGameDialogFragment;
 import com.dhpcs.liquidity.fragment.GamesFragment;
@@ -64,11 +67,49 @@ public class GamesActivity extends AppCompatActivity implements CreateGameDialog
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 
         setSupportActionBar(toolbar);
+
+        findViewById(R.id.floatingactionbutton_new_game)
+                .setOnClickListener(new View.OnClickListener() {
+
+                    @Override
+                    public void onClick(View v) {
+                        new BottomSheet.Builder(GamesActivity.this)
+                                .sheet(R.menu.games_bottom_sheet)
+                                .listener(new DialogInterface.OnClickListener() {
+
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        switch (which) {
+                                            case R.id.action_new_game:
+                                                CreateGameDialogFragment.newInstance()
+                                                        .show(
+                                                                getFragmentManager(),
+                                                                CreateGameDialogFragment.TAG
+                                                        );
+                                                break;
+                                            case R.id.action_join_game:
+                                                new IntentIntegrator(GamesActivity.this)
+                                                        .setCaptureActivity(JoinGameActivity.class)
+                                                        .setDesiredBarcodeFormats(
+                                                                Collections.singleton("QR_CODE")
+                                                        )
+                                                        .setBeepEnabled(false)
+                                                        .setOrientationLocked(false)
+                                                        .initiateScan();
+                                                break;
+                                        }
+                                    }
+
+                                }).
+                                show();
+                    }
+
+                });
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_games, menu);
+        getMenuInflater().inflate(R.menu.games_toolbar, menu);
         return true;
     }
 
@@ -110,21 +151,6 @@ public class GamesActivity extends AppCompatActivity implements CreateGameDialog
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.action_new_game:
-                CreateGameDialogFragment.newInstance()
-                        .show(
-                                getFragmentManager(),
-                                CreateGameDialogFragment.TAG
-                        );
-                return true;
-            case R.id.action_join_game:
-                new IntentIntegrator(GamesActivity.this)
-                        .setCaptureActivity(JoinGameActivity.class)
-                        .setDesiredBarcodeFormats(Collections.singleton("QR_CODE"))
-                        .setBeepEnabled(false)
-                        .setOrientationLocked(false)
-                        .initiateScan();
-                return true;
             case R.id.action_about:
                 startActivity(
                         new Intent(

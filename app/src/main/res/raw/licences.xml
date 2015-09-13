@@ -32,13 +32,19 @@
         <license>Apache Software License 2.0</license>
     </notice>
     <notice>
-        <name>Android Sliding Up Panel</name>
-        <url>https://github.com/umano/AndroidSlidingUpPanel</url>
+        <name>BottomSheet</name>
+        <url>http://cocosw.com/BottomSheet/</url>
+        <copyright>Copyright 2011, 2015 Kai Liao</copyright>
         <license>Apache Software License 2.0</license>
     </notice>
     <notice>
         <name>joda-time-android</name>
         <url>https://github.com/dlew/joda-time-android</url>
+        <license>Apache Software License 2.0</license>
+    </notice>
+    <notice>
+        <name>Android Sliding Up Panel</name>
+        <url>https://github.com/umano/AndroidSlidingUpPanel</url>
         <license>Apache Software License 2.0</license>
     </notice>
     <notice>

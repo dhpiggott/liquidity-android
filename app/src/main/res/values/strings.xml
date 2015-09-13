@@ -7,11 +7,11 @@
     <string name="activity_add_players_title">Add Players</string>
     <string name="activity_games_title">Liquidity</string>
     <string name="activity_join_game_title">Join Game</string>
-    <string name="activity_board_game_title">Board Game</string>
+    <string name="activity_board_game_title">Unnamed Game</string>
     <string name="activity_receive_identity_title">Receive Identity</string>
     <string name="activity_transfer_identity_title">Transfer Identity</string>
 
-    <string name="about">About</string>
+    <string name="about">Help &amp; acknowledgements</string>
     <string name="acknowledgement_copyright_and_license_format_string">%1$s\n\n%2$s</string>
     <string name="acknowledgements_content">Liquidity is built around the following open source libraries. Big thanks go to these giants whose shoulders we stand on:</string>
     <string name="acknowledgements_title">Acknowledgements &amp; Licences</string>
@@ -31,6 +31,7 @@
     <string name="create_identity">Create identity</string>
     <string name="create_identity_account_error_format_string">Couldn\'t create account for identity \"%1$s\"!</string>
     <string name="create_identity_member_error_format_string">Couldn\'t create member for identity \"%1$s\"!</string>
+    <string name="create_new_game">Create new game</string>
     <string name="created_format_string">Created %1$s</string>
     <string name="currency_code_format_string">"%1$s "</string>
     <string name="currency_none" />
@@ -51,7 +52,7 @@
     <string name="game_name">Name</string>
     <string name="group_transfer">Group transfer</string>
     <string name="identity_format_string">%1$s (%2$s available)</string>
-    <string name="join_game">Join game</string>
+    <string name="join_existing_game">Join existing game</string>
     <string name="join_game_error">"Couldn't join game - are you sure it\'s a Liquidity game?"</string>
     <string name="join_game_instruction">Scan the QR code on the host\'s phone.</string>
     <string name="join_state_available">The connection was closed.</string>
@@ -62,8 +63,7 @@
     <string name="join_state_quitting">Quitting game</string>
     <string name="join_state_tls_error">Could not establish a secure connection. Check you are using the latest version of Liquidity.</string>
     <string name="join_state_unavailable">Liquidity requires a data connection, but none is available.</string>
-    <string name="new_game">New game</string>
-    <string name="no_games">You don\'t have any saved games. Use the menu above to create or join one.</string>
+    <string name="no_games">You don\'t have any saved games. Click the button below to create or join one.</string>
     <string name="no_identities">You don\'t have any identities. Touch here to create one.</string>
     <string name="no_last_transfer">Click a player to send money to them.</string>
     <string name="no_other_players">No one else has joined yet. Touch here to invite them.</string>

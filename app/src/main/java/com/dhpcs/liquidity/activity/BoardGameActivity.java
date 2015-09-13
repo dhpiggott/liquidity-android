@@ -505,7 +505,7 @@ public class BoardGameActivity extends AppCompatActivity
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_board_game, menu);
+        getMenuInflater().inflate(R.menu.board_game_toolbar, menu);
         return true;
     }
 
