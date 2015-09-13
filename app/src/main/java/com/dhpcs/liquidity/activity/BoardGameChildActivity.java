@@ -6,7 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import com.dhpcs.liquidity.BoardGame;
 import com.dhpcs.liquidity.models.ZoneId;
 
-public class BoardGameChildActivity extends AppCompatActivity
+public abstract class BoardGameChildActivity extends AppCompatActivity
         implements BoardGame.JoinStateListener {
 
     public static final String EXTRA_ZONE_ID_HOLDER = "zone_id_holder";
