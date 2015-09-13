@@ -124,6 +124,13 @@ public class TransfersFragment extends Fragment {
             this.player = player;
         }
 
+        public void beginBatchedUpdates() {
+            transfers.beginBatchedUpdates();
+        }
+
+        public void endBatchedUpdates() {
+            transfers.endBatchedUpdates();
+        }
 
         @Override
         public int getItemCount() {
@@ -144,16 +151,8 @@ public class TransfersFragment extends Fragment {
             holder.bindTransfer(transfer);
         }
 
-        public int addOrReplace(TransferWithCurrency transfer) {
-            return transfers.add(transfer);
-        }
-
-        public void beginBatchedUpdates() {
-            transfers.beginBatchedUpdates();
-        }
-
-        public void endBatchedUpdates() {
-            transfers.endBatchedUpdates();
+        public void replaceOrAdd(TransferWithCurrency transfer) {
+            transfers.add(transfer);
         }
 
     }
@@ -283,7 +282,7 @@ public class TransfersFragment extends Fragment {
                 && player.member().id().equals(transfer.from().right().get().member().id()))
                 || (transfer.to().isRight()
                 && player.member().id().equals(transfer.to().right().get().member().id()))) {
-            transfersAdapter.addOrReplace(transfer);
+            transfersAdapter.replaceOrAdd(transfer);
         }
     }
 

@@ -90,10 +90,11 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
 
     private static class IdentitiesAdapter extends ArrayAdapter<IdentityWithBalance> {
 
-        public IdentitiesAdapter(Context context,
-                                 int resource,
-                                 List<IdentityWithBalance> identities) {
-            super(context, resource, identities);
+        public IdentitiesAdapter(Context context, List<IdentityWithBalance> identities) {
+            super(context, android.R.layout.simple_spinner_item, identities);
+            setDropDownViewResource(
+                    android.R.layout.simple_spinner_dropdown_item
+            );
         }
 
         private View bindView(TextView textView, IdentityWithBalance identity) {
@@ -211,14 +212,7 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
                 Collections.singletonList(initialTo);
 
         Comparator<Player> playerComparator = BoardGameActivity.playerComparator(getActivity());
-        identitiesSpinnerAdapter = new IdentitiesAdapter(
-                getActivity(),
-                android.R.layout.simple_spinner_item,
-                identities
-        );
-        identitiesSpinnerAdapter.setDropDownViewResource(
-                android.R.layout.simple_spinner_dropdown_item
-        );
+        identitiesSpinnerAdapter = new IdentitiesAdapter(getActivity(), identities);
         identitiesSpinnerAdapter.sort(playerComparator);
         playersSpinnerAdapter = new PlayersAdapter(
                 getActivity(),
@@ -253,6 +247,7 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
         Spinner spinnerFrom = (Spinner) view.findViewById(R.id.spinner_from);
         Spinner spinnerTo = (Spinner) view.findViewById(R.id.spinner_to);
         listViewTo = (ListView) view.findViewById(R.id.listview_to);
+        View viewBottomDivider = view.findViewById(R.id.view_bottom_divider);
 
         final AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
                 .setTitle(
@@ -399,6 +394,7 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
         } else {
             spinnerTo.setVisibility(View.GONE);
             listViewTo.setVisibility(View.VISIBLE);
+            viewBottomDivider.setVisibility(View.VISIBLE);
         }
 
         alertDialog.setOnShowListener(new DialogInterface.OnShowListener() {

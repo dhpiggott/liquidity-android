@@ -48,8 +48,19 @@ public class CreateGameDialogFragment extends DialogFragment {
 
     private static class CurrenciesAdapter extends ArrayAdapter<Currency> {
 
-        public CurrenciesAdapter(Context context, int resource, List<Currency> currencies) {
-            super(context, resource, currencies);
+        public CurrenciesAdapter(Context context, List<Currency> currencies) {
+            super(context, android.R.layout.simple_spinner_item, currencies);
+            setDropDownViewResource(
+                    android.R.layout.simple_spinner_dropdown_item
+            );
+            sort(new Comparator<Currency>() {
+
+                @Override
+                public int compare(Currency lhs, Currency rhs) {
+                    return lhs.getCurrencyCode().compareTo(rhs.getCurrencyCode());
+                }
+
+            });
         }
 
         @TargetApi(Build.VERSION_CODES.KITKAT)
@@ -140,20 +151,8 @@ public class CreateGameDialogFragment extends DialogFragment {
         }
         final ArrayAdapter<Currency> currenciesSpinnerAdapter = new CurrenciesAdapter(
                 getActivity(),
-                android.R.layout.simple_spinner_item,
                 new ArrayList<>(currencies)
         );
-        currenciesSpinnerAdapter.setDropDownViewResource(
-                android.R.layout.simple_spinner_dropdown_item
-        );
-        currenciesSpinnerAdapter.sort(new Comparator<Currency>() {
-
-            @Override
-            public int compare(Currency lhs, Currency rhs) {
-                return lhs.getCurrencyCode().compareTo(rhs.getCurrencyCode());
-            }
-
-        });
 
         final EditText editTextGameName = (EditText) view.findViewById(R.id.edittext_game_name);
         final TextView textViewGameNameCharacterCount = (TextView)

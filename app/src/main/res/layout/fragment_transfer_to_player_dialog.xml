@@ -1,153 +1,176 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:paddingEnd="24dp"
-    android:paddingLeft="24dp"
-    android:paddingRight="24dp"
-    android:paddingStart="24dp"
     tools:context="com.dhpcs.liquidity.fragment.TransferToPlayerDialogFragment">
 
-    <TextView
-        style="@style/TextAppearance.AppCompat.Body2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:labelFor="@+id/edittext_value"
-        android:text="@string/transfer_amount"
-        android:textColor="?android:textColorSecondary" />
-
-    <RelativeLayout
+    <View
+        android:id="@+id/view_bottom_divider"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="1dp"
+        android:layout_above="@+id/scrollview_transfer_details"
+        android:layout_alignParentBottom="true"
+        android:background="?android:attr/dividerHorizontal"
+        android:visibility="gone" />
+
+    <android.support.v4.widget.NestedScrollView
+        android:id="@+id/scrollview_transfer_details"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true">
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_centerVertical="true"
-            android:layout_toLeftOf="@+id/radiogroup_value_multiplier"
-            android:layout_toStartOf="@+id/radiogroup_value_multiplier"
-            android:orientation="horizontal">
+            android:orientation="vertical"
+            android:paddingEnd="24dp"
+            android:paddingLeft="24dp"
+            android:paddingRight="24dp"
+            android:paddingStart="24dp">
 
             <TextView
-                android:id="@+id/textview_currency"
-                style="@style/TextAppearance.AppCompat.Subhead"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-            <EditText
-                android:id="@+id/edittext_value"
-                style="@style/TextAppearance.AppCompat.Subhead"
+                style="@style/TextAppearance.AppCompat.Body2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:inputType="numberDecimal"
-                android:selectAllOnFocus="true" />
+                android:layout_marginTop="8dp"
+                android:labelFor="@+id/edittext_value"
+                android:text="@string/transfer_amount"
+                android:textColor="?android:textColorSecondary" />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:layout_toLeftOf="@+id/radiogroup_value_multiplier"
+                    android:layout_toStartOf="@+id/radiogroup_value_multiplier"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/textview_currency"
+                        style="@style/TextAppearance.AppCompat.Subhead"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <EditText
+                        android:id="@+id/edittext_value"
+                        style="@style/TextAppearance.AppCompat.Subhead"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:inputType="numberDecimal"
+                        android:selectAllOnFocus="true" />
+
+                    <TextView
+                        android:id="@+id/textview_multiplier"
+                        style="@style/TextAppearance.AppCompat.Subhead"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                </LinearLayout>
+
+                <RadioGroup
+                    android:id="@+id/radiogroup_value_multiplier"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:orientation="horizontal">
+
+                    <RadioButton
+                        android:id="@+id/radiobutton_value_multiplier_million"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/value_multiplier_million" />
+
+                    <RadioButton
+                        android:id="@+id/radiobutton_value_multiplier_thousand"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/value_multiplier_thousand" />
+
+                    <RadioButton
+                        android:id="@+id/radiobutton_value_multiplier_none"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true"
+                        android:text="@string/value_multiplier_none" />
+
+                </RadioGroup>
+
+            </RelativeLayout>
 
             <TextView
-                android:id="@+id/textview_multiplier"
-                style="@style/TextAppearance.AppCompat.Subhead"
+                android:id="@+id/textview_value_error"
+                style="@style/TextAppearance.AppCompat.Caption"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:textColor="#ffdd2c00" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="8dp"
+                android:background="?android:attr/dividerHorizontal" />
+
+            <TextView
+                style="@style/TextAppearance.AppCompat.Body2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:labelFor="@+id/spinner_from"
+                android:text="@string/transfer_from"
+                android:textColor="?android:attr/textColorSecondary" />
+
+            <Spinner
+                android:id="@+id/spinner_from"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="8dp"
+                android:background="?android:attr/dividerHorizontal" />
+
+            <TextView
+                style="@style/TextAppearance.AppCompat.Body2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:labelFor="@+id/linearlayout_to"
+                android:text="@string/transfer_to"
+                android:textColor="?android:attr/textColorSecondary" />
+
+            <LinearLayout
+                android:id="@+id/linearlayout_to"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="vertical">
+
+                <Spinner
+                    android:id="@+id/spinner_to"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <ListView
+                    android:id="@+id/listview_to"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone" />
+
+            </LinearLayout>
 
         </LinearLayout>
 
-        <RadioGroup
-            android:id="@+id/radiogroup_value_multiplier"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentRight="true"
-            android:layout_centerVertical="true"
-            android:orientation="horizontal">
+    </android.support.v4.widget.NestedScrollView>
 
-            <RadioButton
-                android:id="@+id/radiobutton_value_multiplier_million"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/value_multiplier_million" />
-
-            <RadioButton
-                android:id="@+id/radiobutton_value_multiplier_thousand"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/value_multiplier_thousand" />
-
-            <RadioButton
-                android:id="@+id/radiobutton_value_multiplier_none"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="true"
-                android:text="@string/value_multiplier_none" />
-
-        </RadioGroup>
-
-    </RelativeLayout>
-
-    <TextView
-        android:id="@+id/textview_value_error"
-        style="@style/TextAppearance.AppCompat.Caption"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="#ffdd2c00" />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginTop="8dp"
-        android:background="?android:attr/dividerHorizontal" />
-
-    <TextView
-        style="@style/TextAppearance.AppCompat.Body2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:labelFor="@+id/spinner_from"
-        android:text="@string/transfer_from"
-        android:textColor="?android:attr/textColorSecondary" />
-
-    <Spinner
-        android:id="@+id/spinner_from"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp" />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginTop="8dp"
-        android:background="?android:attr/dividerHorizontal" />
-
-    <TextView
-        style="@style/TextAppearance.AppCompat.Body2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:labelFor="@+id/linearlayout_to"
-        android:text="@string/transfer_to"
-        android:textColor="?android:attr/textColorSecondary" />
-
-    <LinearLayout
-        android:id="@+id/linearlayout_to"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:orientation="vertical">
-
-        <Spinner
-            android:id="@+id/spinner_to"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-        <ListView
-            android:id="@+id/listview_to"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone" />
-
-    </LinearLayout>
-
-</LinearLayout>
+</RelativeLayout>

@@ -8,7 +8,7 @@ public class LiquidityContract {
 
     static final String AUTHORITY = "com.dhpcs.liquidity.provider";
 
-    public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY);
+    private static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY);
 
     public static class Games implements BaseColumns {
 

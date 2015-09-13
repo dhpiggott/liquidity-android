@@ -144,23 +144,22 @@ public class PlayersFragment extends Fragment {
             holder.bindPlayer(player);
         }
 
-        /**
-         * @param player Must have same position according to the lists order as any item it
-         *               replaces. If properties of the player (i.e. its name) have changed
-         *               relative to any previous item, the replace method must instead be called.
-         * @return The index of the (newly) added player .
-         */
-        public int addOrReplace(PlayerWithBalanceAndConnectionState player) {
-            return players.add(player);
-        }
-
-        public boolean remove(PlayerWithBalanceAndConnectionState player) {
-            return players.remove(player);
+        public void remove(PlayerWithBalanceAndConnectionState player) {
+            players.remove(player);
         }
 
         public void replace(PlayerWithBalanceAndConnectionState oldPlayer,
                             PlayerWithBalanceAndConnectionState newPlayer) {
             players.updateItemAt(players.indexOf(oldPlayer), newPlayer);
+        }
+
+        /**
+         * @param player Must have same position according to the lists order as any item it
+         *               replaces. If properties of the player (i.e. its name) have changed
+         *               relative to any previous item, the replace method must instead be called.
+         */
+        public void replaceOrAdd(PlayerWithBalanceAndConnectionState player) {
+            players.add(player);
         }
 
     }
@@ -306,7 +305,7 @@ public class PlayersFragment extends Fragment {
             Option<PlayerWithBalanceAndConnectionState> player =
                     players.get(this.selectedIdentity.member().id());
             if (player.isDefined()) {
-                playersAdapter.addOrReplace(player.get());
+                playersAdapter.replaceOrAdd(player.get());
             }
         }
         this.selectedIdentity = selectedIdentity;
@@ -328,7 +327,7 @@ public class PlayersFragment extends Fragment {
     private void replaceOrAddPlayer(PlayerWithBalanceAndConnectionState player) {
         if (selectedIdentity == null
                 || !player.member().id().equals(selectedIdentity.member().id())) {
-            playersAdapter.addOrReplace(player);
+            playersAdapter.replaceOrAdd(player);
         }
     }
 
