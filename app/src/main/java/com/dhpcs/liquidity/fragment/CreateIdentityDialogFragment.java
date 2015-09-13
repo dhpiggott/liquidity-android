@@ -6,6 +6,7 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -102,11 +103,11 @@ public class CreateIdentityDialogFragment extends DialogFragment {
             }
 
             private void updateCharacterCount(Editable s) {
-                //noinspection deprecation
                 textViewIdentityNameCharacterCount.setTextColor(
                         s.length() <= MAXIMUM_NAME_LENGTH
                                 ?
-                                getResources().getColor(
+                                ContextCompat.getColor(
+                                        getActivity(),
                                         android.support.design.
                                                 R.color.secondary_text_default_material_light
                                 )
