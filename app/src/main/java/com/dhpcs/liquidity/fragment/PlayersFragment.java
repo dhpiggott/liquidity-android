@@ -175,6 +175,7 @@ public class PlayersFragment extends Fragment {
 
     private Listener listener;
 
+    @SuppressWarnings("deprecation")
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);

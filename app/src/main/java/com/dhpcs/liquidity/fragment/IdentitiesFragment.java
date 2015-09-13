@@ -124,6 +124,7 @@ public class IdentitiesFragment extends Fragment {
         return viewPagerIdentities.getCurrentItem();
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);

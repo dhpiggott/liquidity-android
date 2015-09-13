@@ -53,6 +53,7 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
 
     private SimpleCursorAdapter gamesAdapter;
 
+    @SuppressWarnings("deprecation")
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
