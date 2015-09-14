@@ -52,6 +52,7 @@ import java.util.Comparator;
 import java.util.Currency;
 import java.util.List;
 
+import me.zhanghai.android.materialprogressbar.IndeterminateProgressDrawable;
 import okio.ByteString;
 import scala.Option;
 import scala.Tuple2;
@@ -332,6 +333,7 @@ public class BoardGameActivity extends AppCompatActivity
         buttonReconnect = (Button) findViewById(R.id.button_reconnect);
         slidingUpPanelLayout = (SlidingUpPanelLayout) findViewById(R.id.slidinguppanellayout);
 
+        progressBarState.setIndeterminateDrawable(new IndeterminateProgressDrawable(this));
         buttonReconnect.setOnClickListener(new View.OnClickListener() {
 
             @Override

@@ -23,3 +23,6 @@
 
 # Design support behaviours are referenced in layout XML
 -keep class android.support.design.widget.** { *; }
+
+# MaterialProgressBar
+-keep class me.zhanghai.android.materialprogressbar.** { *; }
