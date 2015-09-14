@@ -151,6 +151,14 @@ public class GamesActivity extends AppCompatActivity implements CreateGameDialog
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case R.id.action_preferences:
+                startActivity(
+                        new Intent(
+                                GamesActivity.this,
+                                PreferencesActivity.class
+                        )
+                );
+                return true;
             case R.id.action_about:
                 startActivity(
                         new Intent(

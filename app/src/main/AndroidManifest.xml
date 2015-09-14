@@ -68,6 +68,16 @@
                 android:value="com.dhpcs.liquidity.activity.GamesActivity" />
         </activity>
         <activity
+            android:name=".activity.PreferencesActivity"
+            android:label="@string/activity_preferences_title"
+            android:launchMode="standard"
+            android:parentActivityName=".activity.GamesActivity"
+            tools:ignore="UnusedAttribute">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activity.GamesActivity" />
+        </activity>
+        <activity
             android:name=".activity.ReceiveIdentityActivity"
             android:label="@string/activity_receive_identity_title"
             android:launchMode="standard"

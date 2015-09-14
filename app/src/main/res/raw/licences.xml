@@ -2,6 +2,12 @@
 <notices>
     <!-- @formatter:off -->
     <notice>
+        <name>The Android Support libraries</name>
+        <url>http://developer.android.com/tools/support-library/index.html</url>
+        <copyright>Copyright (C) 2011-2015 The Android Open Source Project</copyright>
+        <license>Apache Software License 2.0</license>
+    </notice>
+    <notice>
         <name>The Scala Language libraries</name>
         <url>http://www.scala-lang.org/</url>
         <copyright>Copyright (c) 2002-2015 EPFL&#10;Copyright (c) 2011-2015 Typesafe, Inc.</copyright>
@@ -23,12 +29,6 @@
         <name>The Play JSON library and its dependencies</name>
         <url>https://www.playframework.com/</url>
         <copyright>Copyright 2009-2015 Typesafe (http://www.typesafe.com).</copyright>
-        <license>Apache Software License 2.0</license>
-    </notice>
-    <notice>
-        <name>The Android Support libraries</name>
-        <url>http://developer.android.com/tools/support-library/index.html</url>
-        <copyright>Copyright (C) 2011-2015 The Android Open Source Project</copyright>
         <license>Apache Software License 2.0</license>
     </notice>
     <notice>

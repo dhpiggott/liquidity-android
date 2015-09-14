@@ -3,7 +3,9 @@ package com.dhpcs.liquidity.activity;
 import android.app.DialogFragment;
 import android.content.Context;
 import android.content.Intent;
+import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -210,6 +212,8 @@ public class BoardGameActivity extends AppCompatActivity
         };
     }
 
+    private MediaPlayer transferReceiptMediaPlayer;
+
     private BoardGame.JoinRequestToken joinRequestToken;
     private BoardGame boardGame;
 
@@ -380,6 +384,11 @@ public class BoardGameActivity extends AppCompatActivity
         playersTransfersFragment = (PlayersTransfersFragment)
                 getSupportFragmentManager().findFragmentById(R.id.fragment_players_transfers);
 
+        transferReceiptMediaPlayer = MediaPlayer.create(
+                this,
+                R.raw.antique_cash_register_punching_single_key
+        );
+
         joinRequestToken = (BoardGame.JoinRequestToken) getLastCustomNonConfigurationInstance();
 
         if (joinRequestToken == null) {
@@ -516,6 +525,7 @@ public class BoardGameActivity extends AppCompatActivity
         super.onDestroy();
         boardGame.unregisterListener((BoardGame.GameActionListener) this);
         boardGame.unregisterListener((BoardGame.JoinStateListener) this);
+        transferReceiptMediaPlayer.release();
     }
 
     @Override
@@ -1023,6 +1033,17 @@ public class BoardGameActivity extends AppCompatActivity
 
     @Override
     public void onTransferAdded(TransferWithCurrency addedTransfer) {
+        if (addedTransfer.to().isRight()
+                && PreferenceManager.getDefaultSharedPreferences(this)
+                .getBoolean("play_transfer_receipt_sounds", true)
+                && addedTransfer.to().right().get().member().ownerPublicKey()
+                .equals(ClientKey.getPublicKey(this))) {
+            if (transferReceiptMediaPlayer.isPlaying()) {
+                transferReceiptMediaPlayer.seekTo(0);
+            } else {
+                transferReceiptMediaPlayer.start();
+            }
+        }
         playersTransfersFragment.onTransferAdded(addedTransfer);
     }
 

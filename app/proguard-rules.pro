@@ -21,7 +21,10 @@
 # JSON
 -keep class com.fasterxml.jackson.** { *; }
 
-# Design support behaviours are referenced in layout XML
+# Preference compat types are referenced in XML
+-keep class android.support.v7.preference.** { *; }
+
+# Design support behaviours are referenced in XML
 -keep class android.support.design.widget.** { *; }
 
 # MaterialProgressBar

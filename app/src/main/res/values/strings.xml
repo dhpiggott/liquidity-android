@@ -8,12 +8,13 @@
     <string name="activity_games_title">Liquidity</string>
     <string name="activity_join_game_title">Join Game</string>
     <string name="activity_board_game_title">Unnamed Game</string>
+    <string name="activity_preferences_title">Settings</string>
     <string name="activity_receive_identity_title">Receive Identity</string>
     <string name="activity_transfer_identity_title">Transfer Identity</string>
 
     <string name="about">Help &amp; acknowledgements</string>
     <string name="acknowledgement_copyright_and_license_format_string">%1$s\n\n%2$s</string>
-    <string name="acknowledgements_content">Liquidity is built around the following open source libraries. Big thanks go to these giants whose shoulders we stand on:</string>
+    <string name="acknowledgements_content">The transfer receipt cash register sound is gratefully used under license from http://www.freesfx.co.uk.\n\nLiquidity is built around the following open source libraries. Big thanks go to these giants whose shoulders we stand on:</string>
     <string name="acknowledgements_title">Acknowledgements &amp; Licences</string>
     <string name="add_players">Add players</string>
     <string name="add_players_game_name_format_string">Show the QR code to the joining players to admit them to %1$s.</string>
@@ -70,7 +71,10 @@
     <string name="no_transfers">No transfers have been made yet.</string>
     <string name="non_player_transfer_location_format_string">account %1$s (%2$s)</string>
     <string name="ok">OK</string>
+    <string name="play_transfer_receipt_sounds_summary">Only when the screen is on</string>
+    <string name="play_transfer_receipt_sounds_title">Play transfer receipt sounds</string>
     <string name="player_disconnected">Disconnected</string>
+    <string name="preferences">Settings</string>
     <string name="quit_game_error">Couldn\'t quit game!</string>
     <string name="receive_identity">Receive identity</string>
     <string name="receive_identity_instruction">Show the QR code to the sender.</string>
