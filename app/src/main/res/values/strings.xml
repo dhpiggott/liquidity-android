@@ -39,7 +39,7 @@
     <string name="delete">Delete</string>
     <string name="delete_identity">Delete identity</string>
     <string name="delete_identity_error_format_string">Couldn\'t delete identity \"%1$s\"!</string>
-    <string name="delete_identity_message_format_string">Are you sure you want to delete your identity %1$s? You can always restore deleted identities via the menu later.</string>
+    <string name="delete_identity_message">You can always restore deleted identities via the menu later.</string>
     <string name="delete_identity_title_format_string">Delete %1$s?</string>
     <string name="enter_game_details">Enter game details</string>
     <string name="enter_game_name">Enter game name</string>
@@ -91,7 +91,7 @@
     <string name="transfer_from">From</string>
     <string name="transfer_identity">Transfer identity</string>
     <string name="transfer_identity_error_format_string">Couldn\'t transfer identity \"%1$s\"!</string>
-    <string name="transfer_identity_identity_name_format_string">Scan the QR code on the recipients\'s phone to transfer your identity %1$s to them.</string>
+    <string name="transfer_identity_identity_name_format_string">Scan the QR code on the recipients\'s phone to transfer %1$s to them.</string>
     <string name="transfer_identity_invalid_code_format_string">"That's not a player connected to %1$s!"</string>
     <string name="transfer_summary_format_string">%1$s sent %2$s to %3$s</string>
     <string name="transfer_summary_received_from_format_string">Received %1$s from %2$s</string>

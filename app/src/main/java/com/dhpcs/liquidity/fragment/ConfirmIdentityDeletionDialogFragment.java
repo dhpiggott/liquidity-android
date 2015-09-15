@@ -54,15 +54,7 @@ public class ConfirmIdentityDeletionDialogFragment extends DialogFragment {
                                 )
                         )
                 )
-                .setMessage(
-                        getString(
-                                R.string.delete_identity_message_format_string,
-                                BoardGameActivity.formatNullable(
-                                        getActivity(),
-                                        identity.member().name()
-                                )
-                        )
-                )
+                .setMessage(R.string.delete_identity_message)
                 .setNegativeButton(R.string.cancel, null)
                 .setPositiveButton(
                         R.string.delete,
