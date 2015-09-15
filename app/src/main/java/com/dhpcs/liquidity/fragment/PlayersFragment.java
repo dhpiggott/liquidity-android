@@ -29,148 +29,11 @@ import scala.collection.Iterator;
 
 public class PlayersFragment extends Fragment {
 
-    public interface Listener {
-
-        void onNoPlayersTextClicked();
-
-        void onPlayerClicked(Player player);
-
-    }
-
-    private class PlayersAdapter extends RecyclerView.Adapter<PlayersAdapter.PlayerViewHolder> {
-
-        public class PlayerViewHolder extends RecyclerView.ViewHolder
-                implements View.OnClickListener {
-
-            private final Identicon identiconId;
-            private final TextView textViewName;
-            private final TextView textViewBalance;
-            private final TextView textViewStatus;
-
-            private Player player;
-
-            public PlayerViewHolder(View itemView) {
-                super(itemView);
-                itemView.setOnClickListener(this);
-                identiconId = (Identicon) itemView.findViewById(R.id.identicon_id);
-                textViewName = (TextView) itemView.findViewById(R.id.textview_name);
-                textViewBalance = (TextView) itemView.findViewById(R.id.textview_balance);
-                textViewStatus = (TextView) itemView.findViewById(R.id.textview_status);
-            }
-
-            public void bindPlayer(PlayerWithBalanceAndConnectionState player) {
-                this.player = player;
-
-                ZoneId zoneId = player.zoneId();
-                MemberId memberId = player.member().id();
-                String name = BoardGameActivity.formatNullable(context, player.member().name());
-                String balance = BoardGameActivity.formatCurrencyValue(
-                        context,
-                        player.balanceWithCurrency()._2(),
-                        player.balanceWithCurrency()._1()
-                );
-                String status = player.isConnected()
-                        ?
-                        null
-                        :
-                        context.getString(R.string.player_disconnected);
-
-                identiconId.show(zoneId, memberId);
-                textViewName.setText(name);
-                textViewBalance.setText(balance);
-                textViewStatus.setText(status);
-            }
-
-            @Override
-            public void onClick(View v) {
-                if (listener != null) {
-                    listener.onPlayerClicked(player);
-                }
-            }
-
-        }
-
-        private final Context context;
-        private final SortedList<PlayerWithBalanceAndConnectionState> players;
-
-        public PlayersAdapter(final Context context) {
-            this.context = context;
-            this.players = new SortedList<>(
-                    PlayerWithBalanceAndConnectionState.class,
-                    new SortedListAdapterCallback<PlayerWithBalanceAndConnectionState>(this) {
-
-                        private final Comparator<Player> playerComparator =
-                                BoardGameActivity.playerComparator(context);
-
-                        @Override
-                        public int compare(PlayerWithBalanceAndConnectionState o1,
-                                           PlayerWithBalanceAndConnectionState o2) {
-                            return playerComparator.compare(o1, o2);
-                        }
-
-                        @Override
-                        public boolean areContentsTheSame(PlayerWithBalanceAndConnectionState oldItem,
-                                                          PlayerWithBalanceAndConnectionState newItem) {
-                            return oldItem.equals(newItem);
-                        }
-
-                        @Override
-                        public boolean areItemsTheSame(PlayerWithBalanceAndConnectionState item1,
-                                                       PlayerWithBalanceAndConnectionState item2) {
-                            return item1.member().id().equals(item2.member().id());
-                        }
-
-                    }
-            );
-        }
-
-        @Override
-        public int getItemCount() {
-            return players.size();
-        }
-
-        @Override
-        public PlayerViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View view = LayoutInflater
-                    .from(parent.getContext())
-                    .inflate(R.layout.linearlayout_player, parent, false);
-            return new PlayerViewHolder(view);
-        }
-
-        @Override
-        public void onBindViewHolder(PlayerViewHolder holder, int position) {
-            PlayerWithBalanceAndConnectionState player = players.get(position);
-            holder.bindPlayer(player);
-        }
-
-        public void remove(PlayerWithBalanceAndConnectionState player) {
-            players.remove(player);
-        }
-
-        public void replace(PlayerWithBalanceAndConnectionState oldPlayer,
-                            PlayerWithBalanceAndConnectionState newPlayer) {
-            players.updateItemAt(players.indexOf(oldPlayer), newPlayer);
-        }
-
-        /**
-         * @param player Must have same position according to the lists order as any item it
-         *               replaces. If properties of the player (i.e. its name) have changed
-         *               relative to any previous item, the replace method must instead be called.
-         */
-        public void replaceOrAdd(PlayerWithBalanceAndConnectionState player) {
-            players.add(player);
-        }
-
-    }
-
     private PlayersAdapter playersAdapter;
-
     private TextView textViewEmpty;
     private RecyclerView recyclerViewPlayers;
-
     private scala.collection.immutable.Map<MemberId, PlayerWithBalanceAndConnectionState> players;
     private Identity selectedIdentity;
-
     private Listener listener;
 
     @SuppressWarnings("deprecation")
@@ -291,6 +154,139 @@ public class PlayersFragment extends Fragment {
                 || !player.member().id().equals(selectedIdentity.member().id())) {
             playersAdapter.replaceOrAdd(player);
         }
+    }
+
+    public interface Listener {
+
+        void onNoPlayersTextClicked();
+
+        void onPlayerClicked(Player player);
+
+    }
+
+    private class PlayersAdapter extends RecyclerView.Adapter<PlayersAdapter.PlayerViewHolder> {
+
+        private final Context context;
+        private final SortedList<PlayerWithBalanceAndConnectionState> players;
+        public PlayersAdapter(final Context context) {
+            this.context = context;
+            this.players = new SortedList<>(
+                    PlayerWithBalanceAndConnectionState.class,
+                    new SortedListAdapterCallback<PlayerWithBalanceAndConnectionState>(this) {
+
+                        private final Comparator<Player> playerComparator =
+                                BoardGameActivity.playerComparator(context);
+
+                        @Override
+                        public int compare(PlayerWithBalanceAndConnectionState o1,
+                                           PlayerWithBalanceAndConnectionState o2) {
+                            return playerComparator.compare(o1, o2);
+                        }
+
+                        @Override
+                        public boolean areContentsTheSame(PlayerWithBalanceAndConnectionState oldItem,
+                                                          PlayerWithBalanceAndConnectionState newItem) {
+                            return oldItem.equals(newItem);
+                        }
+
+                        @Override
+                        public boolean areItemsTheSame(PlayerWithBalanceAndConnectionState item1,
+                                                       PlayerWithBalanceAndConnectionState item2) {
+                            return item1.member().id().equals(item2.member().id());
+                        }
+
+                    }
+            );
+        }
+
+        @Override
+        public int getItemCount() {
+            return players.size();
+        }
+
+        @Override
+        public PlayerViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View view = LayoutInflater
+                    .from(parent.getContext())
+                    .inflate(R.layout.linearlayout_player, parent, false);
+            return new PlayerViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(PlayerViewHolder holder, int position) {
+            PlayerWithBalanceAndConnectionState player = players.get(position);
+            holder.bindPlayer(player);
+        }
+
+        public void remove(PlayerWithBalanceAndConnectionState player) {
+            players.remove(player);
+        }
+
+        public void replace(PlayerWithBalanceAndConnectionState oldPlayer,
+                            PlayerWithBalanceAndConnectionState newPlayer) {
+            players.updateItemAt(players.indexOf(oldPlayer), newPlayer);
+        }
+
+        /**
+         * @param player Must have same position according to the lists order as any item it
+         *               replaces. If properties of the player (i.e. its name) have changed
+         *               relative to any previous item, the replace method must instead be called.
+         */
+        public void replaceOrAdd(PlayerWithBalanceAndConnectionState player) {
+            players.add(player);
+        }
+
+        public class PlayerViewHolder extends RecyclerView.ViewHolder
+                implements View.OnClickListener {
+
+            private final Identicon identiconId;
+            private final TextView textViewName;
+            private final TextView textViewBalance;
+            private final TextView textViewStatus;
+
+            private Player player;
+
+            public PlayerViewHolder(View itemView) {
+                super(itemView);
+                itemView.setOnClickListener(this);
+                identiconId = (Identicon) itemView.findViewById(R.id.identicon_id);
+                textViewName = (TextView) itemView.findViewById(R.id.textview_name);
+                textViewBalance = (TextView) itemView.findViewById(R.id.textview_balance);
+                textViewStatus = (TextView) itemView.findViewById(R.id.textview_status);
+            }
+
+            public void bindPlayer(PlayerWithBalanceAndConnectionState player) {
+                this.player = player;
+
+                ZoneId zoneId = player.zoneId();
+                MemberId memberId = player.member().id();
+                String name = BoardGameActivity.formatNullable(context, player.member().name());
+                String balance = BoardGameActivity.formatCurrencyValue(
+                        context,
+                        player.balanceWithCurrency()._2(),
+                        player.balanceWithCurrency()._1()
+                );
+                int status = player.isConnected()
+                        ?
+                        R.string.player_connected
+                        :
+                        R.string.player_disconnected;
+
+                identiconId.show(zoneId, memberId);
+                textViewName.setText(name);
+                textViewBalance.setText(balance);
+                textViewStatus.setText(status);
+            }
+
+            @Override
+            public void onClick(View v) {
+                if (listener != null) {
+                    listener.onPlayerClicked(player);
+                }
+            }
+
+        }
+
     }
 
 }
