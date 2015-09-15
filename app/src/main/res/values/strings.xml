@@ -33,7 +33,6 @@
     <string name="create_identity_account_error_format_string">Couldn\'t create account for identity \"%1$s\"!</string>
     <string name="create_identity_member_error_format_string">Couldn\'t create member for identity \"%1$s\"!</string>
     <string name="create_new_game">Create new game</string>
-    <string name="created_format_string">Created %1$s</string>
     <string name="currency_code_format_string">"%1$s "</string>
     <string name="currency_none" />
     <string name="currency_value_format_string">%1$s%2$s%3$s</string>
@@ -46,10 +45,11 @@
     <string name="enter_game_name">Enter game name</string>
     <string name="enter_identity_name">Enter identity name</string>
     <string name="enter_transfer_details">Enter transfer details</string>
-    <string name="expires_format_string">(expires %1$s)</string>
+    <string name="game_created_format_string">Created %1$s</string>
     <string name="game_currency">Currency</string>
     <string name="game_currency_format_string">%1$s (%2$s)</string>
     <string name="game_currency_symbol_and_name_format_string">%1$s, %2$s</string>
+    <string name="game_expires_format_string">(expires %1$s)</string>
     <string name="game_name">Name</string>
     <string name="group_transfer">Group transfer</string>
     <string name="identity_format_string">%1$s (%2$s available)</string>
@@ -73,7 +73,7 @@
     <string name="ok">OK</string>
     <string name="play_transfer_receipt_sounds_summary">Only when the screen is on</string>
     <string name="play_transfer_receipt_sounds_title">Play transfer receipt sounds</string>
-    <string name="player_disconnected">Disconnected</string>
+    <string name="player_disconnected">(disconnected)</string>
     <string name="preferences">Settings</string>
     <string name="quit_game_error">Couldn\'t quit game!</string>
     <string name="receive_identity">Receive identity</string>
@@ -86,6 +86,8 @@
     <string name="terminology_title">Terminology</string>
     <string name="transfers">Transfers</string>
     <string name="transfer_amount">Amount</string>
+    <string name="transfer_created_date_format_string">(%1$s)</string>
+    <string name="transfer_created_time_format_string">%1$s</string>
     <string name="transfer_from">From</string>
     <string name="transfer_identity">Transfer identity</string>
     <string name="transfer_identity_error_format_string">Couldn\'t transfer identity \"%1$s\"!</string>

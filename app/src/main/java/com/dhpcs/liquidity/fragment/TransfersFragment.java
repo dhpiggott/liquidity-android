@@ -1,10 +1,6 @@
 package com.dhpcs.liquidity.fragment;
 
 import android.content.Context;
-import android.content.res.TypedArray;
-import android.graphics.Canvas;
-import android.graphics.Rect;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.util.SortedList;
@@ -77,8 +73,14 @@ public class TransfersFragment extends Fragment {
                             BoardGameActivity.formatMemberOrAccount(context, transfer.to())
                     );
                 }
-                String createdTime = timeFormat.format(transfer.transaction().created());
-                String createdDate = dateFormat.format(transfer.transaction().created());
+                String createdTime = getString(
+                        R.string.transfer_created_time_format_string,
+                        timeFormat.format(transfer.transaction().created())
+                );
+                String createdDate = getString(
+                        R.string.transfer_created_date_format_string,
+                        dateFormat.format(transfer.transaction().created())
+                );
 
                 textViewSummary.setText(summary);
                 textViewCreatedTime.setText(createdTime);
@@ -205,43 +207,6 @@ public class TransfersFragment extends Fragment {
         textViewEmpty = (TextView) view.findViewById(R.id.textview_empty);
         recyclerViewTransfers = (RecyclerView) view.findViewById(R.id.recyclerview_transfers);
 
-        recyclerViewTransfers.addItemDecoration(new RecyclerView.ItemDecoration() {
-
-            private final Drawable divider;
-
-            {
-                TypedArray a = getActivity().obtainStyledAttributes(
-                        new int[]{android.R.attr.listDivider}
-                );
-                divider = a.getDrawable(0);
-                a.recycle();
-            }
-
-            @Override
-            public void getItemOffsets(Rect outRect,
-                                       View view,
-                                       RecyclerView parent,
-                                       RecyclerView.State state) {
-                outRect.set(0, 0, 0, divider.getIntrinsicHeight());
-            }
-
-            @Override
-            public void onDraw(Canvas c, RecyclerView parent, RecyclerView.State state) {
-                int left = parent.getPaddingLeft();
-                int right = parent.getWidth() - parent.getPaddingRight();
-                int childCount = parent.getChildCount();
-                for (int i = 0; i < childCount; i++) {
-                    View child = parent.getChildAt(i);
-                    RecyclerView.LayoutParams params = (RecyclerView.LayoutParams)
-                            child.getLayoutParams();
-                    int top = child.getBottom() + params.bottomMargin;
-                    int bottom = top + divider.getIntrinsicHeight();
-                    divider.setBounds(left, top, right, bottom);
-                    divider.draw(c);
-                }
-            }
-
-        });
         recyclerViewTransfers.setHasFixedSize(true);
         recyclerViewTransfers.setLayoutManager(new LinearLayoutManager(getActivity()));
         recyclerViewTransfers.setAdapter(transfersAdapter);

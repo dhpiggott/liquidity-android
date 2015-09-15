@@ -92,7 +92,7 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
                     bound = true;
                     ((TextView) view).setText(
                             getActivity().getString(
-                                    R.string.created_format_string,
+                                    R.string.game_created_format_string,
                                     DateUtils.getRelativeTimeSpanString(
                                             getActivity(),
                                             new Instant(cursor.getLong(columnIndex))
@@ -104,7 +104,7 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
                     bound = true;
                     ((TextView) view).setText(
                             getActivity().getString(
-                                    R.string.expires_format_string,
+                                    R.string.game_expires_format_string,
                                     DateUtils.getRelativeTimeSpanString(
                                             getActivity(),
                                             new Instant(cursor.getLong(columnIndex))
