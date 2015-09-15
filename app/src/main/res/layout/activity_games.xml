@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
     tools:context="com.dhpcs.liquidity.activity.GamesActivity">
 
     <LinearLayout
@@ -41,4 +39,4 @@
         android:layout_margin="16dp"
         android:src="@drawable/ic_add_white_24dp" />
 
-</FrameLayout>
+</merge>
