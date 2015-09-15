@@ -79,6 +79,16 @@ public class BoardGameActivity extends AppCompatActivity
     public static final String EXTRA_ZONE_ID = "zone_id";
 
     private static final int REQUEST_CODE_RECEIVE_IDENTITY = 0;
+    private MediaPlayer transferReceiptMediaPlayer;
+    private BoardGame.JoinRequestToken joinRequestToken;
+    private BoardGame boardGame;
+    private ProgressBar progressBarState;
+    private TextView textViewState;
+    private Button buttonReconnect;
+    private SlidingUpPanelLayout slidingUpPanelLayout;
+    private IdentitiesFragment identitiesFragment;
+    private PlayersFragment playersFragment;
+    private PlayersTransfersFragment playersTransfersFragment;
 
     public static String formatCurrency(Context context,
                                         Option<Either<String, Currency>> currency) {
@@ -211,22 +221,6 @@ public class BoardGameActivity extends AppCompatActivity
 
         };
     }
-
-    private MediaPlayer transferReceiptMediaPlayer;
-
-    private BoardGame.JoinRequestToken joinRequestToken;
-    private BoardGame boardGame;
-
-    private boolean isStartingChildActivity;
-
-    private ProgressBar progressBarState;
-    private TextView textViewState;
-    private Button buttonReconnect;
-    private SlidingUpPanelLayout slidingUpPanelLayout;
-
-    private IdentitiesFragment identitiesFragment;
-    private PlayersFragment playersFragment;
-    private PlayersTransfersFragment playersTransfersFragment;
 
     private void closeDialogFragments() {
         for (String tag : new String[]{
@@ -503,18 +497,6 @@ public class BoardGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onDeleteIdentityError(Option<String> name) {
-        Toast.makeText(
-                this,
-                getString(
-                        R.string.delete_identity_error_format_string,
-                        formatNullable(this, name)
-                ),
-                Toast.LENGTH_LONG
-        ).show();
-    }
-
-    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.board_game_toolbar, menu);
         return true;
@@ -526,6 +508,18 @@ public class BoardGameActivity extends AppCompatActivity
         boardGame.unregisterListener((BoardGame.GameActionListener) this);
         boardGame.unregisterListener((BoardGame.JoinStateListener) this);
         transferReceiptMediaPlayer.release();
+    }
+
+    @Override
+    public void onDeleteIdentityError(Option<String> name) {
+        Toast.makeText(
+                this,
+                getString(
+                        R.string.delete_identity_error_format_string,
+                        formatNullable(this, name)
+                ),
+                Toast.LENGTH_LONG
+        ).show();
     }
 
     @Override
@@ -554,13 +548,13 @@ public class BoardGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onIdentityDeleteConfirmed(Identity identity) {
-        boardGame.deleteIdentity(identity);
+    public void onIdentityCreated(IdentityWithBalance identity) {
+        identitiesFragment.setSelectedPage(identitiesFragment.getPage(identity));
     }
 
     @Override
-    public void onIdentityCreated(IdentityWithBalance identity) {
-        identitiesFragment.setSelectedPage(identitiesFragment.getPage(identity));
+    public void onIdentityDeleteConfirmed(Identity identity) {
+        boardGame.deleteIdentity(identity);
     }
 
     @Override
@@ -580,7 +574,6 @@ public class BoardGameActivity extends AppCompatActivity
 
     @Override
     public void onIdentityReceived(IdentityWithBalance identity) {
-        finishActivity(REQUEST_CODE_RECEIVE_IDENTITY);
         identitiesFragment.setSelectedPage(identitiesFragment.getPage(identity));
     }
 
@@ -727,7 +720,6 @@ public class BoardGameActivity extends AppCompatActivity
 
     @Override
     public void onNoPlayersTextClicked() {
-        isStartingChildActivity = true;
         Bundle zoneIdHolder = new Bundle();
         zoneIdHolder.putSerializable(
                 TransferIdentityActivity.EXTRA_ZONE_ID,
@@ -761,7 +753,6 @@ public class BoardGameActivity extends AppCompatActivity
                     return false;
                 }
             case R.id.action_add_players:
-                isStartingChildActivity = true;
                 zoneIdHolder = new Bundle();
                 zoneIdHolder.putSerializable(
                         AddPlayersActivity.EXTRA_ZONE_ID,
@@ -837,7 +828,6 @@ public class BoardGameActivity extends AppCompatActivity
                 }
                 return true;
             case R.id.action_receive_identity:
-                isStartingChildActivity = true;
                 zoneIdHolder = new Bundle();
                 zoneIdHolder.putSerializable(
                         ReceiveIdentityActivity.EXTRA_ZONE_ID,
@@ -858,7 +848,6 @@ public class BoardGameActivity extends AppCompatActivity
                 );
                 return true;
             case R.id.action_transfer_identity:
-                isStartingChildActivity = true;
                 Bundle identityNameHolder = new Bundle();
                 identityNameHolder.putSerializable(
                         TransferIdentityActivity.EXTRA_IDENTITY_NAME,
@@ -890,16 +879,6 @@ public class BoardGameActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-        if (!isChangingConfigurations()) {
-            if (!isStartingChildActivity) {
-                boardGame.unrequestJoin(joinRequestToken);
-            }
-        }
-    }
-
-    @Override
     public void onPlayerAdded(PlayerWithBalanceAndConnectionState addedPlayer) {
         playersFragment.onPlayerAdded(addedPlayer);
     }
@@ -907,46 +886,6 @@ public class BoardGameActivity extends AppCompatActivity
     @Override
     public void onPlayerChanged(PlayerWithBalanceAndConnectionState changedPlayer) {
         playersFragment.onPlayerChanged(changedPlayer);
-    }
-
-    @Override
-    public void onPlayersInitialized(
-            scala.collection.Iterable<PlayerWithBalanceAndConnectionState> players) {
-        playersFragment.onPlayersInitialized(players);
-    }
-
-    @Override
-    public void onPlayerRemoved(PlayerWithBalanceAndConnectionState removedPlayer) {
-        playersFragment.onPlayerRemoved(removedPlayer);
-    }
-
-    @Override
-    public void onPlayersUpdated(
-            scala.collection.immutable.Map<MemberId, PlayerWithBalanceAndConnectionState> players) {
-        playersFragment.onPlayersUpdated(players);
-        playersTransfersFragment.onPlayersUpdated(players);
-    }
-
-    @Override
-    public void onQuitGameError() {
-        Toast.makeText(
-                this,
-                R.string.quit_game_error,
-                Toast.LENGTH_LONG
-        ).show();
-        finish();
-    }
-
-    @Override
-    public void onRestoreIdentityError(Option<String> name) {
-        Toast.makeText(
-                this,
-                getString(
-                        R.string.restore_identity_error_format_string,
-                        formatNullable(this, name)
-                ),
-                Toast.LENGTH_LONG
-        ).show();
     }
 
     @Override
@@ -966,6 +905,24 @@ public class BoardGameActivity extends AppCompatActivity
                     TransferToPlayerDialogFragment.TAG
             );
         }
+    }
+
+    @Override
+    public void onPlayerRemoved(PlayerWithBalanceAndConnectionState removedPlayer) {
+        playersFragment.onPlayerRemoved(removedPlayer);
+    }
+
+    @Override
+    public void onPlayersInitialized(
+            scala.collection.Iterable<PlayerWithBalanceAndConnectionState> players) {
+        playersFragment.onPlayersInitialized(players);
+    }
+
+    @Override
+    public void onPlayersUpdated(
+            scala.collection.immutable.Map<MemberId, PlayerWithBalanceAndConnectionState> players) {
+        playersFragment.onPlayersUpdated(players);
+        playersTransfersFragment.onPlayersUpdated(players);
     }
 
     @Override
@@ -1004,9 +961,25 @@ public class BoardGameActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        boardGame.requestJoin(joinRequestToken, false);
+    public void onQuitGameError() {
+        Toast.makeText(
+                this,
+                R.string.quit_game_error,
+                Toast.LENGTH_LONG
+        ).show();
+        finish();
+    }
+
+    @Override
+    public void onRestoreIdentityError(Option<String> name) {
+        Toast.makeText(
+                this,
+                getString(
+                        R.string.restore_identity_error_format_string,
+                        formatNullable(this, name)
+                ),
+                Toast.LENGTH_LONG
+        ).show();
     }
 
     @Override
@@ -1021,13 +994,16 @@ public class BoardGameActivity extends AppCompatActivity
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        boardGame.requestJoin(joinRequestToken, false);
+    }
+
+    @Override
     protected void onStop() {
         super.onStop();
         if (!isChangingConfigurations()) {
-            if (isStartingChildActivity) {
-                boardGame.unrequestJoin(joinRequestToken);
-                isStartingChildActivity = false;
-            }
+            boardGame.unrequestJoin(joinRequestToken);
         }
     }
 
@@ -1072,6 +1048,16 @@ public class BoardGameActivity extends AppCompatActivity
     }
 
     @Override
+    public void onTransferValueEntered(Identity from, List<Player> to, BigDecimal transferValue) {
+        boardGame.transferToPlayer(
+                from,
+                from,
+                JavaConversions.asScalaBuffer(to),
+                scala.math.BigDecimal.javaBigDecimal2bigDecimal(transferValue)
+        );
+    }
+
+    @Override
     public void onTransfersChanged(
             scala.collection.Iterable<TransferWithCurrency> changedTransfers) {
         playersTransfersFragment.onTransfersChanged(changedTransfers);
@@ -1086,16 +1072,6 @@ public class BoardGameActivity extends AppCompatActivity
     public void onTransfersUpdated(
             scala.collection.immutable.Map<TransactionId, TransferWithCurrency> transfers) {
         playersTransfersFragment.onTransfersUpdated(transfers);
-    }
-
-    @Override
-    public void onTransferValueEntered(Identity from, List<Player> to, BigDecimal transferValue) {
-        boardGame.transferToPlayer(
-                from,
-                from,
-                JavaConversions.asScalaBuffer(to),
-                scala.math.BigDecimal.javaBigDecimal2bigDecimal(transferValue)
-        );
     }
 
 }

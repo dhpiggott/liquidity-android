@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
 
+import com.dhpcs.liquidity.BoardGame.IdentityWithBalance;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.models.PublicKey;
 
@@ -46,6 +47,12 @@ public class ReceiveIdentityActivity extends BoardGameChildActivity {
             }
 
         });
+    }
+
+    @Override
+    public void onIdentityReceived(IdentityWithBalance identity) {
+        setResult(RESULT_OK);
+        finish();
     }
 
 }

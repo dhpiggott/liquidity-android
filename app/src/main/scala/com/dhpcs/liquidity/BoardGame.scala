@@ -1221,9 +1221,12 @@ class BoardGame private(context: Context,
             ),
             new ResponseCallback {
 
-              private def doDisconnect() = if (joinRequestTokens.isEmpty) {
-                serverConnection.unrequestConnection(connectionRequestToken)
-              }
+              private def doDisconnect() =
+                if (joinRequestTokens.isEmpty) {
+                  serverConnection.unrequestConnection(connectionRequestToken)
+                } else {
+                  join(zoneId.get)
+                }
 
               override def onErrorReceived(errorResponse: ErrorResponse) {
                 gameActionListeners.foreach(_.onQuitGameError())

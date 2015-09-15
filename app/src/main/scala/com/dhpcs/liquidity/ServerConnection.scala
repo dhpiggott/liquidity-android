@@ -352,7 +352,8 @@ class ServerConnection private(context: Context) extends WebSocketListener {
           doClose(
             activeState.handler,
             dueToGeneralFailure = false,
-            dueToTlsError = false
+            dueToTlsError = false,
+            reconnect = connectRequestTokens.nonEmpty
           )
 
           hasFailed = false
