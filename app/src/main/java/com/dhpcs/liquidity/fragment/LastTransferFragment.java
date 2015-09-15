@@ -1,6 +1,7 @@
 package com.dhpcs.liquidity.fragment;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,16 +10,27 @@ import android.widget.TextSwitcher;
 import android.widget.TextView;
 
 import com.dhpcs.liquidity.BoardGame.TransferWithCurrency;
+import com.dhpcs.liquidity.LiquidityApplication;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activity.BoardGameActivity;
 
-import java.text.DateFormat;
+import org.joda.time.Instant;
 
 import scala.collection.Iterator;
 
 public class LastTransferFragment extends Fragment {
 
-    private final DateFormat timeFormat = DateFormat.getTimeInstance();
+    private static final long REFRESH_INTERVAL = 60_000;
+
+    private final Handler refreshHandler = new Handler();
+    private final Runnable refreshRunnable = new Runnable() {
+
+        @Override
+        public void run() {
+            showTransfer(lastTransfer, false);
+        }
+
+    };
 
     private TextView textViewEmpty;
     private TextSwitcher textSwitcherSummary;
@@ -37,6 +49,12 @@ public class LastTransferFragment extends Fragment {
         textSwitcherCreated = (TextSwitcher) view.findViewById(R.id.textswitcher_created);
 
         return view;
+    }
+
+    @Override
+    public void onDestroy() {
+        refreshHandler.removeCallbacks(refreshRunnable);
+        super.onDestroy();
     }
 
     public void onTransferAdded(TransferWithCurrency addedTransfer) {
@@ -85,7 +103,12 @@ public class LastTransferFragment extends Fragment {
                 ),
                 BoardGameActivity.formatMemberOrAccount(getActivity(), lastTransfer.to())
         );
-        String created = timeFormat.format(transfer.transaction().created());
+        String created = LiquidityApplication.getRelativeTimeSpanString(
+                getActivity(),
+                new Instant(transfer.transaction().created()),
+                new Instant(System.currentTimeMillis()),
+                REFRESH_INTERVAL
+        );
 
         if (animate) {
             textSwitcherSummary.setText(summary);
@@ -97,6 +120,7 @@ public class LastTransferFragment extends Fragment {
         textViewEmpty.setVisibility(View.GONE);
         textSwitcherSummary.setVisibility(View.VISIBLE);
         textSwitcherCreated.setVisibility(View.VISIBLE);
+        refreshHandler.postDelayed(refreshRunnable, REFRESH_INTERVAL);
     }
 
 }

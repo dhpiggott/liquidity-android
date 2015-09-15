@@ -16,11 +16,10 @@ import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
+import com.dhpcs.liquidity.LiquidityApplication;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.models.ZoneId;
 import com.dhpcs.liquidity.provider.LiquidityContract;
-
-import net.danlew.android.joda.DateUtils;
 
 import org.joda.time.Instant;
 
@@ -93,9 +92,11 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
                     ((TextView) view).setText(
                             getActivity().getString(
                                     R.string.game_created_format_string,
-                                    DateUtils.getRelativeTimeSpanString(
+                                    LiquidityApplication.getRelativeTimeSpanString(
                                             getActivity(),
-                                            new Instant(cursor.getLong(columnIndex))
+                                            new Instant(cursor.getLong(columnIndex)),
+                                            new Instant(System.currentTimeMillis()),
+                                            REFRESH_INTERVAL
                                     )
                             )
                     );
@@ -105,9 +106,11 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
                     ((TextView) view).setText(
                             getActivity().getString(
                                     R.string.game_expires_format_string,
-                                    DateUtils.getRelativeTimeSpanString(
+                                    LiquidityApplication.getRelativeTimeSpanString(
                                             getActivity(),
-                                            new Instant(cursor.getLong(columnIndex))
+                                            new Instant(cursor.getLong(columnIndex)),
+                                            new Instant(System.currentTimeMillis()),
+                                            REFRESH_INTERVAL
                                     )
                             )
                     );
@@ -177,11 +180,13 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
             Cursor cursor = ((Cursor) parent.getItemAtPosition(position));
             listener.onGameClicked(
                     id,
-                    new ZoneId(UUID.fromString(
-                            cursor.getString(cursor.getColumnIndexOrThrow(
-                                    LiquidityContract.Games.ZONE_ID
-                            ))
-                    )),
+                    new ZoneId(
+                            UUID.fromString(
+                                    cursor.getString(cursor.getColumnIndexOrThrow(
+                                            LiquidityContract.Games.ZONE_ID
+                                    ))
+                            )
+                    ),
                     cursor.getString(cursor.getColumnIndexOrThrow(
                             LiquidityContract.Games.NAME
                     ))
