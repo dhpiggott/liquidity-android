@@ -23,6 +23,10 @@ public class LastTransferFragment extends Fragment {
     private static final long REFRESH_INTERVAL = 60_000;
 
     private final Handler refreshHandler = new Handler();
+    private TextView textViewEmpty;
+    private TextSwitcher textSwitcherSummary;
+    private TextSwitcher textSwitcherCreated;
+    private TransferWithCurrency lastTransfer;
     private final Runnable refreshRunnable = new Runnable() {
 
         @Override
@@ -31,12 +35,6 @@ public class LastTransferFragment extends Fragment {
         }
 
     };
-
-    private TextView textViewEmpty;
-    private TextSwitcher textSwitcherSummary;
-    private TextSwitcher textSwitcherCreated;
-
-    private TransferWithCurrency lastTransfer;
 
     @Override
     public View onCreateView(LayoutInflater inflater,
@@ -103,10 +101,18 @@ public class LastTransferFragment extends Fragment {
                 ),
                 BoardGameActivity.formatMemberOrAccount(getActivity(), lastTransfer.to())
         );
+        long createdTimeMillis = transfer.transaction().created();
+        long currentTimeMillis = System.currentTimeMillis();
         String created = LiquidityApplication.getRelativeTimeSpanString(
                 getActivity(),
-                new Instant(transfer.transaction().created()),
-                new Instant(System.currentTimeMillis()),
+                new Instant(createdTimeMillis),
+                new Instant(
+                        currentTimeMillis < createdTimeMillis
+                                ?
+                                createdTimeMillis
+                                :
+                                currentTimeMillis
+                ),
                 REFRESH_INTERVAL
         );
 

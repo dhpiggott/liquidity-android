@@ -31,15 +31,6 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
     private static final int GAMES_LOADER = 0;
 
     private static final long REFRESH_INTERVAL = 60_000;
-
-    public interface Listener {
-
-        void onGameClicked(long gameId, ZoneId zoneId, String gameName);
-
-    }
-
-    private Listener listener;
-
     private final Handler refreshHandler = new Handler();
     private final Runnable refreshRunnable = new Runnable() {
 
@@ -49,7 +40,7 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
         }
 
     };
-
+    private Listener listener;
     private SimpleCursorAdapter gamesAdapter;
 
     @SuppressWarnings("deprecation")
@@ -89,13 +80,21 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
                 boolean bound = false;
                 if (columnIndex == cursor.getColumnIndexOrThrow(LiquidityContract.Games.CREATED)) {
                     bound = true;
+                    long createdTimeMillis = cursor.getLong(columnIndex);
+                    long currentTimeMillis = System.currentTimeMillis();
                     ((TextView) view).setText(
                             getActivity().getString(
                                     R.string.game_created_format_string,
                                     LiquidityApplication.getRelativeTimeSpanString(
                                             getActivity(),
-                                            new Instant(cursor.getLong(columnIndex)),
-                                            new Instant(System.currentTimeMillis()),
+                                            new Instant(createdTimeMillis),
+                                            new Instant(
+                                                    currentTimeMillis < createdTimeMillis
+                                                            ?
+                                                            createdTimeMillis
+                                                            :
+                                                            currentTimeMillis
+                                            ),
                                             REFRESH_INTERVAL
                                     )
                             )
@@ -103,13 +102,21 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
                 }
                 if (columnIndex == cursor.getColumnIndexOrThrow(LiquidityContract.Games.EXPIRES)) {
                     bound = true;
+                    long expiresTimeMillis = cursor.getLong(columnIndex);
+                    long currentTimeMillis = System.currentTimeMillis();
                     ((TextView) view).setText(
                             getActivity().getString(
                                     R.string.game_expires_format_string,
                                     LiquidityApplication.getRelativeTimeSpanString(
                                             getActivity(),
-                                            new Instant(cursor.getLong(columnIndex)),
-                                            new Instant(System.currentTimeMillis()),
+                                            new Instant(expiresTimeMillis),
+                                            new Instant(
+                                                    currentTimeMillis >= expiresTimeMillis
+                                                            ?
+                                                            expiresTimeMillis
+                                                            :
+                                                            currentTimeMillis
+                                            ),
                                             REFRESH_INTERVAL
                                     )
                             )
@@ -203,6 +210,12 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         gamesAdapter.changeCursor(data);
         refreshHandler.postDelayed(refreshRunnable, REFRESH_INTERVAL);
+    }
+
+    public interface Listener {
+
+        void onGameClicked(long gameId, ZoneId zoneId, String gameName);
+
     }
 
 }
