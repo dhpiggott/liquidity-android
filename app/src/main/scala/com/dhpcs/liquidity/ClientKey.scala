@@ -12,7 +12,7 @@ import android.provider.Settings
 import com.dhpcs.liquidity.models.PublicKey
 import org.spongycastle.asn1.x500.X500NameBuilder
 import org.spongycastle.asn1.x500.style.BCStyle
-import org.spongycastle.asn1.x509.{BasicConstraints, Extension, Time}
+import org.spongycastle.asn1.x509.{Extension, Time}
 import org.spongycastle.asn1.{ASN1GeneralizedTime, ASN1UTCTime}
 import org.spongycastle.cert.jcajce.{JcaX509CertificateConverter, JcaX509ExtensionUtils, JcaX509v3CertificateBuilder}
 import org.spongycastle.operator.jcajce.JcaContentSignerBuilder
@@ -48,14 +48,6 @@ object ClientKey {
           Extension.subjectKeyIdentifier,
           false,
           new JcaX509ExtensionUtils().createSubjectKeyIdentifier(keyPair.getPublic)
-        ).addExtension(
-          Extension.authorityKeyIdentifier,
-          false,
-          new JcaX509ExtensionUtils().createAuthorityKeyIdentifier(keyPair.getPublic)
-        ).addExtension(
-          Extension.basicConstraints,
-          false,
-          new BasicConstraints(true)
         ).build(
           new JcaContentSignerBuilder("SHA256withRSA").build(keyPair.getPrivate)
         )
