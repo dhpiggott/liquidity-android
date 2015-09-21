@@ -148,8 +148,8 @@ class ServerConnection private(context: Context) extends WebSocketListener {
 
   }
 
-  private var pendingRequests = Map.empty[Int, PendingRequest]
-  private var commandIdentifier = 0
+  private var pendingRequests = Map.empty[BigDecimal, PendingRequest]
+  private var commandIdentifier = BigDecimal(0)
   private var state: State = UnavailableIdleState
   private var hasFailed: Boolean = _
 
@@ -463,7 +463,7 @@ class ServerConnection private(context: Context) extends WebSocketListener {
                           s".eitherErrorOrResult=${jsonRpcResponseMessage.eitherErrorOrResult}")
                       } { id =>
                         id.right.toOption.fold {
-                          sys.error(s"JSON-RPC message ID was not an Int, id=$id")
+                          sys.error(s"JSON-RPC message ID was not a number, id=$id")
                           disconnect(1002)
                         } { commandIdentifier =>
                           asyncPost(activeState.handler)(
@@ -613,7 +613,7 @@ class ServerConnection private(context: Context) extends WebSocketListener {
         case connectedState: ConnectedSubState =>
 
           asyncPost(activeState.handler) {
-            val jsonRpcRequestMessage = Command.write(command, Right(commandIdentifier))
+            val jsonRpcRequestMessage = Command.write(command, Some(Right(commandIdentifier)))
             commandIdentifier = commandIdentifier + 1
             Try {
               connectedState.webSocket.sendMessage(
@@ -625,7 +625,7 @@ class ServerConnection private(context: Context) extends WebSocketListener {
                 )
               )
               pendingRequests = pendingRequests +
-                (jsonRpcRequestMessage.id.right.get ->
+                (jsonRpcRequestMessage.id.get.right.get ->
                   PendingRequest(jsonRpcRequestMessage, responseCallback))
             } match {
 
