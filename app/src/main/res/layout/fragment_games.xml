@@ -12,7 +12,8 @@
         android:layout_height="match_parent"
         android:gravity="center"
         android:padding="16dp"
-        android:text="@string/no_games" />
+        android:text="@string/no_games"
+        android:textColor="?android:attr/textColorSecondary" />
 
     <ListView
         android:id="@+id/listview_games"

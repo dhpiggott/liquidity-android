@@ -12,7 +12,8 @@
         android:layout_height="match_parent"
         android:gravity="center"
         android:padding="16dp"
-        android:text="@string/no_transfers" />
+        android:text="@string/no_transfers"
+        android:textColor="?android:attr/textColorSecondary" />
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recyclerview_transfers"

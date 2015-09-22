@@ -19,7 +19,8 @@
         android:layout_marginRight="8dp"
         android:layout_marginStart="8dp"
         android:gravity="center"
-        android:text="@string/no_last_transfer" />
+        android:text="@string/no_last_transfer"
+        android:textColor="?android:attr/textColorSecondary" />
 
     <LinearLayout
         android:layout_width="match_parent"
