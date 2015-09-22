@@ -117,6 +117,22 @@ object ServerConnection {
     sslContext.getSocketFactory
   }
 
+  private def readJsonRpcMessage(jsonString: String): Either[String, JsonRpcMessage] =
+
+    Try(Json.parse(jsonString)) match {
+
+      case Failure(exception) =>
+
+        Left(s"Invalid JSON: $exception")
+
+      case Success(json) =>
+
+        Json.fromJson[JsonRpcMessage](json).fold({ errors =>
+          Left(s"Invalid JSON-RPC message: $errors")
+        }, Right(_))
+
+    }
+
 }
 
 class ServerConnection private(context: Context) extends WebSocketListener {
@@ -436,89 +452,94 @@ class ServerConnection private(context: Context) extends WebSocketListener {
 
             case WebSocket.PayloadType.TEXT =>
 
-              Try(Json.parse(payload.readUtf8)) match {
+              readJsonRpcMessage(payload.readUtf8) match {
 
-                case Failure(exception) =>
+                case Left(error) =>
 
                   disconnect(1002)
-                  sys.error(s"Invalid JSON: $exception")
+                  sys.error(error)
 
-                case Success(json) =>
+                case Right(jsonRpcMessage) => jsonRpcMessage match {
 
-                  Json.fromJson[JsonRpcMessage](json).fold({ errors =>
+                  case jsonRpcRequestMessage: JsonRpcRequestMessage =>
+
                     disconnect(1002)
-                    sys.error(s"Invalid JSON-RPC message: $errors")
-                  }, {
+                    sys.error(s"Received $jsonRpcRequestMessage")
 
-                    case jsonRpcRequestMessage: JsonRpcRequestMessage =>
+                  case jsonRpcRequestMessageBatch: JsonRpcRequestMessageBatch =>
 
+                    disconnect(1002)
+                    sys.error(s"Received $jsonRpcRequestMessageBatch")
+
+                  case jsonRpcResponseMessage: JsonRpcResponseMessage =>
+
+                    jsonRpcResponseMessage.id.fold {
                       disconnect(1002)
-                      sys.error(s"Received $jsonRpcRequestMessage")
-
-                    case jsonRpcResponseMessage: JsonRpcResponseMessage =>
-
-                      jsonRpcResponseMessage.id.fold {
+                      sys.error(s"JSON-RPC message ID missing, jsonRpcResponseMessage" +
+                        s".eitherErrorOrResult=${jsonRpcResponseMessage.eitherErrorOrResult}")
+                    } { id =>
+                      id.right.toOption.fold {
+                        sys.error(s"JSON-RPC message ID was not a number, id=$id")
                         disconnect(1002)
-                        sys.error(s"JSON-RPC message ID missing, jsonRpcResponseMessage" +
-                          s".eitherErrorOrResult=${jsonRpcResponseMessage.eitherErrorOrResult}")
-                      } { id =>
-                        id.right.toOption.fold {
-                          sys.error(s"JSON-RPC message ID was not a number, id=$id")
-                          disconnect(1002)
-                        } { commandIdentifier =>
-                          asyncPost(activeState.handler)(
-                            pendingRequests.get(commandIdentifier).fold {
-                              disconnect(1002)
-                              sys.error(s"No pending request exists with commandIdentifier" +
-                                s"=$commandIdentifier")
-                            } { pendingRequest =>
-                              pendingRequests = pendingRequests - commandIdentifier
-                              Response.read(
-                                jsonRpcResponseMessage,
-                                pendingRequest.requestMessage.method
-                              ).fold({ errors =>
-                                disconnect(1002)
-                                sys.error(s"Invalid Response: $errors")
-                              }, {
-
-                                case errorResponse: ErrorResponse =>
-
-                                  asyncPost(mainHandler)(
-                                    pendingRequest.callback.onErrorReceived(errorResponse)
-                                  )
-
-                                case resultResponse: ResultResponse =>
-
-                                  asyncPost(mainHandler)(
-                                    pendingRequest.callback.onResultReceived(resultResponse)
-                                  )
-
-                              })
-                            }
-                          )
-                        }
-                      }
-
-                    case jsonRpcNotificationMessage: JsonRpcNotificationMessage =>
-
-                      Notification.read(jsonRpcNotificationMessage).fold {
-                        disconnect(1002)
-                        sys.error(s"No notification type exists with method" +
-                          s"=${jsonRpcNotificationMessage.method}")
-                      }(_.fold({ errors =>
-                        disconnect(1002)
-                        sys.error(s"Invalid Notification: $errors")
-                      }, notification =>
+                      } { commandIdentifier =>
                         asyncPost(activeState.handler)(
-                          asyncPost(mainHandler)(
-                            notificationReceiptListeners.foreach(
-                              _.onNotificationReceived(notification)
-                            )
+                          pendingRequests.get(commandIdentifier).fold {
+                            disconnect(1002)
+                            sys.error(s"No pending request exists with commandIdentifier" +
+                              s"=$commandIdentifier")
+                          } { pendingRequest =>
+                            pendingRequests = pendingRequests - commandIdentifier
+                            Response.read(
+                              jsonRpcResponseMessage,
+                              pendingRequest.requestMessage.method
+                            ).fold({ errors =>
+                              disconnect(1002)
+                              sys.error(s"Invalid Response: $errors")
+                            }, {
+
+                              case Left(errorResponse) =>
+
+                                asyncPost(mainHandler)(
+                                  pendingRequest.callback.onErrorReceived(errorResponse)
+                                )
+
+                              case Right(resultResponse) =>
+
+                                asyncPost(mainHandler)(
+                                  pendingRequest.callback.onResultReceived(resultResponse)
+                                )
+
+                            })
+                          }
+                        )
+                      }
+                    }
+
+                  case jsonRpcResponseMessageBatch: JsonRpcResponseMessageBatch =>
+
+                    disconnect(1002)
+                    sys.error(s"Received $jsonRpcResponseMessageBatch")
+
+                  case jsonRpcNotificationMessage: JsonRpcNotificationMessage =>
+
+                    Notification.read(jsonRpcNotificationMessage).fold {
+                      disconnect(1002)
+                      sys.error(s"No notification type exists with method" +
+                        s"=${jsonRpcNotificationMessage.method}")
+                    }(_.fold({ errors =>
+                      disconnect(1002)
+                      sys.error(s"Invalid Notification: $errors")
+                    }, notification =>
+                      asyncPost(activeState.handler)(
+                        asyncPost(mainHandler)(
+                          notificationReceiptListeners.foreach(
+                            _.onNotificationReceived(notification)
                           )
                         )
-                      ))
+                      )
+                    ))
 
-                  })
+                }
 
               }
 

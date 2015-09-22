@@ -3,6 +3,7 @@ package com.dhpcs.liquidity
 import java.util.Currency
 
 import android.content.{ContentUris, ContentValues, Context}
+import com.dhpcs.jsonrpc.ErrorResponse
 import com.dhpcs.liquidity.BoardGame.{State, _}
 import com.dhpcs.liquidity.ServerConnection._
 import com.dhpcs.liquidity.models._
