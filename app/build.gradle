@@ -72,7 +72,7 @@ dependencies {
     compile 'com.madgag.spongycastle:pkix:1.52.0.0'
     compile 'com.squareup.okhttp:okhttp-ws:2.5.0'
 
-    compile 'com.dhpcs:liquidity-common_2.11:0.38.0', {
+    compile 'com.dhpcs:liquidity-common_2.11:0.39.0', {
         exclude group: 'joda-time', module: 'joda-time'
     }
 
