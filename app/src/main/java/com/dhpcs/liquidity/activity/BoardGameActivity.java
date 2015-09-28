@@ -877,6 +877,14 @@ public class BoardGameActivity extends AppCompatActivity
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        if (!isChangingConfigurations()) {
+            closeDialogFragments();
+        }
+    }
+
+    @Override
     public void onPlayerAdded(PlayerWithBalanceAndConnectionState addedPlayer) {
         playersFragment.onPlayerAdded(addedPlayer);
     }
