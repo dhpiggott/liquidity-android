@@ -1,24 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:paddingTop="20dp"
     tools:context="com.dhpcs.liquidity.fragment.TransferToPlayerDialogFragment">
 
-    <View
-        android:id="@+id/view_bottom_divider"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_above="@+id/scrollview_transfer_details"
-        android:layout_alignParentBottom="true"
-        android:background="?android:attr/dividerHorizontal"
-        android:visibility="gone" />
-
-    <android.support.v4.widget.NestedScrollView
-        android:id="@+id/scrollview_transfer_details"
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true">
+        android:paddingBottom="24dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -161,16 +152,28 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
-                <ListView
-                    android:id="@+id/listview_to"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:visibility="gone" />
-
             </LinearLayout>
 
         </LinearLayout>
 
-    </android.support.v4.widget.NestedScrollView>
+    </ScrollView>
 
-</RelativeLayout>
+    <View
+        android:id="@+id/view_top_divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_gravity="top"
+        android:layout_marginTop="-1dp"
+        android:background="?android:attr/dividerHorizontal"
+        android:visibility="gone" />
+
+    <View
+        android:id="@+id/view_bottom_divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="-1dp"
+        android:background="?android:attr/dividerHorizontal"
+        android:visibility="gone" />
+
+</FrameLayout>

@@ -7,18 +7,19 @@ import android.app.DialogFragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.SparseBooleanArray;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckedTextView;
 import android.widget.EditText;
-import android.widget.ListView;
+import android.widget.LinearLayout;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -57,10 +58,15 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
     private static final String ARG_FROM = "from";
     private static final String ARG_TO = "to";
 
+    private static final String EXTRA_TO_LIST = "to_list";
+
     private static class PlayersAdapter extends ArrayAdapter<Player> {
 
-        public PlayersAdapter(Context context, int resource, List<Player> players) {
-            super(context, resource, players);
+        public PlayersAdapter(Context context, List<Player> players) {
+            super(context, android.R.layout.simple_spinner_item, players);
+            setDropDownViewResource(
+                    android.R.layout.simple_spinner_dropdown_item
+            );
         }
 
         private View bindView(TextView textView, Player player) {
@@ -175,14 +181,13 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
 
     private Option<Either<String, Currency>> currency;
     private IdentityWithBalance from;
-    private List<Player> to;
+    private Player to;
+    private ArrayList<Player> toList;
 
     private ArrayAdapter<IdentityWithBalance> identitiesSpinnerAdapter;
     private ArrayAdapter<Player> playersSpinnerAdapter;
-    private ArrayAdapter<Player> playersListAdapter;
 
     private TextView textViewValueError;
-    private ListView listViewTo;
     private Button buttonPositive;
 
     private BigDecimal value;
@@ -198,37 +203,30 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        //noinspection unchecked
         List<IdentityWithBalance> identities = (List<IdentityWithBalance>)
                 getArguments().getSerializable(ARG_IDENTITIES);
+        //noinspection unchecked
         List<Player> players = (List<Player>) getArguments().getSerializable(ARG_PLAYERS);
+        //noinspection unchecked
         currency = (Option<Either<String, Currency>>) getArguments().getSerializable(ARG_CURRENCY);
         from = (IdentityWithBalance) getArguments().getSerializable(ARG_FROM);
-        Player initialTo = (Player) getArguments().getSerializable(ARG_TO);
-        to = initialTo == null ? Collections.<Player>emptyList() :
-                Collections.singletonList(initialTo);
+        to = (Player) getArguments().getSerializable(ARG_TO);
+        //noinspection unchecked
+        toList = to != null ? null : (savedInstanceState != null
+                ?
+                (ArrayList<Player>) savedInstanceState.getSerializable(EXTRA_TO_LIST)
+                :
+                new ArrayList<Player>());
 
         Comparator<Player> playerComparator = BoardGameActivity.playerComparator(getActivity());
         identitiesSpinnerAdapter = new IdentitiesAdapter(getActivity(), identities);
         identitiesSpinnerAdapter.sort(playerComparator);
-        playersSpinnerAdapter = new PlayersAdapter(
-                getActivity(),
-                android.R.layout.simple_spinner_item,
-                players
-        );
-        playersSpinnerAdapter.setDropDownViewResource(
-                android.R.layout.simple_spinner_dropdown_item
-        );
+        playersSpinnerAdapter = new PlayersAdapter(getActivity(), players);
         playersSpinnerAdapter.sort(playerComparator);
-        playersListAdapter = new PlayersAdapter(
-                getActivity(),
-                android.R.layout.simple_list_item_multiple_choice,
-                players
-        );
-        playersListAdapter.sort(playerComparator);
     }
 
     @Override
@@ -245,8 +243,9 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
         RadioGroup radioGroupValueMultiplier =
                 (RadioGroup) view.findViewById(R.id.radiogroup_value_multiplier);
         Spinner spinnerFrom = (Spinner) view.findViewById(R.id.spinner_from);
+        LinearLayout linearLayoutTo = (LinearLayout) view.findViewById(R.id.linearlayout_to);
         Spinner spinnerTo = (Spinner) view.findViewById(R.id.spinner_to);
-        listViewTo = (ListView) view.findViewById(R.id.listview_to);
+        View viewTopDivider = view.findViewById(R.id.view_top_divider);
         View viewBottomDivider = view.findViewById(R.id.view_bottom_divider);
 
         final AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
@@ -266,7 +265,7 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
                                 if (listener != null) {
                                     listener.onTransferValueEntered(
                                             from,
-                                            to,
+                                            to != null ? Collections.singletonList(to) : toList,
                                             scaledValue
                                     );
                                 }
@@ -351,7 +350,7 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
                                        View view,
                                        int position,
                                        long id) {
-                to = Collections.singletonList(playersSpinnerAdapter.getItem(position));
+                to = playersSpinnerAdapter.getItem(position);
                 if (buttonPositive != null) {
                     validateInput();
                 }
@@ -359,23 +358,6 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-            }
-
-        });
-        listViewTo.setAdapter(playersListAdapter);
-        listViewTo.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
-        listViewTo.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                SparseBooleanArray checkedPositions = listViewTo.getCheckedItemPositions();
-                to = new ArrayList<>();
-                for (int i = 0; i < checkedPositions.size(); i++) {
-                    if (checkedPositions.valueAt(i)) {
-                        to.add(playersListAdapter.getItem(checkedPositions.keyAt(i)));
-                    }
-                }
-                validateInput();
             }
 
         });
@@ -389,12 +371,42 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
 
         spinnerFrom.setSelection(identitiesSpinnerAdapter.getPosition(from));
 
-        if (to.size() == 1) {
-            spinnerTo.setSelection(playersSpinnerAdapter.getPosition(to.get(0)));
+        if (to != null) {
+            spinnerTo.setSelection(playersSpinnerAdapter.getPosition(to));
         } else {
             spinnerTo.setVisibility(View.GONE);
-            listViewTo.setVisibility(View.VISIBLE);
+            viewTopDivider.setVisibility(View.VISIBLE);
             viewBottomDivider.setVisibility(View.VISIBLE);
+            //noinspection unchecked
+            List<Player> players = (List<Player>) getArguments().getSerializable(ARG_PLAYERS);
+            assert players != null;
+            for (final Player player : players) {
+                final CheckedTextView checkedTextViewPlayer = (CheckedTextView)
+                        getActivity().getLayoutInflater().inflate(
+                                android.R.layout.simple_list_item_multiple_choice,
+                                linearLayoutTo,
+                                false
+                        );
+                linearLayoutTo.addView(checkedTextViewPlayer);
+                checkedTextViewPlayer.setText(
+                        BoardGameActivity.formatNullable(getActivity(), player.member().name())
+                );
+                checkedTextViewPlayer.setChecked(toList.contains(player));
+                checkedTextViewPlayer.setOnClickListener(new View.OnClickListener() {
+
+                    @Override
+                    public void onClick(View v) {
+                        checkedTextViewPlayer.toggle();
+                        if (checkedTextViewPlayer.isChecked()) {
+                            toList.add(player);
+                        } else {
+                            toList.remove(player);
+                        }
+                        validateInput();
+                    }
+
+                });
+            }
         }
 
         alertDialog.setOnShowListener(new DialogInterface.OnShowListener() {
@@ -435,6 +447,12 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
         }
     }
 
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putSerializable(EXTRA_TO_LIST, toList);
+    }
+
     private void validateInput() {
         scala.math.BigDecimal currentBalance = identities == null ?
                 from.balanceWithCurrency()._1() :
@@ -446,7 +464,7 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
         } else {
             scaledValue = value.scaleByPowerOfTen(scale);
             BigDecimal requiredBalance = from.isBanker() ? null :
-                    scaledValue.multiply(new BigDecimal(to.size()));
+                    scaledValue.multiply(new BigDecimal(to != null ? 1 : toList.size()));
             if (requiredBalance != null
                     && currentBalance.bigDecimal().compareTo(requiredBalance) < 0) {
                 textViewValueError.setText(
