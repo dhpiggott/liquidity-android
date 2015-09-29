@@ -62,8 +62,10 @@
     <string name="join_state_general_failure">The connection failed.</string>
     <string name="join_state_joining">Joining game</string>
     <string name="join_state_quitting">Quitting game</string>
-    <string name="join_state_tls_error">Could not establish a secure connection. Check you are using the latest version of Liquidity.</string>
+    <string name="join_state_tls_error">Could not establish a secure connection. Ensure you are using the latest version of Liquidity.</string>
     <string name="join_state_unavailable">Liquidity requires a data connection, but none is available.</string>
+    <string name="join_state_unsupported_version">This version is no longer supported. Ensure you are using the latest version of Liquidity.</string>
+    <string name="join_state_waiting_for_version_check">Checking version</string>
     <string name="no_games">You don\'t have any saved games. Click the button below to create or join one.</string>
     <string name="no_identities">You don\'t have any identities. Touch here to create one.</string>
     <string name="no_last_transfer">Click a player to send money to them.</string>

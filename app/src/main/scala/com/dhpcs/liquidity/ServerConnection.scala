@@ -29,11 +29,15 @@ object ServerConnection {
 
   case object TLS_ERROR extends ConnectionState
 
+  case object UNSUPPORTED_VERSION extends ConnectionState
+
   case object AVAILABLE extends ConnectionState
 
   case object CONNECTING extends ConnectionState
 
-  case object CONNECTED extends ConnectionState
+  case object WAITING_FOR_VERSION_CHECK extends ConnectionState
+
+  case object ONLINE extends ConnectionState
 
   case object DISCONNECTING extends ConnectionState
 
@@ -45,7 +49,7 @@ object ServerConnection {
 
   trait NotificationReceiptListener {
 
-    def onNotificationReceived(notification: Notification)
+    def onZoneNotificationReceived(zoneNotification: ZoneNotification)
 
   }
 
@@ -69,6 +73,8 @@ object ServerConnection {
 
   private case object TlsErrorIdleState extends IdleState
 
+  private case object UnsupportedVersionIdleState extends IdleState
+
   private case object AvailableIdleState extends IdleState
 
   private case class ActiveState(handler: Handler) extends State {
@@ -81,7 +87,15 @@ object ServerConnection {
 
   private case class ConnectingSubState(webSocketCall: WebSocketCall) extends SubState
 
-  private case class ConnectedSubState(webSocket: WebSocket) extends SubState
+  private sealed trait ConnectedSubState extends SubState {
+
+    val webSocket: WebSocket
+
+  }
+
+  private case class WaitingForVersionCheckSubState(webSocket: WebSocket) extends ConnectedSubState
+
+  private case class OnlineSubState(webSocket: WebSocket) extends ConnectedSubState
 
   private case object DisconnectingSubState extends SubState
 
@@ -186,7 +200,12 @@ class ServerConnection private(context: Context) extends WebSocketListener {
 
     case UnavailableIdleState =>
 
-    case AvailableIdleState | GeneralFailureIdleState | TlsErrorIdleState =>
+      sys.error("Connection unavailable")
+
+    case AvailableIdleState
+         | GeneralFailureIdleState
+         | TlsErrorIdleState
+         | UnsupportedVersionIdleState =>
 
       doOpen()
 
@@ -211,19 +230,27 @@ class ServerConnection private(context: Context) extends WebSocketListener {
 
             activeState.subState = DisconnectingSubState
             _connectionState = DISCONNECTING
-            asyncPost(mainHandler)(
+            asyncPost(mainHandler) {
               connectionStateListeners.foreach(_.onConnectionStateChanged(_connectionState))
-            )
+            }
 
             connectingState.webSocketCall.cancel()
 
-          case connectedState: ConnectedSubState =>
+          case connectedState: WaitingForVersionCheckSubState =>
+
+            try {
+              connectedState.webSocket.close(code, null)
+            } catch {
+              case _: IOException =>
+            }
+
+          case connectedState: OnlineSubState =>
 
             activeState.subState = DisconnectingSubState
             _connectionState = DISCONNECTING
-            asyncPost(mainHandler)(
+            asyncPost(mainHandler) {
               connectionStateListeners.foreach(_.onConnectionStateChanged(_connectionState))
-            )
+            }
 
             try {
               connectedState.webSocket.close(code, null)
@@ -239,13 +266,17 @@ class ServerConnection private(context: Context) extends WebSocketListener {
   private def doClose(handler: Handler,
                       dueToGeneralFailure: Boolean,
                       dueToTlsError: Boolean,
+                      dueToUnsupportedVersion: Boolean,
                       reconnect: Boolean = false) =
     asyncPost(handler) {
       handler.getLooper.quit()
       asyncPost(mainHandler) {
-        hasFailed = dueToGeneralFailure || dueToTlsError
+        hasFailed = dueToGeneralFailure || dueToTlsError || dueToUnsupportedVersion
         if (!reconnect) {
-          if (dueToTlsError) {
+          if (dueToUnsupportedVersion) {
+            state = UnsupportedVersionIdleState
+            _connectionState = UNSUPPORTED_VERSION
+          } else if (dueToTlsError) {
             state = TlsErrorIdleState
             _connectionState = TLS_ERROR
           } else if (dueToGeneralFailure) {
@@ -285,7 +316,10 @@ class ServerConnection private(context: Context) extends WebSocketListener {
     if (!isConnectionAvailable) {
       state match {
 
-        case AvailableIdleState | GeneralFailureIdleState | TlsErrorIdleState =>
+        case AvailableIdleState
+             | GeneralFailureIdleState
+             | TlsErrorIdleState
+             | UnsupportedVersionIdleState =>
 
           state = UnavailableIdleState
           _connectionState = UNAVAILABLE
@@ -330,12 +364,22 @@ class ServerConnection private(context: Context) extends WebSocketListener {
 
           sys.error("Not connected or disconnecting")
 
-        case _: ConnectedSubState =>
+        case _: WaitingForVersionCheckSubState =>
 
           doClose(
             activeState.handler,
             dueToGeneralFailure = false,
-            dueToTlsError = false
+            dueToTlsError = false,
+            dueToUnsupportedVersion = true
+          )
+
+        case _: OnlineSubState =>
+
+          doClose(
+            activeState.handler,
+            dueToGeneralFailure = false,
+            dueToTlsError = false,
+            dueToUnsupportedVersion = false
           )
 
         case DisconnectingSubState =>
@@ -344,6 +388,7 @@ class ServerConnection private(context: Context) extends WebSocketListener {
             activeState.handler,
             dueToGeneralFailure = false,
             dueToTlsError = false,
+            dueToUnsupportedVersion = false,
             reconnect = connectRequestTokens.nonEmpty
           )
 
@@ -369,6 +414,7 @@ class ServerConnection private(context: Context) extends WebSocketListener {
             activeState.handler,
             dueToGeneralFailure = false,
             dueToTlsError = false,
+            dueToUnsupportedVersion = false,
             reconnect = connectRequestTokens.nonEmpty
           )
 
@@ -388,7 +434,8 @@ class ServerConnection private(context: Context) extends WebSocketListener {
                 doClose(
                   activeState.handler,
                   dueToGeneralFailure = false,
-                  dueToTlsError = true
+                  dueToTlsError = true,
+                  dueToUnsupportedVersion = false
                 )
 
               case _ =>
@@ -396,7 +443,8 @@ class ServerConnection private(context: Context) extends WebSocketListener {
                 doClose(
                   activeState.handler,
                   dueToGeneralFailure = true,
-                  dueToTlsError = false
+                  dueToTlsError = false,
+                  dueToUnsupportedVersion = false
                 )
 
             }
@@ -411,7 +459,8 @@ class ServerConnection private(context: Context) extends WebSocketListener {
               doClose(
                 activeState.handler,
                 dueToGeneralFailure = false,
-                dueToTlsError = true
+                dueToTlsError = true,
+                dueToUnsupportedVersion = false
               )
 
             } else {
@@ -419,7 +468,8 @@ class ServerConnection private(context: Context) extends WebSocketListener {
               doClose(
                 activeState.handler,
                 dueToGeneralFailure = true,
-                dueToTlsError = false
+                dueToTlsError = false,
+                dueToUnsupportedVersion = false
               )
 
             }
@@ -438,40 +488,74 @@ class ServerConnection private(context: Context) extends WebSocketListener {
 
     case activeState: ActiveState =>
 
-      activeState.subState match {
+      `type` match {
 
-        case _: ConnectingSubState =>
+        case WebSocket.PayloadType.TEXT =>
 
-          sys.error("Not connected")
+          readJsonRpcMessage(payload.readUtf8) match {
 
-        case DisconnectingSubState =>
+            case Left(error) =>
 
-        case _: ConnectedSubState =>
+              disconnect(1002)
+              sys.error(error)
 
-          `type` match {
+            case Right(jsonRpcMessage) => jsonRpcMessage match {
 
-            case WebSocket.PayloadType.TEXT =>
+              case jsonRpcRequestMessage: JsonRpcRequestMessage =>
 
-              readJsonRpcMessage(payload.readUtf8) match {
+                activeState.subState match {
 
-                case Left(error) =>
+                  case _: ConnectingSubState =>
 
-                  disconnect(1002)
-                  sys.error(error)
+                    sys.error("Not connected")
 
-                case Right(jsonRpcMessage) => jsonRpcMessage match {
+                  case _: WaitingForVersionCheckSubState =>
 
-                  case jsonRpcRequestMessage: JsonRpcRequestMessage =>
+                    sys.error("Waiting for version check")
+
+                  case _: OnlineSubState =>
 
                     disconnect(1002)
                     sys.error(s"Received $jsonRpcRequestMessage")
 
-                  case jsonRpcRequestMessageBatch: JsonRpcRequestMessageBatch =>
+                  case DisconnectingSubState =>
+
+                }
+
+              case jsonRpcRequestMessageBatch: JsonRpcRequestMessageBatch =>
+
+                activeState.subState match {
+
+                  case _: ConnectingSubState =>
+
+                    sys.error("Not connected")
+
+                  case _: WaitingForVersionCheckSubState =>
+
+                    sys.error("Waiting for version check")
+
+                  case _: OnlineSubState =>
 
                     disconnect(1002)
                     sys.error(s"Received $jsonRpcRequestMessageBatch")
 
-                  case jsonRpcResponseMessage: JsonRpcResponseMessage =>
+                  case DisconnectingSubState =>
+
+                }
+
+              case jsonRpcResponseMessage: JsonRpcResponseMessage =>
+
+                activeState.subState match {
+
+                  case _: ConnectingSubState =>
+
+                    sys.error("Not connected")
+
+                  case _: WaitingForVersionCheckSubState =>
+
+                    sys.error("Waiting for version check")
+
+                  case _: OnlineSubState =>
 
                     jsonRpcResponseMessage.id.fold {
                       disconnect(1002)
@@ -515,76 +599,166 @@ class ServerConnection private(context: Context) extends WebSocketListener {
                       }
                     }
 
-                  case jsonRpcResponseMessageBatch: JsonRpcResponseMessageBatch =>
+                  case DisconnectingSubState =>
+
+                }
+
+              case jsonRpcResponseMessageBatch: JsonRpcResponseMessageBatch =>
+
+                activeState.subState match {
+
+                  case _: ConnectingSubState =>
+
+                    sys.error("Not connected")
+
+                  case _: WaitingForVersionCheckSubState =>
+
+                    sys.error("Waiting for version check")
+
+                  case _: OnlineSubState =>
 
                     disconnect(1002)
                     sys.error(s"Received $jsonRpcResponseMessageBatch")
 
-                  case jsonRpcNotificationMessage: JsonRpcNotificationMessage =>
-
-                    Notification.read(jsonRpcNotificationMessage).fold {
-                      disconnect(1002)
-                      sys.error(s"No notification type exists with method" +
-                        s"=${jsonRpcNotificationMessage.method}")
-                    }(_.fold({ errors =>
-                      disconnect(1002)
-                      sys.error(s"Invalid Notification: $errors")
-                    }, notification =>
-                      asyncPost(activeState.handler)(
-                        asyncPost(mainHandler)(
-                          notificationReceiptListeners.foreach(
-                            _.onNotificationReceived(notification)
-                          )
-                        )
-                      )
-                    ))
+                  case DisconnectingSubState =>
 
                 }
 
-              }
+              case jsonRpcNotificationMessage: JsonRpcNotificationMessage =>
 
-            case WebSocket.PayloadType.BINARY =>
+                Notification.read(jsonRpcNotificationMessage).fold {
+                  disconnect(1002)
+                  sys.error(s"No notification type exists with method" +
+                    s"=${jsonRpcNotificationMessage.method}")
+                }(_.fold({ errors =>
+                  disconnect(1002)
+                  sys.error(s"Invalid Notification: $errors")
+                }, {
 
-              disconnect(1003)
+                  case SupportedVersionsNotification(compatibleVersionNumbers) =>
+
+                    activeState.subState match {
+
+                      case _: ConnectingSubState =>
+
+                        sys.error("Not connected")
+
+                      case _: OnlineSubState =>
+
+                        sys.error("Already online")
+
+                      case waitingForVersionCheckSubState: WaitingForVersionCheckSubState =>
+
+                        if (!compatibleVersionNumbers.contains(VersionNumber)) {
+
+                          disconnect(1001)
+
+                        } else {
+
+                          asyncPost(activeState.handler) {
+                            activeState.subState = OnlineSubState(
+                              waitingForVersionCheckSubState.webSocket
+                            )
+                            _connectionState = ONLINE
+                            asyncPost(mainHandler) {
+                              connectionStateListeners.foreach(
+                                _.onConnectionStateChanged(_connectionState)
+                              )
+                            }
+                          }
+
+                        }
+
+                      case DisconnectingSubState =>
+
+                    }
+
+                  case KeepAliveNotification =>
+
+                    activeState.subState match {
+
+                      case _: ConnectingSubState =>
+
+                        sys.error("Not connected")
+
+                      case _: WaitingForVersionCheckSubState =>
+
+                        sys.error("Waiting for version check")
+
+                      case _: OnlineSubState =>
+
+                      case DisconnectingSubState =>
+
+                    }
+
+                  case zoneNotification: ZoneNotification =>
+
+                    activeState.subState match {
+
+                      case _: ConnectingSubState =>
+
+                        sys.error("Not connected")
+
+                      case _: WaitingForVersionCheckSubState =>
+
+                        sys.error("Waiting for version check")
+
+                      case _: OnlineSubState =>
+
+                        asyncPost(activeState.handler)(
+                          asyncPost(mainHandler)(
+                            notificationReceiptListeners.foreach(
+                              _.onZoneNotificationReceived(zoneNotification)
+                            )
+                          )
+                        )
+
+                      case DisconnectingSubState =>
+
+                    }
+
+                }))
+
+            }
 
           }
+
+        case WebSocket.PayloadType.BINARY =>
+
+          disconnect(1003)
 
       }
       payload.close()
 
   }
 
-  override def onOpen(webSocket: WebSocket, response: com.squareup.okhttp.Response) =
-    state match {
+  override def onOpen(webSocket: WebSocket, response: com.squareup.okhttp.Response) = state match {
 
-      case AvailableIdleState
-           | GeneralFailureIdleState
-           | TlsErrorIdleState
-           | UnavailableIdleState =>
+    case _: IdleState =>
 
-        sys.error("Not connecting")
+      sys.error("Not connecting")
 
-      case activeState: ActiveState =>
+    case activeState: ActiveState =>
 
-        activeState.subState match {
+      activeState.subState match {
 
-          case _: ConnectedSubState | DisconnectingSubState =>
+        case _: ConnectedSubState | DisconnectingSubState =>
 
-            sys.error("Not connecting")
+          sys.error("Not connecting")
 
-          case _: ConnectingSubState =>
+        case _: ConnectingSubState =>
 
-            asyncPost(activeState.handler) {
-              activeState.subState = ConnectedSubState(webSocket)
-              _connectionState = CONNECTED
-              asyncPost(mainHandler)(
-                connectionStateListeners.foreach(_.onConnectionStateChanged(_connectionState))
-              )
+          asyncPost(activeState.handler) {
+            activeState.subState = WaitingForVersionCheckSubState(webSocket)
+            _connectionState = WAITING_FOR_VERSION_CHECK
+            asyncPost(mainHandler) {
+              connectionStateListeners.foreach(_.onConnectionStateChanged(_connectionState))
             }
+          }
 
-        }
+      }
 
-    }
+  }
 
   override def onPong(payload: Buffer) = ()
 
@@ -609,7 +783,8 @@ class ServerConnection private(context: Context) extends WebSocketListener {
     }
     if ((_connectionState == ServerConnection.AVAILABLE
       || _connectionState == ServerConnection.GENERAL_FAILURE
-      || _connectionState == ServerConnection.TLS_ERROR)
+      || _connectionState == ServerConnection.TLS_ERROR
+      || _connectionState == ServerConnection.UNSUPPORTED_VERSION)
       && (!hasFailed || retry)) {
 
       connect()
@@ -631,13 +806,17 @@ class ServerConnection private(context: Context) extends WebSocketListener {
 
           sys.error("Not connected")
 
-        case connectedState: ConnectedSubState =>
+        case _: WaitingForVersionCheckSubState =>
+
+          sys.error("Waiting for version check")
+
+        case onlineSubState: OnlineSubState =>
 
           asyncPost(activeState.handler) {
             val jsonRpcRequestMessage = Command.write(command, Some(Right(commandIdentifier)))
             commandIdentifier = commandIdentifier + 1
             Try {
-              connectedState.webSocket.sendMessage(
+              onlineSubState.webSocket.sendMessage(
                 WebSocket.PayloadType.TEXT,
                 new Buffer().writeUtf8(
                   Json.stringify(
@@ -663,7 +842,8 @@ class ServerConnection private(context: Context) extends WebSocketListener {
                     doClose(
                       activeState.handler,
                       dueToGeneralFailure = true,
-                      dueToTlsError = false
+                      dueToTlsError = false,
+                      dueToUnsupportedVersion = false
                     )
 
                 }
@@ -695,7 +875,8 @@ class ServerConnection private(context: Context) extends WebSocketListener {
       connectRequestTokens = connectRequestTokens - token
       if (connectRequestTokens.isEmpty) {
         if (_connectionState == ServerConnection.CONNECTING
-          || _connectionState == ServerConnection.CONNECTED) {
+          || _connectionState == ServerConnection.WAITING_FOR_VERSION_CHECK
+          || _connectionState == ServerConnection.ONLINE) {
 
           disconnect(1001)
 

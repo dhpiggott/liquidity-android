@@ -639,6 +639,17 @@ public class BoardGameActivity extends AppCompatActivity
             textViewState.setText(R.string.join_state_tls_error);
             buttonReconnect.setVisibility(View.VISIBLE);
 
+        } else if (joinState == BoardGame.UNSUPPORTED_VERSION$.MODULE$) {
+
+            closeDialogFragments();
+
+            slidingUpPanelLayout.setVisibility(View.GONE);
+            progressBarState.setVisibility(View.GONE);
+
+            textViewState.setVisibility(View.VISIBLE);
+            textViewState.setText(R.string.join_state_unsupported_version);
+            buttonReconnect.setVisibility(View.VISIBLE);
+
         } else if (joinState == BoardGame.AVAILABLE$.MODULE$) {
 
             closeDialogFragments();
@@ -660,6 +671,17 @@ public class BoardGameActivity extends AppCompatActivity
             progressBarState.setVisibility(View.VISIBLE);
             textViewState.setVisibility(View.VISIBLE);
             textViewState.setText(R.string.join_state_connecting);
+
+        } else if (joinState == BoardGame.WAITING_FOR_VERSION_CHECK$.MODULE$) {
+
+            closeDialogFragments();
+
+            slidingUpPanelLayout.setVisibility(View.GONE);
+            buttonReconnect.setVisibility(View.GONE);
+
+            progressBarState.setVisibility(View.VISIBLE);
+            textViewState.setVisibility(View.VISIBLE);
+            textViewState.setText(R.string.join_state_waiting_for_version_check);
 
         } else if (joinState == BoardGame.JOINING$.MODULE$) {
 

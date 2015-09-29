@@ -25,9 +25,13 @@ object BoardGame {
 
   case object TLS_ERROR extends JoinState
 
+  case object UNSUPPORTED_VERSION extends JoinState
+
   case object AVAILABLE extends JoinState
 
   case object CONNECTING extends JoinState
+
+  case object WAITING_FOR_VERSION_CHECK extends JoinState
 
   case object JOINING extends JoinState
 
@@ -653,18 +657,251 @@ class BoardGame private(context: Context,
     joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
   }
 
-  override def onNotificationReceived(notification: Notification) = notification match {
+  override def onZoneNotificationReceived(zoneNotification: ZoneNotification) =
+    if (zoneId.get == zoneNotification.zoneId) {
 
-    case KeepAliveNotification =>
+      def updatePlayersAndTransactions() {
+        val (updatedPlayers, updatedHiddenPlayers) = playersFromMembersAccounts(
+          zoneNotification.zoneId,
+          state.memberIdsToAccountIds,
+          state.zone.accounts,
+          state.balances,
+          state.currency,
+          state.zone.members,
+          state.zone.equityAccountId,
+          state.connectedClients
+        )
 
-    case zoneNotification: ZoneNotification =>
+        if (updatedPlayers != state.players) {
+          val addedPlayers = updatedPlayers -- state.players.keys
+          val changedPlayers = updatedPlayers.filter { case (memberId, player) =>
+            state.players.get(memberId).fold(false)(_ != player)
+          }
+          val removedPlayers = state.players -- updatedPlayers.keys
+          if (addedPlayers.nonEmpty) {
+            gameActionListeners.foreach(listener =>
+              addedPlayers.values.foreach(listener.onPlayerAdded)
+            )
+          }
+          if (changedPlayers.nonEmpty) {
+            gameActionListeners.foreach(listener =>
+              changedPlayers.values.foreach(listener.onPlayerChanged)
+            )
+          }
+          if (removedPlayers.nonEmpty) {
+            gameActionListeners.foreach(listener =>
+              removedPlayers.values.foreach(listener.onPlayerRemoved)
+            )
+          }
+          state.players = updatedPlayers
+          gameActionListeners.foreach(_.onPlayersUpdated(updatedPlayers))
+        }
 
-      if (zoneId.get == zoneNotification.zoneId) {
+        if (updatedHiddenPlayers != state.hiddenPlayers) {
+          state.hiddenPlayers = updatedHiddenPlayers
+        }
 
-        def updatePlayersAndTransactions() {
-          val (updatedPlayers, updatedHiddenPlayers) = playersFromMembersAccounts(
+        val updatedTransfers = transfersFromTransactions(
+          state.zone.transactions,
+          state.currency,
+          state.accountIdsToMemberIds,
+          state.players ++ state.hiddenPlayers,
+          state.zone.accounts,
+          state.zone.members
+        )
+
+        if (updatedTransfers != state.transfers) {
+          val changedTransfers = updatedTransfers.filter { case (transactionId, transfer) =>
+            state.transfers.get(transactionId).fold(false)(_ != transfer)
+          }
+          if (changedTransfers.nonEmpty) {
+            gameActionListeners.foreach(_.onTransfersChanged(changedTransfers.values))
+          }
+          state.transfers = updatedTransfers
+          gameActionListeners.foreach(_.onTransfersUpdated(updatedTransfers))
+        }
+      }
+
+      zoneNotification match {
+
+        case ClientJoinedZoneNotification(_, publicKey) =>
+
+          state.connectedClients = state.connectedClients + publicKey
+
+          val (joinedPlayers, joinedHiddenPlayers) = playersFromMembersAccounts(
+            zoneNotification.zoneId,
+            state.memberIdsToAccountIds.filterKeys(
+              state.zone.members(_).ownerPublicKey == publicKey
+            ),
+            state.zone.accounts,
+            state.balances,
+            state.currency,
+            state.zone.members,
+            state.zone.equityAccountId,
+            Set(publicKey)
+          )
+
+          if (joinedPlayers.nonEmpty) {
+            state.players = state.players ++ joinedPlayers
+            gameActionListeners.foreach(listener =>
+              joinedPlayers.values.foreach(listener.onPlayerChanged)
+            )
+            gameActionListeners.foreach(_.onPlayersUpdated(state.players))
+          }
+
+          if (joinedHiddenPlayers.nonEmpty) {
+            state.hiddenPlayers = state.hiddenPlayers ++ joinedHiddenPlayers
+          }
+
+        case ClientQuitZoneNotification(_, publicKey) =>
+
+          state.connectedClients = state.connectedClients - publicKey
+
+          val (quitPlayers, quitHiddenPlayers) = playersFromMembersAccounts(
+            zoneNotification.zoneId,
+            state.memberIdsToAccountIds.filterKeys(
+              state.zone.members(_).ownerPublicKey == publicKey
+            ),
+            state.zone.accounts,
+            state.balances,
+            state.currency,
+            state.zone.members,
+            state.zone.equityAccountId,
+            Set.empty
+          )
+
+          if (quitPlayers.nonEmpty) {
+            state.players = state.players ++ quitPlayers
+            gameActionListeners.foreach(listener =>
+              quitPlayers.values.foreach(listener.onPlayerChanged)
+            )
+            gameActionListeners.foreach(_.onPlayersUpdated(state.players))
+          }
+
+          if (quitHiddenPlayers.nonEmpty) {
+            state.hiddenPlayers = state.hiddenPlayers ++ quitHiddenPlayers
+          }
+
+        case ZoneTerminatedNotification(_) =>
+
+          join(zoneNotification.zoneId)
+
+        case ZoneNameChangedNotification(_, name) =>
+
+          state.zone = state.zone.copy(name = name)
+
+          gameActionListeners.foreach(_.onGameNameChanged(name))
+
+          gameId.foreach(
+            _.foreach { gameId =>
+              Future(
+                updateGameName(gameId, name.orNull)
+              )
+            }
+          )
+
+        case MemberCreatedNotification(_, member) =>
+
+          state.zone = state.zone.copy(
+            members = state.zone.members + (member.id -> member)
+          )
+
+        case MemberUpdatedNotification(_, member) =>
+
+          state.zone = state.zone.copy(
+            members = state.zone.members + (member.id -> member)
+          )
+
+          val (updatedIdentities, updatedHiddenIdentities) = identitiesFromMembersAccounts(
             zoneNotification.zoneId,
             state.memberIdsToAccountIds,
+            state.zone.accounts,
+            state.balances,
+            state.currency,
+            state.zone.members,
+            state.zone.equityAccountId,
+            ClientKey.getPublicKey(context)
+          )
+
+          if (updatedIdentities != state.identities) {
+
+            val receivedIdentity =
+              if (!state.identities.contains(member.id) &&
+                !state.hiddenIdentities.contains(member.id)) {
+                updatedIdentities.get(member.id)
+              } else {
+                None
+              }
+
+            val restoredIdentity =
+              if (!state.identities.contains(member.id) &&
+                state.hiddenIdentities.contains(member.id)) {
+                updatedIdentities.get(member.id)
+              } else {
+                None
+              }
+
+            state.identities = updatedIdentities
+            gameActionListeners.foreach(_.onIdentitiesUpdated(updatedIdentities))
+
+            receivedIdentity.foreach(receivedIdentity =>
+              gameActionListeners.foreach(_.onIdentityReceived(receivedIdentity))
+            )
+
+            restoredIdentity.foreach(restoredIdentity =>
+              gameActionListeners.foreach(_.onIdentityRestored(restoredIdentity))
+            )
+
+          }
+
+          if (updatedHiddenIdentities != state.hiddenIdentities) {
+            state.hiddenIdentities = updatedHiddenIdentities
+          }
+
+          updatePlayersAndTransactions()
+
+        case AccountCreatedNotification(_, account) =>
+
+          state.zone = state.zone.copy(
+            accounts = state.zone.accounts + (account.id -> account)
+          )
+
+          val createdMembersAccounts = membersAccountsFromAccounts(
+            Map(
+              account.id -> state.zone.accounts(account.id)
+            )
+          )
+
+          state.memberIdsToAccountIds = state.memberIdsToAccountIds ++ createdMembersAccounts
+          state.accountIdsToMemberIds = state.accountIdsToMemberIds ++
+            createdMembersAccounts.map(_.swap)
+
+          val (createdIdentity, createdHiddenIdentity) = identitiesFromMembersAccounts(
+            zoneNotification.zoneId,
+            createdMembersAccounts,
+            state.zone.accounts,
+            state.balances,
+            state.currency,
+            state.zone.members,
+            state.zone.equityAccountId,
+            ClientKey.getPublicKey(context)
+          )
+
+          if (createdIdentity.nonEmpty) {
+            state.identities = state.identities ++ createdIdentity
+            gameActionListeners.foreach(_.onIdentitiesUpdated(state.identities))
+            gameActionListeners.foreach(
+              _.onIdentityCreated(state.identities(account.ownerMemberIds.head))
+            )
+          }
+
+          if (createdHiddenIdentity.nonEmpty) {
+            state.hiddenIdentities = state.hiddenIdentities ++ createdHiddenIdentity
+          }
+
+          val (createdPlayer, createdHiddenPlayer) = playersFromMembersAccounts(
+            zoneNotification.zoneId,
+            createdMembersAccounts,
             state.zone.accounts,
             state.balances,
             state.currency,
@@ -673,37 +910,113 @@ class BoardGame private(context: Context,
             state.connectedClients
           )
 
-          if (updatedPlayers != state.players) {
-            val addedPlayers = updatedPlayers -- state.players.keys
-            val changedPlayers = updatedPlayers.filter { case (memberId, player) =>
-              state.players.get(memberId).fold(false)(_ != player)
-            }
-            val removedPlayers = state.players -- updatedPlayers.keys
-            if (addedPlayers.nonEmpty) {
-              gameActionListeners.foreach(listener =>
-                addedPlayers.values.foreach(listener.onPlayerAdded)
-              )
-            }
-            if (changedPlayers.nonEmpty) {
-              gameActionListeners.foreach(listener =>
-                changedPlayers.values.foreach(listener.onPlayerChanged)
-              )
-            }
-            if (removedPlayers.nonEmpty) {
-              gameActionListeners.foreach(listener =>
-                removedPlayers.values.foreach(listener.onPlayerRemoved)
-              )
-            }
-            state.players = updatedPlayers
-            gameActionListeners.foreach(_.onPlayersUpdated(updatedPlayers))
+          if (createdPlayer.nonEmpty) {
+            state.players = state.players ++ createdPlayer
+            gameActionListeners.foreach(listener =>
+              createdPlayer.values.foreach(listener.onPlayerAdded)
+            )
+            gameActionListeners.foreach(_.onPlayersUpdated(state.players))
           }
 
-          if (updatedHiddenPlayers != state.hiddenPlayers) {
-            state.hiddenPlayers = updatedHiddenPlayers
+          if (createdHiddenPlayer.nonEmpty) {
+            state.hiddenPlayers = state.hiddenPlayers ++ createdHiddenPlayer
           }
 
-          val updatedTransfers = transfersFromTransactions(
-            state.zone.transactions,
+        case AccountUpdatedNotification(_, account) =>
+
+          state.zone = state.zone.copy(
+            accounts = state.zone.accounts + (account.id -> account)
+          )
+
+          state.memberIdsToAccountIds = membersAccountsFromAccounts(state.zone.accounts)
+          state.accountIdsToMemberIds = state.memberIdsToAccountIds.map(_.swap)
+
+          val (updatedIdentities, updatedHiddenIdentities) = identitiesFromMembersAccounts(
+            zoneNotification.zoneId,
+            state.memberIdsToAccountIds,
+            state.zone.accounts,
+            state.balances,
+            state.currency,
+            state.zone.members,
+            state.zone.equityAccountId,
+            ClientKey.getPublicKey(context)
+          )
+
+          if (updatedIdentities != state.identities) {
+            state.identities = updatedIdentities
+            gameActionListeners.foreach(_.onIdentitiesUpdated(updatedIdentities))
+          }
+
+          if (updatedHiddenIdentities != state.hiddenIdentities) {
+            state.hiddenIdentities = updatedHiddenIdentities
+          }
+
+          updatePlayersAndTransactions()
+
+        case TransactionAddedNotification(_, transaction) =>
+
+          state.zone = state.zone.copy(
+            transactions = state.zone.transactions + (transaction.id -> transaction)
+          )
+
+          state.balances = state.balances +
+            (transaction.from -> (state.balances(transaction.from) - transaction.value)) +
+            (transaction.to -> (state.balances(transaction.to) + transaction.value))
+
+          val changedMembersAccounts = membersAccountsFromAccounts(
+            Map(
+              transaction.from -> state.zone.accounts(transaction.from),
+              transaction.to -> state.zone.accounts(transaction.to)
+            )
+          )
+
+          val (changedIdentities, changedHiddenIdentities) = identitiesFromMembersAccounts(
+            zoneNotification.zoneId,
+            changedMembersAccounts,
+            state.zone.accounts,
+            state.balances,
+            state.currency,
+            state.zone.members,
+            state.zone.equityAccountId,
+            ClientKey.getPublicKey(context)
+          )
+
+          if (changedIdentities.nonEmpty) {
+            state.identities = state.identities ++ changedIdentities
+            gameActionListeners.foreach(_.onIdentitiesUpdated(state.identities))
+          }
+
+          if (changedHiddenIdentities.nonEmpty) {
+            state.hiddenIdentities = state.hiddenIdentities ++ changedHiddenIdentities
+          }
+
+          val (changedPlayers, changedHiddenPlayers) = playersFromMembersAccounts(
+            zoneNotification.zoneId,
+            changedMembersAccounts,
+            state.zone.accounts,
+            state.balances,
+            state.currency,
+            state.zone.members,
+            state.zone.equityAccountId,
+            state.connectedClients
+          )
+
+          if (changedPlayers.nonEmpty) {
+            state.players = state.players ++ changedPlayers
+            gameActionListeners.foreach(listener =>
+              changedPlayers.values.foreach(listener.onPlayerChanged)
+            )
+            gameActionListeners.foreach(_.onPlayersUpdated(state.players))
+          }
+
+          if (changedHiddenPlayers.nonEmpty) {
+            state.hiddenPlayers = state.hiddenPlayers ++ changedHiddenPlayers
+          }
+
+          val createdTransfer = transfersFromTransactions(
+            Map(
+              transaction.id -> transaction
+            ),
             state.currency,
             state.accountIdsToMemberIds,
             state.players ++ state.hiddenPlayers,
@@ -711,333 +1024,17 @@ class BoardGame private(context: Context,
             state.zone.members
           )
 
-          if (updatedTransfers != state.transfers) {
-            val changedTransfers = updatedTransfers.filter { case (transactionId, transfer) =>
-              state.transfers.get(transactionId).fold(false)(_ != transfer)
-            }
-            if (changedTransfers.nonEmpty) {
-              gameActionListeners.foreach(_.onTransfersChanged(changedTransfers.values))
-            }
-            state.transfers = updatedTransfers
-            gameActionListeners.foreach(_.onTransfersUpdated(updatedTransfers))
+          if (createdTransfer.nonEmpty) {
+            state.transfers = state.transfers ++ createdTransfer
+            gameActionListeners.foreach(listener =>
+              createdTransfer.values.foreach(listener.onTransferAdded)
+            )
+            gameActionListeners.foreach(_.onTransfersUpdated(state.transfers))
           }
-        }
-
-        zoneNotification match {
-
-          case ClientJoinedZoneNotification(_, publicKey) =>
-
-            state.connectedClients = state.connectedClients + publicKey
-
-            val (joinedPlayers, joinedHiddenPlayers) = playersFromMembersAccounts(
-              zoneNotification.zoneId,
-              state.memberIdsToAccountIds.filterKeys(
-                state.zone.members(_).ownerPublicKey == publicKey
-              ),
-              state.zone.accounts,
-              state.balances,
-              state.currency,
-              state.zone.members,
-              state.zone.equityAccountId,
-              Set(publicKey)
-            )
-
-            if (joinedPlayers.nonEmpty) {
-              state.players = state.players ++ joinedPlayers
-              gameActionListeners.foreach(listener =>
-                joinedPlayers.values.foreach(listener.onPlayerChanged)
-              )
-              gameActionListeners.foreach(_.onPlayersUpdated(state.players))
-            }
-
-            if (joinedHiddenPlayers.nonEmpty) {
-              state.hiddenPlayers = state.hiddenPlayers ++ joinedHiddenPlayers
-            }
-
-          case ClientQuitZoneNotification(_, publicKey) =>
-
-            state.connectedClients = state.connectedClients - publicKey
-
-            val (quitPlayers, quitHiddenPlayers) = playersFromMembersAccounts(
-              zoneNotification.zoneId,
-              state.memberIdsToAccountIds.filterKeys(
-                state.zone.members(_).ownerPublicKey == publicKey
-              ),
-              state.zone.accounts,
-              state.balances,
-              state.currency,
-              state.zone.members,
-              state.zone.equityAccountId,
-              Set.empty
-            )
-
-            if (quitPlayers.nonEmpty) {
-              state.players = state.players ++ quitPlayers
-              gameActionListeners.foreach(listener =>
-                quitPlayers.values.foreach(listener.onPlayerChanged)
-              )
-              gameActionListeners.foreach(_.onPlayersUpdated(state.players))
-            }
-
-            if (quitHiddenPlayers.nonEmpty) {
-              state.hiddenPlayers = state.hiddenPlayers ++ quitHiddenPlayers
-            }
-
-          case ZoneTerminatedNotification(_) =>
-
-            join(zoneNotification.zoneId)
-
-          case ZoneNameChangedNotification(_, name) =>
-
-            state.zone = state.zone.copy(name = name)
-
-            gameActionListeners.foreach(_.onGameNameChanged(name))
-
-            gameId.foreach(
-              _.foreach { gameId =>
-                Future(
-                  updateGameName(gameId, name.orNull)
-                )
-              }
-            )
-
-          case MemberCreatedNotification(_, member) =>
-
-            state.zone = state.zone.copy(
-              members = state.zone.members + (member.id -> member)
-            )
-
-          case MemberUpdatedNotification(_, member) =>
-
-            state.zone = state.zone.copy(
-              members = state.zone.members + (member.id -> member)
-            )
-
-            val (updatedIdentities, updatedHiddenIdentities) = identitiesFromMembersAccounts(
-              zoneNotification.zoneId,
-              state.memberIdsToAccountIds,
-              state.zone.accounts,
-              state.balances,
-              state.currency,
-              state.zone.members,
-              state.zone.equityAccountId,
-              ClientKey.getPublicKey(context)
-            )
-
-            if (updatedIdentities != state.identities) {
-
-              val receivedIdentity =
-                if (!state.identities.contains(member.id) &&
-                  !state.hiddenIdentities.contains(member.id)) {
-                  updatedIdentities.get(member.id)
-                } else {
-                  None
-                }
-
-              val restoredIdentity =
-                if (!state.identities.contains(member.id) &&
-                  state.hiddenIdentities.contains(member.id)) {
-                  updatedIdentities.get(member.id)
-                } else {
-                  None
-                }
-
-              state.identities = updatedIdentities
-              gameActionListeners.foreach(_.onIdentitiesUpdated(updatedIdentities))
-
-              receivedIdentity.foreach(receivedIdentity =>
-                gameActionListeners.foreach(_.onIdentityReceived(receivedIdentity))
-              )
-
-              restoredIdentity.foreach(restoredIdentity =>
-                gameActionListeners.foreach(_.onIdentityRestored(restoredIdentity))
-              )
-
-            }
-
-            if (updatedHiddenIdentities != state.hiddenIdentities) {
-              state.hiddenIdentities = updatedHiddenIdentities
-            }
-
-            updatePlayersAndTransactions()
-
-          case AccountCreatedNotification(_, account) =>
-
-            state.zone = state.zone.copy(
-              accounts = state.zone.accounts + (account.id -> account)
-            )
-
-            val createdMembersAccounts = membersAccountsFromAccounts(
-              Map(
-                account.id -> state.zone.accounts(account.id)
-              )
-            )
-
-            state.memberIdsToAccountIds = state.memberIdsToAccountIds ++ createdMembersAccounts
-            state.accountIdsToMemberIds = state.accountIdsToMemberIds ++
-              createdMembersAccounts.map(_.swap)
-
-            val (createdIdentity, createdHiddenIdentity) = identitiesFromMembersAccounts(
-              zoneNotification.zoneId,
-              createdMembersAccounts,
-              state.zone.accounts,
-              state.balances,
-              state.currency,
-              state.zone.members,
-              state.zone.equityAccountId,
-              ClientKey.getPublicKey(context)
-            )
-
-            if (createdIdentity.nonEmpty) {
-              state.identities = state.identities ++ createdIdentity
-              gameActionListeners.foreach(_.onIdentitiesUpdated(state.identities))
-              gameActionListeners.foreach(
-                _.onIdentityCreated(state.identities(account.ownerMemberIds.head))
-              )
-            }
-
-            if (createdHiddenIdentity.nonEmpty) {
-              state.hiddenIdentities = state.hiddenIdentities ++ createdHiddenIdentity
-            }
-
-            val (createdPlayer, createdHiddenPlayer) = playersFromMembersAccounts(
-              zoneNotification.zoneId,
-              createdMembersAccounts,
-              state.zone.accounts,
-              state.balances,
-              state.currency,
-              state.zone.members,
-              state.zone.equityAccountId,
-              state.connectedClients
-            )
-
-            if (createdPlayer.nonEmpty) {
-              state.players = state.players ++ createdPlayer
-              gameActionListeners.foreach(listener =>
-                createdPlayer.values.foreach(listener.onPlayerAdded)
-              )
-              gameActionListeners.foreach(_.onPlayersUpdated(state.players))
-            }
-
-            if (createdHiddenPlayer.nonEmpty) {
-              state.hiddenPlayers = state.hiddenPlayers ++ createdHiddenPlayer
-            }
-
-          case AccountUpdatedNotification(_, account) =>
-
-            state.zone = state.zone.copy(
-              accounts = state.zone.accounts + (account.id -> account)
-            )
-
-            state.memberIdsToAccountIds = membersAccountsFromAccounts(state.zone.accounts)
-            state.accountIdsToMemberIds = state.memberIdsToAccountIds.map(_.swap)
-
-            val (updatedIdentities, updatedHiddenIdentities) = identitiesFromMembersAccounts(
-              zoneNotification.zoneId,
-              state.memberIdsToAccountIds,
-              state.zone.accounts,
-              state.balances,
-              state.currency,
-              state.zone.members,
-              state.zone.equityAccountId,
-              ClientKey.getPublicKey(context)
-            )
-
-            if (updatedIdentities != state.identities) {
-              state.identities = updatedIdentities
-              gameActionListeners.foreach(_.onIdentitiesUpdated(updatedIdentities))
-            }
-
-            if (updatedHiddenIdentities != state.hiddenIdentities) {
-              state.hiddenIdentities = updatedHiddenIdentities
-            }
-
-            updatePlayersAndTransactions()
-
-          case TransactionAddedNotification(_, transaction) =>
-
-            state.zone = state.zone.copy(
-              transactions = state.zone.transactions + (transaction.id -> transaction)
-            )
-
-            state.balances = state.balances +
-              (transaction.from -> (state.balances(transaction.from) - transaction.value)) +
-              (transaction.to -> (state.balances(transaction.to) + transaction.value))
-
-            val changedMembersAccounts = membersAccountsFromAccounts(
-              Map(
-                transaction.from -> state.zone.accounts(transaction.from),
-                transaction.to -> state.zone.accounts(transaction.to)
-              )
-            )
-
-            val (changedIdentities, changedHiddenIdentities) = identitiesFromMembersAccounts(
-              zoneNotification.zoneId,
-              changedMembersAccounts,
-              state.zone.accounts,
-              state.balances,
-              state.currency,
-              state.zone.members,
-              state.zone.equityAccountId,
-              ClientKey.getPublicKey(context)
-            )
-
-            if (changedIdentities.nonEmpty) {
-              state.identities = state.identities ++ changedIdentities
-              gameActionListeners.foreach(_.onIdentitiesUpdated(state.identities))
-            }
-
-            if (changedHiddenIdentities.nonEmpty) {
-              state.hiddenIdentities = state.hiddenIdentities ++ changedHiddenIdentities
-            }
-
-            val (changedPlayers, changedHiddenPlayers) = playersFromMembersAccounts(
-              zoneNotification.zoneId,
-              changedMembersAccounts,
-              state.zone.accounts,
-              state.balances,
-              state.currency,
-              state.zone.members,
-              state.zone.equityAccountId,
-              state.connectedClients
-            )
-
-            if (changedPlayers.nonEmpty) {
-              state.players = state.players ++ changedPlayers
-              gameActionListeners.foreach(listener =>
-                changedPlayers.values.foreach(listener.onPlayerChanged)
-              )
-              gameActionListeners.foreach(_.onPlayersUpdated(state.players))
-            }
-
-            if (changedHiddenPlayers.nonEmpty) {
-              state.hiddenPlayers = state.hiddenPlayers ++ changedHiddenPlayers
-            }
-
-            val createdTransfer = transfersFromTransactions(
-              Map(
-                transaction.id -> transaction
-              ),
-              state.currency,
-              state.accountIdsToMemberIds,
-              state.players ++ state.hiddenPlayers,
-              state.zone.accounts,
-              state.zone.members
-            )
-
-            if (createdTransfer.nonEmpty) {
-              state.transfers = state.transfers ++ createdTransfer
-              gameActionListeners.foreach(listener =>
-                createdTransfer.values.foreach(listener.onTransferAdded)
-              )
-              gameActionListeners.foreach(_.onTransfersUpdated(state.transfers))
-            }
-
-        }
 
       }
 
-  }
+    }
 
   override def onConnectionStateChanged(connectionState: ConnectionState) {
     connectionState match {
@@ -1057,6 +1054,11 @@ class BoardGame private(context: Context,
         state = null
         _joinState = BoardGame.TLS_ERROR
 
+      case ServerConnection.UNSUPPORTED_VERSION =>
+
+        state = null
+        _joinState = BoardGame.UNSUPPORTED_VERSION
+
       case ServerConnection.AVAILABLE =>
 
         state = null
@@ -1067,7 +1069,12 @@ class BoardGame private(context: Context,
         state = null
         _joinState = BoardGame.CONNECTING
 
-      case ServerConnection.CONNECTED =>
+      case ServerConnection.WAITING_FOR_VERSION_CHECK =>
+
+        state = null
+        _joinState = BoardGame.WAITING_FOR_VERSION_CHECK
+
+      case ServerConnection.ONLINE =>
 
         state = null
         zoneId.fold(createAndThenJoinZone(currency.get, gameName.get))(join)
