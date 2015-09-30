@@ -78,16 +78,6 @@ public class BoardGameActivity extends AppCompatActivity
     public static final String EXTRA_ZONE_ID = "zone_id";
 
     private static final int REQUEST_CODE_RECEIVE_IDENTITY = 0;
-    private MediaPlayer transferReceiptMediaPlayer;
-    private BoardGame.JoinRequestToken joinRequestToken;
-    private BoardGame boardGame;
-    private ProgressBar progressBarState;
-    private TextView textViewState;
-    private Button buttonReconnect;
-    private SlidingUpPanelLayout slidingUpPanelLayout;
-    private IdentitiesFragment identitiesFragment;
-    private PlayersFragment playersFragment;
-    private PlayersTransfersFragment playersTransfersFragment;
 
     public static String formatCurrency(Context context,
                                         Option<Either<String, Currency>> currency) {
@@ -220,6 +210,20 @@ public class BoardGameActivity extends AppCompatActivity
 
         };
     }
+
+    private MediaPlayer transferReceiptMediaPlayer;
+
+    private BoardGame.JoinRequestToken joinRequestToken;
+    private BoardGame boardGame;
+
+    private ProgressBar progressBarState;
+    private TextView textViewState;
+    private Button buttonReconnect;
+    private SlidingUpPanelLayout slidingUpPanelLayout;
+
+    private IdentitiesFragment identitiesFragment;
+    private PlayersFragment playersFragment;
+    private PlayersTransfersFragment playersTransfersFragment;
 
     private void closeDialogFragments() {
         for (String tag : new String[]{
