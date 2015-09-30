@@ -1216,8 +1216,7 @@ class BoardGame private(context: Context,
           }
         )
 
-        if ((_joinState != BoardGame.JOINING && _joinState != BoardGame.JOINED)
-          || zoneId.isEmpty) {
+        if (_joinState != BoardGame.JOINING && _joinState != BoardGame.JOINED) {
 
           serverConnection.unrequestConnection(connectionRequestToken)
 
