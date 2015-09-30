@@ -214,6 +214,7 @@ public class BoardGameActivity extends AppCompatActivity
     private MediaPlayer transferReceiptMediaPlayer;
 
     private BoardGame.JoinRequestToken joinRequestToken;
+    private boolean retry;
     private BoardGame boardGame;
 
     private ProgressBar progressBarState;
@@ -392,6 +393,8 @@ public class BoardGameActivity extends AppCompatActivity
             joinRequestToken = new BoardGame.JoinRequestToken();
 
         }
+
+        retry = savedInstanceState == null;
 
         if (getIntent().getExtras() == null) {
             throw new Error();
@@ -1028,7 +1031,8 @@ public class BoardGameActivity extends AppCompatActivity
     @Override
     protected void onStart() {
         super.onStart();
-        boardGame.requestJoin(joinRequestToken, false);
+        boardGame.requestJoin(joinRequestToken, retry);
+        retry = false;
     }
 
     @Override

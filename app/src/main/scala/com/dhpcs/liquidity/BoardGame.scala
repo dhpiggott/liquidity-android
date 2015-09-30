@@ -403,7 +403,7 @@ class BoardGame private(context: Context,
       }
     )
 
-  def createIdentity(name: String) {
+  def createIdentity(name: String) =
     serverConnection.sendCommand(
       CreateMemberCommand(
         zoneId.get,
@@ -425,11 +425,11 @@ class BoardGame private(context: Context,
 
       }
     )
-  }
 
   def deleteIdentity(identity: Identity) {
     val member = state.identities(identity.member.id).member
     serverConnection.sendCommand(
+    {
       UpdateMemberCommand(
         zoneId.get,
         member.copy(
@@ -437,13 +437,14 @@ class BoardGame private(context: Context,
             member.metadata.getOrElse(Json.obj()) ++ Json.obj(HiddenFlagKey -> true)
           )
         )
-      ),
-      new ResponseCallback {
+      )
+    },
+    new ResponseCallback {
 
-        override def onErrorReceived(errorResponse: ErrorResponse) =
-          gameActionListeners.foreach(_.onDeleteIdentityError(member.name))
+      override def onErrorReceived(errorResponse: ErrorResponse) =
+        gameActionListeners.foreach(_.onDeleteIdentityError(member.name))
 
-      }
+    }
     )
   }
 
@@ -468,7 +469,7 @@ class BoardGame private(context: Context,
   def isPublicKeyConnectedAndImplicitlyValid(publicKey: PublicKey) =
     state.connectedClients.contains(publicKey)
 
-  private def join(zoneId: ZoneId) = {
+  private def join(zoneId: ZoneId) =
     serverConnection.sendCommand(
       JoinZoneCommand(
         zoneId
@@ -652,10 +653,6 @@ class BoardGame private(context: Context,
 
       }
     )
-    state = null
-    _joinState = BoardGame.JOINING
-    joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
-  }
 
   override def onZoneNotificationReceived(zoneNotification: ZoneNotification) =
     if (zoneId.get == zoneNotification.zoneId) {
@@ -783,6 +780,10 @@ class BoardGame private(context: Context,
           }
 
         case ZoneTerminatedNotification(_) =>
+
+          state = null
+          _joinState = BoardGame.JOINING
+          joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
 
           join(zoneNotification.zoneId)
 
@@ -1036,57 +1037,68 @@ class BoardGame private(context: Context,
 
     }
 
-  override def onConnectionStateChanged(connectionState: ConnectionState) {
-    connectionState match {
+  override def onConnectionStateChanged(connectionState: ConnectionState) = connectionState match {
 
-      case ServerConnection.UNAVAILABLE =>
+    case ServerConnection.UNAVAILABLE =>
+
+      state = null
+      _joinState = BoardGame.UNAVAILABLE
+      joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
+
+    case ServerConnection.GENERAL_FAILURE =>
+
+      state = null
+      _joinState = BoardGame.GENERAL_FAILURE
+      joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
+
+    case ServerConnection.TLS_ERROR =>
+
+      state = null
+      _joinState = BoardGame.TLS_ERROR
+      joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
+
+    case ServerConnection.UNSUPPORTED_VERSION =>
+
+      state = null
+      _joinState = BoardGame.UNSUPPORTED_VERSION
+      joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
+
+    case ServerConnection.AVAILABLE =>
+
+      state = null
+      _joinState = BoardGame.AVAILABLE
+      joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
+
+    case ServerConnection.CONNECTING =>
+
+      state = null
+      _joinState = BoardGame.CONNECTING
+      joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
+
+    case ServerConnection.WAITING_FOR_VERSION_CHECK =>
+
+      state = null
+      _joinState = BoardGame.WAITING_FOR_VERSION_CHECK
+      joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
+
+    case ServerConnection.ONLINE =>
+
+      if (joinRequestTokens.nonEmpty) {
 
         state = null
-        _joinState = BoardGame.UNAVAILABLE
-
-      case ServerConnection.GENERAL_FAILURE =>
-
-        state = null
-        _joinState = BoardGame.GENERAL_FAILURE
-
-      case ServerConnection.TLS_ERROR =>
-
-        state = null
-        _joinState = BoardGame.TLS_ERROR
-
-      case ServerConnection.UNSUPPORTED_VERSION =>
-
-        state = null
-        _joinState = BoardGame.UNSUPPORTED_VERSION
-
-      case ServerConnection.AVAILABLE =>
-
-        state = null
-        _joinState = BoardGame.AVAILABLE
-
-      case ServerConnection.CONNECTING =>
-
-        state = null
-        _joinState = BoardGame.CONNECTING
-
-      case ServerConnection.WAITING_FOR_VERSION_CHECK =>
-
-        state = null
-        _joinState = BoardGame.WAITING_FOR_VERSION_CHECK
-
-      case ServerConnection.ONLINE =>
-
-        state = null
-        zoneId.fold(createAndThenJoinZone(currency.get, gameName.get))(join)
         _joinState = BoardGame.JOINING
+        joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
 
-      case ServerConnection.DISCONNECTING =>
+        zoneId.fold(createAndThenJoinZone(currency.get, gameName.get))(join)
 
-        state = null
-        _joinState = BoardGame.DISCONNECTING
+      }
 
-    }
-    joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
+    case ServerConnection.DISCONNECTING =>
+
+      state = null
+      _joinState = BoardGame.DISCONNECTING
+      joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
+
   }
 
   def registerListener(listener: JoinStateListener) =
@@ -1122,14 +1134,24 @@ class BoardGame private(context: Context,
         instances = instances + (zoneId -> BoardGame.this)
       }
     )
-    if (joinStateListeners.isEmpty && gameActionListeners.isEmpty && joinRequestTokens.isEmpty) {
-      serverConnection.registerListener(this: ConnectionStateListener)
-      serverConnection.registerListener(this: NotificationReceiptListener)
-    }
     if (!joinRequestTokens.contains(token)) {
+      if (joinStateListeners.isEmpty && gameActionListeners.isEmpty && joinRequestTokens.isEmpty) {
+        serverConnection.registerListener(this: ConnectionStateListener)
+        serverConnection.registerListener(this: NotificationReceiptListener)
+      }
       joinRequestTokens = joinRequestTokens + token
     }
     serverConnection.requestConnection(connectionRequestToken, retry)
+    if (_joinState != BoardGame.JOINING && _joinState != BoardGame.JOINED
+      && serverConnection.connectionState == ServerConnection.ONLINE) {
+
+      state = null
+      _joinState = BoardGame.JOINING
+      joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
+
+      zoneId.fold(createAndThenJoinZone(currency.get, gameName.get))(join)
+
+    }
   }
 
   def restoreIdentity(identity: Identity) {
@@ -1210,6 +1232,10 @@ class BoardGame private(context: Context,
       }
       if (joinRequestTokens.isEmpty) {
 
+        state = null
+        _joinState = BoardGame.QUITTING
+        joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
+
         zoneId.foreach(zoneId =>
           if (instances.contains(zoneId)) {
             instances = instances - zoneId
@@ -1228,26 +1254,26 @@ class BoardGame private(context: Context,
             ),
             new ResponseCallback {
 
-              private def doDisconnect() =
-                if (joinRequestTokens.isEmpty) {
-                  serverConnection.unrequestConnection(connectionRequestToken)
-                } else {
-                  join(zoneId.get)
-                }
-
-              override def onErrorReceived(errorResponse: ErrorResponse) {
+              override def onErrorReceived(errorResponse: ErrorResponse) =
                 gameActionListeners.foreach(_.onQuitGameError())
-                doDisconnect()
-              }
 
-              override def onResultReceived(resultResponse: ResultResponse) = doDisconnect()
+              override def onResultReceived(resultResponse: ResultResponse) =
+                if (joinRequestTokens.nonEmpty) {
+
+                  state = null
+                  _joinState = BoardGame.JOINING
+                  joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
+
+                  join(zoneId.get)
+
+                } else {
+
+                  serverConnection.unrequestConnection(connectionRequestToken)
+
+                }
 
             }
           )
-
-          state = null
-          _joinState = BoardGame.QUITTING
-          joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
 
         }
 
