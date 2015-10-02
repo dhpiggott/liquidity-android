@@ -1231,57 +1231,52 @@ class BoardGame private(context: Context,
         serverConnection.unregisterListener(this: ConnectionStateListener)
       }
       if (joinRequestTokens.isEmpty) {
-        if (serverConnection.connectionState == ServerConnection.CONNECTING
-          || serverConnection.connectionState == ServerConnection.WAITING_FOR_VERSION_CHECK
-          || serverConnection.connectionState == ServerConnection.ONLINE
-          || serverConnection.connectionState == ServerConnection.DISCONNECTING) {
+
+        zoneId.foreach(zoneId =>
+          if (instances.contains(zoneId)) {
+            instances = instances - zoneId
+          }
+        )
+
+        if (_joinState != BoardGame.JOINING && _joinState != BoardGame.JOINED) {
+
+          serverConnection.unrequestConnection(connectionRequestToken)
+
+        } else {
 
           state = null
           _joinState = BoardGame.QUITTING
           joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
 
-          zoneId.foreach(zoneId =>
-            if (instances.contains(zoneId)) {
-              instances = instances - zoneId
+          serverConnection.sendCommand(
+            QuitZoneCommand(
+              zoneId.get
+            ),
+            new ResponseCallback {
+
+              override def onErrorReceived(errorResponse: ErrorResponse) =
+                gameActionListeners.foreach(_.onQuitGameError())
+
+              override def onResultReceived(resultResponse: ResultResponse) =
+                if (joinRequestTokens.nonEmpty) {
+
+                  state = null
+                  _joinState = BoardGame.JOINING
+                  joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
+
+                  join(zoneId.get)
+
+                } else {
+
+                  serverConnection.unrequestConnection(connectionRequestToken)
+
+                }
+
             }
           )
 
-          if (_joinState != BoardGame.JOINING && _joinState != BoardGame.JOINED) {
-
-            serverConnection.unrequestConnection(connectionRequestToken)
-
-          } else {
-
-            serverConnection.sendCommand(
-              QuitZoneCommand(
-                zoneId.get
-              ),
-              new ResponseCallback {
-
-                override def onErrorReceived(errorResponse: ErrorResponse) =
-                  gameActionListeners.foreach(_.onQuitGameError())
-
-                override def onResultReceived(resultResponse: ResultResponse) =
-                  if (joinRequestTokens.nonEmpty) {
-
-                    state = null
-                    _joinState = BoardGame.JOINING
-                    joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
-
-                    join(zoneId.get)
-
-                  } else {
-
-                    serverConnection.unrequestConnection(connectionRequestToken)
-
-                  }
-
-              }
-            )
-
-          }
-
         }
+
       }
     }
 
