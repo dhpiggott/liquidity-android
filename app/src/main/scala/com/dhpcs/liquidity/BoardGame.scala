@@ -655,7 +655,7 @@ class BoardGame private(context: Context,
     )
 
   override def onZoneNotificationReceived(zoneNotification: ZoneNotification) =
-    if (zoneId.get == zoneNotification.zoneId) {
+    if (_joinState == BoardGame.JOINED && zoneId.get == zoneNotification.zoneId) {
 
       def updatePlayersAndTransactions() {
         val (updatedPlayers, updatedHiddenPlayers) = playersFromMembersAccounts(
