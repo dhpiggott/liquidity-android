@@ -663,7 +663,82 @@ class BoardGame private(context: Context,
       }
     )
 
-  // TODO: Move down
+  override def onConnectionStateChanged(connectionState: ConnectionState) = connectionState match {
+
+    case ServerConnection.UNAVAILABLE =>
+
+      state = null
+      _joinState = BoardGame.UNAVAILABLE
+      joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
+
+    case ServerConnection.GENERAL_FAILURE =>
+
+      state = null
+      _joinState = BoardGame.GENERAL_FAILURE
+      joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
+
+    case ServerConnection.TLS_ERROR =>
+
+      state = null
+      _joinState = BoardGame.TLS_ERROR
+      joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
+
+    case ServerConnection.UNSUPPORTED_VERSION =>
+
+      state = null
+      _joinState = BoardGame.UNSUPPORTED_VERSION
+      joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
+
+    case ServerConnection.AVAILABLE =>
+
+      state = null
+      _joinState = BoardGame.AVAILABLE
+      joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
+
+    case ServerConnection.CONNECTING =>
+
+      state = null
+      _joinState = BoardGame.CONNECTING
+      joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
+
+    case ServerConnection.WAITING_FOR_VERSION_CHECK =>
+
+      state = null
+      _joinState = BoardGame.WAITING_FOR_VERSION_CHECK
+      joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
+
+    case ServerConnection.ONLINE =>
+
+      if (joinRequestTokens.nonEmpty) {
+
+        zoneId.fold {
+
+          state = null
+          _joinState = BoardGame.CREATING
+          joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
+
+          createAndThenJoinZone(currency.get, gameName.get)
+
+        } { zoneId =>
+
+          state = null
+          _joinState = BoardGame.JOINING
+          joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
+
+          join(zoneId)
+
+        }
+
+      }
+
+    case ServerConnection.DISCONNECTING =>
+
+      state = null
+      _joinState = BoardGame.DISCONNECTING
+      joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
+
+  }
+
   override def onZoneNotificationReceived(zoneNotification: ZoneNotification) =
     if (_joinState == BoardGame.JOINED && zoneId.get == zoneNotification.zoneId) {
 
@@ -1046,82 +1121,6 @@ class BoardGame private(context: Context,
       }
 
     }
-
-  override def onConnectionStateChanged(connectionState: ConnectionState) = connectionState match {
-
-    case ServerConnection.UNAVAILABLE =>
-
-      state = null
-      _joinState = BoardGame.UNAVAILABLE
-      joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
-
-    case ServerConnection.GENERAL_FAILURE =>
-
-      state = null
-      _joinState = BoardGame.GENERAL_FAILURE
-      joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
-
-    case ServerConnection.TLS_ERROR =>
-
-      state = null
-      _joinState = BoardGame.TLS_ERROR
-      joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
-
-    case ServerConnection.UNSUPPORTED_VERSION =>
-
-      state = null
-      _joinState = BoardGame.UNSUPPORTED_VERSION
-      joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
-
-    case ServerConnection.AVAILABLE =>
-
-      state = null
-      _joinState = BoardGame.AVAILABLE
-      joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
-
-    case ServerConnection.CONNECTING =>
-
-      state = null
-      _joinState = BoardGame.CONNECTING
-      joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
-
-    case ServerConnection.WAITING_FOR_VERSION_CHECK =>
-
-      state = null
-      _joinState = BoardGame.WAITING_FOR_VERSION_CHECK
-      joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
-
-    case ServerConnection.ONLINE =>
-
-      if (joinRequestTokens.nonEmpty) {
-
-        zoneId.fold {
-
-          state = null
-          _joinState = BoardGame.CREATING
-          joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
-
-          createAndThenJoinZone(currency.get, gameName.get)
-
-        } { zoneId =>
-
-          state = null
-          _joinState = BoardGame.JOINING
-          joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
-
-          join(zoneId)
-
-        }
-
-      }
-
-    case ServerConnection.DISCONNECTING =>
-
-      state = null
-      _joinState = BoardGame.DISCONNECTING
-      joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
-
-  }
 
   def registerListener(listener: JoinStateListener) =
     if (!joinStateListeners.contains(listener)) {
