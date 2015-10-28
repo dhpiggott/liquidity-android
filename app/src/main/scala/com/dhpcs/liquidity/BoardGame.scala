@@ -436,7 +436,6 @@ class BoardGame private(context: Context,
   def deleteIdentity(identity: Identity) {
     val member = state.identities(identity.member.id).member
     serverConnection.sendCommand(
-    {
       UpdateMemberCommand(
         zoneId.get,
         member.copy(
@@ -444,14 +443,13 @@ class BoardGame private(context: Context,
             member.metadata.getOrElse(Json.obj()) ++ Json.obj(HiddenFlagKey -> true)
           )
         )
-      )
-    },
-    new ResponseCallback {
+      ),
+      new ResponseCallback {
 
-      override def onErrorReceived(errorResponse: ErrorResponse) =
-        gameActionListeners.foreach(_.onDeleteIdentityError(member.name))
+        override def onErrorReceived(errorResponse: ErrorResponse) =
+          gameActionListeners.foreach(_.onDeleteIdentityError(member.name))
 
-    }
+      }
     )
   }
 
