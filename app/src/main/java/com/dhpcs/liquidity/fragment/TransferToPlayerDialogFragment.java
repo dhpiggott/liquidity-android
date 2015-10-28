@@ -29,6 +29,7 @@ import com.dhpcs.liquidity.BoardGame.IdentityWithBalance;
 import com.dhpcs.liquidity.BoardGame.Player;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activity.BoardGameActivity;
+import com.dhpcs.liquidity.models.AccountId;
 import com.dhpcs.liquidity.models.MemberId;
 
 import java.math.BigDecimal;
@@ -36,7 +37,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Currency;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import scala.Option;
 import scala.collection.JavaConversions;
@@ -187,6 +190,7 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
     private ArrayAdapter<IdentityWithBalance> identitiesSpinnerAdapter;
     private ArrayAdapter<Player> playersSpinnerAdapter;
 
+    private TextView textViewFromError;
     private TextView textViewValueError;
     private Button buttonPositive;
 
@@ -239,6 +243,7 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
         TextView textViewCurrency = (TextView) view.findViewById(R.id.textview_currency);
         final EditText editTextValue = (EditText) view.findViewById(R.id.edittext_value);
         textViewValueError = (TextView) view.findViewById(R.id.textview_value_error);
+        textViewFromError = (TextView) view.findViewById(R.id.textview_from_error);
         final TextView textViewMultiplier = (TextView) view.findViewById(R.id.textview_multiplier);
         RadioGroup radioGroupValueMultiplier =
                 (RadioGroup) view.findViewById(R.id.radiogroup_value_multiplier);
@@ -454,22 +459,26 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
     }
 
     private void validateInput() {
+        boolean isValid = true;
         scala.math.BigDecimal currentBalance = identities == null ?
                 from.balanceWithCurrency()._1() :
                 identities.apply(from.member().id()).balanceWithCurrency()._1();
         if (value == null) {
             scaledValue = null;
             textViewValueError.setText(null);
-            buttonPositive.setEnabled(false);
+            isValid = false;
         } else {
             scaledValue = value.scaleByPowerOfTen(scale);
-            BigDecimal requiredBalance = from.isBanker() ? null :
+            BigDecimal requiredBalance = from.isBanker()
+                    ?
+                    null
+                    :
                     scaledValue.multiply(new BigDecimal(to != null ? 1 : toList.size()));
             if (requiredBalance != null
                     && currentBalance.bigDecimal().compareTo(requiredBalance) < 0) {
                 textViewValueError.setText(
                         getString(
-                                R.string.transfer_value_error_invalid_format_string,
+                                R.string.transfer_value_invalid_format_string,
                                 BoardGameActivity.formatCurrencyValue(
                                         getActivity(),
                                         currency,
@@ -482,12 +491,32 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
                                 )
                         )
                 );
-                buttonPositive.setEnabled(false);
+                isValid = false;
             } else {
                 textViewValueError.setText(null);
-                buttonPositive.setEnabled(true);
             }
         }
+        Set<AccountId> toAccountIds;
+        if (to != null) {
+            toAccountIds = Collections.singleton(to.account().id());
+        } else {
+            toAccountIds = new HashSet<>(toList.size());
+            for (Player to : toList) {
+                toAccountIds.add(to.account().id());
+            }
+        }
+        if (toAccountIds.contains(from.account().id())) {
+            textViewFromError.setText(
+                    getString(
+                            R.string.transfer_from_invalid_format_string,
+                            BoardGameActivity.formatNullable(getActivity(), from.member().name())
+                    )
+            );
+            isValid = false;
+        } else {
+            textViewFromError.setText(null);
+        }
+        buttonPositive.setEnabled(isValid);
     }
 
 }
