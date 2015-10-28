@@ -58,6 +58,7 @@
     <string name="join_game_instruction">Scan the QR code on the host\'s phone.</string>
     <string name="join_state_available">The connection was closed.</string>
     <string name="join_state_connecting">Connecting</string>
+    <string name="join_state_creating">Creating game</string>
     <string name="join_state_disconnecting">Disconnecting</string>
     <string name="join_state_general_failure">The connection failed.</string>
     <string name="join_state_joining">Joining game</string>

@@ -33,6 +33,8 @@ object BoardGame {
 
   case object WAITING_FOR_VERSION_CHECK extends JoinState
 
+  case object CREATING extends JoinState
+
   case object JOINING extends JoinState
 
   case object JOINED extends JoinState
@@ -388,17 +390,22 @@ class BoardGame private(context: Context,
         override def onErrorReceived(errorResponse: ErrorResponse) =
           gameActionListeners.foreach(_.onCreateGameError(Some(name)))
 
-        override def onResultReceived(resultResponse: ResultResponse) {
+        override def onResultReceived(resultResponse: ResultResponse) =
+          if (_joinState == BoardGame.CREATING) {
 
-          val createZoneResponse = resultResponse.asInstanceOf[CreateZoneResponse]
+            val createZoneResponse = resultResponse.asInstanceOf[CreateZoneResponse]
 
-          instances = instances + (createZoneResponse.zone.id -> BoardGame.this)
+            instances = instances + (createZoneResponse.zone.id -> BoardGame.this)
 
-          zoneId = Some(createZoneResponse.zone.id)
+            zoneId = Some(createZoneResponse.zone.id)
 
-          join(createZoneResponse.zone.id)
+            state = null
+            _joinState = BoardGame.JOINING
+            joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
 
-        }
+            join(createZoneResponse.zone.id)
+
+          }
 
       }
     )
@@ -656,6 +663,7 @@ class BoardGame private(context: Context,
       }
     )
 
+  // TODO: Move down
   override def onZoneNotificationReceived(zoneNotification: ZoneNotification) =
     if (_joinState == BoardGame.JOINED && zoneId.get == zoneNotification.zoneId) {
 
@@ -1087,11 +1095,23 @@ class BoardGame private(context: Context,
 
       if (joinRequestTokens.nonEmpty) {
 
-        state = null
-        _joinState = BoardGame.JOINING
-        joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
+        zoneId.fold {
 
-        zoneId.fold(createAndThenJoinZone(currency.get, gameName.get))(join)
+          state = null
+          _joinState = BoardGame.CREATING
+          joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
+
+          createAndThenJoinZone(currency.get, gameName.get)
+
+        } { zoneId =>
+
+          state = null
+          _joinState = BoardGame.JOINING
+          joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
+
+          join(zoneId)
+
+        }
 
       }
 
@@ -1144,14 +1164,28 @@ class BoardGame private(context: Context,
       joinRequestTokens = joinRequestTokens + token
     }
     serverConnection.requestConnection(connectionRequestToken, retry)
-    if (_joinState != BoardGame.JOINING && _joinState != BoardGame.JOINED
+    if (_joinState != BoardGame.CREATING
+      && _joinState != BoardGame.JOINING
+      && _joinState != BoardGame.JOINED
       && serverConnection.connectionState == ServerConnection.ONLINE) {
 
-      state = null
-      _joinState = BoardGame.JOINING
-      joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
+      zoneId.fold {
 
-      zoneId.fold(createAndThenJoinZone(currency.get, gameName.get))(join)
+        state = null
+        _joinState = BoardGame.CREATING
+        joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
+
+        createAndThenJoinZone(currency.get, gameName.get)
+
+      } { zoneId =>
+
+        state = null
+        _joinState = BoardGame.JOINING
+        joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
+
+        join(zoneId)
+
+      }
 
     }
   }

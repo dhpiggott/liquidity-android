@@ -279,6 +279,8 @@ class ServerConnection private(context: Context) extends WebSocketListener {
                       closeCause: CloseCause,
                       reconnect: Boolean = false) {
     handler.getLooper.quit()
+    commandIdentifier = 0
+    pendingRequests = Map.empty
     asyncPost(mainHandler) {
       closeCause match {
 

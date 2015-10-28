@@ -1,6 +1,5 @@
 When https://code.google.com/p/android/issues/detail?id=190500 is fixed switch to https://developer.android.com/reference/android/support/design/widget/TextInputLayout.html#setCounterMaxLength(int)
 When Gradle plugin 1.4.0 is released re-enable resource shrinking
-Investigate bug where two games get created when connection fails after first create
 Improve transfer multiplier radio buttons
 Improve logging: http://doc.akka.io/docs/akka/2.4.0/scala/logging.html
 Review http://www.cakesolutions.net/teamblogs/using-spark-to-analyse-akka-persistence-events-in-cassandra and http://doc.akka.io/docs/akka/2.4.0/scala/persistence-schema-evolution.html

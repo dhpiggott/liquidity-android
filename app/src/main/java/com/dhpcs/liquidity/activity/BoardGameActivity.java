@@ -690,6 +690,17 @@ public class BoardGameActivity extends AppCompatActivity
             textViewState.setVisibility(View.VISIBLE);
             textViewState.setText(R.string.join_state_waiting_for_version_check);
 
+        } else if (joinState == BoardGame.CREATING$.MODULE$) {
+
+            closeDialogFragments();
+
+            slidingUpPanelLayout.setVisibility(View.GONE);
+            buttonReconnect.setVisibility(View.GONE);
+
+            progressBarState.setVisibility(View.VISIBLE);
+            textViewState.setVisibility(View.VISIBLE);
+            textViewState.setText(R.string.join_state_creating);
+
         } else if (joinState == BoardGame.JOINING$.MODULE$) {
 
             closeDialogFragments();
