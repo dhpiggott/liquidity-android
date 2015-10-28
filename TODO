@@ -1,6 +1,5 @@
 Re-enable resource shrinking when Gradle plugin 1.4.0 is released
 Investigate bug where two games get created when connection fails after first create
 Improve transfer multiplier radio buttons
-Remove double quotation marks from toast error message strings
 Improve logging: http://doc.akka.io/docs/akka/2.4.0/scala/logging.html
 Review http://www.cakesolutions.net/teamblogs/using-spark-to-analyse-akka-persistence-events-in-cassandra and http://doc.akka.io/docs/akka/2.4.0/scala/persistence-schema-evolution.html
