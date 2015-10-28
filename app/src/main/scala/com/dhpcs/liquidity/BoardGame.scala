@@ -479,177 +479,179 @@ class BoardGame private(context: Context,
         override def onErrorReceived(errorResponse: ErrorResponse) =
           gameActionListeners.foreach(_.onJoinGameError())
 
-        override def onResultReceived(resultResponse: ResultResponse) {
+        override def onResultReceived(resultResponse: ResultResponse) =
+          if (_joinState == BoardGame.JOINING) {
 
-          val joinZoneResponse = resultResponse.asInstanceOf[JoinZoneResponse]
+            val joinZoneResponse = resultResponse.asInstanceOf[JoinZoneResponse]
 
-          var balances = Map.empty[AccountId, BigDecimal].withDefaultValue(BigDecimal(0))
-          for (transaction <- joinZoneResponse.zone.transactions.values) {
-            balances = balances +
-              (transaction.from -> (balances(transaction.from) - transaction.value)) +
-              (transaction.to -> (balances(transaction.to) + transaction.value))
-          }
-
-          val currency = currencyFromMetadata(joinZoneResponse.zone.metadata)
-
-          val memberIdsToAccountIds = membersAccountsFromAccounts(
-            joinZoneResponse.zone.accounts
-          )
-          val accountIdsToMemberIds = memberIdsToAccountIds.map(_.swap)
-
-          val (identities, hiddenIdentities) = identitiesFromMembersAccounts(
-            zoneId,
-            memberIdsToAccountIds,
-            joinZoneResponse.zone.accounts,
-            balances,
-            currency,
-            joinZoneResponse.zone.members,
-            joinZoneResponse.zone.equityAccountId,
-            ClientKey.getPublicKey(context)
-          )
-
-          val (players, hiddenPlayers) = playersFromMembersAccounts(
-            zoneId,
-            memberIdsToAccountIds,
-            joinZoneResponse.zone.accounts,
-            balances,
-            currency,
-            joinZoneResponse.zone.members,
-            joinZoneResponse.zone.equityAccountId,
-            joinZoneResponse.connectedClients
-          )
-
-          val transfers = transfersFromTransactions(
-            joinZoneResponse.zone.transactions,
-            currency,
-            accountIdsToMemberIds,
-            players ++ hiddenPlayers,
-            joinZoneResponse.zone.accounts,
-            joinZoneResponse.zone.members
-          )
-
-          state = new State(
-            joinZoneResponse.zone,
-            joinZoneResponse.connectedClients,
-            balances,
-            currency,
-            memberIdsToAccountIds,
-            accountIdsToMemberIds,
-            identities,
-            hiddenIdentities,
-            players,
-            hiddenPlayers,
-            transfers
-          )
-
-          _joinState = BoardGame.JOINED
-          joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
-
-          gameActionListeners.foreach(_.onGameNameChanged(joinZoneResponse.zone.name))
-          gameActionListeners.foreach(_.onIdentitiesUpdated(identities))
-          gameActionListeners.foreach(_.onPlayersInitialized(players.values))
-          gameActionListeners.foreach(_.onPlayersUpdated(players))
-          gameActionListeners.foreach(_.onTransfersInitialized(transfers.values))
-          gameActionListeners.foreach(_.onTransfersUpdated(transfers))
-
-          val partiallyCreatedIdentities = joinZoneResponse.zone.members.collect {
-            case (memberId, member) if ClientKey.getPublicKey(context) == member.ownerPublicKey
-              && !joinZoneResponse.zone.accounts.values.exists(_.ownerMemberIds == Set(memberId)) =>
-              member
-          }
-
-          partiallyCreatedIdentities.foreach(createAccount)
-
-          /*
-           * Since we must only prompt for a required identity if none exist yet and since having
-           * one or more partially created identities implies that gameId would be set, we can
-           * proceed here without checking that partiallyCreatedIdentityIds is non empty.
-           *
-           * The second condition isn't usually of significance but exists to prevent incorrectly
-           * prompting for an identity if a user rejoins a game by scanning its code again rather
-           * than by clicking its list item.
-           */
-          if (gameId.isEmpty && !(identities ++ hiddenIdentities).values.exists(
-            _.account.id != joinZoneResponse.zone.equityAccountId
-          )) {
-            gameActionListeners.foreach(_.onIdentityRequired())
-          }
-
-          def checkAndUpdateGame(expires: Long, name: String): Option[Long] = {
-            val existingEntry = context.getContentResolver.query(
-              Games.CONTENT_URI,
-              Array(
-                LiquidityContract.Games._ID,
-                LiquidityContract.Games.NAME
-              ),
-              LiquidityContract.Games.ZONE_ID + " = ?",
-              Array(zoneId.id.toString),
-              null
-            )
-            try {
-              if (!existingEntry.moveToFirst()) {
-                None
-              } else {
-                val gameId = existingEntry.getLong(
-                  existingEntry.getColumnIndexOrThrow(LiquidityContract.Games._ID)
-                )
-                if (existingEntry.getString(
-                  existingEntry.getColumnIndexOrThrow(LiquidityContract.Games.NAME)
-                ) != name) {
-                  updateGameName(gameId, name)
-                }
-                Some(gameId)
-              }
-            } finally {
-              existingEntry.close()
+            var balances = Map.empty[AccountId, BigDecimal].withDefaultValue(BigDecimal(0))
+            for (transaction <- joinZoneResponse.zone.transactions.values) {
+              balances = balances +
+                (transaction.from -> (balances(transaction.from) - transaction.value)) +
+                (transaction.to -> (balances(transaction.to) + transaction.value))
             }
-          }
 
-          /*
-           * We don't set gameId until now as it also indicates above whether we've prompted for
-           * the required identity - which we must do at most once.
-           */
-          gameId = gameId.fold(
-            Some(
-              Future(
+            val currency = currencyFromMetadata(joinZoneResponse.zone.metadata)
 
-                /*
-                 * This is in case a user rejoins a game by scanning its code again rather than by
-                 * clicking its list item - in such cases we mustn't attempt to insert an entry as
-                 * that would silently fail (as it happens on the Future's worker thread), but we
-                 * may need to update the existing entries name.
-                 */
-                checkAndUpdateGame(
-                  joinZoneResponse.zone.expires,
-                  joinZoneResponse.zone.name.orNull
-                ).getOrElse {
-                  val contentValues = new ContentValues
-                  contentValues.put(Games.ZONE_ID, zoneId.id.toString)
-                  contentValues.put(Games.CREATED, joinZoneResponse.zone.created: java.lang.Long)
-                  contentValues.put(Games.EXPIRES, joinZoneResponse.zone.expires: java.lang.Long)
-                  contentValues.put(Games.NAME, joinZoneResponse.zone.name.orNull)
-                  ContentUris.parseId(
-                    context.getContentResolver.insert(
-                      Games.CONTENT_URI,
-                      contentValues
-                    )
-                  )
-                }
-              )
+            val memberIdsToAccountIds = membersAccountsFromAccounts(
+              joinZoneResponse.zone.accounts
             )
-          ) { gameId =>
-            gameId.foreach(_ =>
-              Future(
-                checkAndUpdateGame(
-                  joinZoneResponse.zone.expires,
-                  joinZoneResponse.zone.name.orNull
+            val accountIdsToMemberIds = memberIdsToAccountIds.map(_.swap)
+
+            val (identities, hiddenIdentities) = identitiesFromMembersAccounts(
+              zoneId,
+              memberIdsToAccountIds,
+              joinZoneResponse.zone.accounts,
+              balances,
+              currency,
+              joinZoneResponse.zone.members,
+              joinZoneResponse.zone.equityAccountId,
+              ClientKey.getPublicKey(context)
+            )
+
+            val (players, hiddenPlayers) = playersFromMembersAccounts(
+              zoneId,
+              memberIdsToAccountIds,
+              joinZoneResponse.zone.accounts,
+              balances,
+              currency,
+              joinZoneResponse.zone.members,
+              joinZoneResponse.zone.equityAccountId,
+              joinZoneResponse.connectedClients
+            )
+
+            val transfers = transfersFromTransactions(
+              joinZoneResponse.zone.transactions,
+              currency,
+              accountIdsToMemberIds,
+              players ++ hiddenPlayers,
+              joinZoneResponse.zone.accounts,
+              joinZoneResponse.zone.members
+            )
+
+            state = new State(
+              joinZoneResponse.zone,
+              joinZoneResponse.connectedClients,
+              balances,
+              currency,
+              memberIdsToAccountIds,
+              accountIdsToMemberIds,
+              identities,
+              hiddenIdentities,
+              players,
+              hiddenPlayers,
+              transfers
+            )
+
+            _joinState = BoardGame.JOINED
+            joinStateListeners.foreach(_.onJoinStateChanged(_joinState))
+
+            gameActionListeners.foreach(_.onGameNameChanged(joinZoneResponse.zone.name))
+            gameActionListeners.foreach(_.onIdentitiesUpdated(identities))
+            gameActionListeners.foreach(_.onPlayersInitialized(players.values))
+            gameActionListeners.foreach(_.onPlayersUpdated(players))
+            gameActionListeners.foreach(_.onTransfersInitialized(transfers.values))
+            gameActionListeners.foreach(_.onTransfersUpdated(transfers))
+
+            val partiallyCreatedIdentities = joinZoneResponse.zone.members.collect {
+              case (memberId, member) if ClientKey.getPublicKey(context) == member.ownerPublicKey
+                && !joinZoneResponse.zone.accounts.values.exists(_.ownerMemberIds == Set(memberId))
+              =>
+                member
+            }
+
+            partiallyCreatedIdentities.foreach(createAccount)
+
+            /*
+             * Since we must only prompt for a required identity if none exist yet and since having
+             * one or more partially created identities implies that gameId would be set, we can
+             * proceed here without checking that partiallyCreatedIdentityIds is non empty.
+             *
+             * The second condition isn't usually of significance but exists to prevent incorrectly
+             * prompting for an identity if a user rejoins a game by scanning its code again rather
+             * than by clicking its list item.
+             */
+            if (gameId.isEmpty && !(identities ++ hiddenIdentities).values.exists(
+              _.account.id != joinZoneResponse.zone.equityAccountId
+            )) {
+              gameActionListeners.foreach(_.onIdentityRequired())
+            }
+
+            def checkAndUpdateGame(expires: Long, name: String): Option[Long] = {
+              val existingEntry = context.getContentResolver.query(
+                Games.CONTENT_URI,
+                Array(
+                  LiquidityContract.Games._ID,
+                  LiquidityContract.Games.NAME
+                ),
+                LiquidityContract.Games.ZONE_ID + " = ?",
+                Array(zoneId.id.toString),
+                null
+              )
+              try {
+                if (!existingEntry.moveToFirst()) {
+                  None
+                } else {
+                  val gameId = existingEntry.getLong(
+                    existingEntry.getColumnIndexOrThrow(LiquidityContract.Games._ID)
+                  )
+                  if (existingEntry.getString(
+                    existingEntry.getColumnIndexOrThrow(LiquidityContract.Games.NAME)
+                  ) != name) {
+                    updateGameName(gameId, name)
+                  }
+                  Some(gameId)
+                }
+              } finally {
+                existingEntry.close()
+              }
+            }
+
+            /*
+             * We don't set gameId until now as it also indicates above whether we've prompted for
+             * the required identity - which we must do at most once.
+             */
+            gameId = gameId.fold(
+              Some(
+                Future(
+
+                  /*
+                   * This is in case a user rejoins a game by scanning its code again rather than
+                   * by clicking its list item - in such cases we mustn't attempt to insert an
+                   * entry as that would silently fail (as it happens on the Future's worker
+                   * thread), but we may need to update the existing entries name.
+                   */
+                  checkAndUpdateGame(
+                    joinZoneResponse.zone.expires,
+                    joinZoneResponse.zone.name.orNull
+                  ).getOrElse {
+                    val contentValues = new ContentValues
+                    contentValues.put(Games.ZONE_ID, zoneId.id.toString)
+                    contentValues.put(Games.CREATED, joinZoneResponse.zone.created: java.lang.Long)
+                    contentValues.put(Games.EXPIRES, joinZoneResponse.zone.expires: java.lang.Long)
+                    contentValues.put(Games.NAME, joinZoneResponse.zone.name.orNull)
+                    ContentUris.parseId(
+                      context.getContentResolver.insert(
+                        Games.CONTENT_URI,
+                        contentValues
+                      )
+                    )
+                  }
                 )
               )
-            )
-            Some(gameId)
-          }
+            ) { gameId =>
+              gameId.foreach(_ =>
+                Future(
+                  checkAndUpdateGame(
+                    joinZoneResponse.zone.expires,
+                    joinZoneResponse.zone.name.orNull
+                  )
+                )
+              )
+              Some(gameId)
+            }
 
-        }
+          }
 
       }
     )
