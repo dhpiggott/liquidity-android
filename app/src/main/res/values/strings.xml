@@ -34,7 +34,6 @@
     <string name="create_identity_member_error_format_string">Couldn\'t create member for identity %1$s!</string>
     <string name="create_new_game">Create new game</string>
     <string name="currency_code_format_string">"%1$s "</string>
-    <string name="currency_none" />
     <string name="currency_value_format_string">%1$s%2$s%3$s</string>
     <string name="delete">Delete</string>
     <string name="delete_identity">Delete identity</string>
@@ -93,7 +92,7 @@
     <string name="transfer_created_date_format_string">(%1$s)</string>
     <string name="transfer_created_time_format_string">%1$s</string>
     <string name="transfer_from">From</string>
-    <string name="transfer_from_invalid_format_string">Cannot transfer to %1$s from %1$s</string>
+    <string name="transfer_from_invalid_format_string">Cannot transfer from %1$s to %1$s</string>
     <string name="transfer_identity">Transfer identity</string>
     <string name="transfer_identity_error_format_string">Couldn\'t transfer identity %1$s!</string>
     <string name="transfer_identity_identity_name_format_string">Scan the QR code on the recipients\'s phone to transfer %1$s to them.</string>
@@ -103,12 +102,13 @@
     <string name="transfer_summary_sent_to_format_string">Sent %1$s to %2$s</string>
     <string name="transfer_to">To</string>
     <string name="transfer_to_player_error_format_string">Couldn\'t transfer to player %1$s!</string>
+    <string name="transfer_to_player_scaled_value_format_string">(%1$s)</string>
     <string name="transfer_value_invalid_format_string">Balance is %1$s but this would require %2$s</string>
     <string name="unnamed">Unnamed</string>
+    <string name="value_multiplier_billion">B</string>
     <string name="value_multiplier_million">M</string>
-    <string name="value_multiplier_million_with_leading_space">M</string>
-    <string name="value_multiplier_none" />
     <string name="value_multiplier_thousand">K</string>
-    <string name="value_multiplier_thousand_with_leading_space"> K</string>
+    <string name="value_multiplier_trillion">T</string>
+    <string name="value_multiplier_quadrillion">Q</string>
 
 </resources>

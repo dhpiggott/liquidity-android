@@ -48,6 +48,7 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
 
 import java.math.BigDecimal;
 import java.text.Collator;
+import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Collections;
 import java.util.Comparator;
@@ -84,7 +85,7 @@ public class BoardGameActivity extends AppCompatActivity
 
         String result;
         if (!currency.isDefined()) {
-            result = context.getString(R.string.currency_none);
+            result = "";
         } else {
 
             Either<String, Currency> c = currency.get();
@@ -119,16 +120,25 @@ public class BoardGameActivity extends AppCompatActivity
         int scaleAmount;
         BigDecimal scaledValue;
         String multiplier;
-        if ((scaledValue = value.scaleByPowerOfTen(scaleAmount = -6))
+        if ((scaledValue = value.scaleByPowerOfTen(scaleAmount = -15))
                 .abs().compareTo(BigDecimal.ONE) >= 0) {
-            multiplier = context.getString(R.string.value_multiplier_million_with_leading_space);
+            multiplier = context.getString(R.string.value_multiplier_quadrillion);
+        } else if ((scaledValue = value.scaleByPowerOfTen(scaleAmount = -12))
+                .abs().compareTo(BigDecimal.ONE) >= 0) {
+            multiplier = context.getString(R.string.value_multiplier_trillion);
+        } else if ((scaledValue = value.scaleByPowerOfTen(scaleAmount = -9))
+                .abs().compareTo(BigDecimal.ONE) >= 0) {
+            multiplier = context.getString(R.string.value_multiplier_billion);
+        } else if ((scaledValue = value.scaleByPowerOfTen(scaleAmount = -6))
+                .abs().compareTo(BigDecimal.ONE) >= 0) {
+            multiplier = context.getString(R.string.value_multiplier_million);
         } else if ((scaledValue = value.scaleByPowerOfTen(scaleAmount = -3))
                 .abs().compareTo(BigDecimal.ONE) >= 0) {
-            multiplier = context.getString(R.string.value_multiplier_thousand_with_leading_space);
+            multiplier = context.getString(R.string.value_multiplier_thousand);
         } else {
             scaleAmount = 0;
             scaledValue = value;
-            multiplier = context.getString(R.string.value_multiplier_none);
+            multiplier = "";
         }
 
         int maximumFractionDigits;
@@ -146,7 +156,7 @@ public class BoardGameActivity extends AppCompatActivity
             minimumFractionDigits = 0;
         }
 
-        NumberFormat numberFormat = NumberFormat.getNumberInstance();
+        DecimalFormat numberFormat = (DecimalFormat) NumberFormat.getNumberInstance();
         numberFormat.setMaximumFractionDigits(maximumFractionDigits);
         numberFormat.setMinimumFractionDigits(minimumFractionDigits);
 

@@ -20,7 +20,6 @@ import android.widget.Button;
 import android.widget.CheckedTextView;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -33,6 +32,8 @@ import com.dhpcs.liquidity.models.AccountId;
 import com.dhpcs.liquidity.models.MemberId;
 
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -190,13 +191,11 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
     private ArrayAdapter<IdentityWithBalance> identitiesSpinnerAdapter;
     private ArrayAdapter<Player> playersSpinnerAdapter;
 
-    private TextView textViewFromError;
     private TextView textViewValueError;
+    private TextView textViewFromError;
     private Button buttonPositive;
 
     private BigDecimal value;
-    private int scale;
-    private BigDecimal scaledValue;
 
     private scala.collection.immutable.Map<MemberId, IdentityWithBalance> identities;
 
@@ -242,16 +241,13 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
 
         TextView textViewCurrency = (TextView) view.findViewById(R.id.textview_currency);
         final EditText editTextValue = (EditText) view.findViewById(R.id.edittext_value);
+        final TextView editTextScaledValue = (TextView)
+                view.findViewById(R.id.textview_scaled_value);
         textViewValueError = (TextView) view.findViewById(R.id.textview_value_error);
-        textViewFromError = (TextView) view.findViewById(R.id.textview_from_error);
-        final TextView textViewMultiplier = (TextView) view.findViewById(R.id.textview_multiplier);
-        RadioGroup radioGroupValueMultiplier =
-                (RadioGroup) view.findViewById(R.id.radiogroup_value_multiplier);
         Spinner spinnerFrom = (Spinner) view.findViewById(R.id.spinner_from);
+        textViewFromError = (TextView) view.findViewById(R.id.textview_from_error);
         LinearLayout linearLayoutTo = (LinearLayout) view.findViewById(R.id.linearlayout_to);
         Spinner spinnerTo = (Spinner) view.findViewById(R.id.spinner_to);
-        View viewTopDivider = view.findViewById(R.id.view_top_divider);
-        View viewBottomDivider = view.findViewById(R.id.view_bottom_divider);
 
         final AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
                 .setTitle(
@@ -271,7 +267,7 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
                                     listener.onTransferValueEntered(
                                             from,
                                             to != null ? Collections.singletonList(to) : toList,
-                                            scaledValue
+                                            value
                                     );
                                 }
                             }
@@ -290,44 +286,96 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
             }
 
+            @SuppressLint("SetTextI18n")
             @Override
             public void afterTextChanged(Editable s) {
+
+                DecimalFormat numberFormat = (DecimalFormat) NumberFormat.getNumberInstance();
+
                 try {
-                    value = new BigDecimal(s.toString());
+                    value = new BigDecimal(
+                            s.toString().replace(
+                                    String.valueOf(
+                                            numberFormat.getDecimalFormatSymbols()
+                                                    .getGroupingSeparator()
+                                    ),
+                                    ""
+                            )
+                    );
                 } catch (IllegalArgumentException e) {
                     value = null;
                 }
+
+                if (value == null) {
+
+                    editTextValue.removeTextChangedListener(this);
+                    editTextValue.setText(null);
+                    editTextValue.addTextChangedListener(this);
+                    editTextScaledValue.setText(null);
+
+                } else {
+
+                    StringBuilder trailingZeros = new StringBuilder();
+                    int currentDecimalSeparatorIndex = s.toString().indexOf(
+                            numberFormat.getDecimalFormatSymbols().getDecimalSeparator()
+                    );
+                    if (currentDecimalSeparatorIndex != -1) {
+                        for (int i = currentDecimalSeparatorIndex + 1; i < s.length(); i++) {
+                            if (s.charAt(i)
+                                    == numberFormat.getDecimalFormatSymbols().getZeroDigit()) {
+                                trailingZeros.append(
+                                        numberFormat.getDecimalFormatSymbols().getZeroDigit()
+                                );
+                            } else {
+                                trailingZeros.setLength(0);
+                            }
+                        }
+                        numberFormat.setDecimalSeparatorAlwaysShown(true);
+                    }
+
+                    int currentSelection = editTextValue.getSelectionStart();
+                    int currentLength = editTextValue.getText().length();
+
+                    numberFormat.setMaximumFractionDigits(value.scale());
+                    numberFormat.setMinimumFractionDigits(0);
+
+                    editTextValue.removeTextChangedListener(this);
+                    editTextValue.setText(numberFormat.format(value) + trailingZeros);
+                    editTextValue.addTextChangedListener(this);
+
+                    int updatedLength = editTextValue.getText().length();
+                    int updatedSelection = currentSelection + updatedLength - currentLength;
+
+                    if (updatedSelection < 0 || updatedSelection > updatedLength) {
+                        editTextValue.setSelection(0);
+                    } else {
+                        editTextValue.setSelection(updatedSelection);
+                    }
+
+                    if (value.scaleByPowerOfTen(-3).abs().compareTo(BigDecimal.ONE) < 0) {
+                        editTextScaledValue.setText(null);
+                    } else {
+                        editTextScaledValue.setText(
+                                getString(
+                                        R.string.transfer_to_player_scaled_value_format_string,
+                                        BoardGameActivity.formatCurrencyValue(
+                                                getActivity(),
+                                                currency,
+                                                value
+                                        )
+                                )
+                        );
+                    }
+
+                }
+
                 if (buttonPositive != null) {
                     validateInput();
                 }
+
             }
 
         });
-        radioGroupValueMultiplier.setOnCheckedChangeListener(
-                new RadioGroup.OnCheckedChangeListener() {
-
-                    @Override
-                    public void onCheckedChanged(RadioGroup group, int checkedId) {
-                        switch (checkedId) {
-                            case R.id.radiobutton_value_multiplier_million:
-                                textViewMultiplier.setText(R.string.value_multiplier_million);
-                                scale = 6;
-                                break;
-                            case R.id.radiobutton_value_multiplier_thousand:
-                                textViewMultiplier.setText(R.string.value_multiplier_thousand);
-                                scale = 3;
-                                break;
-                            case R.id.radiobutton_value_multiplier_none:
-                                textViewMultiplier.setText(R.string.value_multiplier_none);
-                                scale = 0;
-                                break;
-                        }
-                        if (buttonPositive != null) {
-                            validateInput();
-                        }
-                    }
-
-                });
         spinnerFrom.setAdapter(identitiesSpinnerAdapter);
         spinnerFrom.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 
@@ -380,8 +428,6 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
             spinnerTo.setSelection(playersSpinnerAdapter.getPosition(to));
         } else {
             spinnerTo.setVisibility(View.GONE);
-            viewTopDivider.setVisibility(View.VISIBLE);
-            viewBottomDivider.setVisibility(View.VISIBLE);
             //noinspection unchecked
             List<Player> players = (List<Player>) getArguments().getSerializable(ARG_PLAYERS);
             assert players != null;
@@ -464,16 +510,14 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
                 from.balanceWithCurrency()._1() :
                 identities.apply(from.member().id()).balanceWithCurrency()._1();
         if (value == null) {
-            scaledValue = null;
             textViewValueError.setText(null);
             isValid = false;
         } else {
-            scaledValue = value.scaleByPowerOfTen(scale);
             BigDecimal requiredBalance = from.isBanker()
                     ?
                     null
                     :
-                    scaledValue.multiply(new BigDecimal(to != null ? 1 : toList.size()));
+                    value.multiply(new BigDecimal(to != null ? 1 : toList.size()));
             if (requiredBalance != null
                     && currentBalance.bigDecimal().compareTo(requiredBalance) < 0) {
                 textViewValueError.setText(
