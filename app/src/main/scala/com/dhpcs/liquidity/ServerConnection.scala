@@ -10,9 +10,9 @@ import android.os.{Handler, HandlerThread, Looper}
 import com.dhpcs.jsonrpc._
 import com.dhpcs.liquidity.ServerConnection._
 import com.dhpcs.liquidity.models._
-import com.squareup.okhttp.OkHttpClient
 import com.squareup.okhttp.ws.{WebSocket, WebSocketCall, WebSocketListener}
-import okio.{Buffer, BufferedSource}
+import com.squareup.okhttp.{OkHttpClient, RequestBody, ResponseBody}
+import okio.Buffer
 import play.api.libs.json.Json
 
 import scala.util.{Failure, Right, Success, Try}
@@ -493,15 +493,15 @@ class ServerConnection private(context: Context) extends WebSocketListener {
 
     })
 
-  override def onMessage(payload: BufferedSource, `type`: WebSocket.PayloadType) = `type` match {
+  override def onMessage(message: ResponseBody) = message.contentType match {
 
-    case WebSocket.PayloadType.BINARY =>
+    case WebSocket.BINARY =>
 
       sys.error("Received binary frame")
 
-    case WebSocket.PayloadType.TEXT =>
+    case WebSocket.TEXT =>
 
-      readJsonRpcMessage(payload.readUtf8) match {
+      readJsonRpcMessage(message.string) match {
 
         case Left(error) =>
 
@@ -697,7 +697,6 @@ class ServerConnection private(context: Context) extends WebSocketListener {
           })
 
       }
-      payload.close()
 
   }
 
@@ -784,8 +783,8 @@ class ServerConnection private(context: Context) extends WebSocketListener {
           commandIdentifier = commandIdentifier + 1
           try {
             onlineSubState.webSocket.sendMessage(
-              WebSocket.PayloadType.TEXT,
-              new Buffer().writeUtf8(
+              RequestBody.create(
+                WebSocket.TEXT,
                 Json.stringify(
                   Json.toJson(jsonRpcRequestMessage)
                 )
