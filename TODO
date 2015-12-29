@@ -1,4 +1,5 @@
+Add Platinum, Gold, Silver, Copper etc. currencies
+When Gradle plugin 2.0.0 is released re-enable resource shrinking
 When https://code.google.com/p/android/issues/detail?id=77846 is fixed switch to https://developer.android.com/reference/android/support/design/widget/TextInputLayout.html#setCounterMaxLength(int)
-When Gradle plugin 1.4.0 is released re-enable resource shrinking
 Improve logging: http://doc.akka.io/docs/akka/2.4.1/scala/logging.html
 Review http://www.cakesolutions.net/teamblogs/using-spark-to-analyse-akka-persistence-events-in-cassandra and http://doc.akka.io/docs/akka/2.4.1/scala/persistence-schema-evolution.html
