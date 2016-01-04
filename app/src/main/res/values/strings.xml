@@ -26,7 +26,6 @@
     <string name="change_game_name_error_format_string">Couldn\'t change game name to %1$s!</string>
     <string name="change_identity_name">Change identity name</string>
     <string name="change_identity_name_error_format_string">Couldn\'t change identity name to %1$s!</string>
-    <string name="character_count_format_string">%1$d / %2$d</string>
     <string name="choose_identity_to_restore">Choose identity to restore</string>
     <string name="create_game_error_format_string">Couldn\'t create game %1$s!</string>
     <string name="create_identity">Create identity</string>

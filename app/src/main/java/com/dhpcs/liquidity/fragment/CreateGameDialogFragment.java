@@ -9,7 +9,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
+import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -43,8 +43,6 @@ public class CreateGameDialogFragment extends DialogFragment {
     }
 
     public static final String TAG = "create_game_dialog_fragment";
-
-    private static final int MAXIMUM_NAME_LENGTH = package$.MODULE$.MaxStringLength();
 
     private static class CurrenciesAdapter extends ArrayAdapter<Currency> {
 
@@ -154,9 +152,9 @@ public class CreateGameDialogFragment extends DialogFragment {
                 new ArrayList<>(currencies)
         );
 
+        TextInputLayout textInputLayoutGameName = (TextInputLayout)
+                view.findViewById(R.id.textinputlayout_game_name);
         final EditText editTextGameName = (EditText) view.findViewById(R.id.edittext_game_name);
-        final TextView textViewGameNameCharacterCount = (TextView)
-                view.findViewById(R.id.textview_game_name_character_count);
         final Spinner spinnerCurrency = (Spinner) view.findViewById(R.id.spinner_game_currency);
 
         final AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
@@ -187,11 +185,8 @@ public class CreateGameDialogFragment extends DialogFragment {
                 )
                 .create();
 
+        textInputLayoutGameName.setCounterMaxLength(package$.MODULE$.MaxStringLength());
         editTextGameName.addTextChangedListener(new TextWatcher() {
-
-            {
-                updateCharacterCount(editTextGameName.getText());
-            }
 
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -203,31 +198,9 @@ public class CreateGameDialogFragment extends DialogFragment {
 
             @Override
             public void afterTextChanged(Editable s) {
-                updateCharacterCount(s);
                 if (buttonPositive != null) {
                     validateInput(s);
                 }
-            }
-
-            private void updateCharacterCount(Editable s) {
-                textViewGameNameCharacterCount.setTextColor(
-                        s.length() <= MAXIMUM_NAME_LENGTH
-                                ?
-                                ContextCompat.getColor(
-                                        getActivity(),
-                                        android.support.design.
-                                                R.color.secondary_text_default_material_light
-                                )
-                                :
-                                0xffdd2c00
-                );
-                textViewGameNameCharacterCount.setText(
-                        getString(
-                                R.string.character_count_format_string,
-                                s.length(),
-                                MAXIMUM_NAME_LENGTH
-                        )
-                );
             }
 
         });

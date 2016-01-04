@@ -6,7 +6,7 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
+import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -14,7 +14,6 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 
 import com.dhpcs.liquidity.BoardGame$;
 import com.dhpcs.liquidity.R;
@@ -29,8 +28,6 @@ public class EnterGameNameDialogFragment extends DialogFragment {
     }
 
     public static final String TAG = "enter_game_name_dialog_fragment";
-
-    private static final int MAXIMUM_NAME_LENGTH = package$.MODULE$.MaxStringLength();
 
     private static final String ARG_NAME = "name";
 
@@ -61,8 +58,8 @@ public class EnterGameNameDialogFragment extends DialogFragment {
 
         String name = getArguments().getString(ARG_NAME);
 
-        final TextView textViewGameNameCharacterCount = (TextView)
-                view.findViewById(R.id.textview_game_name_character_count);
+        TextInputLayout textInputLayoutGameName = (TextInputLayout)
+                view.findViewById(R.id.textinputlayout_game_name);
         final EditText editTextGameName = (EditText) view.findViewById(R.id.edittext_game_name);
 
         final AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
@@ -86,11 +83,8 @@ public class EnterGameNameDialogFragment extends DialogFragment {
                 )
                 .create();
 
+        textInputLayoutGameName.setCounterMaxLength(package$.MODULE$.MaxStringLength());
         editTextGameName.addTextChangedListener(new TextWatcher() {
-
-            {
-                updateCharacterCount(editTextGameName.getText());
-            }
 
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -102,31 +96,9 @@ public class EnterGameNameDialogFragment extends DialogFragment {
 
             @Override
             public void afterTextChanged(Editable s) {
-                updateCharacterCount(s);
                 if (buttonPositive != null) {
                     validateInput(s);
                 }
-            }
-
-            private void updateCharacterCount(Editable s) {
-                textViewGameNameCharacterCount.setTextColor(
-                        s.length() <= MAXIMUM_NAME_LENGTH
-                                ?
-                                ContextCompat.getColor(
-                                        getActivity(),
-                                        android.support.design.
-                                                R.color.secondary_text_default_material_light
-                                )
-                                :
-                                0xffdd2c00
-                );
-                textViewGameNameCharacterCount.setText(
-                        getString(
-                                R.string.character_count_format_string,
-                                s.length(),
-                                MAXIMUM_NAME_LENGTH
-                        )
-                );
             }
 
         });

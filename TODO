@@ -1,4 +1,4 @@
-Switch to https://developer.android.com/reference/android/support/design/widget/TextInputLayout.html#setCounterMaxLength(int)
+Update screenshots
 When Gradle plugin 2.0.0 is released re-enable resource shrinking
 When https://code.google.com/p/android/issues/detail?id=77846 is fixed re-enable setHasFixedSize in PlayersFragment and TransfersFragment
 Improve logging: http://doc.akka.io/docs/akka/2.4.1/scala/logging.html

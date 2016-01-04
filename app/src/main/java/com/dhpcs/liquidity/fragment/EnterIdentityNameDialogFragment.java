@@ -6,7 +6,7 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
+import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -14,7 +14,6 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 
 import com.dhpcs.liquidity.BoardGame.Identity;
 import com.dhpcs.liquidity.R;
@@ -30,8 +29,6 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
     }
 
     public static final String TAG = "enter_identity_name_dialog_fragment";
-
-    private static final int MAXIMUM_NAME_LENGTH = package$.MODULE$.MaxStringLength();
 
     private static final String ARG_IDENTITY = "identity";
 
@@ -63,8 +60,8 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
 
         final Identity identity = (Identity) getArguments().getSerializable(ARG_IDENTITY);
 
-        final TextView textViewIdentityNameCharacterCount = (TextView)
-                view.findViewById(R.id.textview_identity_name_character_count);
+        TextInputLayout textInputLayoutIdentityName = (TextInputLayout)
+                view.findViewById(R.id.textinputlayout_identity_name);
         final EditText editTextIdentityName = (EditText) view.findViewById(
                 R.id.edittext_identity_name
         );
@@ -91,11 +88,8 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
                 )
                 .create();
 
+        textInputLayoutIdentityName.setCounterMaxLength(package$.MODULE$.MaxStringLength());
         editTextIdentityName.addTextChangedListener(new TextWatcher() {
-
-            {
-                updateCharacterCount(editTextIdentityName.getText());
-            }
 
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -107,31 +101,9 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
 
             @Override
             public void afterTextChanged(Editable s) {
-                updateCharacterCount(s);
                 if (buttonPositive != null) {
                     validateInput(s);
                 }
-            }
-
-            private void updateCharacterCount(Editable s) {
-                textViewIdentityNameCharacterCount.setTextColor(
-                        s.length() <= MAXIMUM_NAME_LENGTH
-                                ?
-                                ContextCompat.getColor(
-                                        getActivity(),
-                                        android.support.design.
-                                                R.color.secondary_text_default_material_light
-                                )
-                                :
-                                0xffdd2c00
-                );
-                textViewIdentityNameCharacterCount.setText(
-                        getString(
-                                R.string.character_count_format_string,
-                                s.length(),
-                                MAXIMUM_NAME_LENGTH
-                        )
-                );
             }
 
         });
