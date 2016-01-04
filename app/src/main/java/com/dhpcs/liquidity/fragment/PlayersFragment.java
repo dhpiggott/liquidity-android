@@ -207,7 +207,7 @@ public class PlayersFragment extends Fragment {
             }
 
         });
-        recyclerViewPlayers.setHasFixedSize(true);
+        // recyclerViewPlayers.setHasFixedSize(true);
         recyclerViewPlayers.setLayoutManager(new LinearLayoutManager(getActivity()));
         recyclerViewPlayers.setAdapter(playersAdapter);
 
