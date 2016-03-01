@@ -70,7 +70,7 @@ dependencies {
     compile 'org.scala-lang:scala-library:2.11.7'
 
     compile 'com.madgag.spongycastle:pkix:1.54.0.0'
-    compile 'com.squareup.okhttp:okhttp-ws:2.7.2'
+    compile 'com.squareup.okhttp:okhttp-ws:2.7.5'
 
     compile 'com.dhpcs:liquidity-common_2.11:1.0.0', {
         exclude group: 'joda-time', module: 'joda-time'
