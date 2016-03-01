@@ -1,5 +1,9 @@
+Update to v23.2.0 support libraries (see http://android-developers.blogspot.co.uk/2016/02/android-support-library-232.html and http://developer.android.com/tools/support-library/index.html)
+Update to MaterialProgressBar 1.1.5
 Update screenshots
+Review Lint warnings
+Fix connection bug where client keeps socket open (repro: join an invalid game)
+Extract Scala code as separate library
+Update Gradle and plugin
 When Gradle plugin 2.0.0 is released re-enable resource shrinking
 When https://code.google.com/p/android/issues/detail?id=77846 is fixed re-enable setHasFixedSize in PlayersFragment and TransfersFragment
-Improve logging: http://doc.akka.io/docs/akka/2.4.1/scala/logging.html
-Review http://www.cakesolutions.net/teamblogs/using-spark-to-analyse-akka-persistence-events-in-cassandra and http://doc.akka.io/docs/akka/2.4.1/scala/persistence-schema-evolution.html
