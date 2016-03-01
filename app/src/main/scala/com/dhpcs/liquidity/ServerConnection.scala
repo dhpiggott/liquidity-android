@@ -10,8 +10,8 @@ import android.os.{Handler, HandlerThread, Looper}
 import com.dhpcs.jsonrpc._
 import com.dhpcs.liquidity.ServerConnection._
 import com.dhpcs.liquidity.models._
-import com.squareup.okhttp.ws.{WebSocket, WebSocketCall, WebSocketListener}
-import com.squareup.okhttp.{OkHttpClient, RequestBody, ResponseBody}
+import okhttp3.ws.{WebSocket, WebSocketCall, WebSocketListener}
+import okhttp3.{OkHttpClient, RequestBody, ResponseBody}
 import okio.Buffer
 import play.api.libs.json.Json
 
@@ -163,13 +163,11 @@ object ServerConnection {
 
 class ServerConnection private(context: Context) extends WebSocketListener {
 
-  private lazy val client = {
-    val client = new OkHttpClient()
-      .setSslSocketFactory(getSslSocketFactory(context))
-    client.setReadTimeout(0, TimeUnit.SECONDS)
-    client.setWriteTimeout(0, TimeUnit.SECONDS)
-    client
-  }
+  private lazy val client = new OkHttpClient.Builder()
+    .sslSocketFactory(getSslSocketFactory(context))
+    .readTimeout(0, TimeUnit.SECONDS)
+    .writeTimeout(0, TimeUnit.SECONDS)
+    .build()
 
   private val mainHandler = new Handler(Looper.getMainLooper)
 
@@ -336,7 +334,7 @@ class ServerConnection private(context: Context) extends WebSocketListener {
     asyncPost(handler) {
       val webSocketCall = WebSocketCall.create(
         client,
-        new com.squareup.okhttp.Request.Builder().url(ServerEndpoint).build
+        new okhttp3.Request.Builder().url(ServerEndpoint).build
       )
       webSocketCall.enqueue(this)
       activeState.subState = ConnectingSubState(webSocketCall)
@@ -423,7 +421,7 @@ class ServerConnection private(context: Context) extends WebSocketListener {
 
     })
 
-  override def onFailure(e: IOException, response: com.squareup.okhttp.Response) =
+  override def onFailure(e: IOException, response: okhttp3.Response) =
     asyncPost(mainHandler)(state match {
 
       case _: IdleState =>
@@ -700,7 +698,7 @@ class ServerConnection private(context: Context) extends WebSocketListener {
 
   }
 
-  override def onOpen(webSocket: WebSocket, response: com.squareup.okhttp.Response) =
+  override def onOpen(webSocket: WebSocket, response: okhttp3.Response) =
     asyncPost(mainHandler)(state match {
 
       case _: IdleState =>
