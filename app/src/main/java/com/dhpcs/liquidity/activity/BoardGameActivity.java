@@ -354,32 +354,32 @@ public class BoardGameActivity extends AppCompatActivity
 
         });
 
-        slidingUpPanelLayout.setPanelSlideListener(new SlidingUpPanelLayout.PanelSlideListener() {
+        slidingUpPanelLayout.addPanelSlideListener(new SlidingUpPanelLayout.PanelSlideListener() {
 
             @Override
             public void onPanelSlide(View view, float v) {
             }
 
             @Override
-            public void onPanelCollapsed(View view) {
-                setTitle(boardGame.getJoinState() == BoardGame.JOINED$.MODULE$
-                        ?
-                        formatNullable(BoardGameActivity.this, boardGame.getGameName())
-                        :
-                        getString(R.string.activity_board_game_title));
-            }
-
-            @Override
-            public void onPanelExpanded(View view) {
-                setTitle(R.string.transfers);
-            }
-
-            @Override
-            public void onPanelAnchored(View view) {
-            }
-
-            @Override
-            public void onPanelHidden(View view) {
+            public void onPanelStateChanged(View panel,
+                                            PanelState previousState,
+                                            PanelState newState) {
+                switch (newState) {
+                    case EXPANDED:
+                        setTitle(R.string.transfers);
+                        break;
+                    case COLLAPSED:
+                        setTitle(boardGame.getJoinState() == BoardGame.JOINED$.MODULE$
+                                ?
+                                formatNullable(BoardGameActivity.this, boardGame.getGameName())
+                                :
+                                getString(R.string.activity_board_game_title));
+                        break;
+                    case ANCHORED:
+                    case HIDDEN:
+                    case DRAGGING:
+                        break;
+                }
             }
 
         });
