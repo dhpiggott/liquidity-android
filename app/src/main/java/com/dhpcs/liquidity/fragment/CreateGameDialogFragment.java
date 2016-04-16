@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
@@ -18,7 +19,6 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -154,7 +154,8 @@ public class CreateGameDialogFragment extends DialogFragment {
 
         TextInputLayout textInputLayoutGameName = (TextInputLayout)
                 view.findViewById(R.id.textinputlayout_game_name);
-        final EditText editTextGameName = (EditText) view.findViewById(R.id.edittext_game_name);
+        final TextInputEditText textInputEditTextGameName = (TextInputEditText)
+                view.findViewById(R.id.textinputedittext_game_name);
         final Spinner spinnerCurrency = (Spinner) view.findViewById(R.id.spinner_game_currency);
 
         final AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
@@ -173,7 +174,7 @@ public class CreateGameDialogFragment extends DialogFragment {
                             public void onClick(DialogInterface dialog, int whichButton) {
                                 if (listener != null) {
                                     listener.onGameDetailsEntered(
-                                            editTextGameName.getText().toString(),
+                                            textInputEditTextGameName.getText().toString(),
                                             currenciesSpinnerAdapter.getItem(
                                                     spinnerCurrency.getSelectedItemPosition()
                                             )
@@ -186,7 +187,7 @@ public class CreateGameDialogFragment extends DialogFragment {
                 .create();
 
         textInputLayoutGameName.setCounterMaxLength(package$.MODULE$.MaxStringLength());
-        editTextGameName.addTextChangedListener(new TextWatcher() {
+        textInputEditTextGameName.addTextChangedListener(new TextWatcher() {
 
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -217,7 +218,7 @@ public class CreateGameDialogFragment extends DialogFragment {
             @Override
             public void onShow(DialogInterface dialog) {
                 buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
-                validateInput(editTextGameName.getText());
+                validateInput(textInputEditTextGameName.getText());
             }
 
         });

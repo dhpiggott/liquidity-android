@@ -12,8 +12,8 @@
     app:counterEnabled="true"
     tools:context="com.dhpcs.liquidity.fragment.CreateIdentityDialogFragment">
 
-    <EditText
-        android:id="@+id/edittext_identity_name"
+    <android.support.design.widget.TextInputEditText
+        android:id="@+id/textinputedittext_identity_name"
         style="@style/TextAppearance.AppCompat.Subhead"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

@@ -6,6 +6,7 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
@@ -13,7 +14,6 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.EditText;
 
 import com.dhpcs.liquidity.BoardGame$;
 import com.dhpcs.liquidity.R;
@@ -60,7 +60,8 @@ public class EnterGameNameDialogFragment extends DialogFragment {
 
         TextInputLayout textInputLayoutGameName = (TextInputLayout)
                 view.findViewById(R.id.textinputlayout_game_name);
-        final EditText editTextGameName = (EditText) view.findViewById(R.id.edittext_game_name);
+        final TextInputEditText textInputEditTextGameName = (TextInputEditText)
+                view.findViewById(R.id.textinputedittext_game_name);
 
         final AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
                 .setTitle(R.string.enter_game_name)
@@ -74,7 +75,7 @@ public class EnterGameNameDialogFragment extends DialogFragment {
                             public void onClick(DialogInterface dialog, int whichButton) {
                                 if (listener != null) {
                                     listener.onGameNameEntered(
-                                            editTextGameName.getText().toString()
+                                            textInputEditTextGameName.getText().toString()
                                     );
                                 }
                             }
@@ -84,7 +85,7 @@ public class EnterGameNameDialogFragment extends DialogFragment {
                 .create();
 
         textInputLayoutGameName.setCounterMaxLength(package$.MODULE$.MaxStringLength());
-        editTextGameName.addTextChangedListener(new TextWatcher() {
+        textInputEditTextGameName.addTextChangedListener(new TextWatcher() {
 
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -103,14 +104,14 @@ public class EnterGameNameDialogFragment extends DialogFragment {
 
         });
 
-        editTextGameName.setText(name);
+        textInputEditTextGameName.setText(name);
 
         alertDialog.setOnShowListener(new DialogInterface.OnShowListener() {
 
             @Override
             public void onShow(DialogInterface dialog) {
                 buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
-                validateInput(editTextGameName.getText());
+                validateInput(textInputEditTextGameName.getText());
             }
 
         });

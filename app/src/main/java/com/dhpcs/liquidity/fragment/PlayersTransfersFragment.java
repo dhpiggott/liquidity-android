@@ -212,16 +212,6 @@ public class PlayersTransfersFragment extends Fragment {
         );
         playersTransfersFragmentStatePagerAdapter.notifyDataSetChanged();
 
-        /*
-         * The call to setTabsFromPagerAdapter first removes all existing tabs. The first tab
-         * re-added is consequently also automatically selected for us. That's not so helpful here
-         * as it would cause selectedPlayer to be set to null (the value corresponding to the
-         * always-present, always-first 'ALL' tab). We could just store the field's value in a
-         * local here, but this somehow seems to read better.
-         */
-        viewPagerPlayersTransfers.removeOnPageChangeListener(pageChangeListener);
-        tabLayoutPlayers.setTabsFromPagerAdapter(playersTransfersFragmentStatePagerAdapter);
-        viewPagerPlayersTransfers.addOnPageChangeListener(pageChangeListener);
         if (selectedPlayer != null && players.contains(selectedPlayer.member().id())) {
             viewPagerPlayersTransfers.setCurrentItem(
                     playersTransfersFragmentStatePagerAdapter.getPosition(

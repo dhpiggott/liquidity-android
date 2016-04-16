@@ -12,8 +12,8 @@
     app:counterEnabled="true"
     tools:context="com.dhpcs.liquidity.fragment.EnterGameNameDialogFragment">
 
-    <EditText
-        android:id="@+id/edittext_game_name"
+    <android.support.design.widget.TextInputEditText
+        android:id="@+id/textinputedittext_game_name"
         style="@style/TextAppearance.AppCompat.Subhead"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

@@ -6,6 +6,7 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
@@ -13,7 +14,6 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.EditText;
 
 import com.dhpcs.liquidity.BoardGame.Identity;
 import com.dhpcs.liquidity.R;
@@ -62,9 +62,8 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
 
         TextInputLayout textInputLayoutIdentityName = (TextInputLayout)
                 view.findViewById(R.id.textinputlayout_identity_name);
-        final EditText editTextIdentityName = (EditText) view.findViewById(
-                R.id.edittext_identity_name
-        );
+        final TextInputEditText textInputEditTextIdentityName = (TextInputEditText)
+                view.findViewById(R.id.textinputedittext_identity_name);
 
         final AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
                 .setTitle(R.string.enter_identity_name)
@@ -79,7 +78,7 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
                                 if (listener != null) {
                                     listener.onIdentityNameEntered(
                                             identity,
-                                            editTextIdentityName.getText().toString()
+                                            textInputEditTextIdentityName.getText().toString()
                                     );
                                 }
                             }
@@ -89,7 +88,7 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
                 .create();
 
         textInputLayoutIdentityName.setCounterMaxLength(package$.MODULE$.MaxStringLength());
-        editTextIdentityName.addTextChangedListener(new TextWatcher() {
+        textInputEditTextIdentityName.addTextChangedListener(new TextWatcher() {
 
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -109,7 +108,7 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
         });
 
         assert identity != null;
-        editTextIdentityName.setText(
+        textInputEditTextIdentityName.setText(
                 BoardGameActivity.formatNullable(getActivity(), identity.member().name())
         );
 
@@ -118,7 +117,7 @@ public class EnterIdentityNameDialogFragment extends DialogFragment {
             @Override
             public void onShow(DialogInterface dialog) {
                 buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
-                validateInput(editTextIdentityName.getText());
+                validateInput(textInputEditTextIdentityName.getText());
             }
 
         });
