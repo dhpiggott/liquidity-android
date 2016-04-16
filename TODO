@@ -1,4 +1,3 @@
-Update to MaterialProgressBar 1.1.5
 Update screenshots
 Review Lint warnings
 Fix connection bug where client keeps socket open (repro: join an invalid game)
