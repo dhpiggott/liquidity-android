@@ -32,7 +32,7 @@
     </LinearLayout>
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/floatingactionbutton_new_game"
+        android:id="@+id/floatingactionbutton_add_game"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="end|bottom"

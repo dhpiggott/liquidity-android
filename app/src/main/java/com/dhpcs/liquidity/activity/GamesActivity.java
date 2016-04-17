@@ -1,6 +1,5 @@
 package com.dhpcs.liquidity.activity;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -10,8 +9,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
-import com.cocosw.bottomsheet.BottomSheet;
 import com.dhpcs.liquidity.R;
+import com.dhpcs.liquidity.fragment.AddGameBottomSheetDialogFragment;
 import com.dhpcs.liquidity.fragment.CreateGameDialogFragment;
 import com.dhpcs.liquidity.fragment.GamesFragment;
 import com.dhpcs.liquidity.models.ZoneId;
@@ -22,7 +21,9 @@ import java.util.Collections;
 import java.util.Currency;
 import java.util.UUID;
 
-public class GamesActivity extends AppCompatActivity implements CreateGameDialogFragment.Listener,
+public class GamesActivity extends AppCompatActivity
+        implements AddGameBottomSheetDialogFragment.Listener,
+        CreateGameDialogFragment.Listener,
         GamesFragment.Listener {
 
     @Override
@@ -68,40 +69,16 @@ public class GamesActivity extends AppCompatActivity implements CreateGameDialog
 
         setSupportActionBar(toolbar);
 
-        findViewById(R.id.floatingactionbutton_new_game)
+        findViewById(R.id.floatingactionbutton_add_game)
                 .setOnClickListener(new View.OnClickListener() {
 
                     @Override
                     public void onClick(View v) {
-                        new BottomSheet.Builder(GamesActivity.this)
-                                .sheet(R.menu.games_bottom_sheet)
-                                .listener(new DialogInterface.OnClickListener() {
-
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        switch (which) {
-                                            case R.id.action_new_game:
-                                                CreateGameDialogFragment.newInstance()
-                                                        .show(
-                                                                getFragmentManager(),
-                                                                CreateGameDialogFragment.TAG
-                                                        );
-                                                break;
-                                            case R.id.action_join_game:
-                                                new IntentIntegrator(GamesActivity.this)
-                                                        .setCaptureActivity(JoinGameActivity.class)
-                                                        .setDesiredBarcodeFormats(
-                                                                Collections.singleton("QR_CODE")
-                                                        )
-                                                        .setBeepEnabled(false)
-                                                        .setOrientationLocked(false)
-                                                        .initiateScan();
-                                                break;
-                                        }
-                                    }
-
-                                }).
-                                show();
+                        AddGameBottomSheetDialogFragment.newInstance()
+                                .show(
+                                        getSupportFragmentManager(),
+                                        AddGameBottomSheetDialogFragment.TAG
+                                );
                     }
 
                 });
@@ -146,6 +123,27 @@ public class GamesActivity extends AppCompatActivity implements CreateGameDialog
                         name
                 )
         );
+    }
+
+    @Override
+    public void onJoinGameClicked() {
+        new IntentIntegrator(GamesActivity.this)
+                .setCaptureActivity(JoinGameActivity.class)
+                .setDesiredBarcodeFormats(
+                        Collections.singleton("QR_CODE")
+                )
+                .setBeepEnabled(false)
+                .setOrientationLocked(false)
+                .initiateScan();
+    }
+
+    @Override
+    public void onNewGameClicked() {
+        CreateGameDialogFragment.newInstance()
+                .show(
+                        getFragmentManager(),
+                        CreateGameDialogFragment.TAG
+                );
     }
 
     @Override
