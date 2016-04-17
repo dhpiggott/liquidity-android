@@ -4,4 +4,3 @@ Fix connection bug where client keeps socket open (repro: join an invalid game)
 Extract Scala code as separate library
 Update Gradle and plugin
 Re-enable resource shrinking
-When https://code.google.com/p/android/issues/detail?id=77846 is fixed re-enable setHasFixedSize in PlayersFragment and TransfersFragment

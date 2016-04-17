@@ -207,7 +207,7 @@ public class TransfersFragment extends Fragment {
         textViewEmpty = (TextView) view.findViewById(R.id.textview_empty);
         recyclerViewTransfers = (RecyclerView) view.findViewById(R.id.recyclerview_transfers);
 
-        // recyclerViewTransfers.setHasFixedSize(true);
+        recyclerViewTransfers.setHasFixedSize(true);
         recyclerViewTransfers.setLayoutManager(new LinearLayoutManager(getActivity()));
         recyclerViewTransfers.setAdapter(transfersAdapter);
 
