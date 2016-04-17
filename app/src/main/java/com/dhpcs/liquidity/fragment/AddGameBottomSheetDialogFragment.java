@@ -50,6 +50,7 @@ public class AddGameBottomSheetDialogFragment extends BottomSheetDialogFragment 
                 if (listener != null) {
                     listener.onNewGameClicked();
                 }
+                dismiss();
             }
 
         });
@@ -60,6 +61,7 @@ public class AddGameBottomSheetDialogFragment extends BottomSheetDialogFragment 
                 if (listener != null) {
                     listener.onJoinGameClicked();
                 }
+                dismiss();
             }
 
         });
