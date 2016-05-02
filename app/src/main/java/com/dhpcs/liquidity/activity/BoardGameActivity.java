@@ -23,7 +23,6 @@ import com.dhpcs.liquidity.BoardGame.IdentityWithBalance;
 import com.dhpcs.liquidity.BoardGame.Player;
 import com.dhpcs.liquidity.BoardGame.PlayerWithBalanceAndConnectionState;
 import com.dhpcs.liquidity.BoardGame.TransferWithCurrency;
-import com.dhpcs.liquidity.ClientKey;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.ServerConnection;
 import com.dhpcs.liquidity.fragment.ConfirmIdentityDeletionDialogFragment;
@@ -890,7 +889,7 @@ public class BoardGameActivity extends AppCompatActivity
                                 zoneIdHolder
                         ).putExtra(
                                 ReceiveIdentityActivity.EXTRA_PUBLIC_KEY,
-                                ClientKey.getPublicKey(this)
+                                ServerConnection.getInstance(getApplicationContext()).publicKey()
                         ),
                         REQUEST_CODE_RECEIVE_IDENTITY
                 );
@@ -1070,7 +1069,9 @@ public class BoardGameActivity extends AppCompatActivity
                 && PreferenceManager.getDefaultSharedPreferences(this)
                 .getBoolean("play_transfer_receipt_sounds", true)
                 && addedTransfer.to().right().get().member().ownerPublicKey()
-                .equals(ClientKey.getPublicKey(this))) {
+                .equals(
+                        ServerConnection.getInstance(getApplicationContext()).publicKey()
+                )) {
             if (transferReceiptMediaPlayer.isPlaying()) {
                 transferReceiptMediaPlayer.seekTo(0);
             } else {

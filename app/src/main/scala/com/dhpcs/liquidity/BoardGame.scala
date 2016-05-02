@@ -266,16 +266,16 @@ object BoardGame {
 
         val from = accountsMembers.get(transaction.from)
           .fold[Either[(AccountId, Account), Player]](
-            Left(transaction.from -> accounts(transaction.from))
-          )(memberId => Right(players(memberId)))
+          Left(transaction.from -> accounts(transaction.from))
+        )(memberId => Right(players(memberId)))
         val to = accountsMembers.get(transaction.to)
           .fold[Either[(AccountId, Account), Player]](
-            Left(transaction.to -> accounts(transaction.to))
-          )(memberId => Right(players(memberId)))
+          Left(transaction.to -> accounts(transaction.to))
+        )(memberId => Right(players(memberId)))
         val creator = players.get(transaction.creator)
           .fold[Either[(MemberId, Member), Player]](
-            Left(transaction.creator -> members(transaction.creator))
-          )(Right(_))
+          Left(transaction.creator -> members(transaction.creator))
+        )(Right(_))
         transactionId -> TransferWithCurrency(
           from,
           to,
@@ -295,7 +295,7 @@ class BoardGame private(context: Context,
                         private var zoneId: Option[ZoneId],
                         private var gameId: Option[Future[Long]])
   extends ServerConnection.ConnectionStateListener
-  with ServerConnection.NotificationReceiptListener {
+    with ServerConnection.NotificationReceiptListener {
 
   private val connectionRequestToken = new ConnectionRequestToken
 
@@ -373,7 +373,7 @@ class BoardGame private(context: Context,
   private def createAndThenJoinZone(currency: Currency, name: String) =
     serverConnection.sendCommand(
       CreateZoneCommand(
-        ClientKey.getPublicKey(context),
+        serverConnection.publicKey,
         Some(context.getString(R.string.bank_member_name)),
         None,
         None,
@@ -414,7 +414,7 @@ class BoardGame private(context: Context,
     serverConnection.sendCommand(
       CreateMemberCommand(
         zoneId.get,
-        ClientKey.getPublicKey(context),
+        serverConnection.publicKey,
         Some(name)
       ),
       new ResponseCallback {
@@ -511,7 +511,7 @@ class BoardGame private(context: Context,
               currency,
               joinZoneResponse.zone.members,
               joinZoneResponse.zone.equityAccountId,
-              ClientKey.getPublicKey(context)
+              serverConnection.publicKey
             )
 
             val (players, hiddenPlayers) = playersFromMembersAccounts(
@@ -559,7 +559,7 @@ class BoardGame private(context: Context,
             gameActionListeners.foreach(_.onTransfersUpdated(transfers))
 
             val partiallyCreatedIdentities = joinZoneResponse.zone.members.collect {
-              case (memberId, member) if ClientKey.getPublicKey(context) == member.ownerPublicKey
+              case (memberId, member) if serverConnection.publicKey == member.ownerPublicKey
                 && !joinZoneResponse.zone.accounts.values.exists(_.ownerMemberIds == Set(memberId))
               =>
                 member
@@ -904,7 +904,7 @@ class BoardGame private(context: Context,
             state.currency,
             state.zone.members,
             state.zone.equityAccountId,
-            ClientKey.getPublicKey(context)
+            serverConnection.publicKey
           )
 
           if (updatedIdentities != state.identities) {
@@ -968,7 +968,7 @@ class BoardGame private(context: Context,
             state.currency,
             state.zone.members,
             state.zone.equityAccountId,
-            ClientKey.getPublicKey(context)
+            serverConnection.publicKey
           )
 
           if (createdIdentity.nonEmpty) {
@@ -1023,7 +1023,7 @@ class BoardGame private(context: Context,
             state.currency,
             state.zone.members,
             state.zone.equityAccountId,
-            ClientKey.getPublicKey(context)
+            serverConnection.publicKey
           )
 
           if (updatedIdentities != state.identities) {
@@ -1062,7 +1062,7 @@ class BoardGame private(context: Context,
             state.currency,
             state.zone.members,
             state.zone.equityAccountId,
-            ClientKey.getPublicKey(context)
+            serverConnection.publicKey
           )
 
           if (changedIdentities.nonEmpty) {

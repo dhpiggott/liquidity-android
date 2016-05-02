@@ -7,8 +7,6 @@ import java.security.{KeyPairGenerator, KeyStore}
 import java.util.{Calendar, Locale}
 import javax.net.ssl.{KeyManager, KeyManagerFactory}
 
-import android.content.Context
-import android.provider.Settings
 import com.dhpcs.liquidity.models.PublicKey
 import org.spongycastle.asn1.x500.X500NameBuilder
 import org.spongycastle.asn1.x500.style.BCStyle
@@ -27,11 +25,7 @@ object ClientKey {
   private var publicKey: PublicKey = _
   private var keyManagers: Array[KeyManager] = _
 
-  private def generateCertKeyPair(context: Context) = {
-    val androidId = Settings.Secure.getString(
-      context.getContentResolver,
-      Settings.Secure.ANDROID_ID
-    )
+  private def generateCertKeyPair(androidId: String) = {
     val clientIdentity = new X500NameBuilder().addRDN(BCStyle.CN, androidId).build
     val keyPairGenerator = KeyPairGenerator.getInstance("RSA")
     keyPairGenerator.initialize(KeyLength)
@@ -45,19 +39,19 @@ object ClientKey {
         clientIdentity,
         keyPair.getPublic
       ).addExtension(
-          Extension.subjectKeyIdentifier,
-          false,
-          new JcaX509ExtensionUtils().createSubjectKeyIdentifier(keyPair.getPublic)
-        ).build(
-          new JcaContentSignerBuilder("SHA256withRSA").build(keyPair.getPrivate)
-        )
+        Extension.subjectKeyIdentifier,
+        false,
+        new JcaX509ExtensionUtils().createSubjectKeyIdentifier(keyPair.getPublic)
+      ).build(
+        new JcaContentSignerBuilder("SHA256withRSA").build(keyPair.getPrivate)
+      )
     )
     (certificate, keyPair.getPrivate)
   }
 
-  def getKeyManagers(context: Context) = {
+  def getKeyManagers(filesDir: File, androidId: String) = {
     if (keyManagers == null) {
-      val keyStore = getOrLoadOrCreateKeyStore(context)
+      val keyStore = getOrLoadOrCreateKeyStore(filesDir, androidId)
       val keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm)
       keyManagerFactory.init(keyStore, Array.emptyCharArray)
       keyManagers = keyManagerFactory.getKeyManagers
@@ -65,12 +59,12 @@ object ClientKey {
     keyManagers
   }
 
-  private def getOrLoadOrCreateKeyStore(context: Context) = {
+  private def getOrLoadOrCreateKeyStore(filesDir: File, androidId: String) = {
     if (keyStore == null) {
       keyStore = KeyStore.getInstance("BKS")
-      val keyStoreFile = new File(context.getFilesDir, KeystoreFilename)
+      val keyStoreFile = new File(filesDir, KeystoreFilename)
       if (!keyStoreFile.exists) {
-        val (certificate, privateKey) = generateCertKeyPair(context)
+        val (certificate, privateKey) = generateCertKeyPair(androidId)
         keyStore.load(null, null)
         keyStore.setKeyEntry(
           EntryAlias,
@@ -96,9 +90,9 @@ object ClientKey {
     keyStore
   }
 
-  def getPublicKey(context: Context) = {
+  def getPublicKey(filesDir: File, androidId: String) = {
     if (publicKey == null) {
-      val keyStore = getOrLoadOrCreateKeyStore(context)
+      val keyStore = getOrLoadOrCreateKeyStore(filesDir, androidId)
       publicKey = PublicKey(
         keyStore.getCertificate(ClientKey.EntryAlias).getPublicKey.getEncoded
       )

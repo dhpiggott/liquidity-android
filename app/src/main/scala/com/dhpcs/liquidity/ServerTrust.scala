@@ -1,15 +1,14 @@
 package com.dhpcs.liquidity
 
+import java.io.InputStream
 import java.security.cert.{CertificateException, X509Certificate}
 import java.security.{KeyStore, PublicKey}
 import javax.net.ssl.{TrustManager, X509TrustManager}
 
-import android.content.Context
-import android.util.Base64
+import okio.ByteString
 
 object ServerTrust {
 
-  private val TrustStoreResources = Set(R.raw.liquidity_dhpcs_com)
   private val EntryAlias = "identity"
 
   private val TrustManagers = Array[TrustManager](new X509TrustManager() {
@@ -27,7 +26,7 @@ object ServerTrust {
       val publicKey = chain(0).getPublicKey
       if (!trustedKeys.contains(publicKey)) {
         throw new CertificateException(
-          "Unknown public key: " + Base64.encodeToString(publicKey.getEncoded, Base64.DEFAULT)
+          s"Unknown public key: ${ByteString.of(publicKey.getEncoded: _*).base64}"
         )
       }
     }
@@ -38,16 +37,15 @@ object ServerTrust {
 
   private var trustedKeys: Set[PublicKey] = _
 
-  def getTrustManagers(context: Context) = {
-    loadTrustedKeys(context)
+  def getTrustManagers(keyStoreInputStreams: Set[InputStream]) = {
+    loadTrustedKeys(keyStoreInputStreams)
     TrustManagers
   }
 
-  private def loadTrustedKeys(context: Context) {
+  private def loadTrustedKeys(keyStoreInputStreams: Set[InputStream]) {
     if (trustedKeys == null) {
-      trustedKeys = TrustStoreResources.map { trustStoreResource =>
+      trustedKeys = keyStoreInputStreams.map { keyStoreInputStream =>
         val keyStore = KeyStore.getInstance("BKS")
-        val keyStoreInputStream = context.getResources.openRawResource(trustStoreResource)
         try {
           keyStore.load(keyStoreInputStream, Array.emptyCharArray)
         } finally {
