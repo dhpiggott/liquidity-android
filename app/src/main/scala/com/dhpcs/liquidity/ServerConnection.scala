@@ -1,13 +1,12 @@
 package com.dhpcs.liquidity
 
-import java.io.IOException
+import java.io.{File, IOException}
 import java.util.concurrent.TimeUnit
-import javax.net.ssl.{SSLContext, SSLException}
+import javax.net.ssl.{KeyManager, SSLContext, SSLException, TrustManager}
 
 import android.content.{BroadcastReceiver, Context, Intent, IntentFilter}
 import android.net.ConnectivityManager
 import android.os.{Handler, HandlerThread, Looper}
-import android.provider.Settings
 import com.dhpcs.jsonrpc._
 import com.dhpcs.liquidity.ServerConnection._
 import com.dhpcs.liquidity.models._
@@ -117,8 +116,6 @@ object ServerConnection {
 
   private val ServerEndpoint = "https://liquidity.dhpcs.com/ws"
 
-  private val TrustStoreResources = Set(R.raw.liquidity_dhpcs_com)
-
   private var instance: ServerConnection = _
 
   private def asyncPost(handler: Handler)(body: => Unit) {
@@ -129,28 +126,24 @@ object ServerConnection {
     })
   }
 
-  def getInstance(context: Context) = {
-    if (instance == null) {
-      instance = new ServerConnection(context)
-    }
-    instance
-  }
-
-  private def getSslSocketFactory(context: Context) = {
+  private def createSslSocketFactory(keyManagers: Array[KeyManager],
+                                     trustManagers: Array[TrustManager]) = {
     val sslContext = SSLContext.getInstance("TLS")
-    val filesDir = context.getFilesDir
-    val androidId = Settings.Secure.getString(
-      context.getContentResolver,
-      Settings.Secure.ANDROID_ID
-    )
     sslContext.init(
-      ClientKey.getKeyManagers(filesDir, androidId),
-      ServerTrust.getTrustManagers(
-        TrustStoreResources.map(context.getResources.openRawResource)
-      ),
+      keyManagers,
+      trustManagers,
       null
     )
     sslContext.getSocketFactory
+  }
+
+  def getInstance(context: Context,
+                  filesDir: File,
+                  androidId: String) = {
+    if (instance == null) {
+      instance = new ServerConnection(context, filesDir, androidId)
+    }
+    instance
   }
 
   private def readJsonRpcMessage(jsonString: String): Either[String, JsonRpcMessage] =
@@ -171,10 +164,15 @@ object ServerConnection {
 
 }
 
-class ServerConnection private(context: Context) extends WebSocketListener {
+class ServerConnection private(context: Context,
+                               filesDir: File,
+                               androidId: String) extends WebSocketListener {
 
   private lazy val client = new OkHttpClient.Builder()
-    .sslSocketFactory(getSslSocketFactory(context))
+    .sslSocketFactory(createSslSocketFactory(
+      ClientKey.getKeyManagers(filesDir, androidId),
+      ServerTrust.getTrustManagers(context.getResources.openRawResource(R.raw.liquidity_dhpcs_com))
+    ))
     .readTimeout(0, TimeUnit.SECONDS)
     .writeTimeout(0, TimeUnit.SECONDS)
     .build()
@@ -211,6 +209,8 @@ class ServerConnection private(context: Context) extends WebSocketListener {
   private var notificationReceiptListeners = Set.empty[NotificationReceiptListener]
 
   handleConnectivityStateChange()
+
+  def clientKey = ClientKey.getPublicKey(filesDir, androidId)
 
   private def connect() = state match {
 
@@ -389,15 +389,6 @@ class ServerConnection private(context: Context) extends WebSocketListener {
       .asInstanceOf[ConnectivityManager]
       .getActiveNetworkInfo
     activeNetwork != null && activeNetwork.isConnected
-  }
-
-  def publicKey = {
-    val filesDir = context.getFilesDir
-    val androidId = Settings.Secure.getString(
-      context.getContentResolver,
-      Settings.Secure.ANDROID_ID
-    )
-    ClientKey.getPublicKey(filesDir, androidId)
   }
 
   override def onClose(code: Int, reason: String) =

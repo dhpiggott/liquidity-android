@@ -4,12 +4,11 @@ import java.io.InputStream
 import java.security.cert.{CertificateException, X509Certificate}
 import java.security.{KeyStore, PublicKey}
 import javax.net.ssl.{TrustManager, X509TrustManager}
+import collection.JavaConverters._
 
 import okio.ByteString
 
 object ServerTrust {
-
-  private val EntryAlias = "identity"
 
   private val TrustManagers = Array[TrustManager](new X509TrustManager() {
 
@@ -37,21 +36,22 @@ object ServerTrust {
 
   private var trustedKeys: Set[PublicKey] = _
 
-  def getTrustManagers(keyStoreInputStreams: Set[InputStream]) = {
-    loadTrustedKeys(keyStoreInputStreams)
+  def getTrustManagers(keyStoreInputStream: InputStream) = {
+    loadTrustedKeys(keyStoreInputStream)
     TrustManagers
   }
 
-  private def loadTrustedKeys(keyStoreInputStreams: Set[InputStream]) {
+  private def loadTrustedKeys(keyStoreInputStream: InputStream) {
     if (trustedKeys == null) {
-      trustedKeys = keyStoreInputStreams.map { keyStoreInputStream =>
-        val keyStore = KeyStore.getInstance("BKS")
-        try {
-          keyStore.load(keyStoreInputStream, Array.emptyCharArray)
-        } finally {
-          keyStoreInputStream.close()
-        }
-        keyStore.getCertificate(EntryAlias).getPublicKey
+      val keyStore = KeyStore.getInstance("BKS")
+      try {
+        keyStore.load(keyStoreInputStream, Array.emptyCharArray)
+        trustedKeys = keyStore.aliases.asScala.collect {
+          case entryAlias if keyStore.isCertificateEntry(entryAlias) =>
+            keyStore.getCertificate(entryAlias).getPublicKey
+        }.toSet
+      } finally {
+        keyStoreInputStream.close()
       }
     }
   }

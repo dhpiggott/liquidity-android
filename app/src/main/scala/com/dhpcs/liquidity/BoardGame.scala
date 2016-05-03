@@ -373,7 +373,7 @@ class BoardGame private(context: Context,
   private def createAndThenJoinZone(currency: Currency, name: String) =
     serverConnection.sendCommand(
       CreateZoneCommand(
-        serverConnection.publicKey,
+        serverConnection.clientKey,
         Some(context.getString(R.string.bank_member_name)),
         None,
         None,
@@ -414,7 +414,7 @@ class BoardGame private(context: Context,
     serverConnection.sendCommand(
       CreateMemberCommand(
         zoneId.get,
-        serverConnection.publicKey,
+        serverConnection.clientKey,
         Some(name)
       ),
       new ResponseCallback {
@@ -511,7 +511,7 @@ class BoardGame private(context: Context,
               currency,
               joinZoneResponse.zone.members,
               joinZoneResponse.zone.equityAccountId,
-              serverConnection.publicKey
+              serverConnection.clientKey
             )
 
             val (players, hiddenPlayers) = playersFromMembersAccounts(
@@ -559,7 +559,7 @@ class BoardGame private(context: Context,
             gameActionListeners.foreach(_.onTransfersUpdated(transfers))
 
             val partiallyCreatedIdentities = joinZoneResponse.zone.members.collect {
-              case (memberId, member) if serverConnection.publicKey == member.ownerPublicKey
+              case (memberId, member) if serverConnection.clientKey == member.ownerPublicKey
                 && !joinZoneResponse.zone.accounts.values.exists(_.ownerMemberIds == Set(memberId))
               =>
                 member
@@ -904,7 +904,7 @@ class BoardGame private(context: Context,
             state.currency,
             state.zone.members,
             state.zone.equityAccountId,
-            serverConnection.publicKey
+            serverConnection.clientKey
           )
 
           if (updatedIdentities != state.identities) {
@@ -968,7 +968,7 @@ class BoardGame private(context: Context,
             state.currency,
             state.zone.members,
             state.zone.equityAccountId,
-            serverConnection.publicKey
+            serverConnection.clientKey
           )
 
           if (createdIdentity.nonEmpty) {
@@ -1023,7 +1023,7 @@ class BoardGame private(context: Context,
             state.currency,
             state.zone.members,
             state.zone.equityAccountId,
-            serverConnection.publicKey
+            serverConnection.clientKey
           )
 
           if (updatedIdentities != state.identities) {
@@ -1062,7 +1062,7 @@ class BoardGame private(context: Context,
             state.currency,
             state.zone.members,
             state.zone.equityAccountId,
-            serverConnection.publicKey
+            serverConnection.clientKey
           )
 
           if (changedIdentities.nonEmpty) {
