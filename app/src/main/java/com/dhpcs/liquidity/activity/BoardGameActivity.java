@@ -428,7 +428,7 @@ public class BoardGameActivity extends AppCompatActivity
                 throw new Error();
             }
 
-            String androidId = Settings.Secure.getString(
+            String clientId = Settings.Secure.getString(
                     getContentResolver(),
                     Settings.Secure.ANDROID_ID
             );
@@ -438,7 +438,7 @@ public class BoardGameActivity extends AppCompatActivity
                     ServerConnection.getInstance(
                             getApplicationContext(),
                             getFilesDir(),
-                            androidId
+                            clientId
                     ),
                     currency,
                     gameName
@@ -450,7 +450,7 @@ public class BoardGameActivity extends AppCompatActivity
 
             if (boardGame == null) {
 
-                String androidId = Settings.Secure.getString(
+                String clientId = Settings.Secure.getString(
                         getContentResolver(),
                         Settings.Secure.ANDROID_ID
                 );
@@ -462,7 +462,7 @@ public class BoardGameActivity extends AppCompatActivity
                             ServerConnection.getInstance(
                                     getApplicationContext(),
                                     getFilesDir(),
-                                    androidId
+                                    clientId
                             ),
                             zoneId
                     );
@@ -474,7 +474,7 @@ public class BoardGameActivity extends AppCompatActivity
                             ServerConnection.getInstance(
                                     getApplicationContext(),
                                     getFilesDir(),
-                                    androidId
+                                    clientId
                             ),
                             zoneId,
                             getIntent().getExtras().getLong(EXTRA_GAME_ID)
@@ -903,7 +903,7 @@ public class BoardGameActivity extends AppCompatActivity
                         ReceiveIdentityActivity.EXTRA_ZONE_ID,
                         boardGame.getZoneId()
                 );
-                String androidId = Settings.Secure.getString(
+                String clientId = Settings.Secure.getString(
                         getContentResolver(),
                         Settings.Secure.ANDROID_ID
                 );
@@ -919,7 +919,7 @@ public class BoardGameActivity extends AppCompatActivity
                                 ServerConnection.getInstance(
                                         getApplicationContext(),
                                         getFilesDir(),
-                                        androidId
+                                        clientId
                                 ).clientKey()
                         ),
                         REQUEST_CODE_RECEIVE_IDENTITY
@@ -1096,7 +1096,7 @@ public class BoardGameActivity extends AppCompatActivity
 
     @Override
     public void onTransferAdded(TransferWithCurrency addedTransfer) {
-        String androidId = Settings.Secure.getString(
+        String clientId = Settings.Secure.getString(
                 getContentResolver(),
                 Settings.Secure.ANDROID_ID
         );
@@ -1108,7 +1108,7 @@ public class BoardGameActivity extends AppCompatActivity
                         ServerConnection.getInstance(
                                 getApplicationContext(),
                                 getFilesDir(),
-                                androidId
+                                clientId
                         ).clientKey()
                 )) {
             if (transferReceiptMediaPlayer.isPlaying()) {

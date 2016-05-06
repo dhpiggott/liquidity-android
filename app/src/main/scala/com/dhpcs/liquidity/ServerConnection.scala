@@ -139,9 +139,9 @@ object ServerConnection {
 
   def getInstance(context: Context,
                   filesDir: File,
-                  androidId: String) = {
+                  clientId: String) = {
     if (instance == null) {
-      instance = new ServerConnection(context, filesDir, androidId)
+      instance = new ServerConnection(context, filesDir, clientId)
     }
     instance
   }
@@ -166,11 +166,11 @@ object ServerConnection {
 
 class ServerConnection private(context: Context,
                                filesDir: File,
-                               androidId: String) extends WebSocketListener {
+                               clientId: String) extends WebSocketListener {
 
   private lazy val client = new OkHttpClient.Builder()
     .sslSocketFactory(createSslSocketFactory(
-      ClientKey.getKeyManagers(filesDir, androidId),
+      ClientKey.getKeyManagers(filesDir, clientId),
       ServerTrust.getTrustManagers(context.getResources.openRawResource(R.raw.liquidity_dhpcs_com))
     ))
     .readTimeout(0, TimeUnit.SECONDS)
@@ -210,7 +210,7 @@ class ServerConnection private(context: Context,
 
   handleConnectivityStateChange()
 
-  def clientKey = ClientKey.getPublicKey(filesDir, androidId)
+  def clientKey = ClientKey.getPublicKey(filesDir, clientId)
 
   private def connect() = state match {
 

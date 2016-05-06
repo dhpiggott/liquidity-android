@@ -25,8 +25,8 @@ object ClientKey {
   private var publicKey: PublicKey = _
   private var keyManagers: Array[KeyManager] = _
 
-  private def generateCertKeyPair(androidId: String) = {
-    val clientIdentity = new X500NameBuilder().addRDN(BCStyle.CN, androidId).build
+  private def generateCertKeyPair(clientId: String) = {
+    val clientIdentity = new X500NameBuilder().addRDN(BCStyle.CN, clientId).build
     val keyPairGenerator = KeyPairGenerator.getInstance("RSA")
     keyPairGenerator.initialize(KeyLength)
     val keyPair = keyPairGenerator.generateKeyPair
@@ -49,9 +49,9 @@ object ClientKey {
     (certificate, keyPair.getPrivate)
   }
 
-  def getKeyManagers(filesDir: File, androidId: String) = {
+  def getKeyManagers(filesDir: File, clientId: String) = {
     if (keyManagers == null) {
-      val keyStore = getOrLoadOrCreateKeyStore(filesDir, androidId)
+      val keyStore = getOrLoadOrCreateKeyStore(filesDir, clientId)
       val keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm)
       keyManagerFactory.init(keyStore, Array.emptyCharArray)
       keyManagers = keyManagerFactory.getKeyManagers
@@ -59,12 +59,12 @@ object ClientKey {
     keyManagers
   }
 
-  private def getOrLoadOrCreateKeyStore(filesDir: File, androidId: String) = {
+  private def getOrLoadOrCreateKeyStore(filesDir: File, clientId: String) = {
     if (keyStore == null) {
       keyStore = KeyStore.getInstance("BKS")
       val keyStoreFile = new File(filesDir, KeystoreFilename)
       if (!keyStoreFile.exists) {
-        val (certificate, privateKey) = generateCertKeyPair(androidId)
+        val (certificate, privateKey) = generateCertKeyPair(clientId)
         keyStore.load(null, null)
         keyStore.setKeyEntry(
           EntryAlias,
@@ -90,9 +90,9 @@ object ClientKey {
     keyStore
   }
 
-  def getPublicKey(filesDir: File, androidId: String) = {
+  def getPublicKey(filesDir: File, clientId: String) = {
     if (publicKey == null) {
-      val keyStore = getOrLoadOrCreateKeyStore(filesDir, androidId)
+      val keyStore = getOrLoadOrCreateKeyStore(filesDir, clientId)
       publicKey = PublicKey(
         keyStore.getCertificate(ClientKey.EntryAlias).getPublicKey.getEncoded
       )
