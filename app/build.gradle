@@ -1,5 +1,4 @@
 apply plugin: 'com.android.application'
-apply plugin: 'jp.leafytree.android-scala'
 
 android {
     buildToolsVersion "23.0.3"
@@ -58,6 +57,11 @@ android {
 }
 
 dependencies {
+    compile ('com.dhpcs:liquidity-boardgame_2.11:1.1.0') {
+        exclude group: 'joda-time', module: 'joda-time'
+    }
+    compile 'net.danlew:android.joda:2.9.3'
+
     compile 'com.android.support:multidex:1.0.1'
     compile 'com.android.support:appcompat-v7:23.4.0'
     compile 'com.android.support:support-v13:23.4.0'
@@ -67,16 +71,6 @@ dependencies {
     compile 'com.android.support:preference-v14:23.4.0'
     compile 'com.android.support:design:23.4.0'
 
-    compile 'org.scala-lang:scala-library:2.11.8'
-
-    compile 'com.madgag.spongycastle:pkix:1.54.0.0'
-    compile 'com.squareup.okhttp3:okhttp-ws:3.2.0'
-
-    compile 'com.dhpcs:liquidity-common_2.11:1.0.0', {
-        exclude group: 'joda-time', module: 'joda-time'
-    }
-
-    compile 'net.danlew:android.joda:2.9.3'
     compile 'me.zhanghai.android.materialprogressbar:library:1.1.6'
     compile 'com.sothree.slidinguppanel:library:3.3.0'
     compile 'net.glxn.qrgen:android:2.0'

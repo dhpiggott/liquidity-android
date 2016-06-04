@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -24,8 +23,8 @@ import com.dhpcs.liquidity.BoardGame.IdentityWithBalance;
 import com.dhpcs.liquidity.BoardGame.Player;
 import com.dhpcs.liquidity.BoardGame.PlayerWithBalanceAndConnectionState;
 import com.dhpcs.liquidity.BoardGame.TransferWithCurrency;
+import com.dhpcs.liquidity.LiquidityApplication;
 import com.dhpcs.liquidity.R;
-import com.dhpcs.liquidity.ServerConnection;
 import com.dhpcs.liquidity.fragment.ConfirmIdentityDeletionDialogFragment;
 import com.dhpcs.liquidity.fragment.CreateIdentityDialogFragment;
 import com.dhpcs.liquidity.fragment.EnterGameNameDialogFragment;
@@ -428,20 +427,12 @@ public class BoardGameActivity extends AppCompatActivity
                 throw new Error();
             }
 
-            String clientId = Settings.Secure.getString(
-                    getContentResolver(),
-                    Settings.Secure.ANDROID_ID
-            );
-
             boardGame = new BoardGame(
-                    this,
-                    ServerConnection.getInstance(
-                            getApplicationContext(),
-                            getFilesDir(),
-                            clientId
-                    ),
+                    LiquidityApplication.getServerConnection(getApplicationContext()),
+                    LiquidityApplication.getGameDatabase(getApplicationContext()),
                     currency,
-                    gameName
+                    gameName,
+                    getString(R.string.bank_member_name)
             );
 
         } else {
@@ -450,32 +441,19 @@ public class BoardGameActivity extends AppCompatActivity
 
             if (boardGame == null) {
 
-                String clientId = Settings.Secure.getString(
-                        getContentResolver(),
-                        Settings.Secure.ANDROID_ID
-                );
-
                 if (!getIntent().getExtras().containsKey(EXTRA_GAME_ID)) {
 
                     boardGame = new BoardGame(
-                            this,
-                            ServerConnection.getInstance(
-                                    getApplicationContext(),
-                                    getFilesDir(),
-                                    clientId
-                            ),
+                            LiquidityApplication.getServerConnection(getApplicationContext()),
+                            LiquidityApplication.getGameDatabase(getApplicationContext()),
                             zoneId
                     );
 
                 } else {
 
                     boardGame = new BoardGame(
-                            this,
-                            ServerConnection.getInstance(
-                                    getApplicationContext(),
-                                    getFilesDir(),
-                                    clientId
-                            ),
+                            LiquidityApplication.getServerConnection(getApplicationContext()),
+                            LiquidityApplication.getGameDatabase(getApplicationContext()),
                             zoneId,
                             getIntent().getExtras().getLong(EXTRA_GAME_ID)
                     );
@@ -903,10 +881,6 @@ public class BoardGameActivity extends AppCompatActivity
                         ReceiveIdentityActivity.EXTRA_ZONE_ID,
                         boardGame.getZoneId()
                 );
-                String clientId = Settings.Secure.getString(
-                        getContentResolver(),
-                        Settings.Secure.ANDROID_ID
-                );
                 startActivityForResult(
                         new Intent(
                                 this,
@@ -916,11 +890,8 @@ public class BoardGameActivity extends AppCompatActivity
                                 zoneIdHolder
                         ).putExtra(
                                 ReceiveIdentityActivity.EXTRA_PUBLIC_KEY,
-                                ServerConnection.getInstance(
-                                        getApplicationContext(),
-                                        getFilesDir(),
-                                        clientId
-                                ).clientKey()
+                                LiquidityApplication.getServerConnection(getApplicationContext())
+                                        .clientKey()
                         ),
                         REQUEST_CODE_RECEIVE_IDENTITY
                 );
@@ -1096,20 +1067,13 @@ public class BoardGameActivity extends AppCompatActivity
 
     @Override
     public void onTransferAdded(TransferWithCurrency addedTransfer) {
-        String clientId = Settings.Secure.getString(
-                getContentResolver(),
-                Settings.Secure.ANDROID_ID
-        );
         if (addedTransfer.to().isRight()
                 && PreferenceManager.getDefaultSharedPreferences(this)
                 .getBoolean("play_transfer_receipt_sounds", true)
                 && addedTransfer.to().right().get().member().ownerPublicKey()
                 .equals(
-                        ServerConnection.getInstance(
-                                getApplicationContext(),
-                                getFilesDir(),
-                                clientId
-                        ).clientKey()
+                        LiquidityApplication.getServerConnection(getApplicationContext())
+                                .clientKey()
                 )) {
             if (transferReceiptMediaPlayer.isPlaying()) {
                 transferReceiptMediaPlayer.seekTo(0);
