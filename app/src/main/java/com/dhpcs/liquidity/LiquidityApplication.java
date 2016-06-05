@@ -1,5 +1,6 @@
 package com.dhpcs.liquidity;
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -122,6 +123,7 @@ public class LiquidityApplication extends MultiDexApplication {
         return getRelativeTimeSpanString(context, time, now, minResolution, flags);
     }
 
+    @SuppressLint("PrivateResource")
     public static String getRelativeTimeSpanString(Context context,
                                                    ReadableInstant time,
                                                    ReadableInstant now,
