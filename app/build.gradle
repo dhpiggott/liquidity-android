@@ -13,7 +13,6 @@ android {
         multiDexEnabled true
         resConfigs "en"
     }
-
     signingConfigs {
         debug {
             storeFile file("debug.keystore")
@@ -28,7 +27,6 @@ android {
             keyPassword "android"
         }
     }
-
     buildTypes {
         debug {
             minifyEnabled true
@@ -43,7 +41,6 @@ android {
             signingConfig signingConfigs.release
         }
     }
-
     lintOptions {
         disable 'InvalidPackage'
     }
@@ -54,7 +51,6 @@ dependencies {
         exclude group: 'joda-time', module: 'joda-time'
     }
     compile 'net.danlew:android.joda:2.9.3.1'
-
     compile 'com.android.support:multidex:1.0.1'
     compile 'com.android.support:appcompat-v7:23.4.0'
     compile 'com.android.support:support-v13:23.4.0'
@@ -63,7 +59,6 @@ dependencies {
     compile 'com.android.support:preference-v7:23.4.0'
     compile 'com.android.support:preference-v14:23.4.0'
     compile 'com.android.support:design:23.4.0'
-
     compile 'me.zhanghai.android.materialprogressbar:library:1.1.6'
     compile 'com.sothree.slidinguppanel:library:3.3.0'
     compile 'net.glxn.qrgen:android:2.0'
