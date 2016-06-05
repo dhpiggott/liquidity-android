@@ -209,21 +209,22 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        //noinspection unchecked
-        List<IdentityWithBalance> identities = (List<IdentityWithBalance>)
-                getArguments().getSerializable(ARG_IDENTITIES);
-        //noinspection unchecked
-        List<Player> players = (List<Player>) getArguments().getSerializable(ARG_PLAYERS);
-        //noinspection unchecked
-        currency = (Option<Either<String, Currency>>) getArguments().getSerializable(ARG_CURRENCY);
+        @SuppressWarnings("unchecked") List<IdentityWithBalance> identities =
+                (List<IdentityWithBalance>) getArguments().getSerializable(ARG_IDENTITIES);
+        @SuppressWarnings("unchecked") List<Player> players =
+                (List<Player>) getArguments().getSerializable(ARG_PLAYERS);
+        @SuppressWarnings("unchecked") Option<Either<String, Currency>> currency =
+                (Option<Either<String, Currency>>) getArguments().getSerializable(ARG_CURRENCY);
+        this.currency = currency;
         from = (IdentityWithBalance) getArguments().getSerializable(ARG_FROM);
         to = (Player) getArguments().getSerializable(ARG_TO);
-        //noinspection unchecked
-        toList = to != null ? null : (savedInstanceState != null
-                ?
-                (ArrayList<Player>) savedInstanceState.getSerializable(EXTRA_TO_LIST)
-                :
-                new ArrayList<Player>());
+        @SuppressWarnings("unchecked") ArrayList<Player> toList =
+                to != null ? null : (savedInstanceState != null
+                        ?
+                        (ArrayList<Player>) savedInstanceState.getSerializable(EXTRA_TO_LIST)
+                        :
+                        new ArrayList<Player>());
+        this.toList = toList;
 
         Comparator<Player> playerComparator = BoardGameActivity.playerComparator(getActivity());
         identitiesSpinnerAdapter = new IdentitiesAdapter(getActivity(), identities);
@@ -428,8 +429,8 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
             spinnerTo.setSelection(playersSpinnerAdapter.getPosition(to));
         } else {
             spinnerTo.setVisibility(View.GONE);
-            //noinspection unchecked
-            List<Player> players = (List<Player>) getArguments().getSerializable(ARG_PLAYERS);
+            @SuppressWarnings("unchecked") List<Player> players =
+                    (List<Player>) getArguments().getSerializable(ARG_PLAYERS);
             assert players != null;
             for (final Player player : players) {
                 final CheckedTextView checkedTextViewPlayer = (CheckedTextView)
