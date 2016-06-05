@@ -11,6 +11,7 @@ import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 public class LiquidityProvider extends ContentProvider {
@@ -73,7 +74,7 @@ public class LiquidityProvider extends ContentProvider {
     private LiquidityDatabaseHelper databaseHelper;
 
     @Override
-    public int delete(Uri uri, String selection, String[] selectionArgs) {
+    public int delete(@NonNull Uri uri, String selection, String[] selectionArgs) {
 
         int rowsAffected;
         switch (URI_MATCHER.match(uri)) {
@@ -111,7 +112,7 @@ public class LiquidityProvider extends ContentProvider {
     }
 
     @Override
-    public String getType(Uri uri) {
+    public String getType(@NonNull Uri uri) {
         switch (URI_MATCHER.match(uri)) {
             case URI_TYPE_GAMES:
                 return LiquidityContract.Games.CONTENT_TYPE;
@@ -123,7 +124,7 @@ public class LiquidityProvider extends ContentProvider {
     }
 
     @Override
-    public Uri insert(Uri uri, ContentValues values) {
+    public Uri insert(@NonNull Uri uri, ContentValues values) {
 
         long id;
         switch (URI_MATCHER.match(uri)) {
@@ -152,7 +153,7 @@ public class LiquidityProvider extends ContentProvider {
     }
 
     @Override
-    public Cursor query(Uri uri,
+    public Cursor query(@NonNull Uri uri,
                         String[] projection,
                         String selection,
                         String[] selectionArgs,
@@ -192,7 +193,7 @@ public class LiquidityProvider extends ContentProvider {
     }
 
     @Override
-    public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+    public int update(@NonNull Uri uri, ContentValues values, String selection, String[] selectionArgs) {
 
         int rowsAffected;
         switch (URI_MATCHER.match(uri)) {

@@ -124,11 +124,11 @@ public class LiquidityApplication extends MultiDexApplication {
     }
 
     @SuppressLint("PrivateResource")
-    public static String getRelativeTimeSpanString(Context context,
-                                                   ReadableInstant time,
-                                                   ReadableInstant now,
-                                                   long minResolution,
-                                                   int flags) {
+    private static String getRelativeTimeSpanString(Context context,
+                                                    ReadableInstant time,
+                                                    ReadableInstant now,
+                                                    long minResolution,
+                                                    int flags) {
         boolean abbrevRelative = (flags
                 & (android.text.format.DateUtils.FORMAT_ABBREV_RELATIVE
                 | android.text.format.DateUtils.FORMAT_ABBREV_ALL)) != 0;
@@ -258,10 +258,11 @@ public class LiquidityApplication extends MultiDexApplication {
                                 final ServerConnection serverConnection) {
                             return new ServerConnection.ConnectivityStatePublisher() {
 
-                                private IntentFilter connectionStateFilter = new IntentFilter(
-                                        android.net.ConnectivityManager.CONNECTIVITY_ACTION
-                                );
-                                private BroadcastReceiver connectionStateReceiver =
+                                private final IntentFilter connectionStateFilter =
+                                        new IntentFilter(
+                                                android.net.ConnectivityManager.CONNECTIVITY_ACTION
+                                        );
+                                private final BroadcastReceiver connectionStateReceiver =
                                         new BroadcastReceiver() {
 
                                             @Override

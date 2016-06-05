@@ -156,7 +156,6 @@ public class PlayersTransfersFragment extends Fragment {
 
     private PlayersTransfersFragmentStatePagerAdapter playersTransfersFragmentStatePagerAdapter;
 
-    private TabLayout tabLayoutPlayers;
     private ViewPager viewPagerPlayersTransfers;
 
     private Player selectedPlayer;
@@ -184,7 +183,7 @@ public class PlayersTransfersFragment extends Fragment {
         lastTransferFragment = (LastTransferFragment) getChildFragmentManager()
                 .findFragmentById(R.id.fragment_last_transfer);
 
-        tabLayoutPlayers = (TabLayout) view.findViewById(R.id.tablayout_players);
+        TabLayout tabLayoutPlayers = (TabLayout) view.findViewById(R.id.tablayout_players);
         viewPagerPlayersTransfers = (ViewPager) view.findViewById(R.id.viewpager_players_transfers);
 
         viewPagerPlayersTransfers.setAdapter(playersTransfersFragmentStatePagerAdapter);
