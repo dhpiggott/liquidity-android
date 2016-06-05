@@ -1,6 +1,7 @@
 package com.dhpcs.liquidity.activity;
 
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.WindowManager;
@@ -27,8 +28,9 @@ public class AddPlayersActivity extends BoardGameChildActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 
         setSupportActionBar(toolbar);
-        //noinspection ConstantConditions
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        ActionBar actionBar = getSupportActionBar();
+        assert actionBar != null;
+        actionBar.setDisplayHomeAsUpEnabled(true);
 
         final ZoneId zoneId = (ZoneId) getIntent()
                 .getBundleExtra(EXTRA_ZONE_ID_HOLDER)

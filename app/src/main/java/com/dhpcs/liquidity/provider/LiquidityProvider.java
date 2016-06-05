@@ -105,8 +105,9 @@ public class LiquidityProvider extends ContentProvider {
         }
 
         if (rowsAffected > 0) {
-            //noinspection ConstantConditions
-            getContext().getContentResolver().notifyChange(uri, null);
+            Context context = getContext();
+            assert context != null;
+            context.getContentResolver().notifyChange(uri, null);
         }
 
         return rowsAffected;
