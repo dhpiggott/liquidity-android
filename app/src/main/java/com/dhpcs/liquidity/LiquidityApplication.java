@@ -53,26 +53,30 @@ public class LiquidityApplication extends MultiDexApplication {
                                     new String[]{zoneId.id().toString()},
                                     null
                             );
-                    try {
-                        if (!existingEntry.moveToFirst()) {
-                            return null;
-                        } else {
-                            long gameId = existingEntry.getLong(
-                                    existingEntry.getColumnIndexOrThrow(
-                                            LiquidityContract.Games._ID
-                                    )
-                            );
-                            if (!existingEntry.getString(
-                                    existingEntry.getColumnIndexOrThrow(
-                                            LiquidityContract.Games.NAME
-                                    )
-                            ).equals(name)) {
-                                updateGameName(gameId, name);
+                    if (existingEntry == null) {
+                        return null;
+                    } else {
+                        try {
+                            if (!existingEntry.moveToFirst()) {
+                                return null;
+                            } else {
+                                long gameId = existingEntry.getLong(
+                                        existingEntry.getColumnIndexOrThrow(
+                                                LiquidityContract.Games._ID
+                                        )
+                                );
+                                if (!existingEntry.getString(
+                                        existingEntry.getColumnIndexOrThrow(
+                                                LiquidityContract.Games.NAME
+                                        )
+                                ).equals(name)) {
+                                    updateGameName(gameId, name);
+                                }
+                                return gameId;
                             }
-                            return gameId;
+                        } finally {
+                            existingEntry.close();
                         }
-                    } finally {
-                        existingEntry.close();
                     }
                 }
 
