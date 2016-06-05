@@ -18,7 +18,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:labelFor="@+id/edittext_game_name"
+        android:labelFor="@+id/textinputedittext_game_name"
         android:text="@string/game_name"
         android:textColor="?android:attr/textColorSecondary" />
 
@@ -34,8 +34,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="textCapWords"
-            android:selectAllOnFocus="true"
-            tools:ignore="LabelFor" />
+            android:selectAllOnFocus="true" />
 
     </android.support.design.widget.TextInputLayout>
 
