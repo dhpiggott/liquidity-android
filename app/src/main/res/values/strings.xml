@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
 
     <string name="app_name">Liquidity</string>
 
@@ -19,7 +19,7 @@
     <string name="add_players">Add players</string>
     <string name="add_players_game_name_format_string">Show the QR code to the joining players to admit them to %1$s.</string>
     <string name="all">All</string>
-    <string name="bank_member_name" tools:ignore="UnusedResources">Bank</string>
+    <string name="bank_member_name">Bank</string>
     <string name="camera_permission_rationale">Camera permission is required to scan Liquidity QR codes.</string>
     <string name="cancel">Cancel</string>
     <string name="change_game_name">Change game name</string>
