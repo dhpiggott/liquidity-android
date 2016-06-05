@@ -36,13 +36,16 @@ public class AddPlayersActivity extends BoardGameChildActivity {
         @SuppressWarnings("unchecked") Option<String> gameName = (Option<String>) getIntent()
                 .getSerializableExtra(EXTRA_GAME_NAME);
 
-        ((TextView) findViewById(R.id.textview_game_name)).setText(
+        TextView textViewGameName = (TextView) findViewById(R.id.textview_game_name);
+        assert textViewGameName != null;
+        textViewGameName.setText(
                 getString(
                         R.string.add_players_game_name_format_string,
                         BoardGameActivity.formatNullable(this, gameName)
                 )
         );
         final ImageView imageViewQrCode = (ImageView) findViewById(R.id.imageview_qr_code);
+        assert imageViewQrCode != null;
         imageViewQrCode.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
 
             @Override

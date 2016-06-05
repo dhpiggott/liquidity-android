@@ -69,8 +69,9 @@ public class GamesActivity extends AppCompatActivity
 
         setSupportActionBar(toolbar);
 
-        findViewById(R.id.floatingactionbutton_add_game)
-                .setOnClickListener(new View.OnClickListener() {
+        View floatingActionButtonAddGame = findViewById(R.id.floatingactionbutton_add_game);
+        assert floatingActionButtonAddGame != null;
+        floatingActionButtonAddGame.setOnClickListener(new View.OnClickListener() {
 
                     @Override
                     public void onClick(View v) {

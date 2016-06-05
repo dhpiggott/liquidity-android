@@ -73,6 +73,7 @@ public class AboutActivity extends AppCompatActivity {
                     );
                 }
 
+                assert linearLayoutLicences != null;
                 linearLayoutLicences.addView(linearLayoutAcknowledgement);
 
             }

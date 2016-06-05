@@ -33,6 +33,7 @@ public class ReceiveIdentityActivity extends BoardGameChildActivity {
         final PublicKey publicKey = (PublicKey) getIntent().getSerializableExtra(EXTRA_PUBLIC_KEY);
 
         final ImageView imageViewQrCode = (ImageView) findViewById(R.id.imageview_qr_code);
+        assert imageViewQrCode != null;
         imageViewQrCode.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
 
             @Override

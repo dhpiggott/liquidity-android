@@ -105,6 +105,7 @@ public class LiquidityProvider extends ContentProvider {
         }
 
         if (rowsAffected > 0) {
+            //noinspection ConstantConditions
             getContext().getContentResolver().notifyChange(uri, null);
         }
 
@@ -141,7 +142,9 @@ public class LiquidityProvider extends ContentProvider {
                 throw new IllegalArgumentException("Unsupported URI: " + uri);
         }
 
-        getContext().getContentResolver().notifyChange(uri, null);
+        Context context = getContext();
+        assert context != null;
+        context.getContentResolver().notifyChange(uri, null);
 
         return ContentUris.withAppendedId(uri, id);
     }
@@ -187,7 +190,9 @@ public class LiquidityProvider extends ContentProvider {
                 null,
                 sortOrder
         );
-        cursor.setNotificationUri(getContext().getContentResolver(), uri);
+        Context context = getContext();
+        assert context != null;
+        cursor.setNotificationUri(context.getContentResolver(), uri);
 
         return cursor;
     }
@@ -226,7 +231,9 @@ public class LiquidityProvider extends ContentProvider {
         }
 
         if (rowsAffected > 0) {
-            getContext().getContentResolver().notifyChange(uri, null);
+            Context context = getContext();
+            assert context != null;
+            context.getContentResolver().notifyChange(uri, null);
         }
 
         return rowsAffected;

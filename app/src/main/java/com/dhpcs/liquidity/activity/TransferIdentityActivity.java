@@ -52,6 +52,7 @@ public class TransferIdentityActivity extends BoardGameChildActivity {
 
         CompoundBarcodeView barcodeScannerView = (CompoundBarcodeView)
                 findViewById(R.id.zxing_barcode_scanner);
+        assert barcodeScannerView != null;
         barcodeScannerView.setStatusText(
                 getString(
                         R.string.transfer_identity_identity_name_format_string,
