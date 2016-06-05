@@ -50,7 +50,7 @@ android {
 }
 
 dependencies {
-    compile ('com.dhpcs:liquidity-boardgame_2.11:1.1.0') {
+    compile ('com.dhpcs:liquidity-boardgame_2.11:1.2.0') {
         exclude group: 'joda-time', module: 'joda-time'
     }
     compile 'net.danlew:android.joda:2.9.3.1'

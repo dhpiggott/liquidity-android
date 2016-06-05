@@ -40,20 +40,18 @@ public class LiquidityApplication extends MultiDexApplication {
         if (gameDatabase == null) {
             gameDatabase = new BoardGame.GameDatabase() {
 
-                // TODO: Update expires if changed
                 @Override
-                public Long checkAndUpdateGame(ZoneId zoneId, long expires, String name) {
-                    Cursor existingEntry =
-                            context.getContentResolver().query(
-                                    LiquidityContract.Games.CONTENT_URI,
-                                    new String[]{
-                                            LiquidityContract.Games._ID,
-                                            LiquidityContract.Games.NAME
-                                    },
-                                    LiquidityContract.Games.ZONE_ID + " = ?",
-                                    new String[]{zoneId.id().toString()},
-                                    null
-                            );
+                public Long checkAndUpdateGame(ZoneId zoneId, String name) {
+                    Cursor existingEntry = context.getContentResolver().query(
+                            LiquidityContract.Games.CONTENT_URI,
+                            new String[]{
+                                    LiquidityContract.Games._ID,
+                                    LiquidityContract.Games.NAME
+                            },
+                            LiquidityContract.Games.ZONE_ID + " = ?",
+                            new String[]{zoneId.id().toString()},
+                            null
+                    );
                     if (existingEntry == null) {
                         return null;
                     } else {
