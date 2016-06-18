@@ -19,7 +19,7 @@ import android.widget.LinearLayout;
 
 import com.dhpcs.liquidity.R;
 import com.journeyapps.barcodescanner.CaptureManager;
-import com.journeyapps.barcodescanner.CompoundBarcodeView;
+import com.journeyapps.barcodescanner.DecoratedBarcodeView;
 
 public class JoinGameActivity extends AppCompatActivity {
 
@@ -43,7 +43,7 @@ public class JoinGameActivity extends AppCompatActivity {
 
         linearLayoutJoinGame = (LinearLayout) findViewById(R.id.linearlayout_join_game);
 
-        CompoundBarcodeView barcodeScannerView = (CompoundBarcodeView)
+        DecoratedBarcodeView barcodeScannerView = (DecoratedBarcodeView)
                 findViewById(R.id.zxing_barcode_scanner);
         assert barcodeScannerView != null;
         barcodeScannerView.setStatusText(getString(R.string.join_game_instruction));

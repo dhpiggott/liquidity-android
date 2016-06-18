@@ -20,10 +20,10 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <com.journeyapps.barcodescanner.CompoundBarcodeView
+    <com.journeyapps.barcodescanner.DecoratedBarcodeView
         android:id="@+id/zxing_barcode_scanner"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:zxing_scanner_layout="@layout/compoundbarcodeview" />
+        app:zxing_scanner_layout="@layout/decoratedbarcodeview" />
 
 </LinearLayout>
