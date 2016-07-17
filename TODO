@@ -1,4 +1,5 @@
-Apply Clean Code chapter 5
-Drop ICS support
-Update screenshots
-Fix connection bug where client keeps socket open (repro: join an invalid game), possibly also intermittently causes connection failures that resolves with process restart
+* Apply Clean Code chapter 5
+* Drop ICS support
+* Update screenshots
+* Fix connection bug where client keeps socket open (repro: join an invalid game), possibly also intermittently causes
+  connection failures that resolves with process restart
