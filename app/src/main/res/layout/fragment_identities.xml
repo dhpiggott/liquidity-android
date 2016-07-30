@@ -15,8 +15,7 @@
         android:layout_height="match_parent"
         android:gravity="center"
         android:padding="16dp"
-        android:text="@string/no_identities"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"/>
+        android:text="@string/no_identities"/>
 
     <android.support.v4.view.ViewPager
         android:id="@+id/viewpager_identities"

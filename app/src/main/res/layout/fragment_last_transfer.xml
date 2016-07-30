@@ -4,7 +4,6 @@
              android:layout_width="match_parent"
              android:layout_height="match_parent"
              android:background="?attr/selectableItemBackground"
-             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
              tools:context="com.dhpcs.liquidity.fragment.LastTransferFragment"
              tools:ignore="Overdraw">
 
