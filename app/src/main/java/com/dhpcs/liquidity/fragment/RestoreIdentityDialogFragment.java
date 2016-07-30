@@ -1,6 +1,5 @@
 package com.dhpcs.liquidity.fragment;
 
-import android.app.Activity;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.Context;
@@ -95,9 +94,9 @@ public class RestoreIdentityDialogFragment extends DialogFragment {
     private Listener listener;
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        listener = (Listener) activity;
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        listener = (Listener) context;
     }
 
     @Override
