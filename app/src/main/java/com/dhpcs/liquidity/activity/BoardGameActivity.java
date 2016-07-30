@@ -236,23 +236,6 @@ public class BoardGameActivity extends AppCompatActivity
     private PlayersFragment playersFragment;
     private PlayersTransfersFragment playersTransfersFragment;
 
-    private void closeDialogFragments() {
-        for (String tag : new String[]{
-                ConfirmIdentityDeletionDialogFragment.TAG,
-                CreateIdentityDialogFragment.TAG,
-                EnterGameNameDialogFragment.TAG,
-                EnterIdentityNameDialogFragment.TAG,
-                RestoreIdentityDialogFragment.TAG,
-                TransferToPlayerDialogFragment.TAG
-        }) {
-            DialogFragment dialogFragment =
-                    (DialogFragment) getFragmentManager().findFragmentByTag(tag);
-            if (dialogFragment != null) {
-                dialogFragment.dismiss();
-            }
-        }
-    }
-
     public boolean isIdentityNameValid(CharSequence name) {
         return boardGame.isIdentityNameValid(name);
     }
@@ -1135,6 +1118,23 @@ public class BoardGameActivity extends AppCompatActivity
     public void onTransfersUpdated(
             scala.collection.immutable.Map<TransactionId, TransferWithCurrency> transfers) {
         playersTransfersFragment.onTransfersUpdated(transfers);
+    }
+
+    private void closeDialogFragments() {
+        for (String tag : new String[]{
+                ConfirmIdentityDeletionDialogFragment.TAG,
+                CreateIdentityDialogFragment.TAG,
+                EnterGameNameDialogFragment.TAG,
+                EnterIdentityNameDialogFragment.TAG,
+                RestoreIdentityDialogFragment.TAG,
+                TransferToPlayerDialogFragment.TAG
+        }) {
+            DialogFragment dialogFragment =
+                    (DialogFragment) getFragmentManager().findFragmentByTag(tag);
+            if (dialogFragment != null) {
+                dialogFragment.dismiss();
+            }
+        }
     }
 
 }

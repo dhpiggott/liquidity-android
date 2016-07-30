@@ -54,6 +54,14 @@ public class IdentitiesFragment extends Fragment {
             return identities.get(position);
         }
 
+        public int getPosition(IdentityWithBalance identity) {
+            return identities.indexOf(identity);
+        }
+
+        public void sort(Comparator<Player> comparator) {
+            Collections.sort(identities, comparator);
+        }
+
         @Override
         public int getCount() {
             return identities.size();
@@ -67,14 +75,6 @@ public class IdentitiesFragment extends Fragment {
         @Override
         public int getItemPosition(Object item) {
             return POSITION_NONE;
-        }
-
-        public int getPosition(IdentityWithBalance identity) {
-            return identities.indexOf(identity);
-        }
-
-        public void sort(Comparator<Player> comparator) {
-            Collections.sort(identities, comparator);
         }
 
     }
@@ -122,6 +122,37 @@ public class IdentitiesFragment extends Fragment {
 
     public int getSelectedPage() {
         return viewPagerIdentities.getCurrentItem();
+    }
+
+    public void setSelectedPage(int page) {
+        viewPagerIdentities.setCurrentItem(page);
+    }
+
+    public void onIdentitiesUpdated(
+            scala.collection.immutable.Map<MemberId, IdentityWithBalance> identities) {
+        identitiesFragmentStatePagerAdapter.clear();
+        Iterator<IdentityWithBalance> iterator = identities.valuesIterator();
+        while (iterator.hasNext()) {
+            identitiesFragmentStatePagerAdapter.add(iterator.next());
+        }
+        identitiesFragmentStatePagerAdapter.sort(
+                BoardGameActivity.playerComparator(getActivity())
+        );
+        identitiesFragmentStatePagerAdapter.notifyDataSetChanged();
+        textViewEmpty.setVisibility(
+                identitiesFragmentStatePagerAdapter.getCount() == 0 ? View.VISIBLE : View.GONE
+        );
+        viewPagerIdentities.setVisibility(
+                identitiesFragmentStatePagerAdapter.getCount() == 0 ? View.GONE : View.VISIBLE
+        );
+        if (selectedIdentity != null && identities.contains(selectedIdentity.member().id())) {
+            viewPagerIdentities.setCurrentItem(
+                    identitiesFragmentStatePagerAdapter.getPosition(
+                            identities.apply(selectedIdentity.member().id())
+                    ),
+                    false
+            );
+        }
     }
 
     @SuppressWarnings("deprecation")
@@ -182,41 +213,10 @@ public class IdentitiesFragment extends Fragment {
         listener = null;
     }
 
-    public void onIdentitiesUpdated(
-            scala.collection.immutable.Map<MemberId, IdentityWithBalance> identities) {
-        identitiesFragmentStatePagerAdapter.clear();
-        Iterator<IdentityWithBalance> iterator = identities.valuesIterator();
-        while (iterator.hasNext()) {
-            identitiesFragmentStatePagerAdapter.add(iterator.next());
-        }
-        identitiesFragmentStatePagerAdapter.sort(
-                BoardGameActivity.playerComparator(getActivity())
-        );
-        identitiesFragmentStatePagerAdapter.notifyDataSetChanged();
-        textViewEmpty.setVisibility(
-                identitiesFragmentStatePagerAdapter.getCount() == 0 ? View.VISIBLE : View.GONE
-        );
-        viewPagerIdentities.setVisibility(
-                identitiesFragmentStatePagerAdapter.getCount() == 0 ? View.GONE : View.VISIBLE
-        );
-        if (selectedIdentity != null && identities.contains(selectedIdentity.member().id())) {
-            viewPagerIdentities.setCurrentItem(
-                    identitiesFragmentStatePagerAdapter.getPosition(
-                            identities.apply(selectedIdentity.member().id())
-                    ),
-                    false
-            );
-        }
-    }
-
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putSerializable(STATE_SELECTED_IDENTITY, selectedIdentity);
-    }
-
-    public void setSelectedPage(int page) {
-        viewPagerIdentities.setCurrentItem(page);
     }
 
 }

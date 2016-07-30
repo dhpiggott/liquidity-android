@@ -52,13 +52,6 @@ public class PlayersTransfersFragment extends Fragment {
             players.clear();
         }
 
-        @Override
-        public void destroyItem(ViewGroup container, int position, Object object) {
-            TransfersFragment transfersFragment = (TransfersFragment) object;
-            transfersFragments.remove(transfersFragment);
-            super.destroyItem(container, position, object);
-        }
-
         public Player get(int position) {
             if (position == 0) {
                 return null;
@@ -67,41 +60,8 @@ public class PlayersTransfersFragment extends Fragment {
             }
         }
 
-        @Override
-        public int getCount() {
-            return players.size() + 1;
-        }
-
-        @Override
-        public Fragment getItem(int position) {
-            return TransfersFragment.newInstance(get(position), transfers);
-        }
-
-        @Override
-        public int getItemPosition(Object item) {
-            return POSITION_NONE;
-        }
-
-        @Override
-        public CharSequence getPageTitle(int position) {
-            Player player = get(position);
-            return player == null
-                    ?
-                    context.getString(R.string.all)
-                    :
-                    BoardGameActivity.formatNullable(context, player.member().name());
-        }
-
         public int getPosition(Player player) {
             return players.indexOf(player) + 1;
-        }
-
-        @Override
-        public Object instantiateItem(ViewGroup container, int position) {
-            TransfersFragment transfersFragment = (TransfersFragment)
-                    super.instantiateItem(container, position);
-            transfersFragments.add(transfersFragment);
-            return transfersFragment;
         }
 
         public void onTransferAdded(TransferWithCurrency addedTransfer) {
@@ -137,6 +97,46 @@ public class PlayersTransfersFragment extends Fragment {
             Collections.sort(players, comparator);
         }
 
+        @Override
+        public void destroyItem(ViewGroup container, int position, Object object) {
+            TransfersFragment transfersFragment = (TransfersFragment) object;
+            transfersFragments.remove(transfersFragment);
+            super.destroyItem(container, position, object);
+        }
+
+        @Override
+        public int getCount() {
+            return players.size() + 1;
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+            return TransfersFragment.newInstance(get(position), transfers);
+        }
+
+        @Override
+        public int getItemPosition(Object item) {
+            return POSITION_NONE;
+        }
+
+        @Override
+        public CharSequence getPageTitle(int position) {
+            Player player = get(position);
+            return player == null
+                    ?
+                    context.getString(R.string.all)
+                    :
+                    BoardGameActivity.formatNullable(context, player.member().name());
+        }
+
+        @Override
+        public Object instantiateItem(ViewGroup container, int position) {
+            TransfersFragment transfersFragment = (TransfersFragment)
+                    super.instantiateItem(container, position);
+            transfersFragments.add(transfersFragment);
+            return transfersFragment;
+        }
+
     }
 
     private static final String STATE_SELECTED_PLAYER = "selected_player";
@@ -159,6 +159,27 @@ public class PlayersTransfersFragment extends Fragment {
     private ViewPager viewPagerPlayersTransfers;
 
     private Player selectedPlayer;
+
+    public void onTransferAdded(TransferWithCurrency addedTransfer) {
+        lastTransferFragment.onTransferAdded(addedTransfer);
+        playersTransfersFragmentStatePagerAdapter.onTransferAdded(addedTransfer);
+    }
+
+    public void onTransfersChanged(
+            scala.collection.Iterable<TransferWithCurrency> changedTransfers) {
+        lastTransferFragment.onTransfersChanged(changedTransfers);
+        playersTransfersFragmentStatePagerAdapter.onTransfersChanged(changedTransfers);
+    }
+
+    public void onTransfersInitialized(scala.collection.Iterable<TransferWithCurrency> transfers) {
+        lastTransferFragment.onTransfersInitialized(transfers);
+        playersTransfersFragmentStatePagerAdapter.onTransfersInitialized(transfers);
+    }
+
+    public void onTransfersUpdated(
+            scala.collection.immutable.Map<TransactionId, TransferWithCurrency> transfers) {
+        playersTransfersFragmentStatePagerAdapter.onTransfersUpdated(transfers);
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -225,27 +246,6 @@ public class PlayersTransfersFragment extends Fragment {
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putSerializable(STATE_SELECTED_PLAYER, selectedPlayer);
-    }
-
-    public void onTransferAdded(TransferWithCurrency addedTransfer) {
-        lastTransferFragment.onTransferAdded(addedTransfer);
-        playersTransfersFragmentStatePagerAdapter.onTransferAdded(addedTransfer);
-    }
-
-    public void onTransfersChanged(
-            scala.collection.Iterable<TransferWithCurrency> changedTransfers) {
-        lastTransferFragment.onTransfersChanged(changedTransfers);
-        playersTransfersFragmentStatePagerAdapter.onTransfersChanged(changedTransfers);
-    }
-
-    public void onTransfersInitialized(scala.collection.Iterable<TransferWithCurrency> transfers) {
-        lastTransferFragment.onTransfersInitialized(transfers);
-        playersTransfersFragmentStatePagerAdapter.onTransfersInitialized(transfers);
-    }
-
-    public void onTransfersUpdated(
-            scala.collection.immutable.Map<TransactionId, TransferWithCurrency> transfers) {
-        playersTransfersFragmentStatePagerAdapter.onTransfersUpdated(transfers);
     }
 
 }

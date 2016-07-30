@@ -134,6 +134,10 @@ public class TransfersFragment extends Fragment {
             transfers.endBatchedUpdates();
         }
 
+        public void replaceOrAdd(TransferWithCurrency transfer) {
+            transfers.add(transfer);
+        }
+
         @Override
         public int getItemCount() {
             return transfers.size();
@@ -151,10 +155,6 @@ public class TransfersFragment extends Fragment {
         public void onBindViewHolder(TransferViewHolder holder, int position) {
             TransferWithCurrency transfer = transfers.get(position);
             holder.bindTransfer(transfer);
-        }
-
-        public void replaceOrAdd(TransferWithCurrency transfer) {
-            transfers.add(transfer);
         }
 
     }
@@ -176,6 +176,29 @@ public class TransfersFragment extends Fragment {
 
     private TextView textViewEmpty;
     private RecyclerView recyclerViewTransfers;
+
+    public void onTransferAdded(TransferWithCurrency addedTransfer) {
+        replaceOrAddTransfer(
+                (Player) getArguments().getSerializable(ARG_PLAYER),
+                addedTransfer
+        );
+        textViewEmpty.setVisibility(View.GONE);
+        recyclerViewTransfers.setVisibility(View.VISIBLE);
+    }
+
+    public void onTransfersChanged(
+            scala.collection.Iterable<TransferWithCurrency> changedTransfers) {
+        replaceOrAddTransfers(changedTransfers);
+    }
+
+    public void onTransfersInitialized(
+            scala.collection.Iterable<TransferWithCurrency> transfers) {
+        replaceOrAddTransfers(transfers);
+        if (transfers.nonEmpty()) {
+            textViewEmpty.setVisibility(View.GONE);
+            recyclerViewTransfers.setVisibility(View.VISIBLE);
+        }
+    }
 
     @Override
     @SuppressWarnings("unchecked")
@@ -219,26 +242,11 @@ public class TransfersFragment extends Fragment {
         return view;
     }
 
-    public void onTransferAdded(TransferWithCurrency addedTransfer) {
-        replaceOrAddTransfer(
-                (Player) getArguments().getSerializable(ARG_PLAYER),
-                addedTransfer
-        );
-        textViewEmpty.setVisibility(View.GONE);
-        recyclerViewTransfers.setVisibility(View.VISIBLE);
-    }
-
-    public void onTransfersChanged(
-            scala.collection.Iterable<TransferWithCurrency> changedTransfers) {
-        replaceOrAddTransfers(changedTransfers);
-    }
-
-    public void onTransfersInitialized(
-            scala.collection.Iterable<TransferWithCurrency> transfers) {
-        replaceOrAddTransfers(transfers);
-        if (transfers.nonEmpty()) {
-            textViewEmpty.setVisibility(View.GONE);
-            recyclerViewTransfers.setVisibility(View.VISIBLE);
+    private void replaceOrAddTransfers(scala.collection.Iterable<TransferWithCurrency> transfers) {
+        Player player = (Player) getArguments().getSerializable(ARG_PLAYER);
+        Iterator<TransferWithCurrency> iterator = transfers.iterator();
+        while (iterator.hasNext()) {
+            replaceOrAddTransfer(player, iterator.next());
         }
     }
 
@@ -248,14 +256,6 @@ public class TransfersFragment extends Fragment {
                 || (transfer.to().isRight()
                 && player.member().id().equals(transfer.to().right().get().member().id()))) {
             transfersAdapter.replaceOrAdd(transfer);
-        }
-    }
-
-    private void replaceOrAddTransfers(scala.collection.Iterable<TransferWithCurrency> transfers) {
-        Player player = (Player) getArguments().getSerializable(ARG_PLAYER);
-        Iterator<TransferWithCurrency> iterator = transfers.iterator();
-        while (iterator.hasNext()) {
-            replaceOrAddTransfer(player, iterator.next());
         }
     }
 

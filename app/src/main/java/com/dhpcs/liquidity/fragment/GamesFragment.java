@@ -28,6 +28,12 @@ import java.util.UUID;
 public class GamesFragment extends Fragment implements AdapterView.OnItemClickListener,
         LoaderManager.LoaderCallbacks<Cursor> {
 
+    public interface Listener {
+
+        void onGameClicked(long gameId, ZoneId zoneId, String gameName);
+
+    }
+
     private static final int GAMES_LOADER = 0;
 
     private static final long REFRESH_INTERVAL = 60_000;
@@ -210,12 +216,6 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         gamesAdapter.changeCursor(data);
         refreshHandler.postDelayed(refreshRunnable, REFRESH_INTERVAL);
-    }
-
-    public interface Listener {
-
-        void onGameClicked(long gameId, ZoneId zoneId, String gameName);
-
     }
 
 }

@@ -43,54 +43,6 @@ public class Identicon extends View {
         paint = new Paint();
     }
 
-    private int getCellColor(byte[] hash) {
-        byte hueMsb = getModuloColorHashByte(hash, 0);
-        byte hueLsb = getModuloColorHashByte(hash, 1);
-        float hue = (float) ((((((0xFF & hueMsb) << 8) | (0xFF & hueLsb)) / 65536d) * 360d));
-        return Color.HSVToColor(new float[]{hue, COLOUR_SATURATION, COLOUR_VALUE});
-    }
-
-    private int[][] getCellColors(byte[] hash) {
-        int[][] result = new int[GRID_ROW_COUNT][GRID_COLUMN_COUNT];
-        int color = getCellColor(hash);
-        for (int r = 0; r < GRID_ROW_COUNT; r++) {
-            for (int c = 0; c < GRID_COLUMN_COUNT; c++) {
-                if (isCellVisible(hash, r, c)) {
-                    result[r][c] = color;
-                }
-            }
-        }
-        return result;
-    }
-
-    private boolean getModuloShapeHashBit(byte[] hash, int index) {
-
-        /*
-         * The offset of 2 is to skip the two color determinant bytes.
-         */
-        byte bits = hash[(2 + (index / 8)) % hash.length];
-        return (1 & (bits >>> (index % 8))) == 1;
-    }
-
-    private byte getModuloColorHashByte(byte[] hash, int index) {
-        return hash[index % hash.length];
-    }
-
-    private int getSymmetricColumnIndex(int columnIndex) {
-        if (columnIndex < GRID_CENTER_COLUMN_INDEX) {
-            return columnIndex;
-        } else {
-            return GRID_COLUMN_COUNT - (columnIndex + 1);
-        }
-    }
-
-    private boolean isCellVisible(byte[] hash, int row, int column) {
-        return getModuloShapeHashBit(
-                hash,
-                (row * GRID_CENTER_COLUMN_INDEX + 1) + getSymmetricColumnIndex(column)
-        );
-    }
-
     public void show(ZoneId zoneId, MemberId memberId) {
         byte[] hash;
         try {
@@ -110,6 +62,54 @@ public class Identicon extends View {
         }
         cellColours = getCellColors(hash);
         invalidate();
+    }
+
+    private int[][] getCellColors(byte[] hash) {
+        int[][] result = new int[GRID_ROW_COUNT][GRID_COLUMN_COUNT];
+        int color = getCellColor(hash);
+        for (int r = 0; r < GRID_ROW_COUNT; r++) {
+            for (int c = 0; c < GRID_COLUMN_COUNT; c++) {
+                if (isCellVisible(hash, r, c)) {
+                    result[r][c] = color;
+                }
+            }
+        }
+        return result;
+    }
+
+    private int getCellColor(byte[] hash) {
+        byte hueMsb = getModuloColorHashByte(hash, 0);
+        byte hueLsb = getModuloColorHashByte(hash, 1);
+        float hue = (float) ((((((0xFF & hueMsb) << 8) | (0xFF & hueLsb)) / 65536d) * 360d));
+        return Color.HSVToColor(new float[]{hue, COLOUR_SATURATION, COLOUR_VALUE});
+    }
+
+    private boolean isCellVisible(byte[] hash, int row, int column) {
+        return getModuloShapeHashBit(
+                hash,
+                (row * GRID_CENTER_COLUMN_INDEX + 1) + getSymmetricColumnIndex(column)
+        );
+    }
+
+    private byte getModuloColorHashByte(byte[] hash, int index) {
+        return hash[index % hash.length];
+    }
+
+    private boolean getModuloShapeHashBit(byte[] hash, int index) {
+
+        /*
+         * The offset of 2 is to skip the two color determinant bytes.
+         */
+        byte bits = hash[(2 + (index / 8)) % hash.length];
+        return (1 & (bits >>> (index % 8))) == 1;
+    }
+
+    private int getSymmetricColumnIndex(int columnIndex) {
+        if (columnIndex < GRID_CENTER_COLUMN_INDEX) {
+            return columnIndex;
+        } else {
+            return GRID_COLUMN_COUNT - (columnIndex + 1);
+        }
     }
 
     @Override

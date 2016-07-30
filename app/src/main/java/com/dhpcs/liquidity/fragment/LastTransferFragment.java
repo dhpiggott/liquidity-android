@@ -36,25 +36,6 @@ public class LastTransferFragment extends Fragment {
 
     };
 
-    @Override
-    public View onCreateView(LayoutInflater inflater,
-                             ViewGroup container,
-                             Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_last_transfer, container, false);
-
-        textViewEmpty = (TextView) view.findViewById(R.id.textview_empty);
-        textSwitcherSummary = (TextSwitcher) view.findViewById(R.id.textswitcher_summary);
-        textSwitcherCreated = (TextSwitcher) view.findViewById(R.id.textswitcher_created);
-
-        return view;
-    }
-
-    @Override
-    public void onDestroy() {
-        refreshHandler.removeCallbacks(refreshRunnable);
-        super.onDestroy();
-    }
-
     public void onTransferAdded(TransferWithCurrency addedTransfer) {
         if (lastTransfer == null ||
                 addedTransfer.transaction().created() > lastTransfer.transaction().created()) {
@@ -127,6 +108,25 @@ public class LastTransferFragment extends Fragment {
         textSwitcherSummary.setVisibility(View.VISIBLE);
         textSwitcherCreated.setVisibility(View.VISIBLE);
         refreshHandler.postDelayed(refreshRunnable, REFRESH_INTERVAL);
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater,
+                             ViewGroup container,
+                             Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_last_transfer, container, false);
+
+        textViewEmpty = (TextView) view.findViewById(R.id.textview_empty);
+        textSwitcherSummary = (TextSwitcher) view.findViewById(R.id.textswitcher_summary);
+        textSwitcherCreated = (TextSwitcher) view.findViewById(R.id.textswitcher_created);
+
+        return view;
+    }
+
+    @Override
+    public void onDestroy() {
+        refreshHandler.removeCallbacks(refreshRunnable);
+        super.onDestroy();
     }
 
 }

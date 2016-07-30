@@ -125,6 +125,24 @@ public class PlayersFragment extends Fragment {
             );
         }
 
+        public void remove(PlayerWithBalanceAndConnectionState player) {
+            players.remove(player);
+        }
+
+        public void replace(PlayerWithBalanceAndConnectionState oldPlayer,
+                            PlayerWithBalanceAndConnectionState newPlayer) {
+            players.updateItemAt(players.indexOf(oldPlayer), newPlayer);
+        }
+
+        /**
+         * @param player Must have same position according to the lists order as any item it
+         *               replaces. If properties of the player (i.e. its name) have changed
+         *               relative to any previous item, the replace method must instead be called.
+         */
+        public void replaceOrAdd(PlayerWithBalanceAndConnectionState player) {
+            players.add(player);
+        }
+
         @Override
         public int getItemCount() {
             return players.size();
@@ -144,24 +162,6 @@ public class PlayersFragment extends Fragment {
             holder.bindPlayer(player);
         }
 
-        public void remove(PlayerWithBalanceAndConnectionState player) {
-            players.remove(player);
-        }
-
-        public void replace(PlayerWithBalanceAndConnectionState oldPlayer,
-                            PlayerWithBalanceAndConnectionState newPlayer) {
-            players.updateItemAt(players.indexOf(oldPlayer), newPlayer);
-        }
-
-        /**
-         * @param player Must have same position according to the lists order as any item it
-         *               replaces. If properties of the player (i.e. its name) have changed
-         *               relative to any previous item, the replace method must instead be called.
-         */
-        public void replaceOrAdd(PlayerWithBalanceAndConnectionState player) {
-            players.add(player);
-        }
-
     }
 
     private PlayersAdapter playersAdapter;
@@ -173,52 +173,6 @@ public class PlayersFragment extends Fragment {
     private Identity selectedIdentity;
 
     private Listener listener;
-
-    @SuppressWarnings("deprecation")
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        listener = (Listener) activity;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        playersAdapter = new PlayersAdapter(getActivity());
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater,
-                             ViewGroup container,
-                             Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_players, container, false);
-
-        textViewEmpty = (TextView) view.findViewById(R.id.textview_empty);
-        recyclerViewPlayers = (RecyclerView) view.findViewById(R.id.recyclerview_players);
-
-        textViewEmpty.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                if (listener != null) {
-                    listener.onNoPlayersTextClicked();
-                }
-            }
-
-        });
-        recyclerViewPlayers.setHasFixedSize(true);
-        recyclerViewPlayers.setLayoutManager(new LinearLayoutManager(getActivity()));
-        recyclerViewPlayers.setAdapter(playersAdapter);
-
-        return view;
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        listener = null;
-    }
 
     public void onPlayerAdded(PlayerWithBalanceAndConnectionState addedPlayer) {
         replaceOrAddPlayer(addedPlayer);
@@ -292,6 +246,52 @@ public class PlayersFragment extends Fragment {
                 || !player.member().id().equals(selectedIdentity.member().id())) {
             playersAdapter.replaceOrAdd(player);
         }
+    }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        listener = (Listener) activity;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        playersAdapter = new PlayersAdapter(getActivity());
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater,
+                             ViewGroup container,
+                             Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_players, container, false);
+
+        textViewEmpty = (TextView) view.findViewById(R.id.textview_empty);
+        recyclerViewPlayers = (RecyclerView) view.findViewById(R.id.recyclerview_players);
+
+        textViewEmpty.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                if (listener != null) {
+                    listener.onNoPlayersTextClicked();
+                }
+            }
+
+        });
+        recyclerViewPlayers.setHasFixedSize(true);
+        recyclerViewPlayers.setLayoutManager(new LinearLayoutManager(getActivity()));
+        recyclerViewPlayers.setAdapter(playersAdapter);
+
+        return view;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        listener = null;
     }
 
 }
