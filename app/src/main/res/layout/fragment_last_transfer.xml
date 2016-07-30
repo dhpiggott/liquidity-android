@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="?attr/selectableItemBackground"
-    android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-    tools:context="com.dhpcs.liquidity.fragment.LastTransferFragment"
-    tools:ignore="Overdraw">
+             xmlns:tools="http://schemas.android.com/tools"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent"
+             android:background="?attr/selectableItemBackground"
+             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+             tools:context="com.dhpcs.liquidity.fragment.LastTransferFragment"
+             tools:ignore="Overdraw">
 
     <TextView
         android:id="@+id/textview_empty"
@@ -20,7 +20,7 @@
         android:layout_marginStart="8dp"
         android:gravity="center"
         android:text="@string/no_last_transfer"
-        android:textColor="?android:attr/textColorSecondary" />
+        android:textColor="?android:attr/textColorSecondary"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -46,7 +46,7 @@
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:gravity="center_horizontal"
-                android:singleLine="true" />
+                android:singleLine="true"/>
 
             <TextView
                 style="@style/TextAppearance.AppCompat.Subhead"
@@ -54,7 +54,7 @@
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:gravity="center_horizontal"
-                android:singleLine="true" />
+                android:singleLine="true"/>
 
         </TextSwitcher>
 
@@ -70,13 +70,13 @@
                 style="@style/TextAppearance.AppCompat.Body1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center_horizontal" />
+                android:gravity="center_horizontal"/>
 
             <TextView
                 style="@style/TextAppearance.AppCompat.Body1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center_horizontal" />
+                android:gravity="center_horizontal"/>
 
         </TextSwitcher>
 

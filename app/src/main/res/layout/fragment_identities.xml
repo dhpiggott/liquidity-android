@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="?attr/colorAccent"
-    android:elevation="4dp"
-    tools:context="com.dhpcs.liquidity.fragment.IdentitiesFragment"
-    tools:ignore="Overdraw,UnusedAttribute">
+             xmlns:tools="http://schemas.android.com/tools"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent"
+             android:background="?attr/colorAccent"
+             android:elevation="4dp"
+             tools:context="com.dhpcs.liquidity.fragment.IdentitiesFragment"
+             tools:ignore="Overdraw,UnusedAttribute">
 
     <TextView
         android:id="@+id/textview_empty"
@@ -16,12 +16,12 @@
         android:gravity="center"
         android:padding="16dp"
         android:text="@string/no_identities"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"/>
 
     <android.support.v4.view.ViewPager
         android:id="@+id/viewpager_identities"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:visibility="gone" />
+        android:visibility="gone"/>
 
 </FrameLayout>

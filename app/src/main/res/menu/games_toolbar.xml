@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.dhpcs.liquidity.activity.GamesActivity">
+      xmlns:app="http://schemas.android.com/apk/res-auto"
+      xmlns:tools="http://schemas.android.com/tools"
+      tools:context="com.dhpcs.liquidity.activity.GamesActivity">
     <item
         android:id="@+id/action_preferences"
         android:orderInCategory="1"
         android:title="@string/preferences"
-        app:showAsAction="never" />
+        app:showAsAction="never"/>
     <item
         android:id="@+id/action_about"
         android:orderInCategory="2"
         android:title="@string/about"
-        app:showAsAction="never" />
+        app:showAsAction="never"/>
 </menu>

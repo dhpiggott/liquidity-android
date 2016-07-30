@@ -73,16 +73,16 @@ public class GamesActivity extends AppCompatActivity
         assert floatingActionButtonAddGame != null;
         floatingActionButtonAddGame.setOnClickListener(new View.OnClickListener() {
 
-                    @Override
-                    public void onClick(View v) {
-                        AddGameBottomSheetDialogFragment.newInstance()
-                                .show(
-                                        getSupportFragmentManager(),
-                                        AddGameBottomSheetDialogFragment.TAG
-                                );
-                    }
+            @Override
+            public void onClick(View v) {
+                AddGameBottomSheetDialogFragment.newInstance()
+                        .show(
+                                getSupportFragmentManager(),
+                                AddGameBottomSheetDialogFragment.TAG
+                        );
+            }
 
-                });
+        });
     }
 
     @Override

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.dhpcs.liquidity">
+          xmlns:tools="http://schemas.android.com/tools"
+          package="com.dhpcs.liquidity">
 
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
         android:name=".LiquidityApplication"
@@ -25,7 +25,7 @@
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activity.GamesActivity" />
+                android:value=".activity.GamesActivity"/>
         </activity>
         <activity
             android:name=".activity.AddPlayersActivity"
@@ -35,7 +35,7 @@
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activity.BoardGameActivity" />
+                android:value=".activity.BoardGameActivity"/>
         </activity>
         <activity
             android:name=".activity.BoardGameActivity"
@@ -45,16 +45,16 @@
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.dhpcs.liquidity.activity.GamesActivity" />
+                android:value="com.dhpcs.liquidity.activity.GamesActivity"/>
         </activity>
         <activity
             android:name=".activity.GamesActivity"
             android:label="@string/activity_games_title"
             android:launchMode="singleTask">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+                <action android:name="android.intent.action.MAIN"/>
 
-                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
         <activity
@@ -65,7 +65,7 @@
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.dhpcs.liquidity.activity.GamesActivity" />
+                android:value="com.dhpcs.liquidity.activity.GamesActivity"/>
         </activity>
         <activity
             android:name=".activity.PreferencesActivity"
@@ -75,7 +75,7 @@
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activity.GamesActivity" />
+                android:value=".activity.GamesActivity"/>
         </activity>
         <activity
             android:name=".activity.ReceiveIdentityActivity"
@@ -85,7 +85,7 @@
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activity.BoardGameActivity" />
+                android:value=".activity.BoardGameActivity"/>
         </activity>
         <activity
             android:name=".activity.TransferIdentityActivity"
@@ -95,13 +95,13 @@
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activity.BoardGameActivity" />
+                android:value=".activity.BoardGameActivity"/>
         </activity>
 
         <provider
             android:name=".provider.LiquidityProvider"
             android:authorities="com.dhpcs.liquidity.provider"
-            android:exported="false" />
+            android:exported="false"/>
 
     </application>
 
