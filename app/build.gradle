@@ -59,7 +59,7 @@ dependencies {
     compile 'com.android.support:preference-v7:24.2.0'
     compile 'com.android.support:design:24.2.0'
     compile 'me.zhanghai.android.materialprogressbar:library:1.1.7'
-    compile 'com.sothree.slidinguppanel:library:3.3.0'
+    compile 'com.sothree.slidinguppanel:library:3.3.1'
     compile 'net.glxn.qrgen:android:2.0'
     compile 'com.journeyapps:zxing-android-embedded:3.3.0'
     compile 'de.psdev.licensesdialog:licensesdialog:1.8.1'
