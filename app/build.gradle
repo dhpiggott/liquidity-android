@@ -1,9 +1,8 @@
 apply plugin: 'com.android.application'
 
 android {
-    buildToolsVersion "24.0.2"
     compileSdkVersion 24
-
+    buildToolsVersion "24.0.2"
     defaultConfig {
         applicationId "com.dhpcs.liquidity"
         minSdkVersion 16
@@ -43,6 +42,9 @@ android {
     }
     lintOptions {
         disable 'InvalidPackage'
+    }
+    packagingOptions {
+        exclude 'META-INF/LICENSE'
     }
 }
 
