@@ -13,7 +13,6 @@ import android.net.NetworkInfo;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
-import android.provider.Settings;
 import android.support.multidex.MultiDexApplication;
 
 import com.dhpcs.liquidity.models.ZoneId;
@@ -235,10 +234,7 @@ public class LiquidityApplication extends MultiDexApplication {
 
                     },
                     context.getFilesDir(),
-                    Settings.Secure.getString(
-                            context.getContentResolver(),
-                            Settings.Secure.ANDROID_ID
-                    ),
+                    "",
                     new ServerConnection.KeyStoreInputStreamProvider() {
 
                         @Override
