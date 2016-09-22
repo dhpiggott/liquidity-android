@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             xmlns:tools="http://schemas.android.com/tools"
-             android:layout_width="match_parent"
-             android:layout_height="wrap_content"
-             android:paddingTop="20dp"
-             tools:context="com.dhpcs.liquidity.fragment.TransferToPlayerDialogFragment">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="20dp"
+    tools:context="com.dhpcs.liquidity.fragment.TransferToPlayerDialogFragment">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -28,7 +28,7 @@
                 android:layout_marginTop="8dp"
                 android:labelFor="@+id/edittext_value"
                 android:text="@string/transfer_amount"
-                android:textColor="?android:textColorSecondary"/>
+                android:textColor="?android:textColorSecondary" />
 
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -39,7 +39,7 @@
                     android:id="@+id/textview_currency"
                     style="@style/TextAppearance.AppCompat.Subhead"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"/>
+                    android:layout_height="wrap_content" />
 
                 <EditText
                     android:id="@+id/edittext_value"
@@ -47,7 +47,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:inputType="numberDecimal"
-                    android:selectAllOnFocus="true"/>
+                    android:selectAllOnFocus="true" />
 
                 <TextView
                     android:id="@+id/textview_scaled_value"
@@ -55,7 +55,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:ellipsize="end"
-                    android:singleLine="true"/>
+                    android:singleLine="true"
+                    tools:ignore="Deprecated" />
 
             </LinearLayout>
 
@@ -64,13 +65,13 @@
                 style="@style/TextAppearance.AppCompat.Caption"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="#ffdd2c00"/>
+                android:textColor="#ffdd2c00" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_marginTop="8dp"
-                android:background="?android:attr/dividerHorizontal"/>
+                android:background="?android:attr/dividerHorizontal" />
 
             <TextView
                 style="@style/TextAppearance.AppCompat.Body2"
@@ -79,26 +80,26 @@
                 android:layout_marginTop="8dp"
                 android:labelFor="@+id/spinner_from"
                 android:text="@string/transfer_from"
-                android:textColor="?android:attr/textColorSecondary"/>
+                android:textColor="?android:attr/textColorSecondary" />
 
             <Spinner
                 android:id="@+id/spinner_from"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"/>
+                android:layout_marginTop="8dp" />
 
             <TextView
                 android:id="@+id/textview_from_error"
                 style="@style/TextAppearance.AppCompat.Caption"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="#ffdd2c00"/>
+                android:textColor="#ffdd2c00" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_marginTop="8dp"
-                android:background="?android:attr/dividerHorizontal"/>
+                android:background="?android:attr/dividerHorizontal" />
 
             <TextView
                 style="@style/TextAppearance.AppCompat.Body2"
@@ -107,7 +108,7 @@
                 android:layout_marginTop="8dp"
                 android:labelFor="@+id/linearlayout_to"
                 android:text="@string/transfer_to"
-                android:textColor="?android:attr/textColorSecondary"/>
+                android:textColor="?android:attr/textColorSecondary" />
 
             <LinearLayout
                 android:id="@+id/linearlayout_to"
@@ -119,7 +120,7 @@
                 <Spinner
                     android:id="@+id/spinner_to"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"/>
+                    android:layout_height="wrap_content" />
 
             </LinearLayout>
 
@@ -132,13 +133,13 @@
         android:layout_height="1dp"
         android:layout_gravity="top"
         android:layout_marginTop="-1dp"
-        android:background="?android:attr/dividerHorizontal"/>
+        android:background="?android:attr/dividerHorizontal" />
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_gravity="bottom"
         android:layout_marginBottom="-1dp"
-        android:background="?android:attr/dividerHorizontal"/>
+        android:background="?android:attr/dividerHorizontal" />
 
 </FrameLayout>

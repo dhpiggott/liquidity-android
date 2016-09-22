@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
-       xmlns:app="http://schemas.android.com/apk/res-auto"
-       xmlns:tools="http://schemas.android.com/tools"
-       tools:context="com.dhpcs.liquidity.activity.BoardGameActivity">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.dhpcs.liquidity.activity.BoardGameActivity">
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -17,7 +17,7 @@
             style="@style/Widget.MaterialProgressBar.ProgressBar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:indeterminate="true"/>
+            android:indeterminate="true" />
 
         <TextView
             android:id="@+id/textview_state"
@@ -26,7 +26,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:gravity="center"
-            android:text="@string/join_state_connecting"/>
+            android:text="@string/join_state_connecting" />
 
         <Button
             android:id="@+id/button_reconnect"
@@ -34,7 +34,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:text="@string/reconnect"
-            android:visibility="gone"/>
+            android:visibility="gone" />
 
     </LinearLayout>
 
@@ -58,14 +58,14 @@
                 android:name="com.dhpcs.liquidity.fragment.IdentitiesFragment"
                 android:layout_width="match_parent"
                 android:layout_height="144dp"
-                tools:layout="@layout/fragment_identities"/>
+                tools:layout="@layout/fragment_identities" />
 
             <fragment
                 android:id="@+id/fragment_players"
                 android:name="com.dhpcs.liquidity.fragment.PlayersFragment"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                tools:layout="@layout/fragment_players"/>
+                tools:layout="@layout/fragment_players" />
 
         </LinearLayout>
 
@@ -74,7 +74,7 @@
             android:name="com.dhpcs.liquidity.fragment.PlayersTransfersFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            tools:layout="@layout/fragment_players_transfers"/>
+            tools:layout="@layout/fragment_players_transfers" />
 
     </com.sothree.slidinguppanel.SlidingUpPanelLayout>
 
@@ -85,7 +85,7 @@
         <android.support.v7.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"/>
+            android:layout_height="?attr/actionBarSize" />
 
     </android.support.design.widget.AppBarLayout>
 

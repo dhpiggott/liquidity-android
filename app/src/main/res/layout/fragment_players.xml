@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             xmlns:tools="http://schemas.android.com/tools"
-             android:layout_width="match_parent"
-             android:layout_height="match_parent"
-             tools:context="com.dhpcs.liquidity.fragment.PlayersFragment">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.dhpcs.liquidity.fragment.PlayersFragment">
 
     <TextView
         android:id="@+id/textview_empty"
@@ -13,7 +13,7 @@
         android:gravity="center"
         android:padding="16dp"
         android:text="@string/no_other_players"
-        android:textColor="?android:attr/textColorSecondary"/>
+        android:textColor="?android:attr/textColorSecondary" />
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recyclerview_players"
@@ -23,6 +23,6 @@
         android:paddingBottom="8dp"
         android:paddingTop="8dp"
         android:scrollbars="vertical"
-        android:visibility="gone"/>
+        android:visibility="gone" />
 
 </FrameLayout>

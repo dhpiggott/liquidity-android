@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:app="http://schemas.android.com/apk/res-auto"
-              xmlns:tools="http://schemas.android.com/tools"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:orientation="vertical"
-              android:paddingBottom="24dp"
-              android:paddingEnd="24dp"
-              android:paddingLeft="24dp"
-              android:paddingRight="24dp"
-              android:paddingStart="24dp"
-              android:paddingTop="20dp"
-              tools:context="com.dhpcs.liquidity.fragment.CreateGameDialogFragment">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingBottom="24dp"
+    android:paddingEnd="24dp"
+    android:paddingLeft="24dp"
+    android:paddingRight="24dp"
+    android:paddingStart="24dp"
+    android:paddingTop="20dp"
+    tools:context="com.dhpcs.liquidity.fragment.CreateGameDialogFragment">
 
     <TextView
         style="@style/TextAppearance.AppCompat.Body2"
@@ -20,7 +20,7 @@
         android:layout_marginTop="8dp"
         android:labelFor="@+id/textinputedittext_game_name"
         android:text="@string/game_name"
-        android:textColor="?android:attr/textColorSecondary"/>
+        android:textColor="?android:attr/textColorSecondary" />
 
     <android.support.design.widget.TextInputLayout
         android:id="@+id/textinputlayout_game_name"
@@ -34,7 +34,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="textCapWords"
-            android:selectAllOnFocus="true"/>
+            android:selectAllOnFocus="true" />
 
     </android.support.design.widget.TextInputLayout>
 
@@ -44,12 +44,12 @@
         android:layout_height="wrap_content"
         android:labelFor="@+id/spinner_game_currency"
         android:text="@string/game_currency"
-        android:textColor="?android:attr/textColorSecondary"/>
+        android:textColor="?android:attr/textColorSecondary" />
 
     <Spinner
         android:id="@+id/spinner_game_currency"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"/>
+        android:layout_marginTop="8dp" />
 
 </LinearLayout>

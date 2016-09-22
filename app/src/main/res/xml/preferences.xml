@@ -5,6 +5,6 @@
         android:defaultValue="true"
         android:key="play_transfer_receipt_sounds"
         android:summary="@string/play_transfer_receipt_sounds_summary"
-        android:title="@string/play_transfer_receipt_sounds_title"/>
+        android:title="@string/play_transfer_receipt_sounds_title" />
 
 </android.support.v7.preference.PreferenceScreen>
