@@ -52,7 +52,7 @@ dependencies {
     compile('com.dhpcs:liquidity-boardgame_2.11:1.2.3') {
         exclude group: 'joda-time', module: 'joda-time'
     }
-    compile 'net.danlew:android.joda:2.9.4.1'
+    compile 'net.danlew:android.joda:2.9.4.2'
     compile 'com.android.support:multidex:1.0.1'
     compile 'com.android.support:appcompat-v7:24.2.1'
     compile 'com.android.support:support-v13:24.2.1'
