@@ -1,6 +1,7 @@
 package com.dhpcs.liquidity.fragment;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.Context;
@@ -199,9 +200,9 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
     private scala.collection.immutable.Map<MemberId, IdentityWithBalance> identities;
 
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        listener = (Listener) context;
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        listener = (Listener) activity;
     }
 
     @Override

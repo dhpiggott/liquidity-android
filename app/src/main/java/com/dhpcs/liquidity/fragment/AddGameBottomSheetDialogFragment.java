@@ -1,7 +1,7 @@
 package com.dhpcs.liquidity.fragment;
 
 import android.annotation.SuppressLint;
-import android.content.Context;
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.design.widget.BottomSheetDialogFragment;
 import android.view.LayoutInflater;
@@ -29,9 +29,9 @@ public class AddGameBottomSheetDialogFragment extends BottomSheetDialogFragment 
     private Listener listener;
 
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        listener = (Listener) context;
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        listener = (Listener) activity;
     }
 
     @Override
