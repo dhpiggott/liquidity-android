@@ -15,10 +15,10 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 
-import com.dhpcs.liquidity.BoardGame.Identity;
+import com.dhpcs.liquidity.boardgame.BoardGame.Identity;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activity.BoardGameActivity;
-import com.dhpcs.liquidity.models.package$;
+import com.dhpcs.liquidity.protocol.package$;
 
 public class EnterIdentityNameDialogFragment extends DialogFragment {
 

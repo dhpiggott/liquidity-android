@@ -18,12 +18,12 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.dhpcs.liquidity.BoardGame;
-import com.dhpcs.liquidity.BoardGame.Identity;
-import com.dhpcs.liquidity.BoardGame.IdentityWithBalance;
-import com.dhpcs.liquidity.BoardGame.Player;
-import com.dhpcs.liquidity.BoardGame.PlayerWithBalanceAndConnectionState;
-import com.dhpcs.liquidity.BoardGame.TransferWithCurrency;
+import com.dhpcs.liquidity.boardgame.BoardGame;
+import com.dhpcs.liquidity.boardgame.BoardGame.Identity;
+import com.dhpcs.liquidity.boardgame.BoardGame.IdentityWithBalance;
+import com.dhpcs.liquidity.boardgame.BoardGame.Player;
+import com.dhpcs.liquidity.boardgame.BoardGame.PlayerWithBalanceAndConnectionState;
+import com.dhpcs.liquidity.boardgame.BoardGame.TransferWithCurrency;
 import com.dhpcs.liquidity.LiquidityApplication;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.fragment.ConfirmIdentityDeletionDialogFragment;
@@ -35,12 +35,12 @@ import com.dhpcs.liquidity.fragment.PlayersFragment;
 import com.dhpcs.liquidity.fragment.PlayersTransfersFragment;
 import com.dhpcs.liquidity.fragment.RestoreIdentityDialogFragment;
 import com.dhpcs.liquidity.fragment.TransferToPlayerDialogFragment;
-import com.dhpcs.liquidity.models.Account;
-import com.dhpcs.liquidity.models.AccountId;
-import com.dhpcs.liquidity.models.MemberId;
-import com.dhpcs.liquidity.models.PublicKey;
-import com.dhpcs.liquidity.models.TransactionId;
-import com.dhpcs.liquidity.models.ZoneId;
+import com.dhpcs.liquidity.model.Account;
+import com.dhpcs.liquidity.model.AccountId;
+import com.dhpcs.liquidity.model.MemberId;
+import com.dhpcs.liquidity.model.PublicKey;
+import com.dhpcs.liquidity.model.TransactionId;
+import com.dhpcs.liquidity.model.ZoneId;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
@@ -254,7 +254,7 @@ public class BoardGameActivity extends AppCompatActivity
                         PublicKey publicKey = new PublicKey(
                                 ByteString.decodeBase64(
                                         contents
-                                ).toByteArray()
+                                )
                         );
                         if (!boardGame.isPublicKeyConnectedAndImplicitlyValid(publicKey)) {
                             throw new IllegalArgumentException();

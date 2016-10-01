@@ -18,7 +18,7 @@ import android.widget.TextView;
 
 import com.dhpcs.liquidity.LiquidityApplication;
 import com.dhpcs.liquidity.R;
-import com.dhpcs.liquidity.models.ZoneId;
+import com.dhpcs.liquidity.model.ZoneId;
 import com.dhpcs.liquidity.provider.LiquidityContract;
 
 import org.joda.time.Instant;

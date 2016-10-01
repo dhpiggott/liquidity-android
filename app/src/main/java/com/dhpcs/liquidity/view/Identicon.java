@@ -7,8 +7,8 @@ import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.view.View;
 
-import com.dhpcs.liquidity.models.MemberId;
-import com.dhpcs.liquidity.models.ZoneId;
+import com.dhpcs.liquidity.model.MemberId;
+import com.dhpcs.liquidity.model.ZoneId;
 
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;

@@ -12,8 +12,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.dhpcs.liquidity.BoardGame.Player;
-import com.dhpcs.liquidity.BoardGame.TransferWithCurrency;
+import com.dhpcs.liquidity.boardgame.BoardGame.Player;
+import com.dhpcs.liquidity.boardgame.BoardGame.TransferWithCurrency;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activity.BoardGameActivity;
 

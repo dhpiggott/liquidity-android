@@ -22,13 +22,13 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.dhpcs.liquidity.BoardGame.Identity;
-import com.dhpcs.liquidity.BoardGame.IdentityWithBalance;
-import com.dhpcs.liquidity.BoardGame.Player;
+import com.dhpcs.liquidity.boardgame.BoardGame.Identity;
+import com.dhpcs.liquidity.boardgame.BoardGame.IdentityWithBalance;
+import com.dhpcs.liquidity.boardgame.BoardGame.Player;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activity.BoardGameActivity;
-import com.dhpcs.liquidity.models.AccountId;
-import com.dhpcs.liquidity.models.MemberId;
+import com.dhpcs.liquidity.model.AccountId;
+import com.dhpcs.liquidity.model.MemberId;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;

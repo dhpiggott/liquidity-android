@@ -13,7 +13,7 @@ import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.fragment.AddGameBottomSheetDialogFragment;
 import com.dhpcs.liquidity.fragment.CreateGameDialogFragment;
 import com.dhpcs.liquidity.fragment.GamesFragment;
-import com.dhpcs.liquidity.models.ZoneId;
+import com.dhpcs.liquidity.model.ZoneId;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 

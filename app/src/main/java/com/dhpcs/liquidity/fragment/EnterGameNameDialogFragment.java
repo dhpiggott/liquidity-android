@@ -15,9 +15,9 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 
-import com.dhpcs.liquidity.BoardGame$;
+import com.dhpcs.liquidity.boardgame.BoardGame$;
 import com.dhpcs.liquidity.R;
-import com.dhpcs.liquidity.models.package$;
+import com.dhpcs.liquidity.protocol.package$;
 
 public class EnterGameNameDialogFragment extends DialogFragment {
 

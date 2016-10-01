@@ -3,13 +3,13 @@ package com.dhpcs.liquidity.activity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
-import com.dhpcs.liquidity.BoardGame;
-import com.dhpcs.liquidity.BoardGame.IdentityWithBalance;
-import com.dhpcs.liquidity.BoardGame.PlayerWithBalanceAndConnectionState;
-import com.dhpcs.liquidity.BoardGame.TransferWithCurrency;
-import com.dhpcs.liquidity.models.MemberId;
-import com.dhpcs.liquidity.models.TransactionId;
-import com.dhpcs.liquidity.models.ZoneId;
+import com.dhpcs.liquidity.boardgame.BoardGame;
+import com.dhpcs.liquidity.boardgame.BoardGame.IdentityWithBalance;
+import com.dhpcs.liquidity.boardgame.BoardGame.PlayerWithBalanceAndConnectionState;
+import com.dhpcs.liquidity.boardgame.BoardGame.TransferWithCurrency;
+import com.dhpcs.liquidity.model.MemberId;
+import com.dhpcs.liquidity.model.TransactionId;
+import com.dhpcs.liquidity.model.ZoneId;
 
 import scala.Option;
 import scala.collection.Iterable;

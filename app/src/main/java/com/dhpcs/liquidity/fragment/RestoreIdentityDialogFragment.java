@@ -11,12 +11,12 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-import com.dhpcs.liquidity.BoardGame.Identity;
-import com.dhpcs.liquidity.BoardGame.IdentityWithBalance;
+import com.dhpcs.liquidity.boardgame.BoardGame.Identity;
+import com.dhpcs.liquidity.boardgame.BoardGame.IdentityWithBalance;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activity.BoardGameActivity;
-import com.dhpcs.liquidity.models.MemberId;
-import com.dhpcs.liquidity.models.ZoneId;
+import com.dhpcs.liquidity.model.MemberId;
+import com.dhpcs.liquidity.model.ZoneId;
 import com.dhpcs.liquidity.view.Identicon;
 
 import java.util.ArrayList;

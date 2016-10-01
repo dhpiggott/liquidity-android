@@ -15,7 +15,9 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.support.multidex.MultiDexApplication;
 
-import com.dhpcs.liquidity.models.ZoneId;
+import com.dhpcs.liquidity.boardgame.BoardGame;
+import com.dhpcs.liquidity.client.ServerConnection;
+import com.dhpcs.liquidity.model.ZoneId;
 import com.dhpcs.liquidity.provider.LiquidityContract;
 
 import net.danlew.android.joda.JodaTimeAndroid;
@@ -234,7 +236,6 @@ public class LiquidityApplication extends MultiDexApplication {
 
                     },
                     context.getFilesDir(),
-                    "",
                     new ServerConnection.KeyStoreInputStreamProvider() {
 
                         @Override

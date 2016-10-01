@@ -109,8 +109,10 @@
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/exploded-aar/net.danlew/android.joda/2.9.4.1/jars" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/incremental" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/incremental-safeguard" />
+      <excludeFolder url="file://$MODULE_DIR$/build/intermediates/jniLibs" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/manifests" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/multi-dex" />
+      <excludeFolder url="file://$MODULE_DIR$/build/intermediates/pre-dexed" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/proguard-rules" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/res" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/rs" />
@@ -122,49 +124,51 @@
     </content>
     <orderEntry type="jdk" jdkName="Android API 24 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" exported="" name="okio-1.9.0" level="project" />
     <orderEntry type="library" exported="" name="support-v4-24.2.1" level="project" />
     <orderEntry type="library" exported="" name="support-compat-24.2.1" level="project" />
-    <orderEntry type="library" exported="" name="animated-vector-drawable-24.2.1" level="project" />
-    <orderEntry type="library" exported="" name="play-json-rpc_2.11-1.1.0" level="project" />
     <orderEntry type="library" exported="" name="support-fragment-24.2.1" level="project" />
-    <orderEntry type="library" exported="" name="jsr305-3.0.1" level="project" />
+    <orderEntry type="library" exported="" name="play-json-rpc_2.11-1.2.1" level="project" />
     <orderEntry type="library" exported="" name="joda-convert-1.6" level="project" />
     <orderEntry type="library" exported="" name="core-1.54.0.0" level="project" />
-    <orderEntry type="library" exported="" name="play-json_2.11-2.3.10" level="project" />
     <orderEntry type="library" exported="" name="play-functional_2.11-2.3.10" level="project" />
-    <orderEntry type="library" exported="" name="core-3.2.1" level="project" />
-    <orderEntry type="library" exported="" name="core-2.0" level="project" />
-    <orderEntry type="library" exported="" name="config-1.2.1" level="project" />
-    <orderEntry type="library" exported="" name="jackson-annotations-2.3.2" level="project" />
     <orderEntry type="library" exported="" name="library-1.1.7" level="project" />
-    <orderEntry type="library" exported="" name="android-2.0" level="project" />
     <orderEntry type="library" exported="" name="scala-stm_2.11-0.7" level="project" />
-    <orderEntry type="library" exported="" name="preference-v7-24.2.1" level="project" />
     <orderEntry type="library" exported="" name="cardview-v7-24.2.1" level="project" />
     <orderEntry type="library" exported="" name="play-iteratees_2.11-2.3.10" level="project" />
     <orderEntry type="library" exported="" name="design-24.2.1" level="project" />
     <orderEntry type="library" exported="" scope="TEST" name="multidex-instrumentation-1.0.1" level="project" />
     <orderEntry type="library" exported="" name="play-datacommons_2.11-2.3.10" level="project" />
-    <orderEntry type="library" exported="" name="support-media-compat-24.2.1" level="project" />
-    <orderEntry type="library" exported="" name="support-v13-24.2.1" level="project" />
-    <orderEntry type="library" exported="" name="boardgame_2.11-1.2.2" level="project" />
     <orderEntry type="library" exported="" name="support-core-ui-24.2.1" level="project" />
-    <orderEntry type="library" exported="" name="protocol_2.11-1.2.2" level="project" />
     <orderEntry type="library" exported="" name="recyclerview-v7-24.2.1" level="project" />
     <orderEntry type="library" exported="" name="licensesdialog-1.8.1" level="project" />
     <orderEntry type="library" exported="" name="appcompat-v7-24.2.1" level="project" />
-    <orderEntry type="library" exported="" name="support-vector-drawable-24.2.1" level="project" />
-    <orderEntry type="library" exported="" name="support-core-utils-24.2.1" level="project" />
     <orderEntry type="library" exported="" name="zxing-android-embedded-3.3.0" level="project" />
     <orderEntry type="library" exported="" name="jackson-core-2.3.2" level="project" />
+    <orderEntry type="library" exported="" name="okio-1.10.0" level="project" />
+    <orderEntry type="library" exported="" name="jackson-databind-2.3.2" level="project" />
+    <orderEntry type="library" exported="" name="prov-1.54.0.0" level="project" />
+    <orderEntry type="library" exported="" name="liquidity-boardgame_2.11-1.2.3-SNAPSHOT" level="project" />
+    <orderEntry type="library" exported="" name="pkix-1.54.0.0" level="project" />
+    <orderEntry type="library" exported="" name="animated-vector-drawable-24.2.1" level="project" />
+    <orderEntry type="library" exported="" name="jsr305-3.0.1" level="project" />
+    <orderEntry type="library" exported="" name="play-json_2.11-2.3.10" level="project" />
+    <orderEntry type="library" exported="" name="liquidity-client_2.11-1.2.3-SNAPSHOT" level="project" />
+    <orderEntry type="library" exported="" name="core-3.2.1" level="project" />
+    <orderEntry type="library" exported="" name="core-2.0" level="project" />
+    <orderEntry type="library" exported="" name="config-1.2.1" level="project" />
+    <orderEntry type="library" exported="" name="jackson-annotations-2.3.2" level="project" />
+    <orderEntry type="library" exported="" name="liquidity-protocol_2.11-1.2.3-SNAPSHOT" level="project" />
+    <orderEntry type="library" exported="" name="android-2.0" level="project" />
+    <orderEntry type="library" exported="" name="preference-v7-24.2.1" level="project" />
+    <orderEntry type="library" exported="" name="support-media-compat-24.2.1" level="project" />
+    <orderEntry type="library" exported="" name="support-v13-24.2.1" level="project" />
+    <orderEntry type="library" exported="" name="liquidity-model_2.11-1.2.3-SNAPSHOT" level="project" />
+    <orderEntry type="library" exported="" name="support-vector-drawable-24.2.1" level="project" />
+    <orderEntry type="library" exported="" name="support-core-utils-24.2.1" level="project" />
     <orderEntry type="library" exported="" name="joda-time-2.9.4-no-tzdb" level="project" />
     <orderEntry type="library" exported="" name="scala-reflect-2.11.1" level="project" />
     <orderEntry type="library" exported="" name="support-annotations-24.2.1" level="project" />
-    <orderEntry type="library" exported="" name="jackson-databind-2.3.2" level="project" />
-    <orderEntry type="library" exported="" name="prov-1.54.0.0" level="project" />
     <orderEntry type="library" exported="" name="library-3.3.1" level="project" />
-    <orderEntry type="library" exported="" name="pkix-1.54.0.0" level="project" />
     <orderEntry type="library" exported="" name="multidex-1.0.1" level="project" />
     <orderEntry type="library" exported="" name="scala-library-2.11.8" level="project" />
     <orderEntry type="library" exported="" name="okhttp-ws-3.4.1" level="project" />
