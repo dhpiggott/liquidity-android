@@ -2,9 +2,7 @@ package com.dhpcs.liquidity.fragment;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.app.Dialog;
-import android.app.DialogFragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Build;
@@ -12,6 +10,7 @@ import android.os.Bundle;
 import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatDialogFragment;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
@@ -22,8 +21,8 @@ import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.dhpcs.liquidity.boardgame.BoardGame$;
 import com.dhpcs.liquidity.R;
+import com.dhpcs.liquidity.boardgame.BoardGame$;
 import com.dhpcs.liquidity.protocol.package$;
 
 import java.util.ArrayList;
@@ -34,7 +33,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-public class CreateGameDialogFragment extends DialogFragment {
+public class CreateGameDialogFragment extends AppCompatDialogFragment {
 
     public interface Listener {
 
@@ -124,9 +123,9 @@ public class CreateGameDialogFragment extends DialogFragment {
     private Button buttonPositive;
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        listener = (Listener) activity;
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        listener = (Listener) context;
     }
 
     @Override

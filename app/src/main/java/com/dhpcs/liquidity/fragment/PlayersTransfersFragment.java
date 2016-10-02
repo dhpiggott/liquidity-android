@@ -11,10 +11,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.dhpcs.liquidity.boardgame.BoardGame.Player;
-import com.dhpcs.liquidity.boardgame.BoardGame.TransferWithCurrency;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activity.BoardGameActivity;
+import com.dhpcs.liquidity.boardgame.BoardGame.Player;
+import com.dhpcs.liquidity.boardgame.BoardGame.TransferWithCurrency;
 import com.dhpcs.liquidity.model.MemberId;
 import com.dhpcs.liquidity.model.TransactionId;
 

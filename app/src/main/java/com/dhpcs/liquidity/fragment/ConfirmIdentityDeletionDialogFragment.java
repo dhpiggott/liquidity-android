@@ -1,8 +1,8 @@
 package com.dhpcs.liquidity.fragment;
 
-import android.app.Activity;
 import android.app.Dialog;
-import android.app.DialogFragment;
+import android.support.v7.app.AppCompatDialogFragment;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
@@ -11,7 +11,7 @@ import com.dhpcs.liquidity.boardgame.BoardGame.Identity;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activity.BoardGameActivity;
 
-public class ConfirmIdentityDeletionDialogFragment extends DialogFragment {
+public class ConfirmIdentityDeletionDialogFragment extends AppCompatDialogFragment {
 
     public interface Listener {
 
@@ -35,9 +35,9 @@ public class ConfirmIdentityDeletionDialogFragment extends DialogFragment {
     private Listener listener;
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        listener = (Listener) activity;
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        listener = (Listener) context;
     }
 
     @Override

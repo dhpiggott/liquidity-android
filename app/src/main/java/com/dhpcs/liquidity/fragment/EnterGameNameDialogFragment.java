@@ -1,9 +1,9 @@
 package com.dhpcs.liquidity.fragment;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.Dialog;
-import android.app.DialogFragment;
+import android.support.v7.app.AppCompatDialogFragment;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.design.widget.TextInputEditText;
@@ -19,7 +19,8 @@ import com.dhpcs.liquidity.boardgame.BoardGame$;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.protocol.package$;
 
-public class EnterGameNameDialogFragment extends DialogFragment {
+public class
+EnterGameNameDialogFragment extends AppCompatDialogFragment {
 
     public interface Listener {
 
@@ -44,9 +45,9 @@ public class EnterGameNameDialogFragment extends DialogFragment {
     private Button buttonPositive;
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        listener = (Listener) activity;
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        listener = (Listener) context;
     }
 
     @Override

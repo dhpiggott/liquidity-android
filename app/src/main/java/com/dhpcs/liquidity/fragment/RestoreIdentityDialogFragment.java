@@ -1,21 +1,20 @@
 package com.dhpcs.liquidity.fragment;
 
-import android.app.Activity;
 import android.app.Dialog;
-import android.app.DialogFragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatDialogFragment;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-import com.dhpcs.liquidity.boardgame.BoardGame.Identity;
-import com.dhpcs.liquidity.boardgame.BoardGame.IdentityWithBalance;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activity.BoardGameActivity;
+import com.dhpcs.liquidity.boardgame.BoardGame.Identity;
+import com.dhpcs.liquidity.boardgame.BoardGame.IdentityWithBalance;
 import com.dhpcs.liquidity.model.MemberId;
 import com.dhpcs.liquidity.model.ZoneId;
 import com.dhpcs.liquidity.view.Identicon;
@@ -24,7 +23,7 @@ import java.util.ArrayList;
 
 import scala.collection.JavaConversions;
 
-public class RestoreIdentityDialogFragment extends DialogFragment {
+public class RestoreIdentityDialogFragment extends AppCompatDialogFragment {
 
     public interface Listener {
 
@@ -95,9 +94,9 @@ public class RestoreIdentityDialogFragment extends DialogFragment {
     private Listener listener;
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        listener = (Listener) activity;
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        listener = (Listener) context;
     }
 
     @Override

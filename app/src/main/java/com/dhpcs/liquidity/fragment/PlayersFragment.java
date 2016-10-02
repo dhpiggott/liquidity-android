@@ -1,9 +1,8 @@
 package com.dhpcs.liquidity.fragment;
 
-import android.app.Activity;
-import android.app.Fragment;
 import android.content.Context;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v7.util.SortedList;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -13,11 +12,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.dhpcs.liquidity.R;
+import com.dhpcs.liquidity.activity.BoardGameActivity;
 import com.dhpcs.liquidity.boardgame.BoardGame.Identity;
 import com.dhpcs.liquidity.boardgame.BoardGame.Player;
 import com.dhpcs.liquidity.boardgame.BoardGame.PlayerWithBalanceAndConnectionState;
-import com.dhpcs.liquidity.R;
-import com.dhpcs.liquidity.activity.BoardGameActivity;
 import com.dhpcs.liquidity.model.MemberId;
 import com.dhpcs.liquidity.model.ZoneId;
 import com.dhpcs.liquidity.view.Identicon;
@@ -248,11 +247,10 @@ public class PlayersFragment extends Fragment {
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        listener = (Listener) activity;
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        listener = (Listener) context;
     }
 
     @Override

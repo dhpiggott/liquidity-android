@@ -1,21 +1,21 @@
 package com.dhpcs.liquidity.fragment;
 
-import android.app.Activity;
-import android.app.Fragment;
-import android.app.FragmentManager;
+import android.content.Context;
 import android.os.Bundle;
-import android.support.v13.app.FragmentStatePagerAdapter;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.dhpcs.liquidity.R;
+import com.dhpcs.liquidity.activity.BoardGameActivity;
 import com.dhpcs.liquidity.boardgame.BoardGame.Identity;
 import com.dhpcs.liquidity.boardgame.BoardGame.IdentityWithBalance;
 import com.dhpcs.liquidity.boardgame.BoardGame.Player;
-import com.dhpcs.liquidity.R;
-import com.dhpcs.liquidity.activity.BoardGameActivity;
 import com.dhpcs.liquidity.model.MemberId;
 
 import java.util.ArrayList;
@@ -155,11 +155,10 @@ public class IdentitiesFragment extends Fragment {
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        listener = (Listener) activity;
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        listener = (Listener) context;
     }
 
     @Override

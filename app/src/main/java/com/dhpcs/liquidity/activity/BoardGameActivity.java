@@ -1,11 +1,11 @@
 package com.dhpcs.liquidity.activity;
 
-import android.app.DialogFragment;
 import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.app.DialogFragment;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -18,14 +18,14 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.dhpcs.liquidity.LiquidityApplication;
+import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.boardgame.BoardGame;
 import com.dhpcs.liquidity.boardgame.BoardGame.Identity;
 import com.dhpcs.liquidity.boardgame.BoardGame.IdentityWithBalance;
 import com.dhpcs.liquidity.boardgame.BoardGame.Player;
 import com.dhpcs.liquidity.boardgame.BoardGame.PlayerWithBalanceAndConnectionState;
 import com.dhpcs.liquidity.boardgame.BoardGame.TransferWithCurrency;
-import com.dhpcs.liquidity.LiquidityApplication;
-import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.fragment.ConfirmIdentityDeletionDialogFragment;
 import com.dhpcs.liquidity.fragment.CreateIdentityDialogFragment;
 import com.dhpcs.liquidity.fragment.EnterGameNameDialogFragment;
@@ -369,9 +369,9 @@ public class BoardGameActivity extends AppCompatActivity
         });
 
         identitiesFragment = (IdentitiesFragment)
-                getFragmentManager().findFragmentById(R.id.fragment_identities);
+                getSupportFragmentManager().findFragmentById(R.id.fragment_identities);
         playersFragment = (PlayersFragment)
-                getFragmentManager().findFragmentById(R.id.fragment_players);
+                getSupportFragmentManager().findFragmentById(R.id.fragment_players);
         playersTransfersFragment = (PlayersTransfersFragment)
                 getSupportFragmentManager().findFragmentById(R.id.fragment_players_transfers);
 
@@ -540,7 +540,7 @@ public class BoardGameActivity extends AppCompatActivity
                 identitiesFragment.getIdentity(identitiesFragment.getSelectedPage())
         );
         TransferToPlayerDialogFragment transferToPlayerDialogFragment =
-                (TransferToPlayerDialogFragment) getFragmentManager()
+                (TransferToPlayerDialogFragment) getSupportFragmentManager()
                         .findFragmentByTag(TransferToPlayerDialogFragment.TAG);
         if (transferToPlayerDialogFragment != null) {
             transferToPlayerDialogFragment.onIdentitiesUpdated(identities);
@@ -581,7 +581,7 @@ public class BoardGameActivity extends AppCompatActivity
     public void onIdentityRequired() {
         CreateIdentityDialogFragment.newInstance()
                 .show(
-                        getFragmentManager(),
+                        getSupportFragmentManager(),
                         CreateIdentityDialogFragment.TAG
                 );
     }
@@ -746,7 +746,7 @@ public class BoardGameActivity extends AppCompatActivity
     public void onNoIdentitiesTextClicked() {
         CreateIdentityDialogFragment.newInstance()
                 .show(
-                        getFragmentManager(),
+                        getSupportFragmentManager(),
                         CreateIdentityDialogFragment.TAG
                 );
     }
@@ -814,7 +814,7 @@ public class BoardGameActivity extends AppCompatActivity
                             identity,
                             null
                     ).show(
-                            getFragmentManager(),
+                            getSupportFragmentManager(),
                             TransferToPlayerDialogFragment.TAG
                     );
                 }
@@ -822,7 +822,7 @@ public class BoardGameActivity extends AppCompatActivity
             case R.id.action_change_game_name:
                 EnterGameNameDialogFragment.newInstance(getTitle().toString())
                         .show(
-                                getFragmentManager(),
+                                getSupportFragmentManager(),
                                 EnterGameNameDialogFragment.TAG
                         );
                 return true;
@@ -831,7 +831,7 @@ public class BoardGameActivity extends AppCompatActivity
                 if (identity != null) {
                     EnterIdentityNameDialogFragment.newInstance(identity)
                             .show(
-                                    getFragmentManager(),
+                                    getSupportFragmentManager(),
                                     EnterIdentityNameDialogFragment.TAG
                             );
                 }
@@ -839,14 +839,14 @@ public class BoardGameActivity extends AppCompatActivity
             case R.id.action_create_identity:
                 CreateIdentityDialogFragment.newInstance()
                         .show(
-                                getFragmentManager(),
+                                getSupportFragmentManager(),
                                 CreateIdentityDialogFragment.TAG
                         );
                 return true;
             case R.id.action_restore_identity:
                 RestoreIdentityDialogFragment.newInstance(boardGame.getHiddenIdentities())
                         .show(
-                                getFragmentManager(),
+                                getSupportFragmentManager(),
                                 RestoreIdentityDialogFragment.TAG
                         );
                 return true;
@@ -855,7 +855,7 @@ public class BoardGameActivity extends AppCompatActivity
                 if (identity != null) {
                     ConfirmIdentityDeletionDialogFragment.newInstance(identity)
                             .show(
-                                    getFragmentManager(),
+                                    getSupportFragmentManager(),
                                     ConfirmIdentityDeletionDialogFragment.TAG
                             );
                 }
@@ -943,7 +943,7 @@ public class BoardGameActivity extends AppCompatActivity
                     identity,
                     player
             ).show(
-                    getFragmentManager(),
+                    getSupportFragmentManager(),
                     TransferToPlayerDialogFragment.TAG
             );
         }
@@ -1130,7 +1130,7 @@ public class BoardGameActivity extends AppCompatActivity
                 TransferToPlayerDialogFragment.TAG
         }) {
             DialogFragment dialogFragment =
-                    (DialogFragment) getFragmentManager().findFragmentByTag(tag);
+                    (DialogFragment) getSupportFragmentManager().findFragmentByTag(tag);
             if (dialogFragment != null) {
                 dialogFragment.dismiss();
             }

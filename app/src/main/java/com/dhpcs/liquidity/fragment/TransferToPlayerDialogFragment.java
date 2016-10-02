@@ -1,14 +1,13 @@
 package com.dhpcs.liquidity.fragment;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.Dialog;
-import android.app.DialogFragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatDialogFragment;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
@@ -23,11 +22,11 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.dhpcs.liquidity.R;
+import com.dhpcs.liquidity.activity.BoardGameActivity;
 import com.dhpcs.liquidity.boardgame.BoardGame.Identity;
 import com.dhpcs.liquidity.boardgame.BoardGame.IdentityWithBalance;
 import com.dhpcs.liquidity.boardgame.BoardGame.Player;
-import com.dhpcs.liquidity.R;
-import com.dhpcs.liquidity.activity.BoardGameActivity;
 import com.dhpcs.liquidity.model.AccountId;
 import com.dhpcs.liquidity.model.MemberId;
 
@@ -46,7 +45,7 @@ import scala.Option;
 import scala.collection.JavaConversions;
 import scala.util.Either;
 
-public class TransferToPlayerDialogFragment extends DialogFragment {
+public class TransferToPlayerDialogFragment extends AppCompatDialogFragment {
 
     public interface Listener {
 
@@ -200,9 +199,9 @@ public class TransferToPlayerDialogFragment extends DialogFragment {
     private scala.collection.immutable.Map<MemberId, IdentityWithBalance> identities;
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        listener = (Listener) activity;
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        listener = (Listener) context;
     }
 
     @Override

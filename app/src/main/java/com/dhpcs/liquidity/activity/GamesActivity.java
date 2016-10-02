@@ -142,7 +142,7 @@ public class GamesActivity extends AppCompatActivity
     public void onNewGameClicked() {
         CreateGameDialogFragment.newInstance()
                 .show(
-                        getFragmentManager(),
+                        getSupportFragmentManager(),
                         CreateGameDialogFragment.TAG
                 );
     }
