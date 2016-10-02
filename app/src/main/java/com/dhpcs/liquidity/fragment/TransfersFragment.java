@@ -12,10 +12,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.dhpcs.liquidity.boardgame.BoardGame.Player;
-import com.dhpcs.liquidity.boardgame.BoardGame.TransferWithCurrency;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activity.BoardGameActivity;
+import com.dhpcs.liquidity.boardgame.BoardGame.Player;
+import com.dhpcs.liquidity.boardgame.BoardGame.TransferWithCurrency;
 
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -28,20 +28,20 @@ public class TransfersFragment extends Fragment {
     private class TransfersAdapter
             extends RecyclerView.Adapter<TransfersAdapter.TransferViewHolder> {
 
-        public class TransferViewHolder extends RecyclerView.ViewHolder {
+        class TransferViewHolder extends RecyclerView.ViewHolder {
 
             private final TextView textViewSummary;
             private final TextView textViewCreatedTime;
             private final TextView textViewCreatedDate;
 
-            public TransferViewHolder(View itemView) {
+            TransferViewHolder(View itemView) {
                 super(itemView);
                 textViewSummary = (TextView) itemView.findViewById(R.id.textview_summary);
                 textViewCreatedTime = (TextView) itemView.findViewById(R.id.textview_created_time);
                 textViewCreatedDate = (TextView) itemView.findViewById(R.id.textview_created_date);
             }
 
-            public void bindTransfer(TransferWithCurrency transfer) {
+            void bindTransfer(TransferWithCurrency transfer) {
 
                 boolean isFromPlayer = player != null && transfer.from().right().get().member().id()
                         .equals(player.member().id());
@@ -121,20 +121,20 @@ public class TransfersFragment extends Fragment {
                 }
         );
 
-        public TransfersAdapter(Context context, Player player) {
+        TransfersAdapter(Context context, Player player) {
             this.context = context;
             this.player = player;
         }
 
-        public void beginBatchedUpdates() {
+        void beginBatchedUpdates() {
             transfers.beginBatchedUpdates();
         }
 
-        public void endBatchedUpdates() {
+        void endBatchedUpdates() {
             transfers.endBatchedUpdates();
         }
 
-        public void replaceOrAdd(TransferWithCurrency transfer) {
+        void replaceOrAdd(TransferWithCurrency transfer) {
             transfers.add(transfer);
         }
 

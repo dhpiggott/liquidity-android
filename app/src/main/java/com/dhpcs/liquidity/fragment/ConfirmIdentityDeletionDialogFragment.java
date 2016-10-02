@@ -1,15 +1,16 @@
 package com.dhpcs.liquidity.fragment;
 
 import android.app.Dialog;
-import android.support.v7.app.AppCompatDialogFragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatDialogFragment;
 
-import com.dhpcs.liquidity.boardgame.BoardGame.Identity;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activity.BoardGameActivity;
+import com.dhpcs.liquidity.boardgame.BoardGame.Identity;
 
 public class ConfirmIdentityDeletionDialogFragment extends AppCompatDialogFragment {
 
@@ -40,6 +41,7 @@ public class ConfirmIdentityDeletionDialogFragment extends AppCompatDialogFragme
         listener = (Listener) context;
     }
 
+    @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         Identity identity = (Identity) getArguments().getSerializable(ARG_IDENTITY);

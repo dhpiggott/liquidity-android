@@ -38,8 +38,8 @@ public class PlayersTransfersFragment extends Fragment {
 
         private ArrayList<TransferWithCurrency> transfers;
 
-        public PlayersTransfersFragmentStatePagerAdapter(FragmentManager fragmentManager,
-                                                         Context context) {
+        PlayersTransfersFragmentStatePagerAdapter(FragmentManager fragmentManager,
+                                                  Context context) {
             super(fragmentManager);
             this.context = context;
         }
@@ -48,11 +48,11 @@ public class PlayersTransfersFragment extends Fragment {
             players.add(player);
         }
 
-        public void clear() {
+        void clear() {
             players.clear();
         }
 
-        public Player get(int position) {
+        Player get(int position) {
             if (position == 0) {
                 return null;
             } else {
@@ -60,31 +60,31 @@ public class PlayersTransfersFragment extends Fragment {
             }
         }
 
-        public int getPosition(Player player) {
+        int getPosition(Player player) {
             return players.indexOf(player) + 1;
         }
 
-        public void onTransferAdded(TransferWithCurrency addedTransfer) {
+        void onTransferAdded(TransferWithCurrency addedTransfer) {
             for (TransfersFragment transfersFragment : transfersFragments) {
                 transfersFragment.onTransferAdded(addedTransfer);
             }
         }
 
-        public void onTransfersChanged(
+        void onTransfersChanged(
                 scala.collection.Iterable<TransferWithCurrency> changedTransfers) {
             for (TransfersFragment transfersFragment : transfersFragments) {
                 transfersFragment.onTransfersChanged(changedTransfers);
             }
         }
 
-        public void onTransfersInitialized(
+        void onTransfersInitialized(
                 scala.collection.Iterable<TransferWithCurrency> transfers) {
             for (TransfersFragment transfersFragment : transfersFragments) {
                 transfersFragment.onTransfersInitialized(transfers);
             }
         }
 
-        public void onTransfersUpdated(
+        void onTransfersUpdated(
                 scala.collection.immutable.Map<TransactionId, TransferWithCurrency> transfers) {
             this.transfers = new ArrayList<>(
                     JavaConversions.bufferAsJavaList(
@@ -93,7 +93,7 @@ public class PlayersTransfersFragment extends Fragment {
             );
         }
 
-        public void sort(Comparator<Player> comparator) {
+        void sort(Comparator<Player> comparator) {
             Collections.sort(players, comparator);
         }
 

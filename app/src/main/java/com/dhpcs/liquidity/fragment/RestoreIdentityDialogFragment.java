@@ -4,6 +4,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatDialogFragment;
 import android.view.View;
@@ -35,14 +36,15 @@ public class RestoreIdentityDialogFragment extends AppCompatDialogFragment {
 
     private static class IdentitiesAdapter extends ArrayAdapter<IdentityWithBalance> {
 
-        public IdentitiesAdapter(Context context) {
+        IdentitiesAdapter(Context context) {
             super(context,
                     R.layout.linearlayout_identity,
                     R.id.textview_name);
         }
 
+        @NonNull
         @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
+        public View getView(int position, View convertView, @NonNull ViewGroup parent) {
             View view = super.getView(position, convertView, parent);
 
             IdentityWithBalance identity = getItem(position);
@@ -51,6 +53,7 @@ public class RestoreIdentityDialogFragment extends AppCompatDialogFragment {
             TextView textViewName = (TextView) view.findViewById(R.id.textview_name);
             TextView textViewBalance = (TextView) view.findViewById(R.id.textview_balance);
 
+            assert identity != null;
             ZoneId zoneId = identity.zoneId();
             MemberId memberId = identity.member().id();
             String name = BoardGameActivity.formatNullable(
@@ -99,6 +102,7 @@ public class RestoreIdentityDialogFragment extends AppCompatDialogFragment {
         listener = (Listener) context;
     }
 
+    @NonNull
     @Override
     @SuppressWarnings("unchecked")
     public Dialog onCreateDialog(Bundle savedInstanceState) {

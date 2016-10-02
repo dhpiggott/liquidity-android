@@ -34,7 +34,7 @@ public class LiquidityProvider extends ContentProvider {
                         + "UNIQUE(" + LiquidityContract.Games.ZONE_ID + ")"
                         + ");";
 
-        public LiquidityDatabaseHelper(Context context) {
+        LiquidityDatabaseHelper(Context context) {
             super(context, DATABASE_NAME, null, DATABASE_VERSION);
         }
 

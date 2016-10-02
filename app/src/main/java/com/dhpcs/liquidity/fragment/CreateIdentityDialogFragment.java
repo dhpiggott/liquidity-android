@@ -2,16 +2,18 @@ package com.dhpcs.liquidity.fragment;
 
 import android.annotation.SuppressLint;
 import android.app.Dialog;
-import android.support.v7.app.AppCompatDialogFragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatDialogFragment;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 
@@ -43,6 +45,7 @@ public class CreateIdentityDialogFragment extends AppCompatDialogFragment {
         listener = (Listener) context;
     }
 
+    @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         @SuppressLint("InflateParams") View view = getActivity().getLayoutInflater().inflate(
@@ -106,7 +109,9 @@ public class CreateIdentityDialogFragment extends AppCompatDialogFragment {
 
         });
 
-        alertDialog.getWindow().setSoftInputMode(
+        Window window = alertDialog.getWindow();
+        assert window != null;
+        window.setSoftInputMode(
                 WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE
         );
 

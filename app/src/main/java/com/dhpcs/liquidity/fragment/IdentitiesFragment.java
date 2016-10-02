@@ -38,27 +38,27 @@ public class IdentitiesFragment extends Fragment {
 
         private final ArrayList<IdentityWithBalance> identities = new ArrayList<>();
 
-        public IdentitiesFragmentStatePagerAdapter(FragmentManager fragmentManager) {
+        IdentitiesFragmentStatePagerAdapter(FragmentManager fragmentManager) {
             super(fragmentManager);
         }
 
-        public void add(IdentityWithBalance identity) {
+        void add(IdentityWithBalance identity) {
             identities.add(identity);
         }
 
-        public void clear() {
+        void clear() {
             identities.clear();
         }
 
-        public IdentityWithBalance get(int position) {
+        IdentityWithBalance get(int position) {
             return identities.get(position);
         }
 
-        public int getPosition(IdentityWithBalance identity) {
+        int getPosition(IdentityWithBalance identity) {
             return identities.indexOf(identity);
         }
 
-        public void sort(Comparator<Player> comparator) {
+        void sort(Comparator<Player> comparator) {
             Collections.sort(identities, comparator);
         }
 

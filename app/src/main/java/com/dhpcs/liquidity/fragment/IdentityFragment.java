@@ -1,15 +1,15 @@
 package com.dhpcs.liquidity.fragment;
 
-import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.dhpcs.liquidity.boardgame.BoardGame.IdentityWithBalance;
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activity.BoardGameActivity;
+import com.dhpcs.liquidity.boardgame.BoardGame.IdentityWithBalance;
 import com.dhpcs.liquidity.model.MemberId;
 import com.dhpcs.liquidity.model.ZoneId;
 import com.dhpcs.liquidity.view.Identicon;

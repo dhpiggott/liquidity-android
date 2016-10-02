@@ -12,6 +12,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -65,7 +66,7 @@ public class TransferToPlayerDialogFragment extends AppCompatDialogFragment {
 
     private static class PlayersAdapter extends ArrayAdapter<Player> {
 
-        public PlayersAdapter(Context context, List<Player> players) {
+        PlayersAdapter(Context context, List<Player> players) {
             super(context, android.R.layout.simple_spinner_item, players);
             setDropDownViewResource(
                     android.R.layout.simple_spinner_dropdown_item
@@ -80,15 +81,16 @@ public class TransferToPlayerDialogFragment extends AppCompatDialogFragment {
         }
 
         @Override
-        public View getDropDownView(int position, View convertView, ViewGroup parent) {
+        public View getDropDownView(int position, View convertView, @NonNull ViewGroup parent) {
             return bindView(
                     (TextView) super.getDropDownView(position, convertView, parent),
                     getItem(position)
             );
         }
 
+        @NonNull
         @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
+        public View getView(int position, View convertView, @NonNull ViewGroup parent) {
             return bindView(
                     (TextView) super.getView(position, convertView, parent),
                     getItem(position)
@@ -99,7 +101,7 @@ public class TransferToPlayerDialogFragment extends AppCompatDialogFragment {
 
     private static class IdentitiesAdapter extends ArrayAdapter<IdentityWithBalance> {
 
-        public IdentitiesAdapter(Context context, List<IdentityWithBalance> identities) {
+        IdentitiesAdapter(Context context, List<IdentityWithBalance> identities) {
             super(context, android.R.layout.simple_spinner_item, identities);
             setDropDownViewResource(
                     android.R.layout.simple_spinner_dropdown_item
@@ -131,15 +133,16 @@ public class TransferToPlayerDialogFragment extends AppCompatDialogFragment {
         }
 
         @Override
-        public View getDropDownView(int position, View convertView, ViewGroup parent) {
+        public View getDropDownView(int position, View convertView, @NonNull ViewGroup parent) {
             return bindView(
                     (TextView) super.getDropDownView(position, convertView, parent),
                     getItem(position)
             );
         }
 
+        @NonNull
         @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
+        public View getView(int position, View convertView, @NonNull ViewGroup parent) {
             return bindView(
                     (TextView) super.getView(position, convertView, parent),
                     getItem(position)
@@ -232,6 +235,7 @@ public class TransferToPlayerDialogFragment extends AppCompatDialogFragment {
         playersSpinnerAdapter.sort(playerComparator);
     }
 
+    @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         @SuppressLint("InflateParams") View view = getActivity().getLayoutInflater().inflate(
@@ -475,7 +479,9 @@ public class TransferToPlayerDialogFragment extends AppCompatDialogFragment {
 
         });
 
-        alertDialog.getWindow().setSoftInputMode(
+        Window window = alertDialog.getWindow();
+        assert window != null;
+        window.setSoftInputMode(
                 WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE
         );
 

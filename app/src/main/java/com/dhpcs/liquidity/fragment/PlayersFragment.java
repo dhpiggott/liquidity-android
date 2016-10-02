@@ -38,7 +38,7 @@ public class PlayersFragment extends Fragment {
 
     private class PlayersAdapter extends RecyclerView.Adapter<PlayersAdapter.PlayerViewHolder> {
 
-        public class PlayerViewHolder extends RecyclerView.ViewHolder
+        class PlayerViewHolder extends RecyclerView.ViewHolder
                 implements View.OnClickListener {
 
             private final Identicon identiconId;
@@ -48,7 +48,7 @@ public class PlayersFragment extends Fragment {
 
             private Player player;
 
-            public PlayerViewHolder(View itemView) {
+            PlayerViewHolder(View itemView) {
                 super(itemView);
                 itemView.setOnClickListener(this);
                 identiconId = (Identicon) itemView.findViewById(R.id.identicon_id);
@@ -57,7 +57,7 @@ public class PlayersFragment extends Fragment {
                 textViewStatus = (TextView) itemView.findViewById(R.id.textview_status);
             }
 
-            public void bindPlayer(PlayerWithBalanceAndConnectionState player) {
+            void bindPlayer(PlayerWithBalanceAndConnectionState player) {
                 this.player = player;
 
                 ZoneId zoneId = player.zoneId();
@@ -93,7 +93,7 @@ public class PlayersFragment extends Fragment {
         private final Context context;
         private final SortedList<PlayerWithBalanceAndConnectionState> players;
 
-        public PlayersAdapter(final Context context) {
+        PlayersAdapter(final Context context) {
             this.context = context;
             this.players = new SortedList<>(
                     PlayerWithBalanceAndConnectionState.class,
@@ -124,12 +124,12 @@ public class PlayersFragment extends Fragment {
             );
         }
 
-        public void remove(PlayerWithBalanceAndConnectionState player) {
+        void remove(PlayerWithBalanceAndConnectionState player) {
             players.remove(player);
         }
 
-        public void replace(PlayerWithBalanceAndConnectionState oldPlayer,
-                            PlayerWithBalanceAndConnectionState newPlayer) {
+        void replace(PlayerWithBalanceAndConnectionState oldPlayer,
+                     PlayerWithBalanceAndConnectionState newPlayer) {
             players.updateItemAt(players.indexOf(oldPlayer), newPlayer);
         }
 
@@ -138,7 +138,7 @@ public class PlayersFragment extends Fragment {
          *               replaces. If properties of the player (i.e. its name) have changed
          *               relative to any previous item, the replace method must instead be called.
          */
-        public void replaceOrAdd(PlayerWithBalanceAndConnectionState player) {
+        void replaceOrAdd(PlayerWithBalanceAndConnectionState player) {
             players.add(player);
         }
 
