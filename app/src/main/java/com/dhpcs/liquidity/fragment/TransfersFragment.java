@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.util.SortedList;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.util.SortedListAdapterCallback;
@@ -233,6 +234,10 @@ public class TransfersFragment extends Fragment {
         recyclerViewTransfers.setHasFixedSize(true);
         recyclerViewTransfers.setLayoutManager(new LinearLayoutManager(getActivity()));
         recyclerViewTransfers.setAdapter(transfersAdapter);
+        recyclerViewTransfers.addItemDecoration(new DividerItemDecoration(
+                recyclerViewTransfers.getContext(),
+                DividerItemDecoration.VERTICAL
+        ));
 
         if (transfersAdapter.getItemCount() != 0) {
             textViewEmpty.setVisibility(View.GONE);
