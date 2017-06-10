@@ -18,11 +18,10 @@ import android.view.WindowManager;
 import android.widget.Button;
 
 import com.dhpcs.liquidity.R;
+import com.dhpcs.liquidity.actor.protocol.package$;
 import com.dhpcs.liquidity.boardgame.BoardGame$;
-import com.dhpcs.liquidity.protocol.package$;
 
-public class
-EnterGameNameDialogFragment extends AppCompatDialogFragment {
+public class EnterGameNameDialogFragment extends AppCompatDialogFragment {
 
     public interface Listener {
 

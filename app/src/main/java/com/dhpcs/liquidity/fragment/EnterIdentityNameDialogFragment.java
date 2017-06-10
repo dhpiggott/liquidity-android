@@ -19,8 +19,8 @@ import android.widget.Button;
 
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activity.BoardGameActivity;
+import com.dhpcs.liquidity.actor.protocol.package$;
 import com.dhpcs.liquidity.boardgame.BoardGame.Identity;
-import com.dhpcs.liquidity.protocol.package$;
 
 public class EnterIdentityNameDialogFragment extends AppCompatDialogFragment {
 

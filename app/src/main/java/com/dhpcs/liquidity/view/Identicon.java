@@ -101,9 +101,15 @@ public class Identicon extends View {
             messageDigest.update(
                     ByteBuffer.allocate(8).putLong(zoneId.id().getLeastSignificantBits()).array()
             );
-            messageDigest.update(
-                    ByteBuffer.allocate(4).putInt(memberId.id()).array()
-            );
+            if (memberId.id() <= Integer.MAX_VALUE) {
+                messageDigest.update(
+                        ByteBuffer.allocate(4).putInt((int) memberId.id()).array()
+                );
+            } else {
+                messageDigest.update(
+                        ByteBuffer.allocate(8).putLong(memberId.id()).array()
+                );
+            }
             hash = messageDigest.digest();
         } catch (NoSuchAlgorithmException e) {
             throw new Error(e);

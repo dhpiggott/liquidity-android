@@ -10,6 +10,12 @@
 -dontwarn scala.reflect.internal.*
 -dontwarn sun.**
 
+# Shapeless
+-dontwarn sourcecode.**
+-dontwarn shapeless.**
+-dontwarn fastparse.utils.**
+-dontwarn macrocompat.BundleMacro
+
 # Scala Fork/Join
 -keep class scala.concurrent.forkjoin.** { *; }
 

@@ -24,8 +24,8 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.dhpcs.liquidity.R;
+import com.dhpcs.liquidity.actor.protocol.package$;
 import com.dhpcs.liquidity.boardgame.BoardGame$;
-import com.dhpcs.liquidity.protocol.package$;
 
 import java.util.ArrayList;
 import java.util.Comparator;

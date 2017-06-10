@@ -19,7 +19,7 @@ import android.widget.Button;
 
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activity.BoardGameActivity;
-import com.dhpcs.liquidity.protocol.package$;
+import com.dhpcs.liquidity.actor.protocol.package$;
 
 public class CreateIdentityDialogFragment extends AppCompatDialogFragment {
 

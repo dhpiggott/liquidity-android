@@ -31,8 +31,6 @@ import org.joda.time.ReadableInstant;
 import org.joda.time.Seconds;
 import org.joda.time.Weeks;
 
-import java.io.InputStream;
-
 public class LiquidityApplication extends MultiDexApplication {
 
     private static BoardGame.GameDatabase gameDatabase;
@@ -226,26 +224,9 @@ public class LiquidityApplication extends MultiDexApplication {
 
     public static ServerConnection getServerConnection(final Context context) {
         if (serverConnection == null) {
-            serverConnection = ServerConnection.getInstance(
-                    new ServerConnection.PRNGFixesApplicator() {
-
-                        @Override
-                        public void apply() {
-                            PRNGFixes.apply();
-                        }
-
-                    },
+            PRNGFixes.apply();
+            serverConnection = new ServerConnection(
                     context.getFilesDir(),
-                    new ServerConnection.KeyStoreInputStreamProvider() {
-
-                        @Override
-                        public InputStream get() {
-                            return context.getResources().openRawResource(
-                                    R.raw.liquidity_dhpcs_com
-                            );
-                        }
-
-                    },
                     new ServerConnection.ConnectivityStatePublisherBuilder() {
 
                         @Override
