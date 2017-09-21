@@ -24,8 +24,8 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.dhpcs.liquidity.R;
-import com.dhpcs.liquidity.actor.protocol.package$;
 import com.dhpcs.liquidity.boardgame.BoardGame$;
+import com.dhpcs.liquidity.ws.protocol.ZoneCommand$;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -189,7 +189,7 @@ public class CreateGameDialogFragment extends AppCompatDialogFragment {
                 )
                 .create();
 
-        textInputLayoutGameName.setCounterMaxLength(package$.MODULE$.MaxStringLength());
+        textInputLayoutGameName.setCounterMaxLength(ZoneCommand$.MODULE$.MaximumTagLength());
         textInputEditTextGameName.addTextChangedListener(new TextWatcher() {
 
             @Override

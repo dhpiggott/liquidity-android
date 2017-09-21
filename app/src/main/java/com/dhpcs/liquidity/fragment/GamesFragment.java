@@ -23,8 +23,6 @@ import com.dhpcs.liquidity.provider.LiquidityContract;
 
 import org.joda.time.Instant;
 
-import java.util.UUID;
-
 public class GamesFragment extends Fragment implements AdapterView.OnItemClickListener,
         LoaderManager.LoaderCallbacks<Cursor> {
 
@@ -193,11 +191,9 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
             listener.onGameClicked(
                     id,
                     new ZoneId(
-                            UUID.fromString(
-                                    cursor.getString(cursor.getColumnIndexOrThrow(
-                                            LiquidityContract.Games.ZONE_ID
-                                    ))
-                            )
+                            cursor.getString(cursor.getColumnIndexOrThrow(
+                                    LiquidityContract.Games.ZONE_ID
+                            ))
                     ),
                     cursor.getString(cursor.getColumnIndexOrThrow(
                             LiquidityContract.Games.NAME

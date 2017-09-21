@@ -7,7 +7,6 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Toast;
 
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.fragment.AddGameBottomSheetDialogFragment;
@@ -19,7 +18,6 @@ import com.google.zxing.integration.android.IntentResult;
 
 import java.util.Collections;
 import java.util.Currency;
-import java.util.UUID;
 
 public class GamesActivity extends AppCompatActivity
         implements AddGameBottomSheetDialogFragment.Listener,
@@ -32,28 +30,15 @@ public class GamesActivity extends AppCompatActivity
         if (result != null) {
             String contents = result.getContents();
             if (contents != null) {
-                try {
-                    ZoneId zoneId = new ZoneId(
-                            UUID.fromString(
-                                    contents
-                            )
-                    );
-                    startActivity(
-                            new Intent(
-                                    GamesActivity.this,
-                                    BoardGameActivity.class
-                            ).putExtra(
-                                    BoardGameActivity.EXTRA_ZONE_ID,
-                                    zoneId
-                            )
-                    );
-                } catch (IllegalArgumentException e) {
-                    Toast.makeText(
-                            this,
-                            R.string.join_game_error,
-                            Toast.LENGTH_LONG
-                    ).show();
-                }
+                startActivity(
+                        new Intent(
+                                GamesActivity.this,
+                                BoardGameActivity.class
+                        ).putExtra(
+                                BoardGameActivity.EXTRA_ZONE_ID,
+                                new ZoneId(contents)
+                        )
+                );
             }
         } else {
             super.onActivityResult(requestCode, resultCode, data);

@@ -19,7 +19,7 @@ import android.widget.Button;
 
 import com.dhpcs.liquidity.R;
 import com.dhpcs.liquidity.activity.BoardGameActivity;
-import com.dhpcs.liquidity.actor.protocol.package$;
+import com.dhpcs.liquidity.ws.protocol.ZoneCommand$;
 
 public class CreateIdentityDialogFragment extends AppCompatDialogFragment {
 
@@ -79,7 +79,7 @@ public class CreateIdentityDialogFragment extends AppCompatDialogFragment {
                 )
                 .create();
 
-        textInputLayoutIdentityName.setCounterMaxLength(package$.MODULE$.MaxStringLength());
+        textInputLayoutIdentityName.setCounterMaxLength(ZoneCommand$.MODULE$.MaximumTagLength());
         textInputEditTextIdentityName.addTextChangedListener(new TextWatcher() {
 
             @Override

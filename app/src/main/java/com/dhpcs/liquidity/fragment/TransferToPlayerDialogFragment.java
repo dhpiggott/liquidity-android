@@ -306,7 +306,7 @@ public class TransferToPlayerDialogFragment extends AppCompatDialogFragment {
                                     ""
                             )
                     );
-                } catch (IllegalArgumentException e) {
+                } catch (IllegalArgumentException ignored) {
                     value = null;
                 }
 
@@ -471,7 +471,7 @@ public class TransferToPlayerDialogFragment extends AppCompatDialogFragment {
                 buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
                 try {
                     value = new BigDecimal(editTextValue.getText().toString());
-                } catch (IllegalArgumentException e) {
+                } catch (IllegalArgumentException ignored) {
                     value = null;
                 }
                 validateInput();

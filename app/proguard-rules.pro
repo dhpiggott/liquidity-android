@@ -1,37 +1,20 @@
 # Various superfluous inferred dependencies that don't exist on Android
--dontwarn java.beans.MethodDescriptor
--dontwarn java.beans.PropertyDescriptor
--dontwarn java.beans.SimpleBeanInfo
+-dontwarn java.beans.*
 -dontwarn java.lang.management.*
--dontwarn java.nio.file.*
 -dontwarn javax.**
 -dontwarn org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement
--dontwarn org.w3c.dom.bootstrap.DOMImplementationRegistry
 -dontwarn scala.reflect.internal.*
 -dontwarn sun.**
 
-# Shapeless
--dontwarn sourcecode.**
+# Akka, Scala and Shapeless
+-dontwarn akka.actor.CoordinatedShutdown
+-dontwarn akka.dispatch.affinity.AffinityPool$IdleStrategy
+-dontwarn akka.util.Index
+-dontwarn scala.compat.java8.**
 -dontwarn shapeless.**
--dontwarn fastparse.utils.**
--dontwarn macrocompat.BundleMacro
-
-# Scala Fork/Join
--keep class scala.concurrent.forkjoin.** { *; }
+-dontwarn sourcecode.**
 
 # See https://issues.scala-lang.org/browse/SI-5397
 -keep class scala.collection.SeqLike {
     public protected *;
 }
-
-# JSON
--keep class com.fasterxml.jackson.** { *; }
-
-# Preference compat types are referenced in XML
--keep class android.support.v7.preference.** { *; }
-
-# Design support behaviours are referenced in XML
--keep class android.support.design.widget.** { *; }
-
-# MaterialProgressBar
--keep class me.zhanghai.android.materialprogressbar.** { *; }

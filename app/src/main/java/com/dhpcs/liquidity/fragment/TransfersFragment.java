@@ -101,10 +101,17 @@ public class TransfersFragment extends Fragment {
                     @Override
                     public int compare(TransferWithCurrency o1,
                                        TransferWithCurrency o2) {
-                        long lhsId = o1.transaction().id().id();
-                        long rhsId = o2.transaction().id().id();
-                        return -1 *
-                                (lhsId < rhsId ? -1 : (lhsId == rhsId ? 0 : 1));
+                        long lhsCreated = o1.transaction().created();
+                        long rhsCreated = o2.transaction().created();
+                        if (lhsCreated < rhsCreated) {
+                            return 11;
+                        } else if (lhsCreated > rhsCreated) {
+                            return -1;
+                        } else {
+                            String lhsId = o1.transaction().id().id();
+                            String rhsId = o2.transaction().id().id();
+                            return lhsId.compareTo(rhsId);
+                        }
                     }
 
                     @Override

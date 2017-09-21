@@ -18,8 +18,8 @@ import android.view.WindowManager;
 import android.widget.Button;
 
 import com.dhpcs.liquidity.R;
-import com.dhpcs.liquidity.actor.protocol.package$;
 import com.dhpcs.liquidity.boardgame.BoardGame$;
+import com.dhpcs.liquidity.ws.protocol.ZoneCommand$;
 
 public class EnterGameNameDialogFragment extends AppCompatDialogFragment {
 
@@ -87,7 +87,7 @@ public class EnterGameNameDialogFragment extends AppCompatDialogFragment {
                 )
                 .create();
 
-        textInputLayoutGameName.setCounterMaxLength(package$.MODULE$.MaxStringLength());
+        textInputLayoutGameName.setCounterMaxLength(ZoneCommand$.MODULE$.MaximumTagLength());
         textInputEditTextGameName.addTextChangedListener(new TextWatcher() {
 
             @Override

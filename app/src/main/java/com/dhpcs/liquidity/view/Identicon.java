@@ -13,6 +13,7 @@ import com.dhpcs.liquidity.model.ZoneId;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.UUID;
 
 public class Identicon extends View {
 
@@ -95,20 +96,32 @@ public class Identicon extends View {
         byte[] hash;
         try {
             MessageDigest messageDigest = MessageDigest.getInstance("SHA-1");
-            messageDigest.update(
-                    ByteBuffer.allocate(8).putLong(zoneId.id().getMostSignificantBits()).array()
-            );
-            messageDigest.update(
-                    ByteBuffer.allocate(8).putLong(zoneId.id().getLeastSignificantBits()).array()
-            );
-            if (memberId.id() <= Integer.MAX_VALUE) {
+            try {
+                UUID zoneIdAsUuid = UUID.fromString(zoneId.id());
                 messageDigest.update(
-                        ByteBuffer.allocate(4).putInt((int) memberId.id()).array()
+                        ByteBuffer.allocate(8)
+                                .putLong(zoneIdAsUuid.getMostSignificantBits()).array()
                 );
-            } else {
                 messageDigest.update(
-                        ByteBuffer.allocate(8).putLong(memberId.id()).array()
+                        ByteBuffer.allocate(8)
+                                .putLong(zoneIdAsUuid.getLeastSignificantBits()).array()
                 );
+            } catch (IllegalArgumentException ignored) {
+                messageDigest.update(zoneId.id().getBytes());
+            }
+            try {
+                long memberIdAsInt = Long.parseLong(memberId.id());
+                if (memberIdAsInt <= Integer.MAX_VALUE) {
+                    messageDigest.update(
+                            ByteBuffer.allocate(4).putInt((int) memberIdAsInt).array()
+                    );
+                } else {
+                    messageDigest.update(
+                            ByteBuffer.allocate(8).putLong(memberIdAsInt).array()
+                    );
+                }
+            } catch (IllegalArgumentException ignored) {
+                messageDigest.update(memberId.id().getBytes());
             }
             hash = messageDigest.digest();
         } catch (NoSuchAlgorithmException e) {

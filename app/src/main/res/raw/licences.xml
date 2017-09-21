@@ -2,21 +2,38 @@
 <notices>
     <!-- @formatter:off -->
     <notice>
-        <name>The Android Support libraries</name>
-        <url>https://developer.android.com/topic/libraries/support-library/index.html</url>
-        <copyright>Copyright (C) 2011-2016 The Android Open Source Project</copyright>
+        <name>The Scala Language libraries</name>
+        <url>https://www.scala-lang.org/</url>
+        <copyright>Copyright (c) 2002-2017 EPFL&#10;Copyright (c) 2011-2017 Lightbend, Inc.</copyright>
+        <license>BSD 3-Clause License</license>
+    </notice>
+    <notice>
+        <name>Protocol Buffers</name>
+        <url>https://developers.google.com/protocol-buffers/</url>
+        <copyright>Copyright 2014, Google Inc.</copyright>
+        <license>BSD 3-Clause License</license>
+    </notice>
+    <notice>
+        <name>Cats</name>
+        <url>https://typelevel.org/cats/</url>
+        <copyright>Cats Copyright (c) 2015 Erik Osheim.</copyright>
+        <license>MIT License</license>
+    </notice>
+    <notice>
+        <name>Akka</name>
+        <url>http://akka.io/</url>
+        <copyright>Copyright (C) 2015-2017 Lightbend Inc.</copyright>
         <license>Apache Software License 2.0</license>
     </notice>
     <notice>
-        <name>The Scala Language libraries</name>
-        <url>http://www.scala-lang.org/</url>
-        <copyright>Copyright (c) 2002-2016 EPFL&#10;Copyright (c) 2011-2016 Lightbend, Inc. (formerly Typesafe, Inc.)</copyright>
-        <license>BSD 3-Clause License</license>
+        <name>Shapeless</name>
+        <url>https://github.com/milessabin/shapeless</url>
+        <license>Apache Software License 2.0</license>
     </notice>
     <notice>
         <name>Spongy Castle</name>
         <url>https://rtyley.github.io/spongycastle/</url>
-        <copyright>Copyright (c) 2000-2015 The Legion of the Bouncy Castle Inc. (http://www.bouncycastle.org)</copyright>
+        <copyright>Copyright (c) 2000-2017 The Legion of the Bouncy Castle Inc. (http://www.bouncycastle.org)</copyright>
         <license>MIT License</license>
     </notice>
     <notice>
@@ -26,9 +43,9 @@
         <license>Apache Software License 2.0</license>
     </notice>
     <notice>
-        <name>The Play JSON library and its dependencies</name>
-        <url>https://www.playframework.com/</url>
-        <copyright>Copyright (C) 2009-2016 Lightbend Inc. (https://www.lightbend.com).</copyright>
+        <name>The Android Support libraries</name>
+        <url>https://developer.android.com/topic/libraries/support-library/index.html</url>
+        <copyright>Copyright (C) 2011-2017 The Android Open Source Project</copyright>
         <license>Apache Software License 2.0</license>
     </notice>
     <notice>
@@ -55,6 +72,7 @@
     <notice>
         <name>ZXing Android Embedded</name>
         <url>https://github.com/journeyapps/zxing-android-embedded</url>
+        <copyright>Copyright (C) 2012-2017 ZXing authors, Journey Mobile</copyright>
         <license>Apache Software License 2.0</license>
     </notice>
     <notice>

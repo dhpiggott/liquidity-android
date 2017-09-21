@@ -11,8 +11,8 @@ import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Handler;
-import android.os.HandlerThread;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.support.multidex.MultiDexApplication;
 
 import com.dhpcs.liquidity.boardgame.BoardGame;
@@ -30,6 +30,8 @@ import org.joda.time.Minutes;
 import org.joda.time.ReadableInstant;
 import org.joda.time.Seconds;
 import org.joda.time.Weeks;
+
+import java.util.concurrent.Executor;
 
 public class LiquidityApplication extends MultiDexApplication {
 
@@ -220,6 +222,19 @@ public class LiquidityApplication extends MultiDexApplication {
         return String.format(format, count);
     }
 
+    private static final Executor mainThreadExecutor = new Executor() {
+        private final Handler handler = new Handler(Looper.getMainLooper());
+
+        @Override
+        public void execute(@NonNull Runnable runnable) {
+            handler.post(runnable);
+        }
+    };
+
+    public static Executor getMainThreadExecutor() {
+        return mainThreadExecutor;
+    }
+
     private static ServerConnection serverConnection;
 
     public static ServerConnection getServerConnection(final Context context) {
@@ -227,10 +242,10 @@ public class LiquidityApplication extends MultiDexApplication {
             PRNGFixes.apply();
             serverConnection = new ServerConnection(
                     context.getFilesDir(),
-                    new ServerConnection.ConnectivityStatePublisherBuilder() {
+                    new ServerConnection.ConnectivityStatePublisherProvider() {
 
                         @Override
-                        public ServerConnection.ConnectivityStatePublisher build(
+                        public ServerConnection.ConnectivityStatePublisher provide(
                                 final ServerConnection serverConnection) {
                             return new ServerConnection.ConnectivityStatePublisher() {
 
@@ -291,39 +306,7 @@ public class LiquidityApplication extends MultiDexApplication {
                         }
 
                     },
-                    new ServerConnection.HandlerWrapperFactory() {
-
-                        @Override
-                        public ServerConnection.HandlerWrapper create(String name) {
-                            HandlerThread handlerThread = new HandlerThread(name);
-                            handlerThread.start();
-                            return wrap(handlerThread.getLooper());
-                        }
-
-                        @Override
-                        public ServerConnection.HandlerWrapper main() {
-                            return wrap(Looper.getMainLooper());
-                        }
-
-                        private ServerConnection.HandlerWrapper wrap(final Looper looper) {
-                            return new ServerConnection.HandlerWrapper() {
-
-                                private final Handler handler = new Handler(looper);
-
-                                @Override
-                                public void quit() {
-                                    looper.quit();
-                                }
-
-                                @Override
-                                public void post(Runnable runnable) {
-                                    handler.post(runnable);
-                                }
-
-                            };
-                        }
-
-                    }
+                    mainThreadExecutor
             );
         }
         return serverConnection;

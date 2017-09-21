@@ -210,9 +210,9 @@ public class BoardGameActivity extends AppCompatActivity
                         BoardGameActivity.formatNullable(context, rhs.member().name())
                 );
                 if (nameOrdered == 0) {
-                    long lhsId = lhs.member().id().id();
-                    long rhsId = rhs.member().id().id();
-                    return lhsId < rhsId ? -1 : (lhsId == rhsId ? 0 : 1);
+                    String lhsId = lhs.member().id().id();
+                    String rhsId = rhs.member().id().id();
+                    return lhsId.compareTo(rhsId);
                 } else {
                     return nameOrdered;
                 }
@@ -260,7 +260,7 @@ public class BoardGameActivity extends AppCompatActivity
                             throw new IllegalArgumentException();
                         }
                         boardGame.transferIdentity(identity, publicKey);
-                    } catch (IllegalArgumentException e) {
+                    } catch (IllegalArgumentException ignored) {
                         Toast.makeText(
                                 this,
                                 getString(
@@ -414,6 +414,7 @@ public class BoardGameActivity extends AppCompatActivity
 
             boardGame = new BoardGame(
                     LiquidityApplication.getServerConnection(getApplicationContext()),
+                    LiquidityApplication.getMainThreadExecutor(),
                     LiquidityApplication.getGameDatabase(getApplicationContext()),
                     currency,
                     gameName,
@@ -430,6 +431,7 @@ public class BoardGameActivity extends AppCompatActivity
 
                     boardGame = new BoardGame(
                             LiquidityApplication.getServerConnection(getApplicationContext()),
+                            LiquidityApplication.getMainThreadExecutor(),
                             LiquidityApplication.getGameDatabase(getApplicationContext()),
                             zoneId
                     );
@@ -438,6 +440,7 @@ public class BoardGameActivity extends AppCompatActivity
 
                     boardGame = new BoardGame(
                             LiquidityApplication.getServerConnection(getApplicationContext()),
+                            LiquidityApplication.getMainThreadExecutor(),
                             LiquidityApplication.getGameDatabase(getApplicationContext()),
                             zoneId,
                             getIntent().getExtras().getLong(EXTRA_GAME_ID)
@@ -1044,8 +1047,8 @@ public class BoardGameActivity extends AppCompatActivity
         if (addedTransfer.to().isRight()
                 && PreferenceManager.getDefaultSharedPreferences(this)
                 .getBoolean("play_transfer_receipt_sounds", true)
-                && addedTransfer.to().right().get().member().ownerPublicKey()
-                .equals(
+                && addedTransfer.to().right().get().member().ownerPublicKeys()
+                .contains(
                         LiquidityApplication.getServerConnection(getApplicationContext())
                                 .clientKey()
                 )) {
