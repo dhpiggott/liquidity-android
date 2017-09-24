@@ -35,9 +35,9 @@ public class IdentityFragment extends Fragment {
         IdentityWithBalance identity = (IdentityWithBalance) getArguments()
                 .getSerializable(ARG_IDENTITY);
 
-        Identicon identiconId = (Identicon) view.findViewById(R.id.identicon_id);
-        TextView textViewName = (TextView) view.findViewById(R.id.textview_name);
-        TextView textViewBalance = (TextView) view.findViewById(R.id.textview_balance);
+        Identicon identiconId = view.findViewById(R.id.identicon_id);
+        TextView textViewName = view.findViewById(R.id.textview_name);
+        TextView textViewBalance = view.findViewById(R.id.textview_balance);
 
         assert identity != null;
         ZoneId zoneId = identity.zoneId();

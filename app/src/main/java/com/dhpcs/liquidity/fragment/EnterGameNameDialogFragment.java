@@ -61,10 +61,8 @@ public class EnterGameNameDialogFragment extends AppCompatDialogFragment {
 
         String name = getArguments().getString(ARG_NAME);
 
-        TextInputLayout textInputLayoutGameName = (TextInputLayout)
-                view.findViewById(R.id.textinputlayout_game_name);
-        final TextInputEditText textInputEditTextGameName = (TextInputEditText)
-                view.findViewById(R.id.textinputedittext_game_name);
+        TextInputLayout textInputLayoutGameName = view.findViewById(R.id.textinputlayout_game_name);
+        final TextInputEditText textInputEditTextGameName = view.findViewById(R.id.textinputedittext_game_name);
 
         final AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
                 .setTitle(R.string.enter_game_name)
@@ -72,17 +70,12 @@ public class EnterGameNameDialogFragment extends AppCompatDialogFragment {
                 .setNegativeButton(R.string.cancel, null)
                 .setPositiveButton(
                         R.string.ok,
-                        new DialogInterface.OnClickListener() {
-
-                            @Override
-                            public void onClick(DialogInterface dialog, int whichButton) {
-                                if (listener != null) {
-                                    listener.onGameNameEntered(
-                                            textInputEditTextGameName.getText().toString()
-                                    );
-                                }
+                        (dialog, whichButton) -> {
+                            if (listener != null) {
+                                listener.onGameNameEntered(
+                                        textInputEditTextGameName.getText().toString()
+                                );
                             }
-
                         }
                 )
                 .create();
@@ -109,14 +102,9 @@ public class EnterGameNameDialogFragment extends AppCompatDialogFragment {
 
         textInputEditTextGameName.setText(name);
 
-        alertDialog.setOnShowListener(new DialogInterface.OnShowListener() {
-
-            @Override
-            public void onShow(DialogInterface dialog) {
-                buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
-                validateInput(textInputEditTextGameName.getText());
-            }
-
+        alertDialog.setOnShowListener(dialog -> {
+            buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
+            validateInput(textInputEditTextGameName.getText());
         });
 
         Window window = alertDialog.getWindow();

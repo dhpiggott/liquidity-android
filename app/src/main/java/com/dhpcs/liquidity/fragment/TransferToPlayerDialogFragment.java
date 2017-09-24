@@ -225,7 +225,7 @@ public class TransferToPlayerDialogFragment extends AppCompatDialogFragment {
                         ?
                         (ArrayList<Player>) savedInstanceState.getSerializable(EXTRA_TO_LIST)
                         :
-                        new ArrayList<Player>());
+                        new ArrayList<>());
         this.toList = toList;
 
         Comparator<Player> playerComparator = BoardGameActivity.playerComparator(getActivity());
@@ -243,15 +243,14 @@ public class TransferToPlayerDialogFragment extends AppCompatDialogFragment {
                 null
         );
 
-        TextView textViewCurrency = (TextView) view.findViewById(R.id.textview_currency);
-        final EditText editTextValue = (EditText) view.findViewById(R.id.edittext_value);
-        final TextView editTextScaledValue = (TextView)
-                view.findViewById(R.id.textview_scaled_value);
-        textViewValueError = (TextView) view.findViewById(R.id.textview_value_error);
-        Spinner spinnerFrom = (Spinner) view.findViewById(R.id.spinner_from);
-        textViewFromError = (TextView) view.findViewById(R.id.textview_from_error);
-        LinearLayout linearLayoutTo = (LinearLayout) view.findViewById(R.id.linearlayout_to);
-        Spinner spinnerTo = (Spinner) view.findViewById(R.id.spinner_to);
+        TextView textViewCurrency = view.findViewById(R.id.textview_currency);
+        final EditText editTextValue = view.findViewById(R.id.edittext_value);
+        final TextView editTextScaledValue = view.findViewById(R.id.textview_scaled_value);
+        textViewValueError = view.findViewById(R.id.textview_value_error);
+        Spinner spinnerFrom = view.findViewById(R.id.spinner_from);
+        textViewFromError = view.findViewById(R.id.textview_from_error);
+        LinearLayout linearLayoutTo = view.findViewById(R.id.linearlayout_to);
+        Spinner spinnerTo = view.findViewById(R.id.spinner_to);
 
         final AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
                 .setTitle(
@@ -263,19 +262,14 @@ public class TransferToPlayerDialogFragment extends AppCompatDialogFragment {
                 .setNegativeButton(R.string.cancel, null)
                 .setPositiveButton(
                         R.string.ok,
-                        new DialogInterface.OnClickListener() {
-
-                            @Override
-                            public void onClick(DialogInterface dialog, int whichButton) {
-                                if (listener != null) {
-                                    listener.onTransferValueEntered(
-                                            from,
-                                            to != null ? Collections.singletonList(to) : toList,
-                                            value
-                                    );
-                                }
+                        (dialog, whichButton) -> {
+                            if (listener != null) {
+                                listener.onTransferValueEntered(
+                                        from,
+                                        to != null ? Collections.singletonList(to) : toList,
+                                        value
+                                );
                             }
-
                         }
                 )
                 .create();
@@ -447,36 +441,26 @@ public class TransferToPlayerDialogFragment extends AppCompatDialogFragment {
                         BoardGameActivity.formatNullable(getActivity(), player.member().name())
                 );
                 checkedTextViewPlayer.setChecked(toList.contains(player));
-                checkedTextViewPlayer.setOnClickListener(new View.OnClickListener() {
-
-                    @Override
-                    public void onClick(View v) {
-                        checkedTextViewPlayer.toggle();
-                        if (checkedTextViewPlayer.isChecked()) {
-                            toList.add(player);
-                        } else {
-                            toList.remove(player);
-                        }
-                        validateInput();
+                checkedTextViewPlayer.setOnClickListener(v -> {
+                    checkedTextViewPlayer.toggle();
+                    if (checkedTextViewPlayer.isChecked()) {
+                        toList.add(player);
+                    } else {
+                        toList.remove(player);
                     }
-
+                    validateInput();
                 });
             }
         }
 
-        alertDialog.setOnShowListener(new DialogInterface.OnShowListener() {
-
-            @Override
-            public void onShow(DialogInterface dialog) {
-                buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
-                try {
-                    value = new BigDecimal(editTextValue.getText().toString());
-                } catch (IllegalArgumentException ignored) {
-                    value = null;
-                }
-                validateInput();
+        alertDialog.setOnShowListener(dialog -> {
+            buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
+            try {
+                value = new BigDecimal(editTextValue.getText().toString());
+            } catch (IllegalArgumentException ignored) {
+                value = null;
             }
-
+            validateInput();
         });
 
         Window window = alertDialog.getWindow();

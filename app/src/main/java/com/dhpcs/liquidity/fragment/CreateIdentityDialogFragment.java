@@ -53,10 +53,8 @@ public class CreateIdentityDialogFragment extends AppCompatDialogFragment {
                 null
         );
 
-        TextInputLayout textInputLayoutIdentityName = (TextInputLayout)
-                view.findViewById(R.id.textinputlayout_identity_name);
-        final TextInputEditText textInputEditTextIdentityName = (TextInputEditText)
-                view.findViewById(R.id.textinputedittext_identity_name);
+        TextInputLayout textInputLayoutIdentityName = view.findViewById(R.id.textinputlayout_identity_name);
+        final TextInputEditText textInputEditTextIdentityName = view.findViewById(R.id.textinputedittext_identity_name);
 
         final AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
                 .setTitle(R.string.enter_identity_name)
@@ -64,17 +62,12 @@ public class CreateIdentityDialogFragment extends AppCompatDialogFragment {
                 .setNegativeButton(R.string.cancel, null)
                 .setPositiveButton(
                         R.string.ok,
-                        new DialogInterface.OnClickListener() {
-
-                            @Override
-                            public void onClick(DialogInterface dialog, int whichButton) {
-                                if (listener != null) {
-                                    listener.onIdentityNameEntered(
-                                            textInputEditTextIdentityName.getText().toString()
-                                    );
-                                }
+                        (dialog, whichButton) -> {
+                            if (listener != null) {
+                                listener.onIdentityNameEntered(
+                                        textInputEditTextIdentityName.getText().toString()
+                                );
                             }
-
                         }
                 )
                 .create();
@@ -99,14 +92,9 @@ public class CreateIdentityDialogFragment extends AppCompatDialogFragment {
 
         });
 
-        alertDialog.setOnShowListener(new DialogInterface.OnShowListener() {
-
-            @Override
-            public void onShow(DialogInterface dialog) {
-                buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
-                validateInput(textInputEditTextIdentityName.getText());
-            }
-
+        alertDialog.setOnShowListener(dialog -> {
+            buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
+            validateInput(textInputEditTextIdentityName.getText());
         });
 
         Window window = alertDialog.getWindow();

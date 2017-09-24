@@ -3,7 +3,6 @@ package com.dhpcs.liquidity.activity;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -25,7 +24,7 @@ public class AddPlayersActivity extends BoardGameChildActivity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_add_players);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
 
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
@@ -38,7 +37,7 @@ public class AddPlayersActivity extends BoardGameChildActivity {
         @SuppressWarnings("unchecked") Option<String> gameName = (Option<String>) getIntent()
                 .getSerializableExtra(EXTRA_GAME_NAME);
 
-        TextView textViewGameName = (TextView) findViewById(R.id.textview_game_name);
+        TextView textViewGameName = findViewById(R.id.textview_game_name);
         assert textViewGameName != null;
         textViewGameName.setText(
                 getString(
@@ -46,22 +45,15 @@ public class AddPlayersActivity extends BoardGameChildActivity {
                         BoardGameActivity.formatNullable(this, gameName)
                 )
         );
-        final ImageView imageViewQrCode = (ImageView) findViewById(R.id.imageview_qr_code);
+        final ImageView imageViewQrCode = findViewById(R.id.imageview_qr_code);
         assert imageViewQrCode != null;
-        imageViewQrCode.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
-
-            @Override
-            public void onLayoutChange(View v,
-                                       int left, int top, int right, int bottom,
-                                       int oldLeft, int oldTop, int oldRight, int oldBottom) {
-                assert zoneId != null;
-                imageViewQrCode.setImageBitmap(
-                        ((QRCode) QRCode.from(zoneId.id().toString())
-                                .withSize(right - left, bottom - top))
-                                .bitmap()
-                );
-            }
-
+        imageViewQrCode.addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
+            assert zoneId != null;
+            imageViewQrCode.setImageBitmap(
+                    ((QRCode) QRCode.from(zoneId.id())
+                            .withSize(right - left, bottom - top))
+                            .bitmap()
+            );
         });
     }
 

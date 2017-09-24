@@ -116,9 +116,9 @@ public class LastTransferFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_last_transfer, container, false);
 
-        textViewEmpty = (TextView) view.findViewById(R.id.textview_empty);
-        textSwitcherSummary = (TextSwitcher) view.findViewById(R.id.textswitcher_summary);
-        textSwitcherCreated = (TextSwitcher) view.findViewById(R.id.textswitcher_created);
+        textViewEmpty = view.findViewById(R.id.textview_empty);
+        textSwitcherSummary = view.findViewById(R.id.textswitcher_summary);
+        textSwitcherCreated = view.findViewById(R.id.textswitcher_created);
 
         return view;
     }

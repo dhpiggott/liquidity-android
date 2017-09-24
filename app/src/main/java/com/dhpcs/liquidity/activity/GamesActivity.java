@@ -50,24 +50,17 @@ public class GamesActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_games);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
 
         setSupportActionBar(toolbar);
 
         View floatingActionButtonAddGame = findViewById(R.id.floatingactionbutton_add_game);
         assert floatingActionButtonAddGame != null;
-        floatingActionButtonAddGame.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                AddGameBottomSheetDialogFragment.newInstance()
-                        .show(
-                                getSupportFragmentManager(),
-                                AddGameBottomSheetDialogFragment.TAG
-                        );
-            }
-
-        });
+        floatingActionButtonAddGame.setOnClickListener(v -> AddGameBottomSheetDialogFragment.newInstance()
+                .show(
+                        getSupportFragmentManager(),
+                        AddGameBottomSheetDialogFragment.TAG
+                ));
     }
 
     @Override

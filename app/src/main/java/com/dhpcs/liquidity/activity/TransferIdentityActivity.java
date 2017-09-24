@@ -13,7 +13,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
 import android.view.KeyEvent;
-import android.view.View;
 import android.widget.LinearLayout;
 
 import com.dhpcs.liquidity.R;
@@ -38,7 +37,7 @@ public class TransferIdentityActivity extends BoardGameChildActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_transfer_identity);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
 
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
@@ -49,11 +48,9 @@ public class TransferIdentityActivity extends BoardGameChildActivity {
                 .getBundleExtra(EXTRA_IDENTITY_NAME_HOLDER)
                 .getSerializable(EXTRA_IDENTITY_NAME);
 
-        linearLayoutTransferIdentity = (LinearLayout)
-                findViewById(R.id.linearlayout_transfer_identity);
+        linearLayoutTransferIdentity = findViewById(R.id.linearlayout_transfer_identity);
 
-        DecoratedBarcodeView barcodeScannerView = (DecoratedBarcodeView)
-                findViewById(R.id.zxing_barcode_scanner);
+        DecoratedBarcodeView barcodeScannerView = findViewById(R.id.zxing_barcode_scanner);
         assert barcodeScannerView != null;
         barcodeScannerView.setStatusText(
                 getString(
@@ -103,28 +100,23 @@ public class TransferIdentityActivity extends BoardGameChildActivity {
                         linearLayoutTransferIdentity,
                         R.string.camera_permission_rationale,
                         Snackbar.LENGTH_INDEFINITE
-                ).setAction(R.string.settings, new View.OnClickListener() {
-
-                    @Override
-                    public void onClick(View view) {
+                ).setAction(R.string.settings, view -> {
+                    try {
+                        startActivity(
+                                new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                                        .setData(Uri.parse("package:" + getPackageName()))
+                        );
+                    } catch (ActivityNotFoundException ignored1) {
                         try {
                             startActivity(
-                                    new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                                            .setData(Uri.parse("package:" + getPackageName()))
+                                    new Intent(Settings.ACTION_APPLICATION_SETTINGS)
                             );
-                        } catch (ActivityNotFoundException ignored1) {
-                            try {
-                                startActivity(
-                                        new Intent(Settings.ACTION_APPLICATION_SETTINGS)
-                                );
-                            } catch (ActivityNotFoundException ignored2) {
-                                startActivity(
-                                        new Intent(Settings.ACTION_SETTINGS)
-                                );
-                            }
+                        } catch (ActivityNotFoundException ignored2) {
+                            startActivity(
+                                    new Intent(Settings.ACTION_SETTINGS)
+                            );
                         }
                     }
-
                 }).show();
             }
         } else {
@@ -166,18 +158,11 @@ public class TransferIdentityActivity extends BoardGameChildActivity {
                     linearLayoutTransferIdentity,
                     R.string.camera_permission_rationale,
                     Snackbar.LENGTH_INDEFINITE
-            ).setAction(R.string.ok, new View.OnClickListener() {
-
-                @Override
-                public void onClick(View view) {
-                    ActivityCompat.requestPermissions(
-                            TransferIdentityActivity.this,
-                            new String[]{Manifest.permission.CAMERA},
-                            REQUEST_CODE_GRANT_CAMERA_PERMISSION
-                    );
-                }
-
-            }).show();
+            ).setAction(R.string.ok, view -> ActivityCompat.requestPermissions(
+                    TransferIdentityActivity.this,
+                    new String[]{Manifest.permission.CAMERA},
+                    REQUEST_CODE_GRANT_CAMERA_PERMISSION
+            )).show();
         } else {
             ActivityCompat.requestPermissions(
                     this,

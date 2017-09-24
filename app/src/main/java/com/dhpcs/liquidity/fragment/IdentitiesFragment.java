@@ -181,18 +181,13 @@ public class IdentitiesFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_identities, container, false);
 
-        textViewEmpty = (TextView) view.findViewById(R.id.textview_empty);
-        viewPagerIdentities = (ViewPager) view.findViewById(R.id.viewpager_identities);
+        textViewEmpty = view.findViewById(R.id.textview_empty);
+        viewPagerIdentities = view.findViewById(R.id.viewpager_identities);
 
-        textViewEmpty.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                if (listener != null) {
-                    listener.onNoIdentitiesTextClicked();
-                }
+        textViewEmpty.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onNoIdentitiesTextClicked();
             }
-
         });
         viewPagerIdentities.setAdapter(identitiesFragmentStatePagerAdapter);
         viewPagerIdentities.addOnPageChangeListener(pageChangeListener);

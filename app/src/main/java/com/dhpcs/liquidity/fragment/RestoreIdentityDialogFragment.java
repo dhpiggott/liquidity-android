@@ -2,7 +2,6 @@ package com.dhpcs.liquidity.fragment;
 
 import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
@@ -49,9 +48,9 @@ public class RestoreIdentityDialogFragment extends AppCompatDialogFragment {
 
             IdentityWithBalance identity = getItem(position);
 
-            Identicon identiconId = (Identicon) view.findViewById(R.id.identicon_id);
-            TextView textViewName = (TextView) view.findViewById(R.id.textview_name);
-            TextView textViewBalance = (TextView) view.findViewById(R.id.textview_balance);
+            Identicon identiconId = view.findViewById(R.id.identicon_id);
+            TextView textViewName = view.findViewById(R.id.textview_name);
+            TextView textViewBalance = view.findViewById(R.id.textview_balance);
 
             assert identity != null;
             ZoneId zoneId = identity.zoneId();
@@ -116,17 +115,12 @@ public class RestoreIdentityDialogFragment extends AppCompatDialogFragment {
         identitiesAdapter.sort(BoardGameActivity.playerComparator(getActivity()));
         return new AlertDialog.Builder(getActivity())
                 .setTitle(R.string.choose_identity_to_restore)
-                .setAdapter(identitiesAdapter, new DialogInterface.OnClickListener() {
-
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if (listener != null) {
-                            listener.onIdentityRestorationRequested(
-                                    identitiesAdapter.getItem(which)
-                            );
-                        }
+                .setAdapter(identitiesAdapter, (dialog, which) -> {
+                    if (listener != null) {
+                        listener.onIdentityRestorationRequested(
+                                identitiesAdapter.getItem(which)
+                        );
                     }
-
                 })
                 .create();
     }

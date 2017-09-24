@@ -43,27 +43,17 @@ public class AddGameBottomSheetDialogFragment extends BottomSheetDialogFragment 
                 null
         );
 
-        view.findViewById(R.id.textview_new_game).setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                if (listener != null) {
-                    listener.onNewGameClicked();
-                }
-                dismiss();
+        view.findViewById(R.id.textview_new_game).setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onNewGameClicked();
             }
-
+            dismiss();
         });
-        view.findViewById(R.id.textview_join_game).setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                if (listener != null) {
-                    listener.onJoinGameClicked();
-                }
-                dismiss();
+        view.findViewById(R.id.textview_join_game).setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onJoinGameClicked();
             }
-
+            dismiss();
         });
 
         return view;

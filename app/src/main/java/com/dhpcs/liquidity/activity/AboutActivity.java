@@ -21,14 +21,14 @@ public class AboutActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_about);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
 
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
         assert actionBar != null;
         actionBar.setDisplayHomeAsUpEnabled(true);
 
-        LinearLayout linearLayoutLicences = (LinearLayout) findViewById(R.id.linearlayout_licences);
+        LinearLayout linearLayoutLicences = findViewById(R.id.linearlayout_licences);
 
         try {
 
@@ -45,11 +45,11 @@ public class AboutActivity extends AppCompatActivity {
                                 false
                         );
 
-                TextView textViewName = (TextView) linearLayoutAcknowledgement
+                TextView textViewName = linearLayoutAcknowledgement
                         .findViewById(R.id.textview_name);
-                TextView textViewUrl = (TextView) linearLayoutAcknowledgement
+                TextView textViewUrl = linearLayoutAcknowledgement
                         .findViewById(R.id.textview_url);
-                TextView textViewCopyrightAndLicense = (TextView) linearLayoutAcknowledgement
+                TextView textViewCopyrightAndLicense = linearLayoutAcknowledgement
                         .findViewById(R.id.textview_copyright_and_license);
 
                 textViewName.setText(notice.getName());

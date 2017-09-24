@@ -63,10 +63,8 @@ public class EnterIdentityNameDialogFragment extends AppCompatDialogFragment {
 
         final Identity identity = (Identity) getArguments().getSerializable(ARG_IDENTITY);
 
-        TextInputLayout textInputLayoutIdentityName = (TextInputLayout)
-                view.findViewById(R.id.textinputlayout_identity_name);
-        final TextInputEditText textInputEditTextIdentityName = (TextInputEditText)
-                view.findViewById(R.id.textinputedittext_identity_name);
+        TextInputLayout textInputLayoutIdentityName = view.findViewById(R.id.textinputlayout_identity_name);
+        final TextInputEditText textInputEditTextIdentityName = view.findViewById(R.id.textinputedittext_identity_name);
 
         final AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
                 .setTitle(R.string.enter_identity_name)
@@ -74,18 +72,13 @@ public class EnterIdentityNameDialogFragment extends AppCompatDialogFragment {
                 .setNegativeButton(R.string.cancel, null)
                 .setPositiveButton(
                         R.string.ok,
-                        new DialogInterface.OnClickListener() {
-
-                            @Override
-                            public void onClick(DialogInterface dialog, int whichButton) {
-                                if (listener != null) {
-                                    listener.onIdentityNameEntered(
-                                            identity,
-                                            textInputEditTextIdentityName.getText().toString()
-                                    );
-                                }
+                        (dialog, whichButton) -> {
+                            if (listener != null) {
+                                listener.onIdentityNameEntered(
+                                        identity,
+                                        textInputEditTextIdentityName.getText().toString()
+                                );
                             }
-
                         }
                 )
                 .create();
@@ -115,14 +108,9 @@ public class EnterIdentityNameDialogFragment extends AppCompatDialogFragment {
                 BoardGameActivity.formatNullable(getActivity(), identity.member().name())
         );
 
-        alertDialog.setOnShowListener(new DialogInterface.OnShowListener() {
-
-            @Override
-            public void onShow(DialogInterface dialog) {
-                buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
-                validateInput(textInputEditTextIdentityName.getText());
-            }
-
+        alertDialog.setOnShowListener(dialog -> {
+            buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
+            validateInput(textInputEditTextIdentityName.getText());
         });
 
         Window window = alertDialog.getWindow();

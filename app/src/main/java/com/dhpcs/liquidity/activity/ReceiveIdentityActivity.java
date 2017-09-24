@@ -3,7 +3,6 @@ package com.dhpcs.liquidity.activity;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
 
@@ -23,7 +22,7 @@ public class ReceiveIdentityActivity extends BoardGameChildActivity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_receive_identity);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
 
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
@@ -32,22 +31,13 @@ public class ReceiveIdentityActivity extends BoardGameChildActivity {
 
         final PublicKey publicKey = (PublicKey) getIntent().getSerializableExtra(EXTRA_PUBLIC_KEY);
 
-        final ImageView imageViewQrCode = (ImageView) findViewById(R.id.imageview_qr_code);
+        final ImageView imageViewQrCode = findViewById(R.id.imageview_qr_code);
         assert imageViewQrCode != null;
-        imageViewQrCode.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
-
-            @Override
-            public void onLayoutChange(View v,
-                                       int left, int top, int right, int bottom,
-                                       int oldLeft, int oldTop, int oldRight, int oldBottom) {
-                imageViewQrCode.setImageBitmap(
-                        ((QRCode) QRCode.from(publicKey.value().base64())
-                                .withSize(right - left, bottom - top))
-                                .bitmap()
-                );
-            }
-
-        });
+        imageViewQrCode.addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> imageViewQrCode.setImageBitmap(
+                ((QRCode) QRCode.from(publicKey.value().base64())
+                        .withSize(right - left, bottom - top))
+                        .bitmap()
+        ));
     }
 
     @Override

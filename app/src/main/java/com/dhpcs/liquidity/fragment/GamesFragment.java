@@ -36,14 +36,7 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
 
     private static final long REFRESH_INTERVAL = 60_000;
     private final Handler refreshHandler = new Handler();
-    private final Runnable refreshRunnable = new Runnable() {
-
-        @Override
-        public void run() {
-            getLoaderManager().restartLoader(GAMES_LOADER, null, GamesFragment.this);
-        }
-
-    };
+    private final Runnable refreshRunnable = () -> getLoaderManager().restartLoader(GAMES_LOADER, null, GamesFragment.this);
     private Listener listener;
     private SimpleCursorAdapter gamesAdapter;
 
@@ -76,58 +69,53 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
                 0
         );
 
-        gamesAdapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
-
-            @Override
-            public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
-                boolean bound = false;
-                if (columnIndex == cursor.getColumnIndexOrThrow(LiquidityContract.Games.CREATED)) {
-                    bound = true;
-                    long createdTimeMillis = cursor.getLong(columnIndex);
-                    long currentTimeMillis = System.currentTimeMillis();
-                    ((TextView) view).setText(
-                            getActivity().getString(
-                                    R.string.game_created_format_string,
-                                    LiquidityApplication.getRelativeTimeSpanString(
-                                            getActivity(),
-                                            new Instant(createdTimeMillis),
-                                            new Instant(
-                                                    currentTimeMillis < createdTimeMillis
-                                                            ?
-                                                            createdTimeMillis
-                                                            :
-                                                            currentTimeMillis
-                                            ),
-                                            REFRESH_INTERVAL
-                                    )
-                            )
-                    );
-                }
-                if (columnIndex == cursor.getColumnIndexOrThrow(LiquidityContract.Games.EXPIRES)) {
-                    bound = true;
-                    long expiresTimeMillis = cursor.getLong(columnIndex);
-                    long currentTimeMillis = System.currentTimeMillis();
-                    ((TextView) view).setText(
-                            getActivity().getString(
-                                    R.string.game_expires_format_string,
-                                    LiquidityApplication.getRelativeTimeSpanString(
-                                            getActivity(),
-                                            new Instant(expiresTimeMillis),
-                                            new Instant(
-                                                    currentTimeMillis >= expiresTimeMillis
-                                                            ?
-                                                            expiresTimeMillis
-                                                            :
-                                                            currentTimeMillis
-                                            ),
-                                            REFRESH_INTERVAL
-                                    )
-                            )
-                    );
-                }
-                return bound;
+        gamesAdapter.setViewBinder((view, cursor, columnIndex) -> {
+            boolean bound = false;
+            if (columnIndex == cursor.getColumnIndexOrThrow(LiquidityContract.Games.CREATED)) {
+                bound = true;
+                long createdTimeMillis = cursor.getLong(columnIndex);
+                long currentTimeMillis = System.currentTimeMillis();
+                ((TextView) view).setText(
+                        getActivity().getString(
+                                R.string.game_created_format_string,
+                                LiquidityApplication.getRelativeTimeSpanString(
+                                        getActivity(),
+                                        new Instant(createdTimeMillis),
+                                        new Instant(
+                                                currentTimeMillis < createdTimeMillis
+                                                        ?
+                                                        createdTimeMillis
+                                                        :
+                                                        currentTimeMillis
+                                        ),
+                                        REFRESH_INTERVAL
+                                )
+                        )
+                );
             }
-
+            if (columnIndex == cursor.getColumnIndexOrThrow(LiquidityContract.Games.EXPIRES)) {
+                bound = true;
+                long expiresTimeMillis = cursor.getLong(columnIndex);
+                long currentTimeMillis = System.currentTimeMillis();
+                ((TextView) view).setText(
+                        getActivity().getString(
+                                R.string.game_expires_format_string,
+                                LiquidityApplication.getRelativeTimeSpanString(
+                                        getActivity(),
+                                        new Instant(expiresTimeMillis),
+                                        new Instant(
+                                                currentTimeMillis >= expiresTimeMillis
+                                                        ?
+                                                        expiresTimeMillis
+                                                        :
+                                                        currentTimeMillis
+                                        ),
+                                        REFRESH_INTERVAL
+                                )
+                        )
+                );
+            }
+            return bound;
         });
     }
 
@@ -164,7 +152,7 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_games, container, false);
 
-        ListView listViewGames = (ListView) view.findViewById(R.id.listview_games);
+        ListView listViewGames = view.findViewById(R.id.listview_games);
         listViewGames.setAdapter(gamesAdapter);
         listViewGames.setEmptyView(view.findViewById(R.id.textview_empty));
         listViewGames.setOnItemClickListener(this);

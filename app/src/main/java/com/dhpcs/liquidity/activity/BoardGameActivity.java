@@ -317,26 +317,19 @@ public class BoardGameActivity extends AppCompatActivity
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_board_game);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
 
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
         assert actionBar != null;
         actionBar.setDisplayHomeAsUpEnabled(true);
 
-        progressBarState = (ProgressBar) findViewById(R.id.progressbar_state);
-        textViewState = (TextView) findViewById(R.id.textview_state);
-        buttonReconnect = (Button) findViewById(R.id.button_reconnect);
-        slidingUpPanelLayout = (SlidingUpPanelLayout) findViewById(R.id.slidinguppanellayout);
+        progressBarState = findViewById(R.id.progressbar_state);
+        textViewState = findViewById(R.id.textview_state);
+        buttonReconnect = findViewById(R.id.button_reconnect);
+        slidingUpPanelLayout = findViewById(R.id.slidinguppanellayout);
 
-        buttonReconnect.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                boardGame.requestJoin(joinRequestToken, true);
-            }
-
-        });
+        buttonReconnect.setOnClickListener(v -> boardGame.requestJoin(joinRequestToken, true));
 
         slidingUpPanelLayout.addPanelSlideListener(new SlidingUpPanelLayout.PanelSlideListener() {
 

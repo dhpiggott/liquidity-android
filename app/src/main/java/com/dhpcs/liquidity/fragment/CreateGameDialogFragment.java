@@ -28,7 +28,6 @@ import com.dhpcs.liquidity.boardgame.BoardGame$;
 import com.dhpcs.liquidity.ws.protocol.ZoneCommand$;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Currency;
 import java.util.HashSet;
 import java.util.List;
@@ -52,14 +51,7 @@ public class CreateGameDialogFragment extends AppCompatDialogFragment {
             setDropDownViewResource(
                     android.R.layout.simple_spinner_dropdown_item
             );
-            sort(new Comparator<Currency>() {
-
-                @Override
-                public int compare(Currency lhs, Currency rhs) {
-                    return lhs.getCurrencyCode().compareTo(rhs.getCurrencyCode());
-                }
-
-            });
+            sort((lhs, rhs) -> lhs.getCurrencyCode().compareTo(rhs.getCurrencyCode()));
         }
 
         @TargetApi(Build.VERSION_CODES.KITKAT)
@@ -71,7 +63,7 @@ public class CreateGameDialogFragment extends AppCompatDialogFragment {
                     currency.getDisplayName();
             String symbolAndOrName;
             if (currency.getSymbol().equals(currency.getCurrencyCode())) {
-                symbolAndOrName = displayName == null ? null : displayName;
+                symbolAndOrName = displayName;
             } else {
                 symbolAndOrName = displayName == null
                         ?
@@ -155,11 +147,9 @@ public class CreateGameDialogFragment extends AppCompatDialogFragment {
                 new ArrayList<>(currencies)
         );
 
-        TextInputLayout textInputLayoutGameName = (TextInputLayout)
-                view.findViewById(R.id.textinputlayout_game_name);
-        final TextInputEditText textInputEditTextGameName = (TextInputEditText)
-                view.findViewById(R.id.textinputedittext_game_name);
-        final Spinner spinnerCurrency = (Spinner) view.findViewById(R.id.spinner_game_currency);
+        TextInputLayout textInputLayoutGameName = view.findViewById(R.id.textinputlayout_game_name);
+        final TextInputEditText textInputEditTextGameName = view.findViewById(R.id.textinputedittext_game_name);
+        final Spinner spinnerCurrency = view.findViewById(R.id.spinner_game_currency);
 
         final AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
                 .setTitle(
@@ -171,20 +161,15 @@ public class CreateGameDialogFragment extends AppCompatDialogFragment {
                 .setNegativeButton(R.string.cancel, null)
                 .setPositiveButton(
                         R.string.ok,
-                        new DialogInterface.OnClickListener() {
-
-                            @Override
-                            public void onClick(DialogInterface dialog, int whichButton) {
-                                if (listener != null) {
-                                    listener.onGameDetailsEntered(
-                                            textInputEditTextGameName.getText().toString(),
-                                            currenciesSpinnerAdapter.getItem(
-                                                    spinnerCurrency.getSelectedItemPosition()
-                                            )
-                                    );
-                                }
+                        (dialog, whichButton) -> {
+                            if (listener != null) {
+                                listener.onGameDetailsEntered(
+                                        textInputEditTextGameName.getText().toString(),
+                                        currenciesSpinnerAdapter.getItem(
+                                                spinnerCurrency.getSelectedItemPosition()
+                                        )
+                                );
                             }
-
                         }
                 )
                 .create();
@@ -216,14 +201,9 @@ public class CreateGameDialogFragment extends AppCompatDialogFragment {
                 )
         );
 
-        alertDialog.setOnShowListener(new DialogInterface.OnShowListener() {
-
-            @Override
-            public void onShow(DialogInterface dialog) {
-                buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
-                validateInput(textInputEditTextGameName.getText());
-            }
-
+        alertDialog.setOnShowListener(dialog -> {
+            buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
+            validateInput(textInputEditTextGameName.getText());
         });
 
         Window window = alertDialog.getWindow();

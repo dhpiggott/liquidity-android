@@ -37,7 +37,7 @@ public class LiquidityContract {
 
         public static final String NAME = "name";
 
-        public static final String SORT_ORDER_DEFAULT = CREATED + " ASC";
+        static final String SORT_ORDER_DEFAULT = CREATED + " ASC";
 
     }
 

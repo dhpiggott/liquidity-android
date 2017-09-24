@@ -51,10 +51,10 @@ public class PlayersFragment extends Fragment {
             PlayerViewHolder(View itemView) {
                 super(itemView);
                 itemView.setOnClickListener(this);
-                identiconId = (Identicon) itemView.findViewById(R.id.identicon_id);
-                textViewName = (TextView) itemView.findViewById(R.id.textview_name);
-                textViewBalance = (TextView) itemView.findViewById(R.id.textview_balance);
-                textViewStatus = (TextView) itemView.findViewById(R.id.textview_status);
+                identiconId = itemView.findViewById(R.id.identicon_id);
+                textViewName = itemView.findViewById(R.id.textview_name);
+                textViewBalance = itemView.findViewById(R.id.textview_balance);
+                textViewStatus = itemView.findViewById(R.id.textview_status);
             }
 
             void bindPlayer(PlayerWithBalanceAndConnectionState player) {
@@ -266,18 +266,13 @@ public class PlayersFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_players, container, false);
 
-        textViewEmpty = (TextView) view.findViewById(R.id.textview_empty);
-        recyclerViewPlayers = (RecyclerView) view.findViewById(R.id.recyclerview_players);
+        textViewEmpty = view.findViewById(R.id.textview_empty);
+        recyclerViewPlayers = view.findViewById(R.id.recyclerview_players);
 
-        textViewEmpty.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                if (listener != null) {
-                    listener.onNoPlayersTextClicked();
-                }
+        textViewEmpty.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onNoPlayersTextClicked();
             }
-
         });
         recyclerViewPlayers.setHasFixedSize(true);
         recyclerViewPlayers.setLayoutManager(new LinearLayoutManager(getActivity()));

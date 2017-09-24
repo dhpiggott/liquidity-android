@@ -37,9 +37,9 @@ public class TransfersFragment extends Fragment {
 
             TransferViewHolder(View itemView) {
                 super(itemView);
-                textViewSummary = (TextView) itemView.findViewById(R.id.textview_summary);
-                textViewCreatedTime = (TextView) itemView.findViewById(R.id.textview_created_time);
-                textViewCreatedDate = (TextView) itemView.findViewById(R.id.textview_created_date);
+                textViewSummary = itemView.findViewById(R.id.textview_summary);
+                textViewCreatedTime = itemView.findViewById(R.id.textview_created_time);
+                textViewCreatedDate = itemView.findViewById(R.id.textview_created_date);
             }
 
             void bindTransfer(TransferWithCurrency transfer) {
@@ -235,8 +235,8 @@ public class TransfersFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_transfers, container, false);
 
-        textViewEmpty = (TextView) view.findViewById(R.id.textview_empty);
-        recyclerViewTransfers = (RecyclerView) view.findViewById(R.id.recyclerview_transfers);
+        textViewEmpty = view.findViewById(R.id.textview_empty);
+        recyclerViewTransfers = view.findViewById(R.id.recyclerview_transfers);
 
         recyclerViewTransfers.setHasFixedSize(true);
         recyclerViewTransfers.setLayoutManager(new LinearLayoutManager(getActivity()));

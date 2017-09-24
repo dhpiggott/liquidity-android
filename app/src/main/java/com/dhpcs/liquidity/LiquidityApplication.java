@@ -50,7 +50,7 @@ public class LiquidityApplication extends MultiDexApplication {
                                     LiquidityContract.Games.NAME
                             },
                             LiquidityContract.Games.ZONE_ID + " = ?",
-                            new String[]{zoneId.id().toString()},
+                            new String[]{zoneId.id()},
                             null
                     );
                     if (existingEntry == null) {
@@ -83,7 +83,7 @@ public class LiquidityApplication extends MultiDexApplication {
                 @Override
                 public long insertGame(ZoneId zoneId, long created, long expires, String name) {
                     ContentValues contentValues = new ContentValues();
-                    contentValues.put(LiquidityContract.Games.ZONE_ID, zoneId.id().toString());
+                    contentValues.put(LiquidityContract.Games.ZONE_ID, zoneId.id());
                     contentValues.put(LiquidityContract.Games.CREATED, created);
                     contentValues.put(LiquidityContract.Games.EXPIRES, expires);
                     contentValues.put(LiquidityContract.Games.NAME, name);
@@ -242,67 +242,41 @@ public class LiquidityApplication extends MultiDexApplication {
             PRNGFixes.apply();
             serverConnection = new ServerConnection(
                     context.getFilesDir(),
-                    new ServerConnection.ConnectivityStatePublisherProvider() {
+                    serverConnection -> new ServerConnection.ConnectivityStatePublisher() {
+
+                        private final IntentFilter connectionStateFilter =
+                                new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+                        private final BroadcastReceiver connectionStateReceiver =
+                                new BroadcastReceiver() {
+
+                                    @Override
+                                    public void onReceive(Context context1, Intent intent) {
+                                        serverConnection.handleConnectivityStateChange();
+                                    }
+
+                                };
 
                         @Override
-                        public ServerConnection.ConnectivityStatePublisher provide(
-                                final ServerConnection serverConnection) {
-                            return new ServerConnection.ConnectivityStatePublisher() {
+                        public void register() {
+                            context.registerReceiver(
+                                    connectionStateReceiver,
+                                    connectionStateFilter
+                            );
+                        }
 
-                                private final IntentFilter connectionStateFilter =
-                                        new IntentFilter(
-                                                android.net.ConnectivityManager.CONNECTIVITY_ACTION
-                                        );
-                                private final BroadcastReceiver connectionStateReceiver =
-                                        new BroadcastReceiver() {
+                        @Override
+                        public void unregister() {
+                            context.unregisterReceiver(connectionStateReceiver);
+                        }
 
-                                            @Override
-                                            public void onReceive(Context context, Intent intent) {
-                                                switch (intent.getAction()) {
-                                                    case ConnectivityManager.CONNECTIVITY_ACTION:
+                        private final ConnectivityManager connectivityManager =
+                                ((ConnectivityManager)
+                                        context.getSystemService(Context.CONNECTIVITY_SERVICE));
 
-                                                        serverConnection
-                                                                .handleConnectivityStateChange();
-
-                                                        break;
-                                                    default:
-                                                        throw new RuntimeException(
-                                                                "Received unexpected broadcast " +
-                                                                        "for action " +
-                                                                        intent.getAction()
-                                                        );
-                                                }
-                                            }
-
-                                        };
-
-                                @Override
-                                public void register() {
-                                    context.registerReceiver(
-                                            connectionStateReceiver,
-                                            connectionStateFilter
-                                    );
-                                }
-
-                                @Override
-                                public void unregister() {
-                                    context.unregisterReceiver(
-                                            connectionStateReceiver
-                                    );
-                                }
-
-                                @Override
-                                public boolean isConnectionAvailable() {
-                                    NetworkInfo activeNetwork =
-                                            ((android.net.ConnectivityManager)
-                                                    context.getSystemService(
-                                                            Context.CONNECTIVITY_SERVICE
-                                                    )
-                                            ).getActiveNetworkInfo();
-                                    return activeNetwork != null && activeNetwork.isConnected();
-                                }
-
-                            };
+                        @Override
+                        public boolean isConnectionAvailable() {
+                            NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
+                            return activeNetwork != null && activeNetwork.isConnected();
                         }
 
                     },

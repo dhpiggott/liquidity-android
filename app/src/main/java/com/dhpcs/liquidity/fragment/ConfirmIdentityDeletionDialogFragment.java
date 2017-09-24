@@ -2,7 +2,6 @@ package com.dhpcs.liquidity.fragment;
 
 import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
@@ -60,17 +59,12 @@ public class ConfirmIdentityDeletionDialogFragment extends AppCompatDialogFragme
                 .setNegativeButton(R.string.cancel, null)
                 .setPositiveButton(
                         R.string.delete,
-                        new DialogInterface.OnClickListener() {
-
-                            @Override
-                            public void onClick(DialogInterface dialog, int whichButton) {
-                                if (listener != null) {
-                                    listener.onIdentityDeleteConfirmed(
-                                            (Identity) getArguments().getSerializable(ARG_IDENTITY)
-                                    );
-                                }
+                        (dialog, whichButton) -> {
+                            if (listener != null) {
+                                listener.onIdentityDeleteConfirmed(
+                                        (Identity) getArguments().getSerializable(ARG_IDENTITY)
+                                );
                             }
-
                         }
                 )
                 .create();
