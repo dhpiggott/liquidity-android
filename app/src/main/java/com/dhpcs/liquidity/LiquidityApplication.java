@@ -44,9 +44,9 @@ public class LiquidityApplication extends MultiDexApplication {
                 @Override
                 public Long checkAndUpdateGame(ZoneId zoneId, String name) {
                     Cursor existingEntry = context.getContentResolver().query(
-                            LiquidityContract.Games.CONTENT_URI,
+                            LiquidityContract.Games.INSTANCE.getCONTENT_URI(),
                             new String[]{
-                                    LiquidityContract.Games._ID,
+                                    LiquidityContract.Games.ID,
                                     LiquidityContract.Games.NAME
                             },
                             LiquidityContract.Games.ZONE_ID + " = ?",
@@ -62,7 +62,7 @@ public class LiquidityApplication extends MultiDexApplication {
                             } else {
                                 long gameId = existingEntry.getLong(
                                         existingEntry.getColumnIndexOrThrow(
-                                                LiquidityContract.Games._ID
+                                                LiquidityContract.Games.ID
                                         )
                                 );
                                 if (!existingEntry.getString(
@@ -89,7 +89,7 @@ public class LiquidityApplication extends MultiDexApplication {
                     contentValues.put(LiquidityContract.Games.NAME, name);
                     return ContentUris.parseId(
                             context.getContentResolver().insert(
-                                    LiquidityContract.Games.CONTENT_URI,
+                                    LiquidityContract.Games.INSTANCE.getCONTENT_URI(),
                                     contentValues
                             )
                     );
@@ -100,7 +100,7 @@ public class LiquidityApplication extends MultiDexApplication {
                     ContentValues contentValues = new ContentValues();
                     contentValues.put(LiquidityContract.Games.NAME, name);
                     context.getContentResolver().update(
-                            ContentUris.withAppendedId(LiquidityContract.Games.CONTENT_URI, gameId),
+                            ContentUris.withAppendedId(LiquidityContract.Games.INSTANCE.getCONTENT_URI(), gameId),
                             contentValues,
                             null,
                             null

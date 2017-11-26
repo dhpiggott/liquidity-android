@@ -126,9 +126,9 @@ public class GamesFragment extends Fragment implements AdapterView.OnItemClickLi
 
                 return new CursorLoader(
                         getActivity(),
-                        LiquidityContract.Games.CONTENT_URI,
+                        LiquidityContract.Games.INSTANCE.getCONTENT_URI(),
                         new String[]{
-                                LiquidityContract.Games._ID,
+                                LiquidityContract.Games.ID,
                                 LiquidityContract.Games.ZONE_ID,
                                 LiquidityContract.Games.CREATED,
                                 LiquidityContract.Games.EXPIRES,
