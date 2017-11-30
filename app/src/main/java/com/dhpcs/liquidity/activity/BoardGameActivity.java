@@ -46,6 +46,8 @@ import com.google.zxing.integration.android.IntentResult;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.math.BigDecimal;
 import java.text.Collator;
 import java.text.DecimalFormat;
@@ -62,16 +64,16 @@ import scala.collection.JavaConversions;
 import scala.util.Either;
 
 public class BoardGameActivity extends AppCompatActivity
-        implements EnterGameNameDialogFragment.Listener,
-        EnterIdentityNameDialogFragment.Listener,
-        ConfirmIdentityDeletionDialogFragment.Listener,
-        CreateIdentityDialogFragment.Listener,
-        IdentitiesFragment.Listener,
+        implements EnterGameNameDialogFragment.Companion.Listener,
+        EnterIdentityNameDialogFragment.Companion.Listener,
+        ConfirmIdentityDeletionDialogFragment.Companion.Listener,
+        CreateIdentityDialogFragment.Companion.Listener,
+        IdentitiesFragment.Companion.Listener,
         BoardGame.GameActionListener,
         BoardGame.JoinStateListener,
-        PlayersFragment.Listener,
-        RestoreIdentityDialogFragment.Listener,
-        TransferToPlayerDialogFragment.Listener {
+        PlayersFragment.Companion.Listener,
+        RestoreIdentityDialogFragment.Companion.Listener,
+        TransferToPlayerDialogFragment.Companion.Listener {
 
     public static final String EXTRA_CURRENCY = "currency";
     public static final String EXTRA_GAME_NAME = "game_name";
@@ -575,7 +577,7 @@ public class BoardGameActivity extends AppCompatActivity
 
     @Override
     public void onIdentityRequired() {
-        CreateIdentityDialogFragment.newInstance()
+        CreateIdentityDialogFragment.Companion.newInstance()
                 .show(
                         getSupportFragmentManager(),
                         CreateIdentityDialogFragment.TAG
@@ -729,7 +731,7 @@ public class BoardGameActivity extends AppCompatActivity
 
     @Override
     public void onNoIdentitiesTextClicked() {
-        CreateIdentityDialogFragment.newInstance()
+        CreateIdentityDialogFragment.Companion.newInstance()
                 .show(
                         getSupportFragmentManager(),
                         CreateIdentityDialogFragment.TAG
@@ -792,7 +794,7 @@ public class BoardGameActivity extends AppCompatActivity
             case R.id.action_group_transfer:
                 identity = identitiesFragment.getIdentity(identitiesFragment.getSelectedPage());
                 if (identity != null) {
-                    TransferToPlayerDialogFragment.newInstance(
+                    TransferToPlayerDialogFragment.Companion.newInstance(
                             boardGame.getIdentities(),
                             boardGame.getPlayers(),
                             boardGame.getCurrency(),
@@ -805,7 +807,7 @@ public class BoardGameActivity extends AppCompatActivity
                 }
                 return true;
             case R.id.action_change_game_name:
-                EnterGameNameDialogFragment.newInstance(getTitle().toString())
+                EnterGameNameDialogFragment.Companion.newInstance(getTitle().toString())
                         .show(
                                 getSupportFragmentManager(),
                                 EnterGameNameDialogFragment.TAG
@@ -814,7 +816,7 @@ public class BoardGameActivity extends AppCompatActivity
             case R.id.action_change_identity_name:
                 identity = identitiesFragment.getIdentity(identitiesFragment.getSelectedPage());
                 if (identity != null) {
-                    EnterIdentityNameDialogFragment.newInstance(identity)
+                    EnterIdentityNameDialogFragment.Companion.newInstance(identity)
                             .show(
                                     getSupportFragmentManager(),
                                     EnterIdentityNameDialogFragment.TAG
@@ -822,14 +824,14 @@ public class BoardGameActivity extends AppCompatActivity
                 }
                 return true;
             case R.id.action_create_identity:
-                CreateIdentityDialogFragment.newInstance()
+                CreateIdentityDialogFragment.Companion.newInstance()
                         .show(
                                 getSupportFragmentManager(),
                                 CreateIdentityDialogFragment.TAG
                         );
                 return true;
             case R.id.action_restore_identity:
-                RestoreIdentityDialogFragment.newInstance(boardGame.getHiddenIdentities())
+                RestoreIdentityDialogFragment.Companion.newInstance(boardGame.getHiddenIdentities())
                         .show(
                                 getSupportFragmentManager(),
                                 RestoreIdentityDialogFragment.TAG
@@ -838,7 +840,7 @@ public class BoardGameActivity extends AppCompatActivity
             case R.id.action_delete_identity:
                 identity = identitiesFragment.getIdentity(identitiesFragment.getSelectedPage());
                 if (identity != null) {
-                    ConfirmIdentityDeletionDialogFragment.newInstance(identity)
+                    ConfirmIdentityDeletionDialogFragment.Companion.newInstance(identity)
                             .show(
                                     getSupportFragmentManager(),
                                     ConfirmIdentityDeletionDialogFragment.TAG
@@ -921,7 +923,7 @@ public class BoardGameActivity extends AppCompatActivity
                 identitiesFragment.getSelectedPage()
         );
         if (identity != null) {
-            TransferToPlayerDialogFragment.newInstance(
+            TransferToPlayerDialogFragment.Companion.newInstance(
                     boardGame.getIdentities(),
                     boardGame.getPlayers(),
                     boardGame.getCurrency(),
@@ -1079,11 +1081,11 @@ public class BoardGameActivity extends AppCompatActivity
     }
 
     @Override
-    public void onTransferValueEntered(Identity from, List<Player> to, BigDecimal transferValue) {
+    public void onTransferValueEntered(@NotNull Identity from, List<? extends Player> to, BigDecimal transferValue) {
         boardGame.transferToPlayer(
                 from,
                 from,
-                JavaConversions.asScalaBuffer(to),
+                JavaConversions.asScalaBuffer((List<Player>) to),
                 scala.math.BigDecimal.javaBigDecimal2bigDecimal(transferValue)
         );
     }

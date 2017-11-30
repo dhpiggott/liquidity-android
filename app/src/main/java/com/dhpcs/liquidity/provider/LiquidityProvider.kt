@@ -17,24 +17,6 @@ class LiquidityProvider : ContentProvider() {
 
     companion object {
 
-        private const val URI_TYPE_GAMES = 0
-        private const val URI_TYPE_GAME_ID = 1
-
-        private val URI_MATCHER = UriMatcher(UriMatcher.NO_MATCH)
-
-        init {
-            URI_MATCHER.addURI(
-                    LiquidityContract.AUTHORITY,
-                    LiquidityContract.Games.BASE_PATH,
-                    URI_TYPE_GAMES
-            )
-            URI_MATCHER.addURI(
-                    LiquidityContract.AUTHORITY,
-                    "${LiquidityContract.Games.BASE_PATH}/#",
-                    URI_TYPE_GAME_ID
-            )
-        }
-
         private class LiquidityDatabaseHelper internal constructor(context: Context) :
                 SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
@@ -53,7 +35,7 @@ class LiquidityProvider : ContentProvider() {
                     |  ${LiquidityContract.Games.NAME} TEXT,
                     |  UNIQUE(${LiquidityContract.Games.ZONE_ID})
                     |);
-                    """.trimIndent()
+                    """.trimMargin()
 
             }
 
@@ -65,6 +47,24 @@ class LiquidityProvider : ContentProvider() {
                 )
             }
 
+        }
+
+        private const val URI_TYPE_GAMES = 0
+        private const val URI_TYPE_GAME_ID = 1
+
+        private val URI_MATCHER = UriMatcher(UriMatcher.NO_MATCH)
+
+        init {
+            URI_MATCHER.addURI(
+                    LiquidityContract.AUTHORITY,
+                    LiquidityContract.Games.BASE_PATH,
+                    URI_TYPE_GAMES
+            )
+            URI_MATCHER.addURI(
+                    LiquidityContract.AUTHORITY,
+                    "${LiquidityContract.Games.BASE_PATH}/#",
+                    URI_TYPE_GAME_ID
+            )
         }
 
     }

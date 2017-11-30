@@ -20,9 +20,9 @@ import java.util.Collections;
 import java.util.Currency;
 
 public class GamesActivity extends AppCompatActivity
-        implements AddGameBottomSheetDialogFragment.Listener,
-        CreateGameDialogFragment.Listener,
-        GamesFragment.Listener {
+        implements AddGameBottomSheetDialogFragment.Companion.Listener,
+        CreateGameDialogFragment.Companion.Listener,
+        GamesFragment.Companion.Listener {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -56,7 +56,7 @@ public class GamesActivity extends AppCompatActivity
 
         View floatingActionButtonAddGame = findViewById(R.id.floatingactionbutton_add_game);
         assert floatingActionButtonAddGame != null;
-        floatingActionButtonAddGame.setOnClickListener(v -> AddGameBottomSheetDialogFragment.newInstance()
+        floatingActionButtonAddGame.setOnClickListener(v -> AddGameBottomSheetDialogFragment.Companion.newInstance()
                 .show(
                         getSupportFragmentManager(),
                         AddGameBottomSheetDialogFragment.TAG
@@ -118,7 +118,7 @@ public class GamesActivity extends AppCompatActivity
 
     @Override
     public void onNewGameClicked() {
-        CreateGameDialogFragment.newInstance()
+        CreateGameDialogFragment.Companion.newInstance()
                 .show(
                         getSupportFragmentManager(),
                         CreateGameDialogFragment.TAG
