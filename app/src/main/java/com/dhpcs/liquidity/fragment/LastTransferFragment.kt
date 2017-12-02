@@ -83,18 +83,18 @@ class LastTransferFragment : Fragment() {
     private fun showTransfer(transfer: TransferWithCurrency?, animate: Boolean) {
         val summary = getString(
                 R.string.transfer_summary_format_string,
-                BoardGameActivity.formatMemberOrAccount(activity, lastTransfer!!.from()),
+                BoardGameActivity.formatMemberOrAccount(activity!!, lastTransfer!!.from()),
                 BoardGameActivity.formatCurrencyValue(
-                        activity,
+                        activity!!,
                         transfer!!.currency(),
                         transfer.transaction().value()
                 ),
-                BoardGameActivity.formatMemberOrAccount(activity, lastTransfer!!.to())
+                BoardGameActivity.formatMemberOrAccount(activity!!, lastTransfer!!.to())
         )
         val createdTimeMillis = transfer.transaction().created()
         val currentTimeMillis = System.currentTimeMillis()
         val created = LiquidityApplication.getRelativeTimeSpanString(
-                activity,
+                activity!!,
                 Instant(createdTimeMillis),
                 Instant(
                         if (currentTimeMillis < createdTimeMillis)

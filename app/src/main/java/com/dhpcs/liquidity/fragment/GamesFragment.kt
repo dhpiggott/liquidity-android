@@ -73,7 +73,7 @@ class GamesFragment : Fragment(),
                     (view as TextView).text = activity!!.getString(
                             R.string.game_created_format_string,
                             LiquidityApplication.getRelativeTimeSpanString(
-                                    activity,
+                                    activity!!,
                                     Instant(createdTimeMillis),
                                     Instant(if (currentTimeMillis < createdTimeMillis) {
                                         createdTimeMillis
@@ -91,7 +91,7 @@ class GamesFragment : Fragment(),
                     (view as TextView).text = activity!!.getString(
                             R.string.game_expires_format_string,
                             LiquidityApplication.getRelativeTimeSpanString(
-                                    activity,
+                                    activity!!,
                                     Instant(expiresTimeMillis),
                                     Instant(if (currentTimeMillis >= expiresTimeMillis) {
                                         expiresTimeMillis

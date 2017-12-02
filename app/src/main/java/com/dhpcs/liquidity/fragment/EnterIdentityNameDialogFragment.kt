@@ -63,8 +63,10 @@ class EnterIdentityNameDialogFragment : AppCompatDialogFragment() {
 
         val identity = arguments!!.getSerializable(ARG_IDENTITY) as Identity
 
-        val textInputLayoutIdentityName = view.findViewById<TextInputLayout>(R.id.textinputlayout_identity_name)
-        val textInputEditTextIdentityName = view.findViewById<TextInputEditText>(R.id.textinputedittext_identity_name)
+        val textInputLayoutIdentityName = view
+                .findViewById<TextInputLayout>(R.id.textinputlayout_identity_name)
+        val textInputEditTextIdentityName = view
+                .findViewById<TextInputEditText>(R.id.textinputedittext_identity_name)
 
         val alertDialog = AlertDialog.Builder(activity!!)
                 .setTitle(R.string.enter_identity_name)
@@ -90,7 +92,7 @@ class EnterIdentityNameDialogFragment : AppCompatDialogFragment() {
         })
 
         textInputEditTextIdentityName.setText(
-                BoardGameActivity.formatNullable(activity, identity.member().name())
+                BoardGameActivity.formatNullable(activity!!, identity.member().name())
         )
 
         alertDialog.setOnShowListener {

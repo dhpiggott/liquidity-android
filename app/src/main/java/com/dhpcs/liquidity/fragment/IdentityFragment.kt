@@ -40,9 +40,9 @@ class IdentityFragment : Fragment() {
 
         val zoneId = identity.zoneId()
         val memberId = identity.member().id()
-        val name = BoardGameActivity.formatNullable(activity, identity.member().name())
+        val name = BoardGameActivity.formatNullable(activity!!, identity.member().name())
         val balance = BoardGameActivity.formatCurrencyValue(
-                activity,
+                activity!!,
                 identity.balanceWithCurrency()._2(),
                 identity.balanceWithCurrency()._1()
         )

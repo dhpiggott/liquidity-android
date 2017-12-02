@@ -35,10 +35,11 @@ class PlayersFragment : Fragment() {
 
             private val players: SortedList<PlayerWithBalanceAndConnectionState> = SortedList(
                     PlayerWithBalanceAndConnectionState::class.java,
-                    object : SortedListAdapterCallback<PlayerWithBalanceAndConnectionState>(this) {
+                    object : SortedListAdapterCallback<
+                            PlayerWithBalanceAndConnectionState>(this) {
 
                         private val playerComparator =
-                                BoardGameActivity.playerComparator(playersFragment.context)
+                                BoardGameActivity.playerComparator(playersFragment.context!!)
 
                         override fun compare(o1: PlayerWithBalanceAndConnectionState,
                                              o2: PlayerWithBalanceAndConnectionState
@@ -111,11 +112,11 @@ class PlayersFragment : Fragment() {
                 val zoneId = player.zoneId()
                 val memberId = player.member().id()
                 val name = BoardGameActivity.formatNullable(
-                        playersFragment.context,
+                        playersFragment.context!!,
                         player.member().name()
                 )
                 val balance = BoardGameActivity.formatCurrencyValue(
-                        playersFragment.context,
+                        playersFragment.context!!,
                         player.balanceWithCurrency()._2(),
                         player.balanceWithCurrency()._1()
                 )

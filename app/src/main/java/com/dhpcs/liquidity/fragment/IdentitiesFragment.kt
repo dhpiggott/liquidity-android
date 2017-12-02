@@ -111,7 +111,7 @@ class IdentitiesFragment : Fragment() {
             identitiesFragmentStatePagerAdapter!!.add(iterator.next())
         }
         identitiesFragmentStatePagerAdapter!!.sort(
-                BoardGameActivity.playerComparator(activity)
+                BoardGameActivity.playerComparator(activity!!)
         )
         identitiesFragmentStatePagerAdapter!!.notifyDataSetChanged()
         textViewEmpty!!.visibility = if (identitiesFragmentStatePagerAdapter!!.count == 0) {

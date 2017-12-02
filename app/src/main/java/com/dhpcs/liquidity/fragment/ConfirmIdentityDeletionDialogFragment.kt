@@ -53,7 +53,7 @@ class ConfirmIdentityDeletionDialogFragment : AppCompatDialogFragment() {
                         getString(
                                 R.string.delete_identity_title_format_string,
                                 BoardGameActivity.formatNullable(
-                                        activity,
+                                        activity!!,
                                         identity.member().name()
                                 )
                         )

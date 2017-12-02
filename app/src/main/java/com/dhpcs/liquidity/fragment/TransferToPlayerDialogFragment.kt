@@ -212,7 +212,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
         }
         this.toList = toList
 
-        val playerComparator = BoardGameActivity.playerComparator(activity)
+        val playerComparator = BoardGameActivity.playerComparator(activity!!)
         identitiesSpinnerAdapter = IdentitiesAdapter(activity!!, identities)
         identitiesSpinnerAdapter!!.sort(playerComparator)
         playersSpinnerAdapter = PlayersAdapter(activity!!, players)
@@ -321,9 +321,9 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                         editTextScaledValue.text = getString(
                                 R.string.transfer_to_player_scaled_value_format_string,
                                 BoardGameActivity.formatCurrencyValue(
-                                        activity,
-                                        currency,
-                                        value
+                                        activity!!,
+                                        currency!!,
+                                        value!!
                                 )
                         )
                     }
@@ -364,7 +364,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
 
         }
 
-        textViewCurrency.text = BoardGameActivity.formatCurrency(activity, currency)
+        textViewCurrency.text = BoardGameActivity.formatCurrency(activity!!, currency!!)
 
         spinnerFrom.setSelection(identitiesSpinnerAdapter!!.getPosition(from))
 
@@ -380,7 +380,8 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                         false
                 ) as CheckedTextView
                 linearLayoutTo.addView(checkedTextViewPlayer)
-                checkedTextViewPlayer.text = BoardGameActivity.formatNullable(activity, player.member().name())
+                checkedTextViewPlayer.text =
+                        BoardGameActivity.formatNullable(activity!!, player.member().name())
                 checkedTextViewPlayer.isChecked = toList!!.contains(player)
                 checkedTextViewPlayer.setOnClickListener {
                     checkedTextViewPlayer.toggle()
@@ -453,13 +454,13 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                 textViewValueError!!.text = getString(
                         R.string.transfer_value_invalid_format_string,
                         BoardGameActivity.formatCurrencyValue(
-                                activity,
-                                currency,
+                                activity!!,
+                                currency!!,
                                 currentBalance
                         ),
                         BoardGameActivity.formatCurrencyValue(
-                                activity,
-                                currency,
+                                activity!!,
+                                currency!!,
                                 requiredBalance
                         )
                 )
@@ -477,7 +478,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
         val isFromValid = if (toAccountIds.contains(from!!.account().id())) {
             textViewFromError!!.text = getString(
                     R.string.transfer_from_invalid_format_string,
-                    BoardGameActivity.formatNullable(activity, from!!.member().name())
+                    BoardGameActivity.formatNullable(activity!!, from!!.member().name())
             )
             false
         } else {

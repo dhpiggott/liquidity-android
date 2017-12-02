@@ -6,14 +6,11 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.View
-
 import com.dhpcs.liquidity.model.MemberId
 import com.dhpcs.liquidity.model.ZoneId
-
 import java.nio.ByteBuffer
 import java.security.MessageDigest
-import java.security.NoSuchAlgorithmException
-import java.util.UUID
+import java.util.*
 
 class Identicon @JvmOverloads constructor(context: Context,
                                           attrs: AttributeSet? = null,
@@ -82,43 +79,38 @@ class Identicon @JvmOverloads constructor(context: Context,
     private var cellHeight = 0
 
     fun show(zoneId: ZoneId, memberId: MemberId) {
-        val hash = try {
-            val messageDigest = MessageDigest.getInstance("SHA-1")
-            try {
-                val zoneIdAsUuid = UUID.fromString(zoneId.id())
-                messageDigest.update(
-                        ByteBuffer.allocate(8)
-                                .putLong(zoneIdAsUuid.mostSignificantBits).array()
-                )
-                messageDigest.update(
-                        ByteBuffer.allocate(8)
-                                .putLong(zoneIdAsUuid.leastSignificantBits).array()
-                )
-            } catch (ignored: IllegalArgumentException) {
-                messageDigest.update(zoneId.id().toByteArray())
-            }
+        val hash = MessageDigest.getInstance("SHA-1")
 
-            try {
-                val memberIdAsInt = java.lang.Long.parseLong(memberId.id())
-                if (memberIdAsInt <= Integer.MAX_VALUE) {
-                    messageDigest.update(
-                            ByteBuffer.allocate(4).putInt(memberIdAsInt.toInt()).array()
-                    )
-                } else {
-                    messageDigest.update(
-                            ByteBuffer.allocate(8).putLong(memberIdAsInt).array()
-                    )
-                }
-            } catch (ignored: IllegalArgumentException) {
-                messageDigest.update(memberId.id().toByteArray())
-            }
-
-            messageDigest.digest()
-        } catch (e: NoSuchAlgorithmException) {
-            throw Error(e)
+        try {
+            val zoneIdAsUuid = UUID.fromString(zoneId.id())
+            hash.update(
+                    ByteBuffer.allocate(8)
+                            .putLong(zoneIdAsUuid.mostSignificantBits).array()
+            )
+            hash.update(
+                    ByteBuffer.allocate(8)
+                            .putLong(zoneIdAsUuid.leastSignificantBits).array()
+            )
+        } catch (ignored: IllegalArgumentException) {
+            hash.update(zoneId.id().toByteArray())
         }
 
-        cellColors = getCellColors(hash)
+        try {
+            val memberIdAsInt = java.lang.Long.parseLong(memberId.id())
+            if (memberIdAsInt <= Integer.MAX_VALUE) {
+                hash.update(
+                        ByteBuffer.allocate(4).putInt(memberIdAsInt.toInt()).array()
+                )
+            } else {
+                hash.update(
+                        ByteBuffer.allocate(8).putLong(memberIdAsInt).array()
+                )
+            }
+        } catch (ignored: IllegalArgumentException) {
+            hash.update(memberId.id().toByteArray())
+        }
+
+        cellColors = getCellColors(hash.digest())
         invalidate()
     }
 

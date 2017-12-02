@@ -226,7 +226,7 @@ class TransfersFragment : Fragment() {
     }
 
     private fun replaceOrAddTransfers(transfers: scala.collection.Iterable<TransferWithCurrency>) {
-        val player = arguments!!.getSerializable(ARG_PLAYER) as Player
+        val player = arguments!!.getSerializable(ARG_PLAYER) as Player?
         val iterator = transfers.iterator()
         while (iterator.hasNext()) {
             replaceOrAddTransfer(player, iterator.next())

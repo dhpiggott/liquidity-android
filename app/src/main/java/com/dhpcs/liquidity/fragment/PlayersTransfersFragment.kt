@@ -172,7 +172,7 @@ class PlayersTransfersFragment : Fragment() {
             playersTransfersFragmentStatePagerAdapter!!.add(iterator.next())
         }
         playersTransfersFragmentStatePagerAdapter!!.sort(
-                BoardGameActivity.playerComparator(activity)
+                BoardGameActivity.playerComparator(activity!!)
         )
         playersTransfersFragmentStatePagerAdapter!!.notifyDataSetChanged()
 
