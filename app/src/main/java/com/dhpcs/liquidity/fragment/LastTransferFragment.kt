@@ -8,10 +8,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextSwitcher
 import android.widget.TextView
+import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.LiquidityApplication
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.BoardGameActivity
-import com.dhpcs.liquidity.boardgame.BoardGame.TransferWithCurrency
 import org.joda.time.Instant
 
 class LastTransferFragment : Fragment() {
@@ -29,7 +29,7 @@ class LastTransferFragment : Fragment() {
     private var textSwitcherSummary: TextSwitcher? = null
     private var textSwitcherCreated: TextSwitcher? = null
 
-    private var lastTransfer: TransferWithCurrency? = null
+    private var lastTransfer: BoardGame.Companion.TransferWithCurrency? = null
 
     override fun onCreateView(inflater: LayoutInflater,
                               container: ViewGroup?,
@@ -48,50 +48,47 @@ class LastTransferFragment : Fragment() {
         super.onDestroy()
     }
 
-    fun onTransfersInitialized(transfers: scala.collection.Iterable<TransferWithCurrency>) {
-        val iterator = transfers.iterator()
-        while (iterator.hasNext()) {
-            val transfer = iterator.next()
+    fun onTransfersInitialized(transfers: Collection<BoardGame.Companion.TransferWithCurrency>) {
+        transfers.forEach {
             if (lastTransfer == null ||
-                    transfer.transaction().created() > lastTransfer!!.transaction().created()) {
-                lastTransfer = transfer
+                    it.transaction.created() > lastTransfer!!.transaction.created()) {
+                lastTransfer = it
             }
         }
         if (lastTransfer != null) showTransfer(lastTransfer, false)
     }
 
-    fun onTransferAdded(addedTransfer: TransferWithCurrency) {
+    fun onTransferAdded(addedTransfer: BoardGame.Companion.TransferWithCurrency) {
         if (lastTransfer == null ||
-                addedTransfer.transaction().created() > lastTransfer!!.transaction().created()) {
+                addedTransfer.transaction.created() > lastTransfer!!.transaction.created()) {
             lastTransfer = addedTransfer
             showTransfer(lastTransfer, true)
         }
     }
 
-    fun onTransfersChanged(changedTransfers: scala.collection.Iterable<TransferWithCurrency>) {
-        val iterator = changedTransfers.iterator()
-        while (iterator.hasNext()) {
-            val transfer = iterator.next()
-            if (transfer.transaction().id() == lastTransfer!!.transaction().id()) {
-                lastTransfer = transfer
-                showTransfer(lastTransfer, false)
-                break
-            }
+    fun onTransfersChanged(changedTransfers: Collection<BoardGame.Companion.TransferWithCurrency>) {
+        changedTransfers.filter {
+            it.transaction.id() == lastTransfer!!.transaction.id()
+        }.forEach {
+            lastTransfer = it
+            showTransfer(lastTransfer, false)
         }
     }
 
-    private fun showTransfer(transfer: TransferWithCurrency?, animate: Boolean) {
+    private fun showTransfer(transfer: BoardGame.Companion.TransferWithCurrency?,
+                             animate: Boolean
+    ) {
         val summary = getString(
                 R.string.transfer_summary_format_string,
-                BoardGameActivity.formatMemberOrAccount(activity!!, lastTransfer!!.from()),
+                BoardGameActivity.formatMemberOrAccount(activity!!, lastTransfer!!.from),
                 BoardGameActivity.formatCurrencyValue(
                         activity!!,
-                        transfer!!.currency(),
-                        transfer.transaction().value()
+                        transfer!!.currency,
+                        transfer.transaction.value()
                 ),
-                BoardGameActivity.formatMemberOrAccount(activity!!, lastTransfer!!.to())
+                BoardGameActivity.formatMemberOrAccount(activity!!, lastTransfer!!.to)
         )
-        val createdTimeMillis = transfer.transaction().created()
+        val createdTimeMillis = transfer.transaction.created()
         val currentTimeMillis = System.currentTimeMillis()
         val created = LiquidityApplication.getRelativeTimeSpanString(
                 activity!!,

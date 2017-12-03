@@ -11,9 +11,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.BoardGameActivity
-import com.dhpcs.liquidity.boardgame.BoardGame.*
 import com.dhpcs.liquidity.model.MemberId
 import java.util.*
 
@@ -35,7 +35,7 @@ class IdentitiesFragment : Fragment() {
         internal constructor(fragmentManager: FragmentManager
         ) : FragmentStatePagerAdapter(fragmentManager) {
 
-            private val identities = ArrayList<IdentityWithBalance>()
+            private val identities = ArrayList<BoardGame.Companion.IdentityWithBalance>()
 
             override fun getCount(): Int = identities.size
 
@@ -45,17 +45,21 @@ class IdentitiesFragment : Fragment() {
 
             override fun getItemPosition(item: Any): Int = PagerAdapter.POSITION_NONE
 
-            internal fun add(identity: IdentityWithBalance) = identities.add(identity)
+            internal fun add(identity: BoardGame.Companion.IdentityWithBalance) {
+                identities.add(identity)
+            }
 
             internal fun clear() = identities.clear()
 
-            internal operator fun get(position: Int): IdentityWithBalance = identities[position]
+            internal operator fun get(position: Int): BoardGame.Companion.IdentityWithBalance {
+                return identities[position]
+            }
 
-            internal fun getPosition(identity: IdentityWithBalance): Int {
+            internal fun getPosition(identity: BoardGame.Companion.IdentityWithBalance): Int {
                 return identities.indexOf(identity)
             }
 
-            internal fun sort(comparator: Comparator<Player>) {
+            internal fun sort(comparator: Comparator<BoardGame.Companion.Player>) {
                 Collections.sort(identities, comparator)
             }
 
@@ -77,7 +81,7 @@ class IdentitiesFragment : Fragment() {
     private var textViewEmpty: TextView? = null
     private var viewPagerIdentities: ViewPager? = null
 
-    private var selectedIdentity: Identity? = null
+    private var selectedIdentity: BoardGame.Companion.Identity? = null
 
     private var listener: Listener? = null
 
@@ -87,7 +91,7 @@ class IdentitiesFragment : Fragment() {
             viewPagerIdentities!!.currentItem = page
         }
 
-    fun getIdentity(page: Int): IdentityWithBalance? {
+    fun getIdentity(page: Int): BoardGame.Companion.IdentityWithBalance? {
         return if (identitiesFragmentStatePagerAdapter!!.count == 0) {
             null
         } else {
@@ -95,7 +99,7 @@ class IdentitiesFragment : Fragment() {
         }
     }
 
-    fun getPage(identity: IdentityWithBalance): Int {
+    fun getPage(identity: BoardGame.Companion.IdentityWithBalance): Int {
         return if (identitiesFragmentStatePagerAdapter!!.count == 0) {
             0
         } else {
@@ -103,12 +107,10 @@ class IdentitiesFragment : Fragment() {
         }
     }
 
-    fun onIdentitiesUpdated(
-            identities: scala.collection.immutable.Map<MemberId, IdentityWithBalance>) {
+    fun onIdentitiesUpdated(identities: Map<MemberId, BoardGame.Companion.IdentityWithBalance>) {
         identitiesFragmentStatePagerAdapter!!.clear()
-        val iterator = identities.valuesIterator()
-        while (iterator.hasNext()) {
-            identitiesFragmentStatePagerAdapter!!.add(iterator.next())
+        identities.values.forEach {
+            identitiesFragmentStatePagerAdapter!!.add(it)
         }
         identitiesFragmentStatePagerAdapter!!.sort(
                 BoardGameActivity.playerComparator(activity!!)
@@ -125,10 +127,10 @@ class IdentitiesFragment : Fragment() {
             View.VISIBLE
         }
 
-        if (selectedIdentity != null && identities.contains(selectedIdentity!!.member().id())) {
+        if (selectedIdentity != null && identities.contains(selectedIdentity!!.member.id())) {
             viewPagerIdentities!!.setCurrentItem(
                     identitiesFragmentStatePagerAdapter!!.getPosition(
-                            identities.apply(selectedIdentity!!.member().id())
+                            identities[selectedIdentity!!.member.id()]!!
                     ),
                     false
             )
@@ -142,7 +144,8 @@ class IdentitiesFragment : Fragment() {
                 fragmentManager!!
         )
 
-        selectedIdentity = savedInstanceState?.getSerializable(STATE_SELECTED_IDENTITY) as Identity?
+        selectedIdentity = savedInstanceState?.getSerializable(STATE_SELECTED_IDENTITY) as
+                BoardGame.Companion.Identity?
     }
 
     override fun onCreateView(inflater: LayoutInflater,

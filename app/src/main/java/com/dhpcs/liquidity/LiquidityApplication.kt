@@ -6,7 +6,6 @@ import android.net.ConnectivityManager
 import android.os.Handler
 import android.os.Looper
 import android.support.multidex.MultiDexApplication
-import com.dhpcs.liquidity.boardgame.BoardGame
 import com.dhpcs.liquidity.client.ServerConnection
 import com.dhpcs.liquidity.model.ZoneId
 import com.dhpcs.liquidity.provider.LiquidityContract
@@ -18,13 +17,31 @@ class LiquidityApplication : MultiDexApplication() {
 
     companion object {
 
-        private var gameDatabase: BoardGame.GameDatabase? = null
+        private var gameDatabase: BoardGame.Companion.GameDatabase? = null
 
-        fun getGameDatabase(context: Context): BoardGame.GameDatabase {
+        fun getGameDatabase(context: Context): BoardGame.Companion.GameDatabase {
             if (gameDatabase == null) {
-                gameDatabase = object : BoardGame.GameDatabase {
+                gameDatabase = object : BoardGame.Companion.GameDatabase {
 
-                    override fun checkAndUpdateGame(zoneId: ZoneId, name: String): Long? {
+                    override fun insertGame(zoneId: ZoneId,
+                                            created: Long,
+                                            expires: Long,
+                                            name: String?
+                    ): Long {
+                        val contentValues = ContentValues()
+                        contentValues.put(LiquidityContract.Games.ZONE_ID, zoneId.id())
+                        contentValues.put(LiquidityContract.Games.CREATED, created)
+                        contentValues.put(LiquidityContract.Games.EXPIRES, expires)
+                        contentValues.put(LiquidityContract.Games.NAME, name)
+                        return ContentUris.parseId(
+                                context.contentResolver.insert(
+                                        LiquidityContract.Games.CONTENT_URI,
+                                        contentValues
+                                )
+                        )
+                    }
+
+                    override fun checkAndUpdateGame(zoneId: ZoneId, name: String?): Long? {
                         val existingEntry = context.contentResolver.query(
                                 LiquidityContract.Games.CONTENT_URI,
                                 arrayOf(LiquidityContract.Games.ID, LiquidityContract.Games.NAME),
@@ -52,25 +69,7 @@ class LiquidityApplication : MultiDexApplication() {
                         }
                     }
 
-                    override fun insertGame(zoneId: ZoneId,
-                                            created: Long,
-                                            expires: Long,
-                                            name: String
-                    ): Long {
-                        val contentValues = ContentValues()
-                        contentValues.put(LiquidityContract.Games.ZONE_ID, zoneId.id())
-                        contentValues.put(LiquidityContract.Games.CREATED, created)
-                        contentValues.put(LiquidityContract.Games.EXPIRES, expires)
-                        contentValues.put(LiquidityContract.Games.NAME, name)
-                        return ContentUris.parseId(
-                                context.contentResolver.insert(
-                                        LiquidityContract.Games.CONTENT_URI,
-                                        contentValues
-                                )
-                        )
-                    }
-
-                    override fun updateGameName(gameId: Long, name: String) {
+                    override fun updateGameName(gameId: Long, name: String?) {
                         val contentValues = ContentValues()
                         contentValues.put(LiquidityContract.Games.NAME, name)
                         context.contentResolver.update(

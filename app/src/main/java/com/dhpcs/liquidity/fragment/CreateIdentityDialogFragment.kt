@@ -52,8 +52,10 @@ class CreateIdentityDialogFragment : AppCompatDialogFragment() {
                 R.layout.fragment_create_identity_dialog, null
         )
 
-        val textInputLayoutIdentityName = view.findViewById<TextInputLayout>(R.id.textinputlayout_identity_name)
-        val textInputEditTextIdentityName = view.findViewById<TextInputEditText>(R.id.textinputedittext_identity_name)
+        val textInputLayoutIdentityName = view
+                .findViewById<TextInputLayout>(R.id.textinputlayout_identity_name)
+        val textInputEditTextIdentityName = view
+                .findViewById<TextInputEditText>(R.id.textinputedittext_identity_name)
 
         val alertDialog = AlertDialog.Builder(activity!!)
                 .setTitle(R.string.enter_identity_name)

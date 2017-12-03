@@ -6,9 +6,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.BoardGameActivity
-import com.dhpcs.liquidity.boardgame.BoardGame.IdentityWithBalance
 import com.dhpcs.liquidity.view.Identicon
 
 class IdentityFragment : Fragment() {
@@ -17,7 +17,7 @@ class IdentityFragment : Fragment() {
 
         private const val ARG_IDENTITY = "identity"
 
-        fun newInstance(identity: IdentityWithBalance): IdentityFragment {
+        fun newInstance(identity: BoardGame.Companion.IdentityWithBalance): IdentityFragment {
             val identityFragment = IdentityFragment()
             val args = Bundle()
             args.putSerializable(ARG_IDENTITY, identity)
@@ -32,19 +32,20 @@ class IdentityFragment : Fragment() {
                               savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_identity, container, false)
 
-        val identity = arguments!!.getSerializable(ARG_IDENTITY) as IdentityWithBalance
+        val identity = arguments!!.getSerializable(ARG_IDENTITY) as
+                BoardGame.Companion.IdentityWithBalance
 
         val identiconId = view.findViewById<Identicon>(R.id.identicon_id)
         val textViewName = view.findViewById<TextView>(R.id.textview_name)
         val textViewBalance = view.findViewById<TextView>(R.id.textview_balance)
 
-        val zoneId = identity.zoneId()
-        val memberId = identity.member().id()
-        val name = BoardGameActivity.formatNullable(activity!!, identity.member().name())
+        val zoneId = identity.zoneId
+        val memberId = identity.member.id()
+        val name = BoardGameActivity.formatNullable(activity!!, identity.member.name())
         val balance = BoardGameActivity.formatCurrencyValue(
                 activity!!,
-                identity.balanceWithCurrency()._2(),
-                identity.balanceWithCurrency()._1()
+                identity.currency,
+                identity.balance
         )
 
         identiconId.show(zoneId, memberId)

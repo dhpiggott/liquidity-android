@@ -11,9 +11,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.BoardGameActivity
-import com.dhpcs.liquidity.boardgame.BoardGame.*
 import com.dhpcs.liquidity.model.MemberId
 import com.dhpcs.liquidity.view.Identicon
 
@@ -25,7 +25,7 @@ class PlayersFragment : Fragment() {
 
             fun onNoPlayersTextClicked()
 
-            fun onPlayerClicked(player: Player)
+            fun onPlayerClicked(player: BoardGame.Companion.Player)
 
         }
 
@@ -33,26 +33,29 @@ class PlayersFragment : Fragment() {
         internal constructor(private val playersFragment: PlayersFragment
         ) : RecyclerView.Adapter<PlayerViewHolder>() {
 
-            private val players: SortedList<PlayerWithBalanceAndConnectionState> = SortedList(
-                    PlayerWithBalanceAndConnectionState::class.java,
+            private val players = SortedList(
+                    BoardGame.Companion.PlayerWithBalanceAndConnectionState::class.java,
                     object : SortedListAdapterCallback<
-                            PlayerWithBalanceAndConnectionState>(this) {
+                            BoardGame.Companion.PlayerWithBalanceAndConnectionState
+                            >(this) {
 
-                        private val playerComparator =
-                                BoardGameActivity.playerComparator(playersFragment.context!!)
+                        private val playerComparator = BoardGameActivity
+                                .playerComparator(playersFragment.context!!)
 
-                        override fun compare(o1: PlayerWithBalanceAndConnectionState,
-                                             o2: PlayerWithBalanceAndConnectionState
+                        override fun compare(
+                                o1: BoardGame.Companion.PlayerWithBalanceAndConnectionState,
+                                o2: BoardGame.Companion.PlayerWithBalanceAndConnectionState
                         ): Int = playerComparator.compare(o1, o2)
 
-                        override fun
-                                areContentsTheSame(oldItem: PlayerWithBalanceAndConnectionState,
-                                                   newItem: PlayerWithBalanceAndConnectionState
+                        override fun areContentsTheSame(
+                                oldItem: BoardGame.Companion.PlayerWithBalanceAndConnectionState,
+                                newItem: BoardGame.Companion.PlayerWithBalanceAndConnectionState
                         ): Boolean = oldItem == newItem
 
-                        override fun areItemsTheSame(item1: PlayerWithBalanceAndConnectionState,
-                                                     item2: PlayerWithBalanceAndConnectionState
-                        ): Boolean = item1.member().id() == item2.member().id()
+                        override fun areItemsTheSame(
+                                item1: BoardGame.Companion.PlayerWithBalanceAndConnectionState,
+                                item2: BoardGame.Companion.PlayerWithBalanceAndConnectionState
+                        ): Boolean = item1.member.id() == item2.member.id()
 
                     }
             )
@@ -76,16 +79,20 @@ class PlayersFragment : Fragment() {
              * replaces. If properties of the player (i.e. its name) have changed
              * relative to any previous item, the replace method must instead be called.
              */
-            internal fun replaceOrAdd(player: PlayerWithBalanceAndConnectionState) {
+            internal fun replaceOrAdd(
+                    player: BoardGame.Companion.PlayerWithBalanceAndConnectionState
+            ) {
                 players.add(player)
             }
 
-            internal fun replace(oldPlayer: PlayerWithBalanceAndConnectionState,
-                                 newPlayer: PlayerWithBalanceAndConnectionState) {
+            internal fun replace(oldPlayer:
+                                 BoardGame.Companion.PlayerWithBalanceAndConnectionState,
+                                 newPlayer:
+                                 BoardGame.Companion.PlayerWithBalanceAndConnectionState) {
                 players.updateItemAt(players.indexOf(oldPlayer), newPlayer)
             }
 
-            internal fun remove(player: PlayerWithBalanceAndConnectionState) {
+            internal fun remove(player: BoardGame.Companion.PlayerWithBalanceAndConnectionState) {
                 players.remove(player)
             }
 
@@ -104,21 +111,21 @@ class PlayersFragment : Fragment() {
                 itemView.setOnClickListener(this)
             }
 
-            private var player: Player? = null
+            private var player: BoardGame.Companion.Player? = null
 
-            fun bindPlayer(player: PlayerWithBalanceAndConnectionState) {
+            fun bindPlayer(player: BoardGame.Companion.PlayerWithBalanceAndConnectionState) {
                 this.player = player
 
-                val zoneId = player.zoneId()
-                val memberId = player.member().id()
+                val zoneId = player.zoneId
+                val memberId = player.member.id()
                 val name = BoardGameActivity.formatNullable(
                         playersFragment.context!!,
-                        player.member().name()
+                        player.member.name()
                 )
                 val balance = BoardGameActivity.formatCurrencyValue(
                         playersFragment.context!!,
-                        player.balanceWithCurrency()._2(),
-                        player.balanceWithCurrency()._1()
+                        player.currency,
+                        player.balance
                 )
                 val status = if (player.isConnected) {
                     R.string.player_connected
@@ -145,9 +152,9 @@ class PlayersFragment : Fragment() {
     private var textViewEmpty: TextView? = null
     private var recyclerViewPlayers: RecyclerView? = null
 
-    private var players: scala.collection.immutable.Map<MemberId,
-            PlayerWithBalanceAndConnectionState>? = null
-    private var selectedIdentity: Identity? = null
+    private var players: Map<MemberId, BoardGame.Companion.PlayerWithBalanceAndConnectionState>? =
+            null
+    private var selectedIdentity: BoardGame.Companion.Identity? = null
 
     internal var listener: Listener? = null
 
@@ -186,10 +193,10 @@ class PlayersFragment : Fragment() {
     }
 
     fun onPlayersInitialized(
-            players: scala.collection.Iterable<PlayerWithBalanceAndConnectionState>) {
-        val iterator = players.iterator()
-        while (iterator.hasNext()) {
-            replaceOrAddPlayer(iterator.next())
+            players: Collection<BoardGame.Companion.PlayerWithBalanceAndConnectionState>
+    ) {
+        players.forEach {
+            replaceOrAddPlayer(it)
         }
         if (playersAdapter!!.itemCount != 0) {
             textViewEmpty!!.visibility = View.GONE
@@ -197,7 +204,7 @@ class PlayersFragment : Fragment() {
         }
     }
 
-    fun onPlayerAdded(addedPlayer: PlayerWithBalanceAndConnectionState) {
+    fun onPlayerAdded(addedPlayer: BoardGame.Companion.PlayerWithBalanceAndConnectionState) {
         replaceOrAddPlayer(addedPlayer)
         if (playersAdapter!!.itemCount != 0) {
             textViewEmpty!!.visibility = View.GONE
@@ -205,21 +212,21 @@ class PlayersFragment : Fragment() {
         }
     }
 
-    fun onPlayerChanged(changedPlayer: PlayerWithBalanceAndConnectionState) {
+    fun onPlayerChanged(changedPlayer: BoardGame.Companion.PlayerWithBalanceAndConnectionState) {
         if (selectedIdentity == null ||
-                changedPlayer.member().id() != selectedIdentity!!.member().id()) {
-            playersAdapter!!.replace(players!!.apply(changedPlayer.member().id()), changedPlayer)
+                changedPlayer.member.id() != selectedIdentity!!.member.id()) {
+            playersAdapter!!.replace(players!![changedPlayer.member.id()]!!, changedPlayer)
         }
     }
 
-    fun onPlayersUpdated(players: scala.collection.immutable.Map<MemberId,
-            PlayerWithBalanceAndConnectionState>) {
+    fun onPlayersUpdated(players: Map<MemberId,
+            BoardGame.Companion.PlayerWithBalanceAndConnectionState>) {
         this.players = players
     }
 
-    fun onPlayerRemoved(removedPlayer: PlayerWithBalanceAndConnectionState) {
+    fun onPlayerRemoved(removedPlayer: BoardGame.Companion.PlayerWithBalanceAndConnectionState) {
         if (selectedIdentity == null ||
-                removedPlayer.member().id() != selectedIdentity!!.member().id()) {
+                removedPlayer.member.id() != selectedIdentity!!.member.id()) {
             playersAdapter!!.remove(removedPlayer)
         }
         if (playersAdapter!!.itemCount == 0) {
@@ -228,15 +235,15 @@ class PlayersFragment : Fragment() {
         }
     }
 
-    fun onSelectedIdentityChanged(selectedIdentity: Identity) {
+    fun onSelectedIdentityChanged(selectedIdentity: BoardGame.Companion.Identity) {
         if (this.selectedIdentity != null && players != null) {
-            val player = players!!.get(this.selectedIdentity!!.member().id())
-            if (player.isDefined) playersAdapter!!.replaceOrAdd(player.get())
+            val player = players!![this.selectedIdentity!!.member.id()]
+            if (player != null) playersAdapter!!.replaceOrAdd(player)
         }
         this.selectedIdentity = selectedIdentity
         if (this.selectedIdentity != null && players != null) {
-            val player = players!!.get(this.selectedIdentity!!.member().id())
-            if (player.isDefined) playersAdapter!!.remove(player.get())
+            val player = players!![this.selectedIdentity!!.member.id()]
+            if (player != null) playersAdapter!!.remove(player)
         }
         textViewEmpty!!.visibility =
                 if (playersAdapter!!.itemCount == 0) View.VISIBLE else View.GONE
@@ -244,8 +251,10 @@ class PlayersFragment : Fragment() {
                 if (playersAdapter!!.itemCount == 0) View.GONE else View.VISIBLE
     }
 
-    private fun replaceOrAddPlayer(player: PlayerWithBalanceAndConnectionState) {
-        if (selectedIdentity == null || player.member().id() != selectedIdentity!!.member().id()) {
+    private fun replaceOrAddPlayer(
+            player: BoardGame.Companion.PlayerWithBalanceAndConnectionState
+    ) {
+        if (selectedIdentity == null || player.member.id() != selectedIdentity!!.member.id()) {
             playersAdapter!!.replaceOrAdd(player)
         }
     }

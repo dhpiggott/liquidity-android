@@ -13,12 +13,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.*
+import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.BoardGameActivity
-import com.dhpcs.liquidity.boardgame.BoardGame.*
 import com.dhpcs.liquidity.model.MemberId
 import scala.Option
-import scala.collection.JavaConversions
 import scala.util.Either
 import java.math.BigDecimal
 import java.text.DecimalFormat
@@ -31,8 +30,8 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
 
         interface Listener {
 
-            fun onTransferValueEntered(from: Identity,
-                                       to: List<Player>,
+            fun onTransferValueEntered(from: BoardGame.Companion.Identity,
+                                       to: Collection<BoardGame.Companion.Player>,
                                        transferValue: BigDecimal
             )
 
@@ -49,29 +48,15 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
         private const val EXTRA_TO_LIST = "to_list"
 
         fun newInstance(
-                identities: scala.collection.Iterable<IdentityWithBalance>,
-                players: scala.collection.Iterable<out Player>,
+                identities: ArrayList<BoardGame.Companion.IdentityWithBalance>,
+                players: ArrayList<out BoardGame.Companion.Player>,
                 currency: Option<Either<String, Currency>>,
-                from: IdentityWithBalance,
-                to: Player?): TransferToPlayerDialogFragment {
+                from: BoardGame.Companion.IdentityWithBalance,
+                to: BoardGame.Companion.Player?): TransferToPlayerDialogFragment {
             val transferToPlayerDialogFragment = TransferToPlayerDialogFragment()
             val args = Bundle()
-            args.putSerializable(
-                    ARG_IDENTITIES,
-                    ArrayList(
-                            JavaConversions.bufferAsJavaList(
-                                    identities.toBuffer<Identity>()
-                            )
-                    )
-            )
-            args.putSerializable(
-                    ARG_PLAYERS,
-                    ArrayList(
-                            JavaConversions.bufferAsJavaList(
-                                    players.toBuffer<Player>()
-                            )
-                    )
-            )
+            args.putSerializable(ARG_IDENTITIES, identities)
+            args.putSerializable(ARG_PLAYERS, players)
             args.putSerializable(ARG_CURRENCY, currency)
             args.putSerializable(ARG_FROM, from)
             args.putSerializable(ARG_TO, to)
@@ -80,8 +65,8 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
         }
 
         private class PlayersAdapter internal constructor(context: Context,
-                                                          players: List<Player>
-        ) : ArrayAdapter<Player>(
+                                                          players: List<BoardGame.Companion.Player>
+        ) : ArrayAdapter<BoardGame.Companion.Player>(
                 context,
                 android.R.layout.simple_spinner_item,
                 players
@@ -110,16 +95,18 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                 )
             }
 
-            private fun bindView(textView: TextView, player: Player?): View {
-                textView.text = BoardGameActivity.formatNullable(context, player!!.member().name())
+            private fun bindView(textView: TextView, player: BoardGame.Companion.Player?): View {
+                textView.text = BoardGameActivity.formatNullable(context, player!!.member.name())
                 return textView
             }
 
         }
 
         private class IdentitiesAdapter internal constructor(context: Context,
-                                                             identities: List<IdentityWithBalance>
-        ) : ArrayAdapter<IdentityWithBalance>(
+                                                             identities:
+                                                             List<BoardGame.Companion
+                                                             .IdentityWithBalance>
+        ) : ArrayAdapter<BoardGame.Companion.IdentityWithBalance>(
                 context,
                 android.R.layout.simple_spinner_item,
                 identities
@@ -148,23 +135,25 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                 )
             }
 
-            private fun bindView(textView: TextView, identity: IdentityWithBalance?): View {
+            private fun bindView(textView: TextView,
+                                 identity: BoardGame.Companion.IdentityWithBalance?
+            ): View {
                 textView.text = if (identity!!.isBanker) {
                     BoardGameActivity.formatNullable(
                             context,
-                            identity.member().name()
+                            identity.member.name()
                     )
                 } else {
                     context.getString(
                             R.string.identity_format_string,
                             BoardGameActivity.formatNullable(
                                     context,
-                                    identity.member().name()
+                                    identity.member.name()
                             ),
                             BoardGameActivity.formatCurrencyValue(
                                     context,
-                                    identity.balanceWithCurrency()._2(),
-                                    identity.balanceWithCurrency()._1()
+                                    identity.currency,
+                                    identity.balance
                             )
                     )
                 }
@@ -178,12 +167,13 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
     private var listener: Listener? = null
 
     private var currency: Option<Either<String, Currency>>? = null
-    private var from: IdentityWithBalance? = null
-    private var to: Player? = null
-    private var toList: ArrayList<Player>? = null
+    private var from: BoardGame.Companion.IdentityWithBalance? = null
+    private var to: BoardGame.Companion.Player? = null
+    private var toList: ArrayList<BoardGame.Companion.Player>? = null
 
-    private var identitiesSpinnerAdapter: ArrayAdapter<IdentityWithBalance>? = null
-    private var playersSpinnerAdapter: ArrayAdapter<Player>? = null
+    private var identitiesSpinnerAdapter: ArrayAdapter<BoardGame.Companion.IdentityWithBalance>? =
+            null
+    private var playersSpinnerAdapter: ArrayAdapter<BoardGame.Companion.Player>? = null
 
     private var textViewValueError: TextView? = null
     private var textViewFromError: TextView? = null
@@ -191,22 +181,26 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
 
     private var value: BigDecimal? = null
 
-    private var identities: scala.collection.immutable.Map<MemberId, IdentityWithBalance>? = null
+    private var identities: Map<MemberId, BoardGame.Companion.IdentityWithBalance>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val identities = arguments!!.getSerializable(ARG_IDENTITIES) as List<IdentityWithBalance>
-        val players = arguments!!.getSerializable(ARG_PLAYERS) as List<Player>
-        val currency = arguments!!.getSerializable(ARG_CURRENCY) as Option<Either<String, Currency>>
+        val identities = arguments!!.getSerializable(ARG_IDENTITIES) as
+                List<BoardGame.Companion.IdentityWithBalance>
+        val players = arguments!!.getSerializable(ARG_PLAYERS) as
+                List<BoardGame.Companion.Player>
+        val currency = arguments!!.getSerializable(ARG_CURRENCY) as
+                Option<Either<String, Currency>>
         this.currency = currency
-        from = arguments!!.getSerializable(ARG_FROM) as IdentityWithBalance
-        to = arguments!!.getSerializable(ARG_TO) as Player?
+        from = arguments!!.getSerializable(ARG_FROM) as BoardGame.Companion.IdentityWithBalance
+        to = arguments!!.getSerializable(ARG_TO) as BoardGame.Companion.Player?
         val toList = when {
             to != null ->
                 null
             savedInstanceState != null ->
-                savedInstanceState.getSerializable(EXTRA_TO_LIST) as ArrayList<Player>
+                savedInstanceState.getSerializable(EXTRA_TO_LIST) as
+                        ArrayList<BoardGame.Companion.Player>
             else ->
                 ArrayList()
         }
@@ -372,7 +366,8 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
             spinnerTo.setSelection(playersSpinnerAdapter!!.getPosition(to))
         } else {
             spinnerTo.visibility = View.GONE
-            val players = arguments!!.getSerializable(ARG_PLAYERS) as List<Player>
+            val players = arguments!!.getSerializable(ARG_PLAYERS) as
+                    List<BoardGame.Companion.Player>
             for (player in players) {
                 val checkedTextViewPlayer = activity!!.layoutInflater.inflate(
                         android.R.layout.simple_list_item_multiple_choice,
@@ -381,7 +376,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                 ) as CheckedTextView
                 linearLayoutTo.addView(checkedTextViewPlayer)
                 checkedTextViewPlayer.text =
-                        BoardGameActivity.formatNullable(activity!!, player.member().name())
+                        BoardGameActivity.formatNullable(activity!!, player.member.name())
                 checkedTextViewPlayer.isChecked = toList!!.contains(player)
                 checkedTextViewPlayer.setOnClickListener {
                     checkedTextViewPlayer.toggle()
@@ -427,19 +422,18 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
         outState.putSerializable(EXTRA_TO_LIST, toList)
     }
 
-    fun onIdentitiesUpdated(
-            identities: scala.collection.immutable.Map<MemberId, IdentityWithBalance>) {
+    fun onIdentitiesUpdated(identities: Map<MemberId, BoardGame.Companion.IdentityWithBalance>) {
         this.identities = identities
         identitiesSpinnerAdapter!!.clear()
-        identitiesSpinnerAdapter!!.addAll(JavaConversions.asJavaCollection(identities.values()))
+        identitiesSpinnerAdapter!!.addAll(identities.values)
         if (buttonPositive != null) validateInput()
     }
 
     private fun validateInput() {
         val currentBalance = if (identities == null) {
-            from!!.balanceWithCurrency()._1()
+            from!!.balance
         } else {
-            identities!!.apply(from!!.member().id()).balanceWithCurrency()._1()
+            identities!![from!!.member.id()]!!.balance
         }
         val isValueValid = if (value == null) {
             textViewValueError!!.text = null
@@ -450,7 +444,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
             } else {
                 value!!.multiply(BigDecimal(if (to != null) 1 else toList!!.size))
             }
-            if (requiredBalance != null && currentBalance.bigDecimal() < requiredBalance) {
+            if (requiredBalance != null && currentBalance < requiredBalance) {
                 textViewValueError!!.text = getString(
                         R.string.transfer_value_invalid_format_string,
                         BoardGameActivity.formatCurrencyValue(
@@ -471,14 +465,14 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
             }
         }
         val toAccountIds = if (to != null) {
-            setOf(to!!.account().id())
+            setOf(to!!.account.id())
         } else {
-            toList!!.map { it.account().id() }.toSet()
+            toList!!.map { it.account.id() }.toSet()
         }
-        val isFromValid = if (toAccountIds.contains(from!!.account().id())) {
+        val isFromValid = if (toAccountIds.contains(from!!.account.id())) {
             textViewFromError!!.text = getString(
                     R.string.transfer_from_invalid_format_string,
-                    BoardGameActivity.formatNullable(activity!!, from!!.member().name())
+                    BoardGameActivity.formatNullable(activity!!, from!!.member.name())
             )
             false
         } else {

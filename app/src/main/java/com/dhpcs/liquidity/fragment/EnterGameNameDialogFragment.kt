@@ -13,8 +13,8 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.WindowManager
 import android.widget.Button
+import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.R
-import com.dhpcs.liquidity.boardgame.`BoardGame$`
 import com.dhpcs.liquidity.ws.protocol.`ZoneCommand$`
 
 class EnterGameNameDialogFragment : AppCompatDialogFragment() {
@@ -100,7 +100,7 @@ class EnterGameNameDialogFragment : AppCompatDialogFragment() {
     }
 
     private fun validateInput(gameName: CharSequence) {
-        buttonPositive?.isEnabled = `BoardGame$`.`MODULE$`.isGameNameValid(gameName)
+        buttonPositive?.isEnabled = BoardGame.Companion.isGameNameValid(gameName)
     }
 
 }

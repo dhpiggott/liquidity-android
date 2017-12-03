@@ -20,8 +20,8 @@ import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.Spinner
 import android.widget.TextView
+import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.R
-import com.dhpcs.liquidity.boardgame.`BoardGame$`
 import com.dhpcs.liquidity.ws.protocol.`ZoneCommand$`
 import java.util.*
 
@@ -187,7 +187,7 @@ class CreateGameDialogFragment : AppCompatDialogFragment() {
     }
 
     private fun validateInput(gameName: CharSequence) {
-        buttonPositive?.isEnabled = `BoardGame$`.`MODULE$`.isGameNameValid(gameName)
+        buttonPositive?.isEnabled = BoardGame.Companion.isGameNameValid(gameName)
     }
 
 }

@@ -11,14 +11,13 @@ import android.support.v4.view.ViewPager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.BoardGameActivity
-import com.dhpcs.liquidity.boardgame.BoardGame.Player
-import com.dhpcs.liquidity.boardgame.BoardGame.TransferWithCurrency
 import com.dhpcs.liquidity.model.MemberId
 import com.dhpcs.liquidity.model.TransactionId
-import scala.collection.JavaConversions
 import java.util.*
+import kotlin.collections.ArrayList
 
 class PlayersTransfersFragment : Fragment() {
 
@@ -31,12 +30,12 @@ class PlayersTransfersFragment : Fragment() {
                              private val context: Context
         ) : FragmentStatePagerAdapter(fragmentManager) {
 
-            private val players = ArrayList<Player>()
+            private val players = ArrayList<BoardGame.Companion.Player>()
             private val transfersFragments = HashSet<TransfersFragment>()
 
-            private var transfers: ArrayList<TransferWithCurrency>? = null
+            private var transfers: ArrayList<BoardGame.Companion.TransferWithCurrency>? = null
 
-            fun add(player: Player) = players.add(player)
+            fun add(player: BoardGame.Companion.Player) = players.add(player)
 
             override fun getCount(): Int = players.size + 1
 
@@ -45,7 +44,7 @@ class PlayersTransfersFragment : Fragment() {
                 return if (player == null) {
                     context.getString(R.string.all)
                 } else {
-                    BoardGameActivity.formatNullable(context, player.member().name())
+                    BoardGameActivity.formatNullable(context, player.member.name())
                 }
             }
 
@@ -70,43 +69,41 @@ class PlayersTransfersFragment : Fragment() {
 
             internal fun clear() = players.clear()
 
-            internal operator fun get(position: Int): Player? {
+            internal operator fun get(position: Int): BoardGame.Companion.Player? {
                 return if (position == 0) null else players[position - 1]
             }
 
-            internal fun getPosition(player: Player): Int = players.indexOf(player) + 1
+            internal fun getPosition(player: BoardGame.Companion.Player): Int {
+                return players.indexOf(player) + 1
+            }
 
             internal fun onTransfersInitialized(
-                    transfers: scala.collection.Iterable<TransferWithCurrency>) {
+                    transfers: Collection<BoardGame.Companion.TransferWithCurrency>) {
                 for (transfersFragment in transfersFragments) {
                     transfersFragment.onTransfersInitialized(transfers)
                 }
             }
 
-            internal fun onTransferAdded(addedTransfer: TransferWithCurrency) {
+            internal fun onTransferAdded(addedTransfer: BoardGame.Companion.TransferWithCurrency) {
                 for (transfersFragment in transfersFragments) {
                     transfersFragment.onTransferAdded(addedTransfer)
                 }
             }
 
             internal fun onTransfersChanged(
-                    changedTransfers: scala.collection.Iterable<TransferWithCurrency>) {
+                    changedTransfers: Collection<BoardGame.Companion.TransferWithCurrency>) {
                 for (transfersFragment in transfersFragments) {
                     transfersFragment.onTransfersChanged(changedTransfers)
                 }
             }
 
             internal fun onTransfersUpdated(
-                    transfers: scala.collection.immutable.Map<TransactionId, TransferWithCurrency>
+                    transfers: Map<TransactionId, BoardGame.Companion.TransferWithCurrency>
             ) {
-                this.transfers = ArrayList(
-                        JavaConversions.bufferAsJavaList(
-                                transfers.values().toBuffer()
-                        )
-                )
+                this.transfers = ArrayList(transfers.values)
             }
 
-            internal fun sort(comparator: Comparator<Player>) {
+            internal fun sort(comparator: Comparator<BoardGame.Companion.Player>) {
                 Collections.sort(players, comparator)
             }
 
@@ -128,7 +125,7 @@ class PlayersTransfersFragment : Fragment() {
     private var lastTransferFragment: LastTransferFragment? = null
     private var viewPagerPlayersTransfers: ViewPager? = null
 
-    private var selectedPlayer: Player? = null
+    private var selectedPlayer: BoardGame.Companion.Player? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -138,7 +135,8 @@ class PlayersTransfersFragment : Fragment() {
                 activity!!
         )
 
-        selectedPlayer = savedInstanceState?.getSerializable(STATE_SELECTED_PLAYER) as Player?
+        selectedPlayer = savedInstanceState?.getSerializable(STATE_SELECTED_PLAYER) as
+                BoardGame.Companion.Player?
     }
 
     override fun onCreateView(inflater: LayoutInflater,
@@ -165,45 +163,43 @@ class PlayersTransfersFragment : Fragment() {
         viewPagerPlayersTransfers!!.removeOnPageChangeListener(pageChangeListener)
     }
 
-    fun onPlayersUpdated(players: scala.collection.immutable.Map<MemberId, out Player>) {
+    fun onPlayersUpdated(players: Map<MemberId, BoardGame.Companion.Player>) {
         playersTransfersFragmentStatePagerAdapter!!.clear()
-        val iterator = players.valuesIterator()
-        while (iterator.hasNext()) {
-            playersTransfersFragmentStatePagerAdapter!!.add(iterator.next())
+        players.values.forEach {
+            playersTransfersFragmentStatePagerAdapter!!.add(it)
         }
         playersTransfersFragmentStatePagerAdapter!!.sort(
                 BoardGameActivity.playerComparator(activity!!)
         )
         playersTransfersFragmentStatePagerAdapter!!.notifyDataSetChanged()
 
-        if (selectedPlayer != null && players.contains(selectedPlayer!!.member().id())) {
+        if (selectedPlayer != null && players.contains(selectedPlayer!!.member.id())) {
             viewPagerPlayersTransfers!!.setCurrentItem(
                     playersTransfersFragmentStatePagerAdapter!!.getPosition(
-                            players.apply(selectedPlayer!!.member().id())
+                            players[selectedPlayer!!.member.id()]!!
                     ),
                     false
             )
         }
     }
 
-    fun onTransfersInitialized(transfers: scala.collection.Iterable<TransferWithCurrency>) {
+    fun onTransfersInitialized(transfers: Collection<BoardGame.Companion.TransferWithCurrency>) {
         lastTransferFragment!!.onTransfersInitialized(transfers)
         playersTransfersFragmentStatePagerAdapter!!.onTransfersInitialized(transfers)
     }
 
-    fun onTransferAdded(addedTransfer: TransferWithCurrency) {
+    fun onTransferAdded(addedTransfer: BoardGame.Companion.TransferWithCurrency) {
         lastTransferFragment!!.onTransferAdded(addedTransfer)
         playersTransfersFragmentStatePagerAdapter!!.onTransferAdded(addedTransfer)
     }
 
-    fun onTransfersChanged(
-            changedTransfers: scala.collection.Iterable<TransferWithCurrency>) {
+    fun onTransfersChanged(changedTransfers: Collection<BoardGame.Companion.TransferWithCurrency>) {
         lastTransferFragment!!.onTransfersChanged(changedTransfers)
         playersTransfersFragmentStatePagerAdapter!!.onTransfersChanged(changedTransfers)
     }
 
     fun onTransfersUpdated(
-            transfers: scala.collection.immutable.Map<TransactionId, TransferWithCurrency>) {
+            transfers: Map<TransactionId, BoardGame.Companion.TransferWithCurrency>) {
         playersTransfersFragmentStatePagerAdapter!!.onTransfersUpdated(transfers)
     }
 

@@ -3,20 +3,20 @@ package com.dhpcs.liquidity.activity
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 
-import com.dhpcs.liquidity.boardgame.BoardGame
-import com.dhpcs.liquidity.boardgame.BoardGame.IdentityWithBalance
-import com.dhpcs.liquidity.boardgame.BoardGame.PlayerWithBalanceAndConnectionState
-import com.dhpcs.liquidity.boardgame.BoardGame.TransferWithCurrency
+import com.dhpcs.liquidity.BoardGame
+import com.dhpcs.liquidity.BoardGame.Companion.IdentityWithBalance
+import com.dhpcs.liquidity.BoardGame.Companion.PlayerWithBalanceAndConnectionState
+import com.dhpcs.liquidity.BoardGame.Companion.TransferWithCurrency
 import com.dhpcs.liquidity.model.MemberId
 import com.dhpcs.liquidity.model.TransactionId
 import com.dhpcs.liquidity.model.ZoneId
 
 import scala.Option
-import scala.collection.Iterable
-import scala.collection.immutable.Map
 
 abstract class BoardGameChildActivity :
-        AppCompatActivity(), BoardGame.GameActionListener, BoardGame.JoinStateListener {
+        AppCompatActivity(),
+        BoardGame.Companion.GameActionListener,
+        BoardGame.Companion.JoinStateListener {
 
     companion object {
 
@@ -25,7 +25,7 @@ abstract class BoardGameChildActivity :
 
     }
 
-    private var joinRequestToken: BoardGame.JoinRequestToken? = null
+    private var joinRequestToken: BoardGame.Companion.JoinRequestToken? = null
     private var retry: Boolean = false
 
     private var boardGame: BoardGame? = null
@@ -37,42 +37,44 @@ abstract class BoardGameChildActivity :
                 .getBundleExtra(EXTRA_ZONE_ID_HOLDER)
                 .getSerializable(EXTRA_ZONE_ID) as ZoneId
 
-        joinRequestToken = lastCustomNonConfigurationInstance as BoardGame.JoinRequestToken?
+        joinRequestToken =
+                lastCustomNonConfigurationInstance as BoardGame.Companion.JoinRequestToken?
 
-        if (joinRequestToken == null) joinRequestToken = BoardGame.JoinRequestToken()
+        if (joinRequestToken == null) joinRequestToken = BoardGame.Companion.JoinRequestToken()
 
         retry = savedInstanceState == null
 
-        boardGame = BoardGame.getInstance(zoneId)
+        boardGame = BoardGame.Companion.getInstance(zoneId)
 
-        boardGame!!.registerListener(this as BoardGame.JoinStateListener)
-        boardGame!!.registerListener(this as BoardGame.GameActionListener)
+        boardGame!!.registerListener(this as BoardGame.Companion.JoinStateListener)
+        boardGame!!.registerListener(this as BoardGame.Companion.GameActionListener)
     }
 
     override fun onStart() {
         super.onStart()
-        boardGame!!.requestJoin(joinRequestToken, retry)
+        boardGame!!.requestJoin(joinRequestToken!!, retry)
         retry = false
     }
 
     override fun onStop() {
         super.onStop()
-        if (!isChangingConfigurations) boardGame!!.unrequestJoin(joinRequestToken)
+        if (!isChangingConfigurations) boardGame!!.unrequestJoin(joinRequestToken!!)
     }
 
-    override fun onRetainCustomNonConfigurationInstance(): BoardGame.JoinRequestToken? {
+    override fun onRetainCustomNonConfigurationInstance(): BoardGame.Companion.JoinRequestToken? {
         return joinRequestToken
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        boardGame!!.unregisterListener(this as BoardGame.GameActionListener)
-        boardGame!!.unregisterListener(this as BoardGame.JoinStateListener)
+        boardGame!!.unregisterListener(this as BoardGame.Companion.GameActionListener)
+        boardGame!!.unregisterListener(this as BoardGame.Companion.JoinStateListener)
     }
 
-    override fun onJoinStateChanged(joinState: BoardGame.JoinState) {
-        if (joinState !== BoardGame.`JOINED$`.`MODULE$`) finish()
+    override fun onJoinStateChanged(joinState: BoardGame.Companion.JoinState) {
+        if (joinState != BoardGame.Companion.JoinState.JOINED) finish()
     }
+
     override fun onCreateGameError(name: Option<String>) {}
     override fun onJoinGameError() {}
 
@@ -93,9 +95,12 @@ abstract class BoardGameChildActivity :
 
     override fun onChangeIdentityNameError(name: Option<String>) {}
 
-    override fun onIdentitiesUpdated(identities: Map<MemberId, IdentityWithBalance>) {}
+    override fun onIdentitiesUpdated(identities: Map<MemberId,
+            BoardGame.Companion.IdentityWithBalance>
+    ) {
+    }
 
-    override fun onPlayersInitialized(players: Iterable<PlayerWithBalanceAndConnectionState>) {}
+    override fun onPlayersInitialized(players: Collection<PlayerWithBalanceAndConnectionState>) {}
     override fun onPlayerAdded(addedPlayer: PlayerWithBalanceAndConnectionState) {}
     override fun onPlayerChanged(changedPlayer: PlayerWithBalanceAndConnectionState) {}
     override fun onPlayerRemoved(removedPlayer: PlayerWithBalanceAndConnectionState) {}
@@ -103,11 +108,9 @@ abstract class BoardGameChildActivity :
 
     override fun onTransferToPlayerError(name: Option<String>) {}
 
-    override fun onTransfersInitialized(transfers: scala.collection.Iterable<TransferWithCurrency>
-    ) {
-    }
+    override fun onTransfersInitialized(transfers: Collection<TransferWithCurrency>) {}
     override fun onTransferAdded(addedTransfer: TransferWithCurrency) {}
-    override fun onTransfersChanged(changedTransfers: Iterable<TransferWithCurrency>) {}
+    override fun onTransfersChanged(changedTransfers: Collection<TransferWithCurrency>) {}
     override fun onTransfersUpdated(transfers: Map<TransactionId, TransferWithCurrency>) {}
 
     override fun onChangeGameNameError(name: Option<String>) {}

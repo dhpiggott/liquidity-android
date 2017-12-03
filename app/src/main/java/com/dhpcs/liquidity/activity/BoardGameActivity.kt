@@ -16,10 +16,9 @@ import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.LiquidityApplication
 import com.dhpcs.liquidity.R
-import com.dhpcs.liquidity.boardgame.BoardGame
-import com.dhpcs.liquidity.boardgame.BoardGame.*
 import com.dhpcs.liquidity.fragment.*
 import com.dhpcs.liquidity.model.*
 import com.google.zxing.integration.android.IntentIntegrator
@@ -27,8 +26,6 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState
 import okio.ByteString
 import scala.Option
-import scala.Tuple2
-import scala.collection.JavaConversions
 import scala.util.Either
 import java.math.BigDecimal
 import java.text.Collator
@@ -43,8 +40,8 @@ class BoardGameActivity :
         ConfirmIdentityDeletionDialogFragment.Companion.Listener,
         CreateIdentityDialogFragment.Companion.Listener,
         IdentitiesFragment.Companion.Listener,
-        BoardGame.GameActionListener,
-        BoardGame.JoinStateListener,
+        BoardGame.Companion.GameActionListener,
+        BoardGame.Companion.JoinStateListener,
         PlayersFragment.Companion.Listener,
         RestoreIdentityDialogFragment.Companion.Listener,
         TransferToPlayerDialogFragment.Companion.Listener {
@@ -161,20 +158,19 @@ class BoardGameActivity :
 
         fun formatMemberOrAccount(context: Context,
                                   eitherAccountTupleOrMember:
-                                  Either<Tuple2<AccountId, Account>, Player>
+                                  Either<Account, BoardGame.Companion.Player>
         ): String {
             return if (eitherAccountTupleOrMember.isLeft) {
-                val accountId = eitherAccountTupleOrMember.left().get()._1()
-                val account = eitherAccountTupleOrMember.left().get()._2()
+                val account = eitherAccountTupleOrMember.left().get()
                 context.getString(
                         R.string.non_player_transfer_location_format_string,
-                        accountId.id(),
+                        account.id().id(),
                         formatNullable(context, account.name())
                 )
             } else {
                 formatNullable(
                         context,
-                        eitherAccountTupleOrMember.right().get().member().name()
+                        eitherAccountTupleOrMember.right().get().member.name()
                 )
             }
         }
@@ -183,20 +179,22 @@ class BoardGameActivity :
             return if (!nullable.isDefined) context.getString(R.string.unnamed) else nullable.get()
         }
 
-        fun playerComparator(context: Context): Comparator<Player> {
-            return object : Comparator<Player> {
+        fun playerComparator(context: Context): Comparator<BoardGame.Companion.Player> {
+            return object : Comparator<BoardGame.Companion.Player> {
 
                 private val collator = Collator.getInstance()
 
-                override fun compare(lhs: Player, rhs: Player): Int {
+                override fun compare(lhs: BoardGame.Companion.Player,
+                                     rhs: BoardGame.Companion.Player
+                ): Int {
                     val nameOrdered = collator.compare(
-                            BoardGameActivity.formatNullable(context, lhs.member().name()),
-                            BoardGameActivity.formatNullable(context, rhs.member().name())
+                            BoardGameActivity.formatNullable(context, lhs.member.name()),
+                            BoardGameActivity.formatNullable(context, rhs.member.name())
                     )
                     return when (nameOrdered) {
                         0 -> {
-                            val lhsId = lhs.member().id().id()
-                            val rhsId = rhs.member().id().id()
+                            val lhsId = lhs.member.id().id()
+                            val rhsId = rhs.member.id().id()
                             lhsId.compareTo(rhsId)
                         }
                         else -> nameOrdered
@@ -210,7 +208,7 @@ class BoardGameActivity :
 
     private var transferReceiptMediaPlayer: MediaPlayer? = null
 
-    private var joinRequestToken: BoardGame.JoinRequestToken? = null
+    private var joinRequestToken: BoardGame.Companion.JoinRequestToken? = null
     private var retry: Boolean = false
     private var boardGame: BoardGame? = null
 
@@ -242,7 +240,7 @@ class BoardGameActivity :
         slidingUpPanelLayout = findViewById(R.id.slidinguppanellayout)
 
         buttonReconnect!!.setOnClickListener {
-            boardGame!!.requestJoin(joinRequestToken, true)
+            boardGame!!.requestJoin(joinRequestToken!!, true)
         }
 
         slidingUpPanelLayout!!.addPanelSlideListener(
@@ -258,8 +256,8 @@ class BoardGameActivity :
                             SlidingUpPanelLayout.PanelState.EXPANDED ->
                                 setTitle(R.string.transfers)
                             SlidingUpPanelLayout.PanelState.COLLAPSED ->
-                                title = if (boardGame!!.joinState ===
-                                        BoardGame.`JOINED$`.`MODULE$`) {
+                                title = if (boardGame!!.joinState ==
+                                        BoardGame.Companion.JoinState.JOINED) {
                                     formatNullable(
                                             this@BoardGameActivity,
                                             boardGame!!.gameName
@@ -289,9 +287,10 @@ class BoardGameActivity :
                 R.raw.antique_cash_register_punching_single_key
         )
 
-        joinRequestToken = lastCustomNonConfigurationInstance as BoardGame.JoinRequestToken?
+        joinRequestToken = lastCustomNonConfigurationInstance as
+                BoardGame.Companion.JoinRequestToken?
 
-        if (joinRequestToken == null) joinRequestToken = BoardGame.JoinRequestToken()
+        if (joinRequestToken == null) joinRequestToken = BoardGame.Companion.JoinRequestToken()
 
         retry = savedInstanceState == null
 
@@ -313,7 +312,7 @@ class BoardGameActivity :
                     getString(R.string.bank_member_name)
             )
         } else {
-            boardGame = BoardGame.getInstance(zoneId)
+            boardGame = BoardGame.Companion.getInstance(zoneId)
             if (boardGame == null) {
                 if (!intent.extras!!.containsKey(EXTRA_GAME_ID)) {
                     boardGame = BoardGame(
@@ -337,13 +336,13 @@ class BoardGameActivity :
             }
         }
 
-        boardGame!!.registerListener(this as BoardGame.JoinStateListener)
-        boardGame!!.registerListener(this as BoardGame.GameActionListener)
+        boardGame!!.registerListener(this as BoardGame.Companion.JoinStateListener)
+        boardGame!!.registerListener(this as BoardGame.Companion.GameActionListener)
     }
 
     override fun onStart() {
         super.onStart()
-        boardGame!!.requestJoin(joinRequestToken, retry)
+        boardGame!!.requestJoin(joinRequestToken!!, retry)
         retry = false
     }
 
@@ -353,7 +352,7 @@ class BoardGameActivity :
     }
 
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
-        val isJoined = boardGame!!.joinState === BoardGame.`JOINED$`.`MODULE$`
+        val isJoined = boardGame!!.joinState == BoardGame.Companion.JoinState.JOINED
         val identity = identitiesFragment!!.getIdentity(identitiesFragment!!.selectedPage)
         val isPanelCollapsed = slidingUpPanelLayout!!.panelState == PanelState.COLLAPSED
         menu.findItem(R.id.action_add_players).isVisible =
@@ -367,7 +366,7 @@ class BoardGameActivity :
         menu.findItem(R.id.action_create_identity).isVisible =
                 isJoined && isPanelCollapsed
         menu.findItem(R.id.action_restore_identity).isVisible =
-                isJoined && isPanelCollapsed && boardGame!!.hiddenIdentities.nonEmpty()
+                isJoined && isPanelCollapsed && boardGame!!.hiddenIdentities.isNotEmpty()
         menu.findItem(R.id.action_delete_identity).isVisible =
                 isJoined && identity != null && isPanelCollapsed
         menu.findItem(R.id.action_receive_identity).isVisible =
@@ -395,8 +394,14 @@ class BoardGameActivity :
                 )
                 startActivity(
                         Intent(this, AddPlayersActivity::class.java)
-                                .putExtra(BoardGameChildActivity.EXTRA_ZONE_ID_HOLDER, zoneIdHolder)
-                                .putExtra(AddPlayersActivity.EXTRA_GAME_NAME, boardGame!!.gameName)
+                                .putExtra(
+                                        BoardGameChildActivity.EXTRA_ZONE_ID_HOLDER,
+                                        zoneIdHolder
+                                )
+                                .putExtra(
+                                        AddPlayersActivity.EXTRA_GAME_NAME,
+                                        boardGame!!.gameName
+                                )
                 )
                 return true
             }
@@ -404,8 +409,8 @@ class BoardGameActivity :
                 val identity = identitiesFragment!!.getIdentity(identitiesFragment!!.selectedPage)
                 if (identity != null) {
                     TransferToPlayerDialogFragment.newInstance(
-                            boardGame!!.identities,
-                            boardGame!!.players,
+                            ArrayList(boardGame!!.identities.toList()),
+                            ArrayList(boardGame!!.players.toList()),
                             boardGame!!.currency,
                             identity, null
                     ).show(supportFragmentManager, TransferToPlayerDialogFragment.TAG)
@@ -431,8 +436,9 @@ class BoardGameActivity :
                 return true
             }
             R.id.action_restore_identity -> {
-                RestoreIdentityDialogFragment.newInstance(boardGame!!.hiddenIdentities)
-                        .show(supportFragmentManager, RestoreIdentityDialogFragment.TAG)
+                RestoreIdentityDialogFragment.newInstance(
+                        ArrayList(boardGame!!.hiddenIdentities.toList())
+                ).show(supportFragmentManager, RestoreIdentityDialogFragment.TAG)
                 return true
             }
             R.id.action_delete_identity -> {
@@ -466,7 +472,7 @@ class BoardGameActivity :
                 identityNameHolder.putSerializable(
                         TransferIdentityActivity.EXTRA_IDENTITY_NAME,
                         identitiesFragment!!.getIdentity(identitiesFragment!!.selectedPage)!!
-                                .member().name()
+                                .member.name()
                 )
                 val zoneIdHolder = Bundle()
                 zoneIdHolder.putSerializable(
@@ -499,7 +505,7 @@ class BoardGameActivity :
             result != null -> {
                 val contents = result.contents
                 if (contents != null) {
-                    if (boardGame!!.joinState === BoardGame.`JOINED$`.`MODULE$`) {
+                    if (boardGame!!.joinState == BoardGame.Companion.JoinState.JOINED) {
                         val identity = identitiesFragment!!.getIdentity(
                                 identitiesFragment!!.selectedPage
                         )
@@ -544,7 +550,7 @@ class BoardGameActivity :
 
     override fun onStop() {
         super.onStop()
-        if (!isChangingConfigurations) boardGame!!.unrequestJoin(joinRequestToken)
+        if (!isChangingConfigurations) boardGame!!.unrequestJoin(joinRequestToken!!)
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
@@ -552,20 +558,20 @@ class BoardGameActivity :
         outState!!.putSerializable(EXTRA_ZONE_ID, boardGame!!.zoneId)
     }
 
-    override fun onRetainCustomNonConfigurationInstance(): BoardGame.JoinRequestToken? {
+    override fun onRetainCustomNonConfigurationInstance(): BoardGame.Companion.JoinRequestToken? {
         return joinRequestToken
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        boardGame!!.unregisterListener(this as BoardGame.GameActionListener)
-        boardGame!!.unregisterListener(this as BoardGame.JoinStateListener)
+        boardGame!!.unregisterListener(this as BoardGame.Companion.GameActionListener)
+        boardGame!!.unregisterListener(this as BoardGame.Companion.JoinStateListener)
         transferReceiptMediaPlayer!!.release()
     }
 
-    override fun onJoinStateChanged(joinState: BoardGame.JoinState) {
-        when {
-            joinState === BoardGame.`UNAVAILABLE$`.`MODULE$` -> {
+    override fun onJoinStateChanged(joinState: BoardGame.Companion.JoinState) {
+        when (joinState) {
+            BoardGame.Companion.JoinState.UNAVAILABLE -> {
 
                 closeDialogFragments()
 
@@ -577,7 +583,7 @@ class BoardGameActivity :
                 buttonReconnect!!.visibility = View.GONE
 
             }
-            joinState === BoardGame.`GENERAL_FAILURE$`.`MODULE$` -> {
+            BoardGame.Companion.JoinState.GENERAL_FAILURE -> {
 
                 closeDialogFragments()
 
@@ -589,7 +595,7 @@ class BoardGameActivity :
                 buttonReconnect!!.visibility = View.VISIBLE
 
             }
-            joinState === BoardGame.`TLS_ERROR$`.`MODULE$` -> {
+            BoardGame.Companion.JoinState.TLS_ERROR -> {
 
                 closeDialogFragments()
 
@@ -601,7 +607,7 @@ class BoardGameActivity :
                 buttonReconnect!!.visibility = View.VISIBLE
 
             }
-            joinState === BoardGame.`AVAILABLE$`.`MODULE$` -> {
+            BoardGame.Companion.JoinState.AVAILABLE -> {
 
                 closeDialogFragments()
 
@@ -613,7 +619,7 @@ class BoardGameActivity :
                 buttonReconnect!!.visibility = View.VISIBLE
 
             }
-            joinState === BoardGame.`CONNECTING$`.`MODULE$` -> {
+            BoardGame.Companion.JoinState.CONNECTING -> {
 
                 closeDialogFragments()
 
@@ -625,7 +631,7 @@ class BoardGameActivity :
                 textViewState!!.setText(R.string.join_state_connecting)
 
             }
-            joinState === BoardGame.`AUTHENTICATING$`.`MODULE$` -> {
+            BoardGame.Companion.JoinState.AUTHENTICATING -> {
 
                 closeDialogFragments()
 
@@ -637,7 +643,7 @@ class BoardGameActivity :
                 textViewState!!.setText(R.string.join_state_authenticating)
 
             }
-            joinState === BoardGame.`CREATING$`.`MODULE$` -> {
+            BoardGame.Companion.JoinState.CREATING -> {
 
                 closeDialogFragments()
 
@@ -649,7 +655,7 @@ class BoardGameActivity :
                 textViewState!!.setText(R.string.join_state_creating)
 
             }
-            joinState === BoardGame.`JOINING$`.`MODULE$` -> {
+            BoardGame.Companion.JoinState.JOINING -> {
 
                 closeDialogFragments()
 
@@ -661,7 +667,7 @@ class BoardGameActivity :
                 textViewState!!.setText(R.string.join_state_joining)
 
             }
-            joinState === BoardGame.`JOINED$`.`MODULE$` -> {
+            BoardGame.Companion.JoinState.JOINED -> {
 
                 buttonReconnect!!.visibility = View.GONE
                 textViewState!!.text = null
@@ -671,7 +677,7 @@ class BoardGameActivity :
                 slidingUpPanelLayout!!.visibility = View.VISIBLE
 
             }
-            joinState === BoardGame.`QUITTING$`.`MODULE$` -> {
+            BoardGame.Companion.JoinState.QUITTING -> {
 
                 closeDialogFragments()
 
@@ -683,7 +689,7 @@ class BoardGameActivity :
                 textViewState!!.setText(R.string.join_state_quitting)
 
             }
-            joinState === BoardGame.`DISCONNECTING$`.`MODULE$` -> {
+            BoardGame.Companion.JoinState.DISCONNECTING -> {
 
                 closeDialogFragments()
 
@@ -758,7 +764,7 @@ class BoardGameActivity :
         ).show()
     }
 
-    override fun onIdentityCreated(identity: IdentityWithBalance) {
+    override fun onIdentityCreated(identity: BoardGame.Companion.IdentityWithBalance) {
         identitiesFragment!!.selectedPage = identitiesFragment!!.getPage(identity)
     }
 
@@ -773,11 +779,11 @@ class BoardGameActivity :
         ).show()
     }
 
-    override fun onIdentityReceived(identity: IdentityWithBalance) {
+    override fun onIdentityReceived(identity: BoardGame.Companion.IdentityWithBalance) {
         identitiesFragment!!.selectedPage = identitiesFragment!!.getPage(identity)
     }
 
-    override fun onIdentityDeleteConfirmed(identity: Identity) {
+    override fun onIdentityDeleteConfirmed(identity: BoardGame.Companion.Identity) {
         boardGame!!.deleteIdentity(identity)
     }
 
@@ -792,7 +798,7 @@ class BoardGameActivity :
         ).show()
     }
 
-    override fun onIdentityRestorationRequested(identity: Identity) {
+    override fun onIdentityRestorationRequested(identity: BoardGame.Companion.Identity) {
         boardGame!!.restoreIdentity(identity)
     }
 
@@ -807,11 +813,11 @@ class BoardGameActivity :
         ).show()
     }
 
-    override fun onIdentityRestored(identity: IdentityWithBalance) {
+    override fun onIdentityRestored(identity: BoardGame.Companion.IdentityWithBalance) {
         identitiesFragment!!.selectedPage = identitiesFragment!!.getPage(identity)
     }
 
-    override fun onIdentityNameEntered(identity: Identity, name: String) {
+    override fun onIdentityNameEntered(identity: BoardGame.Companion.Identity, name: String) {
         boardGame!!.changeIdentityName(identity, name)
     }
 
@@ -830,8 +836,9 @@ class BoardGameActivity :
         playersFragment!!.onSelectedIdentityChanged(identitiesFragment!!.getIdentity(page)!!)
     }
 
-    override fun onIdentitiesUpdated(
-            identities: scala.collection.immutable.Map<MemberId, IdentityWithBalance>) {
+    override fun onIdentitiesUpdated(identities: Map<MemberId,
+            BoardGame.Companion.IdentityWithBalance>
+    ) {
         identitiesFragment!!.onIdentitiesUpdated(identities)
         playersFragment!!.onSelectedIdentityChanged(
                 identitiesFragment!!.getIdentity(identitiesFragment!!.selectedPage)!!
@@ -842,8 +849,9 @@ class BoardGameActivity :
         transferToPlayerDialogFragment?.onIdentitiesUpdated(identities)
     }
 
-    override fun onPlayersInitialized(
-            players: scala.collection.Iterable<PlayerWithBalanceAndConnectionState>) {
+    override fun onPlayersInitialized(players: Collection<
+            BoardGame.Companion.PlayerWithBalanceAndConnectionState>
+    ) {
         playersFragment!!.onPlayersInitialized(players)
     }
 
@@ -857,16 +865,18 @@ class BoardGameActivity :
         )
     }
 
-    override fun onPlayerAdded(addedPlayer: PlayerWithBalanceAndConnectionState) {
+    override fun onPlayerAdded(
+            addedPlayer: BoardGame.Companion.PlayerWithBalanceAndConnectionState
+    ) {
         playersFragment!!.onPlayerAdded(addedPlayer)
     }
 
-    override fun onPlayerClicked(player: Player) {
+    override fun onPlayerClicked(player: BoardGame.Companion.Player) {
         val identity = identitiesFragment!!.getIdentity(identitiesFragment!!.selectedPage)
         if (identity != null) {
             TransferToPlayerDialogFragment.newInstance(
-                    boardGame!!.identities,
-                    boardGame!!.players,
+                    ArrayList(boardGame!!.identities.toList()),
+                    ArrayList(boardGame!!.players.toList()),
                     boardGame!!.currency,
                     identity,
                     player
@@ -874,30 +884,36 @@ class BoardGameActivity :
         }
     }
 
-    override fun onPlayerChanged(changedPlayer: PlayerWithBalanceAndConnectionState) {
+    override fun onPlayerChanged(
+            changedPlayer: BoardGame.Companion.PlayerWithBalanceAndConnectionState
+    ) {
         playersFragment!!.onPlayerChanged(changedPlayer)
     }
 
-    override fun onPlayerRemoved(removedPlayer: PlayerWithBalanceAndConnectionState) {
+    override fun onPlayerRemoved(
+            removedPlayer: BoardGame.Companion.PlayerWithBalanceAndConnectionState
+    ) {
         playersFragment!!.onPlayerRemoved(removedPlayer)
     }
 
-    override fun onPlayersUpdated(players: scala.collection.immutable.Map<MemberId,
-            PlayerWithBalanceAndConnectionState>) {
+    override fun onPlayersUpdated(players: Map<MemberId,
+            BoardGame.Companion.PlayerWithBalanceAndConnectionState>) {
         playersFragment!!.onPlayersUpdated(players)
         playersTransfersFragment!!.onPlayersUpdated(players)
     }
 
-    override fun onTransferValueEntered(from: Identity,
-                                        to: List<Player>,
+    override fun onTransferValueEntered(from: BoardGame.Companion.Identity,
+                                        to: Collection<BoardGame.Companion.Player>,
                                         transferValue: BigDecimal
     ) {
-        boardGame!!.transferToPlayer(
-                from,
-                from,
-                JavaConversions.asScalaBuffer(to),
-                scala.math.BigDecimal.javaBigDecimal2bigDecimal(transferValue)
-        )
+        to.forEach {
+            boardGame!!.transferToPlayer(
+                    from,
+                    from,
+                    it,
+                    transferValue
+            )
+        }
     }
 
     override fun onTransferToPlayerError(name: Option<String>) {
@@ -911,16 +927,17 @@ class BoardGameActivity :
         ).show()
     }
 
-    override fun onTransfersInitialized(transfers: scala.collection.Iterable<
-            TransferWithCurrency>) {
+    override fun onTransfersInitialized(transfers:
+                                        Collection<BoardGame.Companion.TransferWithCurrency>
+    ) {
         playersTransfersFragment!!.onTransfersInitialized(transfers)
     }
 
-    override fun onTransferAdded(addedTransfer: TransferWithCurrency) {
-        if (addedTransfer.to().isRight &&
+    override fun onTransferAdded(addedTransfer: BoardGame.Companion.TransferWithCurrency) {
+        if (addedTransfer.to.isRight &&
                 PreferenceManager.getDefaultSharedPreferences(this)
                         .getBoolean("play_transfer_receipt_sounds", true) &&
-                addedTransfer.to().right().get().member().ownerPublicKeys().contains(
+                addedTransfer.to.right().get().member.ownerPublicKeys().contains(
                         LiquidityApplication.getServerConnection(applicationContext).clientKey()
                 )) {
             if (transferReceiptMediaPlayer!!.isPlaying) {
@@ -932,13 +949,15 @@ class BoardGameActivity :
         playersTransfersFragment!!.onTransferAdded(addedTransfer)
     }
 
-    override fun onTransfersChanged(
-            changedTransfers: scala.collection.Iterable<TransferWithCurrency>) {
+    override fun onTransfersChanged(changedTransfers: Collection<
+            BoardGame.Companion.TransferWithCurrency>
+    ) {
         playersTransfersFragment!!.onTransfersChanged(changedTransfers)
     }
 
-    override fun onTransfersUpdated(
-            transfers: scala.collection.immutable.Map<TransactionId, TransferWithCurrency>) {
+    override fun onTransfersUpdated(transfers: Map<TransactionId,
+            BoardGame.Companion.TransferWithCurrency>
+    ) {
         playersTransfersFragment!!.onTransfersUpdated(transfers)
     }
 

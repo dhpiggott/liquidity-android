@@ -13,9 +13,9 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.WindowManager
 import android.widget.Button
+import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.BoardGameActivity
-import com.dhpcs.liquidity.boardgame.BoardGame.Identity
 import com.dhpcs.liquidity.ws.protocol.`ZoneCommand$`
 
 class EnterIdentityNameDialogFragment : AppCompatDialogFragment() {
@@ -24,7 +24,7 @@ class EnterIdentityNameDialogFragment : AppCompatDialogFragment() {
 
         interface Listener {
 
-            fun onIdentityNameEntered(identity: Identity, name: String)
+            fun onIdentityNameEntered(identity: BoardGame.Companion.Identity, name: String)
 
         }
 
@@ -32,7 +32,7 @@ class EnterIdentityNameDialogFragment : AppCompatDialogFragment() {
 
         private const val ARG_IDENTITY = "identity"
 
-        fun newInstance(identity: Identity): EnterIdentityNameDialogFragment {
+        fun newInstance(identity: BoardGame.Companion.Identity): EnterIdentityNameDialogFragment {
             val enterIdentityNameDialogFragment = EnterIdentityNameDialogFragment()
             val args = Bundle()
             args.putSerializable(ARG_IDENTITY, identity)
@@ -61,7 +61,7 @@ class EnterIdentityNameDialogFragment : AppCompatDialogFragment() {
                 R.layout.fragment_enter_identity_name_dialog, null
         )
 
-        val identity = arguments!!.getSerializable(ARG_IDENTITY) as Identity
+        val identity = arguments!!.getSerializable(ARG_IDENTITY) as BoardGame.Companion.Identity
 
         val textInputLayoutIdentityName = view
                 .findViewById<TextInputLayout>(R.id.textinputlayout_identity_name)
@@ -92,7 +92,7 @@ class EnterIdentityNameDialogFragment : AppCompatDialogFragment() {
         })
 
         textInputEditTextIdentityName.setText(
-                BoardGameActivity.formatNullable(activity!!, identity.member().name())
+                BoardGameActivity.formatNullable(activity!!, identity.member.name())
         )
 
         alertDialog.setOnShowListener {

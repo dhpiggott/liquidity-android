@@ -12,10 +12,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.BoardGameActivity
-import com.dhpcs.liquidity.boardgame.BoardGame.Player
-import com.dhpcs.liquidity.boardgame.BoardGame.TransferWithCurrency
 import java.text.DateFormat
 import java.util.*
 
@@ -29,8 +28,9 @@ class TransfersFragment : Fragment() {
         private val timeFormat = DateFormat.getTimeInstance()
         private val dateFormat = DateFormat.getDateInstance()
 
-        fun newInstance(player: Player?,
-                        transfers: ArrayList<TransferWithCurrency>?): TransfersFragment {
+        fun newInstance(player: BoardGame.Companion.Player?,
+                        transfers: ArrayList<BoardGame.Companion.TransferWithCurrency>?
+        ): TransfersFragment {
             val transfersFragment = TransfersFragment()
             val args = Bundle()
             args.putSerializable(ARG_PLAYER, player)
@@ -39,93 +39,42 @@ class TransfersFragment : Fragment() {
             return transfersFragment
         }
 
-        internal class TransferViewHolder(itemView: View,
-                                          private val context: Context,
-                                          private val player: Player?
-        ) : RecyclerView.ViewHolder(itemView) {
-
-            private val textViewSummary =
-                    itemView.findViewById<TextView>(R.id.textview_summary)
-            private val textViewCreatedTime =
-                    itemView.findViewById<TextView>(R.id.textview_created_time)
-            private val textViewCreatedDate =
-                    itemView.findViewById<TextView>(R.id.textview_created_date)
-
-            fun bindTransfer(transfer: TransferWithCurrency) {
-                val isFromPlayer = player != null &&
-                        transfer.from().right().get().member().id() == player.member().id()
-                val value = BoardGameActivity.formatCurrencyValue(
-                        context,
-                        transfer.currency(),
-                        transfer.transaction().value()
-                )
-                val isToPlayer = player != null &&
-                        transfer.to().right().get().member().id() == player.member().id()
-                val summary = if (isFromPlayer && !isToPlayer) {
-                    context.getString(
-                            R.string.transfer_summary_sent_to_format_string,
-                            value,
-                            BoardGameActivity.formatMemberOrAccount(context, transfer.to())
-                    )
-                } else if (!isFromPlayer && isToPlayer) {
-                    context.getString(
-                            R.string.transfer_summary_received_from_format_string,
-                            value,
-                            BoardGameActivity.formatMemberOrAccount(context, transfer.from())
-                    )
-                } else {
-                    context.getString(
-                            R.string.transfer_summary_format_string,
-                            BoardGameActivity.formatMemberOrAccount(context, transfer.from()),
-                            value,
-                            BoardGameActivity.formatMemberOrAccount(context, transfer.to())
-                    )
-                }
-                val createdTime = context.getString(
-                        R.string.transfer_created_time_format_string,
-                        timeFormat.format(transfer.transaction().created())
-                )
-                val createdDate = context.getString(
-                        R.string.transfer_created_date_format_string,
-                        dateFormat.format(transfer.transaction().created())
-                )
-                textViewSummary.text = summary
-                textViewCreatedTime.text = createdTime
-                textViewCreatedDate.text = createdDate
-            }
-
-        }
-
-        private class TransfersAdapter(private val player: Player?) :
+        private class TransfersAdapter
+        internal constructor(private val player: BoardGame.Companion.Player?) :
                 RecyclerView.Adapter<TransferViewHolder>() {
-            private val transfers = SortedList(
-                    TransferWithCurrency::class.java,
-                    object : SortedListAdapterCallback<TransferWithCurrency>(this) {
 
-                        override fun compare(o1: TransferWithCurrency,
-                                             o2: TransferWithCurrency): Int {
-                            val lhsCreated = o1.transaction().created()
-                            val rhsCreated = o2.transaction().created()
+            private val transfers = SortedList(
+                    BoardGame.Companion.TransferWithCurrency::class.java,
+                    object : SortedListAdapterCallback<
+                            BoardGame.Companion.TransferWithCurrency
+                            >(this) {
+
+                        override fun compare(
+                                o1: BoardGame.Companion.TransferWithCurrency,
+                                o2: BoardGame.Companion.TransferWithCurrency
+                        ): Int {
+                            val lhsCreated = o1.transaction.created()
+                            val rhsCreated = o2.transaction.created()
                             return when {
                                 lhsCreated < rhsCreated -> 1
                                 lhsCreated > rhsCreated -> -1
                                 else -> {
-                                    val lhsId = o1.transaction().id().id()
-                                    val rhsId = o2.transaction().id().id()
+                                    val lhsId = o1.transaction.id().id()
+                                    val rhsId = o2.transaction.id().id()
                                     lhsId.compareTo(rhsId)
                                 }
                             }
                         }
 
-                        override fun areContentsTheSame(oldItem: TransferWithCurrency,
-                                                        newItem: TransferWithCurrency): Boolean {
-                            return oldItem == newItem
-                        }
+                        override fun areContentsTheSame(
+                                oldItem: BoardGame.Companion.TransferWithCurrency,
+                                newItem: BoardGame.Companion.TransferWithCurrency
+                        ): Boolean = oldItem == newItem
 
-                        override fun areItemsTheSame(item1: TransferWithCurrency,
-                                                     item2: TransferWithCurrency): Boolean {
-                            return item1.transaction().id() == item2.transaction().id()
-                        }
+                        override fun areItemsTheSame(
+                                item1: BoardGame.Companion.TransferWithCurrency,
+                                item2: BoardGame.Companion.TransferWithCurrency
+                        ): Boolean = item1.transaction.id() == item2.transaction.id()
 
                     }
             )
@@ -148,9 +97,68 @@ class TransfersFragment : Fragment() {
 
             internal fun beginBatchedUpdates() = transfers.beginBatchedUpdates()
 
-            internal fun replaceOrAdd(transfer: TransferWithCurrency) = transfers.add(transfer)
+            internal fun replaceOrAdd(transfer: BoardGame.Companion.TransferWithCurrency) {
+                transfers.add(transfer)
+            }
 
             internal fun endBatchedUpdates() = transfers.endBatchedUpdates()
+
+        }
+
+        private class TransferViewHolder(itemView: View,
+                                         private val context: Context,
+                                         private val player: BoardGame.Companion.Player?
+        ) : RecyclerView.ViewHolder(itemView) {
+
+            private val textViewSummary =
+                    itemView.findViewById<TextView>(R.id.textview_summary)
+            private val textViewCreatedTime =
+                    itemView.findViewById<TextView>(R.id.textview_created_time)
+            private val textViewCreatedDate =
+                    itemView.findViewById<TextView>(R.id.textview_created_date)
+
+            fun bindTransfer(transfer: BoardGame.Companion.TransferWithCurrency) {
+                val isFromPlayer = player != null &&
+                        transfer.from.right().get().member.id() == player.member.id()
+                val value = BoardGameActivity.formatCurrencyValue(
+                        context,
+                        transfer.currency,
+                        transfer.transaction.value()
+                )
+                val isToPlayer = player != null &&
+                        transfer.to.right().get().member.id() == player.member.id()
+                val summary = if (isFromPlayer && !isToPlayer) {
+                    context.getString(
+                            R.string.transfer_summary_sent_to_format_string,
+                            value,
+                            BoardGameActivity.formatMemberOrAccount(context, transfer.to)
+                    )
+                } else if (!isFromPlayer && isToPlayer) {
+                    context.getString(
+                            R.string.transfer_summary_received_from_format_string,
+                            value,
+                            BoardGameActivity.formatMemberOrAccount(context, transfer.from)
+                    )
+                } else {
+                    context.getString(
+                            R.string.transfer_summary_format_string,
+                            BoardGameActivity.formatMemberOrAccount(context, transfer.from),
+                            value,
+                            BoardGameActivity.formatMemberOrAccount(context, transfer.to)
+                    )
+                }
+                val createdTime = context.getString(
+                        R.string.transfer_created_time_format_string,
+                        timeFormat.format(transfer.transaction.created())
+                )
+                val createdDate = context.getString(
+                        R.string.transfer_created_date_format_string,
+                        dateFormat.format(transfer.transaction.created())
+                )
+                textViewSummary.text = summary
+                textViewCreatedTime.text = createdTime
+                textViewCreatedDate.text = createdDate
+            }
 
         }
 
@@ -164,9 +172,10 @@ class TransfersFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val player = arguments!!.getSerializable(ARG_PLAYER) as Player?
+        val player = arguments!!.getSerializable(ARG_PLAYER) as BoardGame.Companion.Player?
         val transfers =
-                arguments!!.getSerializable(ARG_TRANSFERS) as ArrayList<TransferWithCurrency>?
+                arguments!!.getSerializable(ARG_TRANSFERS) as
+                        List<BoardGame.Companion.TransferWithCurrency>?
 
         transfersAdapter = TransfersAdapter(player)
 
@@ -203,42 +212,44 @@ class TransfersFragment : Fragment() {
         return view
     }
 
-    fun onTransfersInitialized(
-            transfers: scala.collection.Iterable<TransferWithCurrency>) {
+    fun onTransfersInitialized(transfers: Collection<BoardGame.Companion.TransferWithCurrency>) {
         replaceOrAddTransfers(transfers)
-        if (transfers.nonEmpty()) {
+        if (transfers.isNotEmpty()) {
             textViewEmpty!!.visibility = View.GONE
             recyclerViewTransfers!!.visibility = View.VISIBLE
         }
     }
 
-    fun onTransferAdded(addedTransfer: TransferWithCurrency) {
+    fun onTransferAdded(addedTransfer: BoardGame.Companion.TransferWithCurrency) {
         replaceOrAddTransfer(
-                arguments!!.getSerializable(ARG_PLAYER) as Player?,
+                arguments!!.getSerializable(ARG_PLAYER) as BoardGame.Companion.Player?,
                 addedTransfer
         )
         textViewEmpty!!.visibility = View.GONE
         recyclerViewTransfers!!.visibility = View.VISIBLE
     }
 
-    fun onTransfersChanged(changedTransfers: scala.collection.Iterable<TransferWithCurrency>) {
+    fun onTransfersChanged(changedTransfers: Collection<BoardGame.Companion.TransferWithCurrency>) {
         replaceOrAddTransfers(changedTransfers)
     }
 
-    private fun replaceOrAddTransfers(transfers: scala.collection.Iterable<TransferWithCurrency>) {
-        val player = arguments!!.getSerializable(ARG_PLAYER) as Player?
-        val iterator = transfers.iterator()
-        while (iterator.hasNext()) {
-            replaceOrAddTransfer(player, iterator.next())
+    private fun replaceOrAddTransfers(
+            transfers: Collection<BoardGame.Companion.TransferWithCurrency>
+    ) {
+        val player = arguments!!.getSerializable(ARG_PLAYER) as BoardGame.Companion.Player?
+        transfers.forEach {
+            replaceOrAddTransfer(player, it)
         }
     }
 
-    private fun replaceOrAddTransfer(player: Player?, transfer: TransferWithCurrency) {
+    private fun replaceOrAddTransfer(player: BoardGame.Companion.Player?,
+                                     transfer: BoardGame.Companion.TransferWithCurrency
+    ) {
         if (player == null ||
-                transfer.from().isRight && player.member().id() ==
-                        transfer.from().right().get().member().id() ||
-                transfer.to().isRight && player.member().id() ==
-                        transfer.to().right().get().member().id()) {
+                transfer.from.isRight && player.member.id() ==
+                        transfer.from.right().get().member.id() ||
+                transfer.to.isRight && player.member.id() ==
+                        transfer.to.right().get().member.id()) {
             transfersAdapter!!.replaceOrAdd(transfer)
         }
     }

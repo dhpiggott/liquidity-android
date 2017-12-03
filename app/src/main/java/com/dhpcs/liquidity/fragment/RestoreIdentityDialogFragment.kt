@@ -9,10 +9,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.TextView
+import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.BoardGameActivity
-import com.dhpcs.liquidity.boardgame.BoardGame.Identity
-import com.dhpcs.liquidity.boardgame.BoardGame.IdentityWithBalance
 import com.dhpcs.liquidity.view.Identicon
 import scala.collection.JavaConversions
 import java.util.*
@@ -23,12 +22,12 @@ class RestoreIdentityDialogFragment : AppCompatDialogFragment() {
 
         interface Listener {
 
-            fun onIdentityRestorationRequested(identity: Identity)
+            fun onIdentityRestorationRequested(identity: BoardGame.Companion.Identity)
 
         }
 
         private class IdentitiesAdapter internal constructor(context: Context
-        ) : ArrayAdapter<IdentityWithBalance>(context,
+        ) : ArrayAdapter<BoardGame.Companion.IdentityWithBalance>(context,
                 R.layout.linearlayout_identity,
                 R.id.textview_name
         ) {
@@ -42,16 +41,16 @@ class RestoreIdentityDialogFragment : AppCompatDialogFragment() {
                 val textViewName = view.findViewById<TextView>(R.id.textview_name)
                 val textViewBalance = view.findViewById<TextView>(R.id.textview_balance)
 
-                val zoneId = identity!!.zoneId()
-                val memberId = identity.member().id()
+                val zoneId = identity!!.zoneId
+                val memberId = identity.member.id()
                 val name = BoardGameActivity.formatNullable(
                         context,
-                        identity.member().name()
+                        identity.member.name()
                 )
                 val balance = BoardGameActivity.formatCurrencyValue(
                         context,
-                        identity.balanceWithCurrency()._2(),
-                        identity.balanceWithCurrency()._1()
+                        identity.currency,
+                        identity.balance
                 )
 
                 identiconId.show(zoneId, memberId)
@@ -68,14 +67,11 @@ class RestoreIdentityDialogFragment : AppCompatDialogFragment() {
         private const val ARG_IDENTITIES = "identities"
 
         fun newInstance(
-                identities: scala.collection.Iterable<IdentityWithBalance>
+                identities: ArrayList<BoardGame.Companion.IdentityWithBalance>
         ): RestoreIdentityDialogFragment {
             val restoreIdentityDialogFragment = RestoreIdentityDialogFragment()
             val args = Bundle()
-            args.putSerializable(
-                    ARG_IDENTITIES,
-                    ArrayList(JavaConversions.bufferAsJavaList(identities.toBuffer<Any>()))
-            )
+            args.putSerializable(ARG_IDENTITIES, identities)
             restoreIdentityDialogFragment.arguments = args
             return restoreIdentityDialogFragment
         }
@@ -97,7 +93,7 @@ class RestoreIdentityDialogFragment : AppCompatDialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val identitiesAdapter = IdentitiesAdapter(activity!!)
         val identities = arguments!!.getSerializable(ARG_IDENTITIES) as
-                ArrayList<IdentityWithBalance>
+                ArrayList<BoardGame.Companion.IdentityWithBalance>
         identitiesAdapter.addAll(identities)
         identitiesAdapter.sort(BoardGameActivity.playerComparator(activity!!))
         return AlertDialog.Builder(activity!!)

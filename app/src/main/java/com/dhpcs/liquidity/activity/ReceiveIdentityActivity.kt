@@ -5,8 +5,8 @@ import android.os.Bundle
 import android.support.v7.widget.Toolbar
 import android.view.WindowManager
 import android.widget.ImageView
+import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.R
-import com.dhpcs.liquidity.boardgame.BoardGame.IdentityWithBalance
 import com.dhpcs.liquidity.model.PublicKey
 import net.glxn.qrgen.android.QRCode
 
@@ -41,7 +41,7 @@ class ReceiveIdentityActivity : BoardGameChildActivity() {
         }
     }
 
-    override fun onIdentityReceived(identity: IdentityWithBalance) {
+    override fun onIdentityReceived(identity: BoardGame.Companion.IdentityWithBalance) {
         setResult(Activity.RESULT_OK)
         finish()
     }

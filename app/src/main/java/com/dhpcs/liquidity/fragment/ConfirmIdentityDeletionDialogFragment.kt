@@ -5,10 +5,9 @@ import android.content.Context
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatDialogFragment
-
+import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.BoardGameActivity
-import com.dhpcs.liquidity.boardgame.BoardGame.Identity
 
 class ConfirmIdentityDeletionDialogFragment : AppCompatDialogFragment() {
 
@@ -16,7 +15,7 @@ class ConfirmIdentityDeletionDialogFragment : AppCompatDialogFragment() {
 
         interface Listener {
 
-            fun onIdentityDeleteConfirmed(identity: Identity)
+            fun onIdentityDeleteConfirmed(identity: BoardGame.Companion.Identity)
 
         }
 
@@ -24,7 +23,8 @@ class ConfirmIdentityDeletionDialogFragment : AppCompatDialogFragment() {
 
         private const val ARG_IDENTITY = "identity"
 
-        fun newInstance(identity: Identity): ConfirmIdentityDeletionDialogFragment {
+        fun newInstance(identity: BoardGame.Companion.Identity
+        ): ConfirmIdentityDeletionDialogFragment {
             val confirmIdentityDeletionDialogFragment = ConfirmIdentityDeletionDialogFragment()
             val args = Bundle()
             args.putSerializable(ARG_IDENTITY, identity)
@@ -47,14 +47,14 @@ class ConfirmIdentityDeletionDialogFragment : AppCompatDialogFragment() {
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val identity = arguments!!.getSerializable(ARG_IDENTITY) as Identity
+        val identity = arguments!!.getSerializable(ARG_IDENTITY) as BoardGame.Companion.Identity
         return AlertDialog.Builder(activity!!)
                 .setTitle(
                         getString(
                                 R.string.delete_identity_title_format_string,
                                 BoardGameActivity.formatNullable(
                                         activity!!,
-                                        identity.member().name()
+                                        identity.member.name()
                                 )
                         )
                 )
@@ -62,7 +62,7 @@ class ConfirmIdentityDeletionDialogFragment : AppCompatDialogFragment() {
                 .setNegativeButton(R.string.cancel, null)
                 .setPositiveButton(R.string.delete) { _, _ ->
                     listener?.onIdentityDeleteConfirmed(
-                            arguments!!.getSerializable(ARG_IDENTITY) as Identity
+                            arguments!!.getSerializable(ARG_IDENTITY) as BoardGame.Companion.Identity
                     )
                 }
                 .create()
