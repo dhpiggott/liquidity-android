@@ -15,12 +15,9 @@ import android.widget.AdapterView
 import android.widget.ListView
 import android.widget.SimpleCursorAdapter
 import android.widget.TextView
-
 import com.dhpcs.liquidity.LiquidityApplication
 import com.dhpcs.liquidity.R
-import com.dhpcs.liquidity.model.ZoneId
 import com.dhpcs.liquidity.provider.LiquidityContract
-
 import org.joda.time.Instant
 
 class GamesFragment : Fragment(),
@@ -31,7 +28,7 @@ class GamesFragment : Fragment(),
 
         interface Listener {
 
-            fun onGameClicked(gameId: Long, zoneId: ZoneId, gameName: String)
+            fun onGameClicked(gameId: Long, zoneId: String, gameName: String?)
 
         }
 
@@ -152,11 +149,9 @@ class GamesFragment : Fragment(),
         val cursor = parent.getItemAtPosition(position) as Cursor
         listener?.onGameClicked(
                 id,
-                ZoneId(
-                        cursor.getString(cursor.getColumnIndexOrThrow(
-                                LiquidityContract.Games.ZONE_ID
-                        ))
-                ),
+                cursor.getString(cursor.getColumnIndexOrThrow(
+                        LiquidityContract.Games.ZONE_ID
+                )),
                 cursor.getString(cursor.getColumnIndexOrThrow(
                         LiquidityContract.Games.NAME
                 ))

@@ -13,7 +13,6 @@ import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.BoardGameActivity
 import com.dhpcs.liquidity.view.Identicon
-import scala.collection.JavaConversions
 import java.util.*
 
 class RestoreIdentityDialogFragment : AppCompatDialogFragment() {
@@ -42,11 +41,8 @@ class RestoreIdentityDialogFragment : AppCompatDialogFragment() {
                 val textViewBalance = view.findViewById<TextView>(R.id.textview_balance)
 
                 val zoneId = identity!!.zoneId
-                val memberId = identity.member.id()
-                val name = BoardGameActivity.formatNullable(
-                        context,
-                        identity.member.name()
-                )
+                val memberId = identity.memberId
+                val name = BoardGameActivity.formatNullable(context, identity.name)
                 val balance = BoardGameActivity.formatCurrencyValue(
                         context,
                         identity.currency,

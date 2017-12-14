@@ -15,7 +15,6 @@ import android.widget.LinearLayout
 import com.dhpcs.liquidity.R
 import com.journeyapps.barcodescanner.CaptureManager
 import com.journeyapps.barcodescanner.DecoratedBarcodeView
-import scala.Option
 
 class TransferIdentityActivity : BoardGameChildActivity() {
 
@@ -44,7 +43,7 @@ class TransferIdentityActivity : BoardGameChildActivity() {
 
         val identityName = intent
                 .getBundleExtra(EXTRA_IDENTITY_NAME_HOLDER)
-                .getSerializable(EXTRA_IDENTITY_NAME) as Option<String>
+                .getString(EXTRA_IDENTITY_NAME)
 
         linearLayoutTransferIdentity = findViewById(R.id.linearlayout_transfer_identity)
 

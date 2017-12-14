@@ -7,7 +7,7 @@ import android.view.WindowManager
 import android.widget.ImageView
 import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.R
-import com.dhpcs.liquidity.model.PublicKey
+import com.google.protobuf.ByteString
 import net.glxn.qrgen.android.QRCode
 
 class ReceiveIdentityActivity : BoardGameChildActivity() {
@@ -29,12 +29,12 @@ class ReceiveIdentityActivity : BoardGameChildActivity() {
         val actionBar = supportActionBar!!
         actionBar.setDisplayHomeAsUpEnabled(true)
 
-        val publicKey = intent.getSerializableExtra(EXTRA_PUBLIC_KEY) as PublicKey
+        val publicKey = intent.getSerializableExtra(EXTRA_PUBLIC_KEY) as ByteString
 
         val imageViewQrCode = findViewById<ImageView>(R.id.imageview_qr_code)!!
         imageViewQrCode.addOnLayoutChangeListener { _, left, top, right, bottom, _, _, _, _ ->
             imageViewQrCode.setImageBitmap(
-                    (QRCode.from(publicKey.value().base64())
+                    (QRCode.from(okio.ByteString.of(*publicKey.toByteArray()).base64())
                             .withSize(right - left, bottom - top) as QRCode)
                             .bitmap()
             )

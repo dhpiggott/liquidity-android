@@ -14,7 +14,6 @@ import android.widget.TextView
 import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.BoardGameActivity
-import com.dhpcs.liquidity.model.MemberId
 import com.dhpcs.liquidity.view.Identicon
 
 class PlayersFragment : Fragment() {
@@ -55,7 +54,7 @@ class PlayersFragment : Fragment() {
                         override fun areItemsTheSame(
                                 item1: BoardGame.Companion.PlayerWithBalanceAndConnectionState,
                                 item2: BoardGame.Companion.PlayerWithBalanceAndConnectionState
-                        ): Boolean = item1.member.id() == item2.member.id()
+                        ): Boolean = item1.memberId == item2.memberId
 
                     }
             )
@@ -117,11 +116,8 @@ class PlayersFragment : Fragment() {
                 this.player = player
 
                 val zoneId = player.zoneId
-                val memberId = player.member.id()
-                val name = BoardGameActivity.formatNullable(
-                        playersFragment.context!!,
-                        player.member.name()
-                )
+                val memberId = player.memberId
+                val name = BoardGameActivity.formatNullable(playersFragment.context!!, player.name)
                 val balance = BoardGameActivity.formatCurrencyValue(
                         playersFragment.context!!,
                         player.currency,
@@ -152,7 +148,7 @@ class PlayersFragment : Fragment() {
     private var textViewEmpty: TextView? = null
     private var recyclerViewPlayers: RecyclerView? = null
 
-    private var players: Map<MemberId, BoardGame.Companion.PlayerWithBalanceAndConnectionState>? =
+    private var players: Map<String, BoardGame.Companion.PlayerWithBalanceAndConnectionState>? =
             null
     private var selectedIdentity: BoardGame.Companion.Identity? = null
 
@@ -214,19 +210,19 @@ class PlayersFragment : Fragment() {
 
     fun onPlayerChanged(changedPlayer: BoardGame.Companion.PlayerWithBalanceAndConnectionState) {
         if (selectedIdentity == null ||
-                changedPlayer.member.id() != selectedIdentity!!.member.id()) {
-            playersAdapter!!.replace(players!![changedPlayer.member.id()]!!, changedPlayer)
+                changedPlayer.memberId != selectedIdentity!!.memberId) {
+            playersAdapter!!.replace(players!![changedPlayer.memberId]!!, changedPlayer)
         }
     }
 
-    fun onPlayersUpdated(players: Map<MemberId,
+    fun onPlayersUpdated(players: Map<String,
             BoardGame.Companion.PlayerWithBalanceAndConnectionState>) {
         this.players = players
     }
 
     fun onPlayerRemoved(removedPlayer: BoardGame.Companion.PlayerWithBalanceAndConnectionState) {
         if (selectedIdentity == null ||
-                removedPlayer.member.id() != selectedIdentity!!.member.id()) {
+                removedPlayer.memberId != selectedIdentity!!.memberId) {
             playersAdapter!!.remove(removedPlayer)
         }
         if (playersAdapter!!.itemCount == 0) {
@@ -237,12 +233,12 @@ class PlayersFragment : Fragment() {
 
     fun onSelectedIdentityChanged(selectedIdentity: BoardGame.Companion.Identity) {
         if (this.selectedIdentity != null && players != null) {
-            val player = players!![this.selectedIdentity!!.member.id()]
+            val player = players!![this.selectedIdentity!!.memberId]
             if (player != null) playersAdapter!!.replaceOrAdd(player)
         }
         this.selectedIdentity = selectedIdentity
         if (this.selectedIdentity != null && players != null) {
-            val player = players!![this.selectedIdentity!!.member.id()]
+            val player = players!![this.selectedIdentity!!.memberId]
             if (player != null) playersAdapter!!.remove(player)
         }
         textViewEmpty!!.visibility =
@@ -254,7 +250,7 @@ class PlayersFragment : Fragment() {
     private fun replaceOrAddPlayer(
             player: BoardGame.Companion.PlayerWithBalanceAndConnectionState
     ) {
-        if (selectedIdentity == null || player.member.id() != selectedIdentity!!.member.id()) {
+        if (selectedIdentity == null || player.memberId != selectedIdentity!!.memberId) {
             playersAdapter!!.replaceOrAdd(player)
         }
     }

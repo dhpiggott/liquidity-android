@@ -6,8 +6,6 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.View
-import com.dhpcs.liquidity.model.MemberId
-import com.dhpcs.liquidity.model.ZoneId
 import java.nio.ByteBuffer
 import java.security.MessageDigest
 import java.util.*
@@ -78,11 +76,11 @@ class Identicon @JvmOverloads constructor(context: Context,
     private var cellWidth = 0
     private var cellHeight = 0
 
-    fun show(zoneId: ZoneId, memberId: MemberId) {
+    fun show(zoneId: String, memberId: String) {
         val hash = MessageDigest.getInstance("SHA-1")
 
         try {
-            val zoneIdAsUuid = UUID.fromString(zoneId.id())
+            val zoneIdAsUuid = UUID.fromString(zoneId)
             hash.update(
                     ByteBuffer.allocate(8)
                             .putLong(zoneIdAsUuid.mostSignificantBits).array()
@@ -92,11 +90,11 @@ class Identicon @JvmOverloads constructor(context: Context,
                             .putLong(zoneIdAsUuid.leastSignificantBits).array()
             )
         } catch (ignored: IllegalArgumentException) {
-            hash.update(zoneId.id().toByteArray())
+            hash.update(zoneId.toByteArray())
         }
 
         try {
-            val memberIdAsInt = java.lang.Long.parseLong(memberId.id())
+            val memberIdAsInt = java.lang.Long.parseLong(memberId)
             if (memberIdAsInt <= Integer.MAX_VALUE) {
                 hash.update(
                         ByteBuffer.allocate(4).putInt(memberIdAsInt.toInt()).array()
@@ -107,7 +105,7 @@ class Identicon @JvmOverloads constructor(context: Context,
                 )
             }
         } catch (ignored: IllegalArgumentException) {
-            hash.update(memberId.id().toByteArray())
+            hash.update(memberId.toByteArray())
         }
 
         cellColors = getCellColors(hash.digest())

@@ -53,14 +53,14 @@ class TransfersFragment : Fragment() {
                                 o1: BoardGame.Companion.TransferWithCurrency,
                                 o2: BoardGame.Companion.TransferWithCurrency
                         ): Int {
-                            val lhsCreated = o1.transaction.created()
-                            val rhsCreated = o2.transaction.created()
+                            val lhsCreated = o1.created
+                            val rhsCreated = o2.created
                             return when {
                                 lhsCreated < rhsCreated -> 1
                                 lhsCreated > rhsCreated -> -1
                                 else -> {
-                                    val lhsId = o1.transaction.id().id()
-                                    val rhsId = o2.transaction.id().id()
+                                    val lhsId = o1.transactionId
+                                    val rhsId = o2.transactionId
                                     lhsId.compareTo(rhsId)
                                 }
                             }
@@ -74,7 +74,7 @@ class TransfersFragment : Fragment() {
                         override fun areItemsTheSame(
                                 item1: BoardGame.Companion.TransferWithCurrency,
                                 item2: BoardGame.Companion.TransferWithCurrency
-                        ): Boolean = item1.transaction.id() == item2.transaction.id()
+                        ): Boolean = item1.transactionId == item2.transactionId
 
                     }
             )
@@ -119,41 +119,61 @@ class TransfersFragment : Fragment() {
 
             fun bindTransfer(transfer: BoardGame.Companion.TransferWithCurrency) {
                 val isFromPlayer = player != null &&
-                        transfer.from.right().get().member.id() == player.member.id()
+                        transfer.fromPlayer?.memberId == player.memberId
                 val value = BoardGameActivity.formatCurrencyValue(
                         context,
                         transfer.currency,
-                        transfer.transaction.value()
+                        transfer.value
                 )
                 val isToPlayer = player != null &&
-                        transfer.to.right().get().member.id() == player.member.id()
+                        transfer.toPlayer?.memberId == player.memberId
                 val summary = if (isFromPlayer && !isToPlayer) {
                     context.getString(
                             R.string.transfer_summary_sent_to_format_string,
                             value,
-                            BoardGameActivity.formatMemberOrAccount(context, transfer.to)
+                            BoardGameActivity.formatAccountOrPlayer(
+                                    context,
+                                    transfer.toAccountId,
+                                    transfer.toAccountName,
+                                    transfer.toPlayer
+                            )
                     )
                 } else if (!isFromPlayer && isToPlayer) {
                     context.getString(
                             R.string.transfer_summary_received_from_format_string,
                             value,
-                            BoardGameActivity.formatMemberOrAccount(context, transfer.from)
+                            BoardGameActivity.formatAccountOrPlayer(
+                                    context,
+                                    transfer.fromAccountId,
+                                    transfer.fromAccountName,
+                                    transfer.fromPlayer
+                            )
                     )
                 } else {
                     context.getString(
                             R.string.transfer_summary_format_string,
-                            BoardGameActivity.formatMemberOrAccount(context, transfer.from),
+                            BoardGameActivity.formatAccountOrPlayer(
+                                    context,
+                                    transfer.fromAccountId,
+                                    transfer.fromAccountName,
+                                    transfer.fromPlayer
+                            ),
                             value,
-                            BoardGameActivity.formatMemberOrAccount(context, transfer.to)
+                            BoardGameActivity.formatAccountOrPlayer(
+                                    context,
+                                    transfer.toAccountId,
+                                    transfer.toAccountName,
+                                    transfer.toPlayer
+                            )
                     )
                 }
                 val createdTime = context.getString(
                         R.string.transfer_created_time_format_string,
-                        timeFormat.format(transfer.transaction.created())
+                        timeFormat.format(transfer.created)
                 )
                 val createdDate = context.getString(
                         R.string.transfer_created_date_format_string,
-                        dateFormat.format(transfer.transaction.created())
+                        dateFormat.format(transfer.created)
                 )
                 textViewSummary.text = summary
                 textViewCreatedTime.text = createdTime
@@ -173,9 +193,8 @@ class TransfersFragment : Fragment() {
         super.onCreate(savedInstanceState)
 
         val player = arguments!!.getSerializable(ARG_PLAYER) as BoardGame.Companion.Player?
-        val transfers =
-                arguments!!.getSerializable(ARG_TRANSFERS) as
-                        List<BoardGame.Companion.TransferWithCurrency>?
+        val transfers = arguments!!.getSerializable(ARG_TRANSFERS) as
+                List<BoardGame.Companion.TransferWithCurrency>?
 
         transfersAdapter = TransfersAdapter(player)
 
@@ -246,10 +265,8 @@ class TransfersFragment : Fragment() {
                                      transfer: BoardGame.Companion.TransferWithCurrency
     ) {
         if (player == null ||
-                transfer.from.isRight && player.member.id() ==
-                        transfer.from.right().get().member.id() ||
-                transfer.to.isRight && player.member.id() ==
-                        transfer.to.right().get().member.id()) {
+                transfer.fromPlayer != null && player.memberId == transfer.fromPlayer.memberId ||
+                transfer.toPlayer != null && player.memberId == transfer.toPlayer.memberId) {
             transfersAdapter!!.replaceOrAdd(transfer)
         }
     }

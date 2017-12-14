@@ -52,17 +52,15 @@ class ConfirmIdentityDeletionDialogFragment : AppCompatDialogFragment() {
                 .setTitle(
                         getString(
                                 R.string.delete_identity_title_format_string,
-                                BoardGameActivity.formatNullable(
-                                        activity!!,
-                                        identity.member.name()
-                                )
+                                BoardGameActivity.formatNullable(activity!!, identity.name)
                         )
                 )
                 .setMessage(R.string.delete_identity_message)
                 .setNegativeButton(R.string.cancel, null)
                 .setPositiveButton(R.string.delete) { _, _ ->
                     listener?.onIdentityDeleteConfirmed(
-                            arguments!!.getSerializable(ARG_IDENTITY) as BoardGame.Companion.Identity
+                            arguments!!.getSerializable(ARG_IDENTITY) as
+                                    BoardGame.Companion.Identity
                     )
                 }
                 .create()

@@ -20,13 +20,10 @@ import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.LiquidityApplication
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.fragment.*
-import com.dhpcs.liquidity.model.*
+import com.google.protobuf.ByteString
 import com.google.zxing.integration.android.IntentIntegrator
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState
-import okio.ByteString
-import scala.Option
-import scala.util.Either
 import java.math.BigDecimal
 import java.text.Collator
 import java.text.DecimalFormat
@@ -55,39 +52,30 @@ class BoardGameActivity :
 
         private const val REQUEST_CODE_RECEIVE_IDENTITY = 0
 
-        fun formatCurrency(context: Context,
-                           currency: Option<Either<String, Currency>>
-        ): String = when {
-            !currency.isDefined ->
+        fun formatCurrency(context: Context, currencyCode: String?): String {
+            return if (currencyCode == null) {
                 ""
-            else -> {
-                val c = currency.get()
-                when {
-                    c.isLeft ->
+            } else {
+                try {
+                    val currency = Currency.getInstance(currencyCode)
+                    if (currency.symbol == currency.currencyCode) {
                         context.getString(
                                 R.string.currency_code_format_string,
-                                c.left().get()
+                                currency.currencyCode
                         )
-                    c.right().get().symbol == c.right().get().currencyCode ->
-                        context.getString(
-                                R.string.currency_code_format_string,
-                                c.right().get().currencyCode
-                        )
-                    else ->
-                        c.right().get().symbol
+                    } else {
+                        currency.symbol
+                    }
+                } catch (_: IllegalArgumentException) {
+                    context.getString(
+                            R.string.currency_code_format_string,
+                            currencyCode
+                    )
                 }
             }
         }
 
-        fun formatCurrencyValue(context: Context,
-                                currency: Option<Either<String, Currency>>,
-                                value: scala.math.BigDecimal): String {
-            return formatCurrencyValue(context, currency, value.bigDecimal())
-        }
-
-        fun formatCurrencyValue(context: Context,
-                                currency: Option<Either<String, Currency>>,
-                                value: BigDecimal): String {
+        fun formatCurrencyValue(context: Context, currency: String?, value: BigDecimal): String {
 
             val scaleAmount: Int
             val scaledValue: BigDecimal
@@ -156,27 +144,23 @@ class BoardGameActivity :
             )
         }
 
-        fun formatMemberOrAccount(context: Context,
-                                  eitherAccountTupleOrMember:
-                                  Either<Account, BoardGame.Companion.Player>
-        ): String {
-            return if (eitherAccountTupleOrMember.isLeft) {
-                val account = eitherAccountTupleOrMember.left().get()
+        fun formatAccountOrPlayer(context: Context,
+                                  accountId: String,
+                                  accountName: String?,
+                                  player: BoardGame.Companion.Player?): String {
+            return if (player == null) {
                 context.getString(
                         R.string.non_player_transfer_location_format_string,
-                        account.id().id(),
-                        formatNullable(context, account.name())
+                        accountId,
+                        formatNullable(context, accountName)
                 )
             } else {
-                formatNullable(
-                        context,
-                        eitherAccountTupleOrMember.right().get().member.name()
-                )
+                formatNullable(context, player.name)
             }
         }
 
-        fun formatNullable(context: Context, nullable: Option<String>): String {
-            return if (!nullable.isDefined) context.getString(R.string.unnamed) else nullable.get()
+        fun formatNullable(context: Context, nullable: String?): String {
+            return nullable ?: context.getString(R.string.unnamed)
         }
 
         fun playerComparator(context: Context): Comparator<BoardGame.Companion.Player> {
@@ -188,13 +172,19 @@ class BoardGameActivity :
                                      rhs: BoardGame.Companion.Player
                 ): Int {
                     val nameOrdered = collator.compare(
-                            BoardGameActivity.formatNullable(context, lhs.member.name()),
-                            BoardGameActivity.formatNullable(context, rhs.member.name())
+                            BoardGameActivity.formatNullable(
+                                    context,
+                                    lhs.name
+                            ),
+                            BoardGameActivity.formatNullable(
+                                    context,
+                                    rhs.name
+                            )
                     )
                     return when (nameOrdered) {
                         0 -> {
-                            val lhsId = lhs.member.id().id()
-                            val rhsId = rhs.member.id().id()
+                            val lhsId = lhs.memberId
+                            val rhsId = rhs.memberId
                             lhsId.compareTo(rhsId)
                         }
                         else -> nameOrdered
@@ -295,9 +285,9 @@ class BoardGameActivity :
         retry = savedInstanceState == null
 
         val zoneId = if (savedInstanceState != null) {
-            savedInstanceState.getSerializable(EXTRA_ZONE_ID) as ZoneId?
+            savedInstanceState.getString(EXTRA_ZONE_ID)
         } else {
-            intent.extras!!.getSerializable(EXTRA_ZONE_ID) as ZoneId?
+            intent.extras!!.getString(EXTRA_ZONE_ID)
         }
 
         if (zoneId == null) {
@@ -305,7 +295,6 @@ class BoardGameActivity :
             val gameName = intent.extras!!.getString(EXTRA_GAME_NAME)
             boardGame = BoardGame(
                     LiquidityApplication.getServerConnection(applicationContext),
-                    LiquidityApplication.mainThreadExecutor,
                     LiquidityApplication.getGameDatabase(applicationContext),
                     currency,
                     gameName,
@@ -314,17 +303,15 @@ class BoardGameActivity :
         } else {
             boardGame = BoardGame.Companion.getInstance(zoneId)
             if (boardGame == null) {
-                if (!intent.extras!!.containsKey(EXTRA_GAME_ID)) {
-                    boardGame = BoardGame(
+                boardGame = if (!intent.extras!!.containsKey(EXTRA_GAME_ID)) {
+                    BoardGame(
                             LiquidityApplication.getServerConnection(applicationContext),
-                            LiquidityApplication.mainThreadExecutor,
                             LiquidityApplication.getGameDatabase(applicationContext),
                             zoneId
                     )
                 } else {
-                    boardGame = BoardGame(
+                    BoardGame(
                             LiquidityApplication.getServerConnection(applicationContext),
-                            LiquidityApplication.mainThreadExecutor,
                             LiquidityApplication.getGameDatabase(applicationContext),
                             zoneId,
                             intent.extras!!.getLong(EXTRA_GAME_ID)
@@ -388,7 +375,7 @@ class BoardGameActivity :
                 }
             R.id.action_add_players -> {
                 val zoneIdHolder = Bundle()
-                zoneIdHolder.putSerializable(
+                zoneIdHolder.putString(
                         BoardGameChildActivity.EXTRA_ZONE_ID,
                         boardGame!!.zoneId
                 )
@@ -451,7 +438,7 @@ class BoardGameActivity :
             }
             R.id.action_receive_identity -> {
                 val zoneIdHolder = Bundle()
-                zoneIdHolder.putSerializable(
+                zoneIdHolder.putString(
                         BoardGameChildActivity.EXTRA_ZONE_ID,
                         boardGame!!.zoneId
                 )
@@ -461,7 +448,7 @@ class BoardGameActivity :
                                 .putExtra(
                                         ReceiveIdentityActivity.EXTRA_PUBLIC_KEY,
                                         LiquidityApplication.getServerConnection(applicationContext)
-                                                .clientKey()
+                                                .clientKey
                                 ),
                         REQUEST_CODE_RECEIVE_IDENTITY
                 )
@@ -469,13 +456,12 @@ class BoardGameActivity :
             }
             R.id.action_transfer_identity -> {
                 val identityNameHolder = Bundle()
-                identityNameHolder.putSerializable(
+                identityNameHolder.putString(
                         TransferIdentityActivity.EXTRA_IDENTITY_NAME,
-                        identitiesFragment!!.getIdentity(identitiesFragment!!.selectedPage)!!
-                                .member.name()
+                        identitiesFragment!!.getIdentity(identitiesFragment!!.selectedPage)!!.name
                 )
                 val zoneIdHolder = Bundle()
-                zoneIdHolder.putSerializable(
+                zoneIdHolder.putString(
                         BoardGameChildActivity.EXTRA_ZONE_ID,
                         boardGame!!.zoneId
                 )
@@ -510,9 +496,7 @@ class BoardGameActivity :
                                 identitiesFragment!!.selectedPage
                         )
                         try {
-                            val publicKey = PublicKey(
-                                    ByteString.decodeBase64(contents)
-                            )
+                            val publicKey = ByteString.copyFromUtf8(contents)
                             if (!boardGame!!.isPublicKeyConnectedAndImplicitlyValid(publicKey)) {
                                 throw IllegalArgumentException()
                             }
@@ -555,7 +539,7 @@ class BoardGameActivity :
 
     override fun onSaveInstanceState(outState: Bundle?) {
         super.onSaveInstanceState(outState)
-        outState!!.putSerializable(EXTRA_ZONE_ID, boardGame!!.zoneId)
+        outState!!.putString(EXTRA_ZONE_ID, boardGame!!.zoneId)
     }
 
     override fun onRetainCustomNonConfigurationInstance(): BoardGame.Companion.JoinRequestToken? {
@@ -705,7 +689,7 @@ class BoardGameActivity :
         supportInvalidateOptionsMenu()
     }
 
-    override fun onCreateGameError(name: Option<String>) {
+    override fun onCreateGameError(name: String?) {
         Toast.makeText(
                 this,
                 getString(
@@ -742,7 +726,7 @@ class BoardGameActivity :
 
     override fun onIdentityNameEntered(name: String) = boardGame!!.createIdentity(name)
 
-    override fun onCreateIdentityMemberError(name: Option<String>) {
+    override fun onCreateIdentityMemberError(name: String?) {
         Toast.makeText(
                 this,
                 getString(
@@ -753,7 +737,7 @@ class BoardGameActivity :
         ).show()
     }
 
-    override fun onCreateIdentityAccountError(name: Option<String>) {
+    override fun onCreateIdentityAccountError(name: String?) {
         Toast.makeText(
                 this,
                 getString(
@@ -768,7 +752,7 @@ class BoardGameActivity :
         identitiesFragment!!.selectedPage = identitiesFragment!!.getPage(identity)
     }
 
-    override fun onTransferIdentityError(name: Option<String>) {
+    override fun onTransferIdentityError(name: String?) {
         Toast.makeText(
                 this,
                 getString(
@@ -787,7 +771,7 @@ class BoardGameActivity :
         boardGame!!.deleteIdentity(identity)
     }
 
-    override fun onDeleteIdentityError(name: Option<String>) {
+    override fun onDeleteIdentityError(name: String?) {
         Toast.makeText(
                 this,
                 getString(
@@ -802,7 +786,7 @@ class BoardGameActivity :
         boardGame!!.restoreIdentity(identity)
     }
 
-    override fun onRestoreIdentityError(name: Option<String>) {
+    override fun onRestoreIdentityError(name: String?) {
         Toast.makeText(
                 this,
                 getString(
@@ -821,7 +805,7 @@ class BoardGameActivity :
         boardGame!!.changeIdentityName(identity, name)
     }
 
-    override fun onChangeIdentityNameError(name: Option<String>) {
+    override fun onChangeIdentityNameError(name: String?) {
         Toast.makeText(
                 this,
                 getString(
@@ -836,7 +820,7 @@ class BoardGameActivity :
         playersFragment!!.onSelectedIdentityChanged(identitiesFragment!!.getIdentity(page)!!)
     }
 
-    override fun onIdentitiesUpdated(identities: Map<MemberId,
+    override fun onIdentitiesUpdated(identities: Map<String,
             BoardGame.Companion.IdentityWithBalance>
     ) {
         identitiesFragment!!.onIdentitiesUpdated(identities)
@@ -857,7 +841,7 @@ class BoardGameActivity :
 
     override fun onNoPlayersTextClicked() {
         val zoneIdHolder = Bundle()
-        zoneIdHolder.putSerializable(BoardGameChildActivity.EXTRA_ZONE_ID, boardGame!!.zoneId)
+        zoneIdHolder.putString(BoardGameChildActivity.EXTRA_ZONE_ID, boardGame!!.zoneId)
         startActivity(
                 Intent(this, AddPlayersActivity::class.java)
                         .putExtra(BoardGameChildActivity.EXTRA_ZONE_ID_HOLDER, zoneIdHolder)
@@ -896,7 +880,7 @@ class BoardGameActivity :
         playersFragment!!.onPlayerRemoved(removedPlayer)
     }
 
-    override fun onPlayersUpdated(players: Map<MemberId,
+    override fun onPlayersUpdated(players: Map<String,
             BoardGame.Companion.PlayerWithBalanceAndConnectionState>) {
         playersFragment!!.onPlayersUpdated(players)
         playersTransfersFragment!!.onPlayersUpdated(players)
@@ -916,7 +900,7 @@ class BoardGameActivity :
         }
     }
 
-    override fun onTransferToPlayerError(name: Option<String>) {
+    override fun onTransferToPlayerError(name: String?) {
         Toast.makeText(
                 this,
                 getString(
@@ -934,12 +918,12 @@ class BoardGameActivity :
     }
 
     override fun onTransferAdded(addedTransfer: BoardGame.Companion.TransferWithCurrency) {
-        if (addedTransfer.to.isRight &&
+        if (addedTransfer.toPlayer != null &&
                 PreferenceManager.getDefaultSharedPreferences(this)
                         .getBoolean("play_transfer_receipt_sounds", true) &&
-                addedTransfer.to.right().get().member.ownerPublicKeys().contains(
-                        LiquidityApplication.getServerConnection(applicationContext).clientKey()
-                )) {
+                addedTransfer.toPlayer.ownerPublicKey ==
+                        LiquidityApplication.getServerConnection(applicationContext).clientKey
+                ) {
             if (transferReceiptMediaPlayer!!.isPlaying) {
                 transferReceiptMediaPlayer!!.seekTo(0)
             } else {
@@ -955,7 +939,7 @@ class BoardGameActivity :
         playersTransfersFragment!!.onTransfersChanged(changedTransfers)
     }
 
-    override fun onTransfersUpdated(transfers: Map<TransactionId,
+    override fun onTransfersUpdated(transfers: Map<String,
             BoardGame.Companion.TransferWithCurrency>
     ) {
         playersTransfersFragment!!.onTransfersUpdated(transfers)
@@ -963,7 +947,7 @@ class BoardGameActivity :
 
     override fun onGameNameEntered(name: String) = boardGame!!.changeGameName(name)
 
-    override fun onChangeGameNameError(name: Option<String>) {
+    override fun onChangeGameNameError(name: String?) {
         Toast.makeText(
                 this,
                 getString(
@@ -974,7 +958,7 @@ class BoardGameActivity :
         ).show()
     }
 
-    override fun onGameNameChanged(name: Option<String>) {
+    override fun onGameNameChanged(name: String?) {
         title = formatNullable(this, name)
     }
 

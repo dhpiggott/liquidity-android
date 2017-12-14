@@ -2,33 +2,16 @@
 <notices>
     <!-- @formatter:off -->
     <notice>
-        <name>The Scala Language libraries</name>
-        <url>https://www.scala-lang.org/</url>
-        <copyright>Copyright (c) 2002-2017 EPFL&#10;Copyright (c) 2011-2017 Lightbend, Inc.</copyright>
-        <license>BSD 3-Clause License</license>
+        <name>The Kotlin Language libraries</name>
+        <url>https://kotlinlang.org/</url>
+        <copyright>Copyright 2010-2017 JetBrains s.r.o.</copyright>
+        <license>Apache Software License 2.0</license>
     </notice>
     <notice>
         <name>Protocol Buffers</name>
         <url>https://developers.google.com/protocol-buffers/</url>
         <copyright>Copyright 2014, Google Inc.</copyright>
         <license>BSD 3-Clause License</license>
-    </notice>
-    <notice>
-        <name>Cats</name>
-        <url>https://typelevel.org/cats/</url>
-        <copyright>Cats Copyright (c) 2015 Erik Osheim.</copyright>
-        <license>MIT License</license>
-    </notice>
-    <notice>
-        <name>Akka</name>
-        <url>http://akka.io/</url>
-        <copyright>Copyright (C) 2015-2017 Lightbend Inc.</copyright>
-        <license>Apache Software License 2.0</license>
-    </notice>
-    <notice>
-        <name>Shapeless</name>
-        <url>https://github.com/milessabin/shapeless</url>
-        <license>Apache Software License 2.0</license>
     </notice>
     <notice>
         <name>Spongy Castle</name>
@@ -43,14 +26,26 @@
         <license>Apache Software License 2.0</license>
     </notice>
     <notice>
-        <name>The Android Support libraries</name>
-        <url>https://developer.android.com/topic/libraries/support-library/index.html</url>
-        <copyright>Copyright (C) 2011-2017 The Android Open Source Project</copyright>
+        <name>RxJava</name>
+        <url>https://github.com/ReactiveX/RxJava</url>
+        <copyright>Copyright (c) 2016-present, RxJava Contributors.</copyright>
+        <license>Apache Software License 2.0</license>
+    </notice>
+    <notice>
+        <name>RxAndroid</name>
+        <url>https://github.com/ReactiveX/RxAndroid</url>
+        <copyright>Copyright 2015 The RxAndroid authors</copyright>
         <license>Apache Software License 2.0</license>
     </notice>
     <notice>
         <name>joda-time-android</name>
         <url>https://github.com/dlew/joda-time-android</url>
+        <license>Apache Software License 2.0</license>
+    </notice>
+    <notice>
+        <name>The Android Support libraries</name>
+        <url>https://developer.android.com/topic/libraries/support-library/index.html</url>
+        <copyright>Copyright (C) 2011-2017 The Android Open Source Project</copyright>
         <license>Apache Software License 2.0</license>
     </notice>
     <notice>

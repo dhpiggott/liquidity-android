@@ -22,7 +22,6 @@ import android.widget.Spinner
 import android.widget.TextView
 import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.R
-import com.dhpcs.liquidity.ws.protocol.`ZoneCommand$`
 import java.util.*
 
 class CreateGameDialogFragment : AppCompatDialogFragment() {
@@ -42,9 +41,7 @@ class CreateGameDialogFragment : AppCompatDialogFragment() {
                 currencies) {
 
             init {
-                setDropDownViewResource(
-                        android.R.layout.simple_spinner_dropdown_item
-                )
+                setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 sort { lhs, rhs -> lhs.currencyCode.compareTo(rhs.currencyCode) }
             }
 
@@ -157,7 +154,7 @@ class CreateGameDialogFragment : AppCompatDialogFragment() {
                 }
                 .create()
 
-        textInputLayoutGameName.counterMaxLength = `ZoneCommand$`.`MODULE$`.MaximumTagLength()
+        textInputLayoutGameName.counterMaxLength = BoardGame.MAXIMUM_TAG_LENGTH
         textInputEditTextGameName.addTextChangedListener(object : TextWatcher {
 
             override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}

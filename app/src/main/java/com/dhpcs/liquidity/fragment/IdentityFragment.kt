@@ -40,8 +40,8 @@ class IdentityFragment : Fragment() {
         val textViewBalance = view.findViewById<TextView>(R.id.textview_balance)
 
         val zoneId = identity.zoneId
-        val memberId = identity.member.id()
-        val name = BoardGameActivity.formatNullable(activity!!, identity.member.name())
+        val memberId = identity.memberId
+        val name = BoardGameActivity.formatNullable(activity!!, identity.name)
         val balance = BoardGameActivity.formatCurrencyValue(
                 activity!!,
                 identity.currency,

@@ -3,15 +3,10 @@ package com.dhpcs.liquidity
 import android.annotation.SuppressLint
 import android.content.*
 import android.net.ConnectivityManager
-import android.os.Handler
-import android.os.Looper
 import android.support.multidex.MultiDexApplication
-import com.dhpcs.liquidity.client.ServerConnection
-import com.dhpcs.liquidity.model.ZoneId
 import com.dhpcs.liquidity.provider.LiquidityContract
 import net.danlew.android.joda.JodaTimeAndroid
 import org.joda.time.*
-import java.util.concurrent.Executor
 
 class LiquidityApplication : MultiDexApplication() {
 
@@ -23,13 +18,13 @@ class LiquidityApplication : MultiDexApplication() {
             if (gameDatabase == null) {
                 gameDatabase = object : BoardGame.Companion.GameDatabase {
 
-                    override fun insertGame(zoneId: ZoneId,
+                    override fun insertGame(zoneId: String,
                                             created: Long,
                                             expires: Long,
                                             name: String?
                     ): Long {
                         val contentValues = ContentValues()
-                        contentValues.put(LiquidityContract.Games.ZONE_ID, zoneId.id())
+                        contentValues.put(LiquidityContract.Games.ZONE_ID, zoneId)
                         contentValues.put(LiquidityContract.Games.CREATED, created)
                         contentValues.put(LiquidityContract.Games.EXPIRES, expires)
                         contentValues.put(LiquidityContract.Games.NAME, name)
@@ -41,12 +36,12 @@ class LiquidityApplication : MultiDexApplication() {
                         )
                     }
 
-                    override fun checkAndUpdateGame(zoneId: ZoneId, name: String?): Long? {
+                    override fun checkAndUpdateGame(zoneId: String, name: String?): Long? {
                         val existingEntry = context.contentResolver.query(
                                 LiquidityContract.Games.CONTENT_URI,
                                 arrayOf(LiquidityContract.Games.ID, LiquidityContract.Games.NAME),
                                 "${LiquidityContract.Games.ZONE_ID} = ?",
-                                arrayOf(zoneId.id()), null
+                                arrayOf(zoneId), null
                         )
                         return existingEntry?.use {
                             if (!existingEntry.moveToFirst()) {
@@ -88,16 +83,6 @@ class LiquidityApplication : MultiDexApplication() {
             return gameDatabase!!
         }
 
-        val mainThreadExecutor: Executor = object : Executor {
-
-            private val handler = Handler(Looper.getMainLooper())
-
-            override fun execute(runnable: Runnable) {
-                handler.post(runnable)
-            }
-
-        }
-
         private var serverConnection: ServerConnection? = null
 
         fun getServerConnection(context: Context): ServerConnection {
@@ -105,42 +90,48 @@ class LiquidityApplication : MultiDexApplication() {
                 PRNGFixes.apply()
                 serverConnection = ServerConnection(
                         context.filesDir,
-                        ServerConnection.ConnectivityStatePublisherProvider { serverConnection ->
-                            object : ServerConnection.ConnectivityStatePublisher {
+                        object : ServerConnection.Companion.ConnectivityStatePublisherProvider {
+                            override fun provide(serverConnection: ServerConnection
+                            ): ServerConnection.Companion.ConnectivityStatePublisher {
+                                return object :
+                                        ServerConnection.Companion.ConnectivityStatePublisher {
 
-                                private val connectionStateFilter =
-                                        IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
-                                private val connectionStateReceiver = object : BroadcastReceiver() {
+                                    private val connectionStateFilter =
+                                            IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
+                                    private val connectionStateReceiver = object :
+                                            BroadcastReceiver() {
 
-                                    override fun onReceive(context1: Context, intent: Intent) {
-                                        serverConnection.handleConnectivityStateChange()
+                                        override fun onReceive(context1: Context, intent: Intent) {
+                                            Companion.serverConnection!!
+                                                    .handleConnectivityStateChange()
+                                        }
+
+                                    }
+
+                                    private val connectivityManager =
+                                            context.getSystemService(
+                                                    Context.CONNECTIVITY_SERVICE
+                                            ) as ConnectivityManager
+
+                                    override fun register() {
+                                        context.registerReceiver(
+                                                connectionStateReceiver,
+                                                connectionStateFilter
+                                        )
+                                    }
+
+                                    override fun unregister() {
+                                        context.unregisterReceiver(connectionStateReceiver)
+                                    }
+
+                                    override fun isConnectionAvailable(): Boolean {
+                                        val activeNetwork = connectivityManager.activeNetworkInfo
+                                        return activeNetwork != null && activeNetwork.isConnected
                                     }
 
                                 }
-
-                                private val connectivityManager =
-                                        context.getSystemService(Context.CONNECTIVITY_SERVICE) as
-                                                ConnectivityManager
-
-                                override fun register() {
-                                    context.registerReceiver(
-                                            connectionStateReceiver,
-                                            connectionStateFilter
-                                    )
-                                }
-
-                                override fun unregister() {
-                                    context.unregisterReceiver(connectionStateReceiver)
-                                }
-
-                                override fun isConnectionAvailable(): Boolean {
-                                    val activeNetwork = connectivityManager.activeNetworkInfo
-                                    return activeNetwork != null && activeNetwork.isConnected
-                                }
-
                             }
-                        },
-                        mainThreadExecutor
+                        }
                 )
             }
             return serverConnection!!

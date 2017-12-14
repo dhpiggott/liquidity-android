@@ -14,8 +14,6 @@ import android.view.ViewGroup
 import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.BoardGameActivity
-import com.dhpcs.liquidity.model.MemberId
-import com.dhpcs.liquidity.model.TransactionId
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -44,7 +42,7 @@ class PlayersTransfersFragment : Fragment() {
                 return if (player == null) {
                     context.getString(R.string.all)
                 } else {
-                    BoardGameActivity.formatNullable(context, player.member.name())
+                    BoardGameActivity.formatNullable(context, player.name)
                 }
             }
 
@@ -98,7 +96,7 @@ class PlayersTransfersFragment : Fragment() {
             }
 
             internal fun onTransfersUpdated(
-                    transfers: Map<TransactionId, BoardGame.Companion.TransferWithCurrency>
+                    transfers: Map<String, BoardGame.Companion.TransferWithCurrency>
             ) {
                 this.transfers = ArrayList(transfers.values)
             }
@@ -163,7 +161,7 @@ class PlayersTransfersFragment : Fragment() {
         viewPagerPlayersTransfers!!.removeOnPageChangeListener(pageChangeListener)
     }
 
-    fun onPlayersUpdated(players: Map<MemberId, BoardGame.Companion.Player>) {
+    fun onPlayersUpdated(players: Map<String, BoardGame.Companion.Player>) {
         playersTransfersFragmentStatePagerAdapter!!.clear()
         players.values.forEach {
             playersTransfersFragmentStatePagerAdapter!!.add(it)
@@ -173,10 +171,10 @@ class PlayersTransfersFragment : Fragment() {
         )
         playersTransfersFragmentStatePagerAdapter!!.notifyDataSetChanged()
 
-        if (selectedPlayer != null && players.contains(selectedPlayer!!.member.id())) {
+        if (selectedPlayer != null && players.contains(selectedPlayer!!.memberId)) {
             viewPagerPlayersTransfers!!.setCurrentItem(
                     playersTransfersFragmentStatePagerAdapter!!.getPosition(
-                            players[selectedPlayer!!.member.id()]!!
+                            players[selectedPlayer!!.memberId]!!
                     ),
                     false
             )
@@ -199,7 +197,7 @@ class PlayersTransfersFragment : Fragment() {
     }
 
     fun onTransfersUpdated(
-            transfers: Map<TransactionId, BoardGame.Companion.TransferWithCurrency>) {
+            transfers: Map<String, BoardGame.Companion.TransferWithCurrency>) {
         playersTransfersFragmentStatePagerAdapter!!.onTransfersUpdated(transfers)
     }
 

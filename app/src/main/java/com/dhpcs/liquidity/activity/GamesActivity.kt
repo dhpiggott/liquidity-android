@@ -11,7 +11,6 @@ import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.fragment.AddGameBottomSheetDialogFragment
 import com.dhpcs.liquidity.fragment.CreateGameDialogFragment
 import com.dhpcs.liquidity.fragment.GamesFragment
-import com.dhpcs.liquidity.model.ZoneId
 import com.google.zxing.integration.android.IntentIntegrator
 import java.util.*
 
@@ -51,7 +50,7 @@ class GamesActivity :
                 if (contents != null) {
                     startActivity(
                             Intent(this@GamesActivity, BoardGameActivity::class.java)
-                                    .putExtra(BoardGameActivity.EXTRA_ZONE_ID, ZoneId(contents))
+                                    .putExtra(BoardGameActivity.EXTRA_ZONE_ID, contents)
                     )
                 }
             }
@@ -108,7 +107,7 @@ class GamesActivity :
                 .initiateScan()
     }
 
-    override fun onGameClicked(gameId: Long, zoneId: ZoneId, gameName: String) {
+    override fun onGameClicked(gameId: Long, zoneId: String, gameName: String?) {
         startActivity(
                 Intent(this@GamesActivity, BoardGameActivity::class.java)
                         .putExtra(BoardGameActivity.EXTRA_GAME_ID, gameId)

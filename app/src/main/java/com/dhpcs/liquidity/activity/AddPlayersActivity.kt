@@ -6,9 +6,7 @@ import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.TextView
 import com.dhpcs.liquidity.R
-import com.dhpcs.liquidity.model.ZoneId
 import net.glxn.qrgen.android.QRCode
-import scala.Option
 
 class AddPlayersActivity : BoardGameChildActivity() {
 
@@ -31,8 +29,8 @@ class AddPlayersActivity : BoardGameChildActivity() {
 
         val zoneId = intent
                 .getBundleExtra(BoardGameChildActivity.EXTRA_ZONE_ID_HOLDER)
-                .getSerializable(BoardGameChildActivity.EXTRA_ZONE_ID) as ZoneId
-        val gameName = intent.getSerializableExtra(EXTRA_GAME_NAME) as Option<String>
+                .getString(BoardGameChildActivity.EXTRA_ZONE_ID)
+        val gameName = intent.getStringExtra(EXTRA_GAME_NAME)
 
         val textViewGameName = findViewById<TextView>(R.id.textview_game_name)!!
         textViewGameName.text = getString(
@@ -42,7 +40,7 @@ class AddPlayersActivity : BoardGameChildActivity() {
         val imageViewQrCode = findViewById<ImageView>(R.id.imageview_qr_code)!!
         imageViewQrCode.addOnLayoutChangeListener { _, left, top, right, bottom, _, _, _, _ ->
             imageViewQrCode.setImageBitmap(
-                    (QRCode.from(zoneId.id())
+                    (QRCode.from(zoneId)
                             .withSize(right - left, bottom - top) as QRCode)
                             .bitmap()
             )

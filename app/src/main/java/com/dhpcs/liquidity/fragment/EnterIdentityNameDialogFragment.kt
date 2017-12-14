@@ -16,7 +16,6 @@ import android.widget.Button
 import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.BoardGameActivity
-import com.dhpcs.liquidity.ws.protocol.`ZoneCommand$`
 
 class EnterIdentityNameDialogFragment : AppCompatDialogFragment() {
 
@@ -80,7 +79,7 @@ class EnterIdentityNameDialogFragment : AppCompatDialogFragment() {
                 }
                 .create()
 
-        textInputLayoutIdentityName.counterMaxLength = `ZoneCommand$`.`MODULE$`.MaximumTagLength()
+        textInputLayoutIdentityName.counterMaxLength = BoardGame.MAXIMUM_TAG_LENGTH
         textInputEditTextIdentityName.addTextChangedListener(object : TextWatcher {
 
             override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
@@ -92,7 +91,7 @@ class EnterIdentityNameDialogFragment : AppCompatDialogFragment() {
         })
 
         textInputEditTextIdentityName.setText(
-                BoardGameActivity.formatNullable(activity!!, identity.member.name())
+                BoardGameActivity.formatNullable(activity!!, identity.name)
         )
 
         alertDialog.setOnShowListener {

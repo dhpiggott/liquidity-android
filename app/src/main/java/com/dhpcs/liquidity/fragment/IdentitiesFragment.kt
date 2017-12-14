@@ -14,7 +14,6 @@ import android.widget.TextView
 import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.BoardGameActivity
-import com.dhpcs.liquidity.model.MemberId
 import java.util.*
 
 class IdentitiesFragment : Fragment() {
@@ -107,7 +106,7 @@ class IdentitiesFragment : Fragment() {
         }
     }
 
-    fun onIdentitiesUpdated(identities: Map<MemberId, BoardGame.Companion.IdentityWithBalance>) {
+    fun onIdentitiesUpdated(identities: Map<String, BoardGame.Companion.IdentityWithBalance>) {
         identitiesFragmentStatePagerAdapter!!.clear()
         identities.values.forEach {
             identitiesFragmentStatePagerAdapter!!.add(it)
@@ -127,10 +126,10 @@ class IdentitiesFragment : Fragment() {
             View.VISIBLE
         }
 
-        if (selectedIdentity != null && identities.contains(selectedIdentity!!.member.id())) {
+        if (selectedIdentity != null && identities.contains(selectedIdentity!!.memberId)) {
             viewPagerIdentities!!.setCurrentItem(
                     identitiesFragmentStatePagerAdapter!!.getPosition(
-                            identities[selectedIdentity!!.member.id()]!!
+                            identities[selectedIdentity!!.memberId]!!
                     ),
                     false
             )

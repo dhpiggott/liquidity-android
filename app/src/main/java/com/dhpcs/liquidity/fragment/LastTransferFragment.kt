@@ -51,7 +51,7 @@ class LastTransferFragment : Fragment() {
     fun onTransfersInitialized(transfers: Collection<BoardGame.Companion.TransferWithCurrency>) {
         transfers.forEach {
             if (lastTransfer == null ||
-                    it.transaction.created() > lastTransfer!!.transaction.created()) {
+                    it.created > lastTransfer!!.created) {
                 lastTransfer = it
             }
         }
@@ -60,7 +60,7 @@ class LastTransferFragment : Fragment() {
 
     fun onTransferAdded(addedTransfer: BoardGame.Companion.TransferWithCurrency) {
         if (lastTransfer == null ||
-                addedTransfer.transaction.created() > lastTransfer!!.transaction.created()) {
+                addedTransfer.created > lastTransfer!!.created) {
             lastTransfer = addedTransfer
             showTransfer(lastTransfer, true)
         }
@@ -68,7 +68,7 @@ class LastTransferFragment : Fragment() {
 
     fun onTransfersChanged(changedTransfers: Collection<BoardGame.Companion.TransferWithCurrency>) {
         changedTransfers.filter {
-            it.transaction.id() == lastTransfer!!.transaction.id()
+            it.transactionId == lastTransfer!!.transactionId
         }.forEach {
             lastTransfer = it
             showTransfer(lastTransfer, false)
@@ -80,15 +80,25 @@ class LastTransferFragment : Fragment() {
     ) {
         val summary = getString(
                 R.string.transfer_summary_format_string,
-                BoardGameActivity.formatMemberOrAccount(activity!!, lastTransfer!!.from),
+                BoardGameActivity.formatAccountOrPlayer(
+                        activity!!,
+                        lastTransfer!!.fromAccountId,
+                        lastTransfer!!.fromAccountName,
+                        lastTransfer!!.fromPlayer
+                ),
                 BoardGameActivity.formatCurrencyValue(
                         activity!!,
                         transfer!!.currency,
-                        transfer.transaction.value()
+                        transfer.value
                 ),
-                BoardGameActivity.formatMemberOrAccount(activity!!, lastTransfer!!.to)
+                BoardGameActivity.formatAccountOrPlayer(
+                        activity!!,
+                        lastTransfer!!.toAccountId,
+                        lastTransfer!!.toAccountName,
+                        lastTransfer!!.toPlayer
+                )
         )
-        val createdTimeMillis = transfer.transaction.created()
+        val createdTimeMillis = transfer.created
         val currentTimeMillis = System.currentTimeMillis()
         val created = LiquidityApplication.getRelativeTimeSpanString(
                 activity!!,
