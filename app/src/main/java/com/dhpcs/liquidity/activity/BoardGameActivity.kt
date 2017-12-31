@@ -825,7 +825,7 @@ class BoardGameActivity :
     ) {
         identitiesFragment!!.onIdentitiesUpdated(identities)
         playersFragment!!.onSelectedIdentityChanged(
-                identitiesFragment!!.getIdentity(identitiesFragment!!.selectedPage)!!
+                identitiesFragment!!.getIdentity(identitiesFragment!!.selectedPage)
         )
         val transferToPlayerDialogFragment = supportFragmentManager
                 .findFragmentByTag(TransferToPlayerDialogFragment.TAG) as

@@ -231,7 +231,7 @@ class PlayersFragment : Fragment() {
         }
     }
 
-    fun onSelectedIdentityChanged(selectedIdentity: BoardGame.Companion.Identity) {
+    fun onSelectedIdentityChanged(selectedIdentity: BoardGame.Companion.Identity?) {
         if (this.selectedIdentity != null && players != null) {
             val player = players!![this.selectedIdentity!!.memberId]
             if (player != null) playersAdapter!!.replaceOrAdd(player)
