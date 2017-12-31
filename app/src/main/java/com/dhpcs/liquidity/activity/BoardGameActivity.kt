@@ -496,7 +496,9 @@ class BoardGameActivity :
                                 identitiesFragment!!.selectedPage
                         )
                         try {
-                            val publicKey = ByteString.copyFromUtf8(contents)
+                            val publicKey = ByteString.copyFrom(
+                                    okio.ByteString.decodeBase64(contents)!!.toByteArray()
+                            )
                             if (!boardGame!!.isPublicKeyConnectedAndImplicitlyValid(publicKey)) {
                                 throw IllegalArgumentException()
                             }
