@@ -1,3 +1,6 @@
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
+
 -dontwarn java.beans.*
 -dontwarn java.lang.management.*
 -dontwarn javax.**
