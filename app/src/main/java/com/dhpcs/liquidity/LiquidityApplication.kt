@@ -1,14 +1,14 @@
 package com.dhpcs.liquidity
 
 import android.annotation.SuppressLint
+import android.app.Application
 import android.content.*
 import android.net.ConnectivityManager
-import android.support.multidex.MultiDexApplication
 import com.dhpcs.liquidity.provider.LiquidityContract
 import net.danlew.android.joda.JodaTimeAndroid
 import org.joda.time.*
 
-class LiquidityApplication : MultiDexApplication() {
+class LiquidityApplication : Application() {
 
     companion object {
 
