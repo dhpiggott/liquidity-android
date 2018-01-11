@@ -204,6 +204,10 @@ class BoardGame private constructor(private val serverConnection: ServerConnecti
 
         fun getInstance(zoneId: String): BoardGame? = instances[zoneId]
 
+        fun <K, V> getOrDefault(map: Map<K, V>, key: K, defaultValue: V): V {
+            return map[key] ?: defaultValue
+        }
+
         fun isGameNameValid(name: CharSequence): Boolean = isTagValid(name)
 
         fun isTagValid(tag: CharSequence): Boolean {
@@ -249,7 +253,7 @@ class BoardGame private constructor(private val serverConnection: ServerConnecti
                         if (!member.hasName()) null else member.name.value,
                         isHidden(member),
                         accounts.find { it.id == accountId }!!.id,
-                        balances.getOrDefault(accountId, BigDecimal(0)),
+                        getOrDefault(balances, accountId, BigDecimal(0)),
                         currency,
                         accountId == equityAccountId
                 )
@@ -280,7 +284,7 @@ class BoardGame private constructor(private val serverConnection: ServerConnecti
                         if (!member.hasName()) null else member.name.value,
                         isHidden(member),
                         accounts.find { it.id == accountId }!!.id,
-                        balances.getOrDefault(accountId, BigDecimal(0)),
+                        getOrDefault(balances, accountId, BigDecimal(0)),
                         currency,
                         accountId == equityAccountId,
                         connectedClients.any { member.ownerPublicKeysList.contains(it) }
@@ -1210,14 +1214,16 @@ class BoardGame private constructor(private val serverConnection: ServerConnecti
                     state!!.balances = state!!.balances +
                             Pair(
                                     transaction.from!!,
-                                    state!!.balances.getOrDefault(
+                                    getOrDefault(
+                                            state!!.balances,
                                             transaction.from,
                                             BigDecimal(0)
                                     ) - BigDecimal(transaction.value)
                             ) +
                             Pair(
                                     transaction.to!!,
-                                    state!!.balances.getOrDefault(
+                                    getOrDefault(
+                                            state!!.balances,
                                             transaction.to,
                                             BigDecimal(0)
                                     ) + BigDecimal(transaction.value)
@@ -1354,14 +1360,16 @@ class BoardGame private constructor(private val serverConnection: ServerConnecti
                             balances = balances +
                                     Pair(
                                             transaction.from!!,
-                                            balances.getOrDefault(
+                                            getOrDefault(
+                                                    balances,
                                                     transaction.from,
                                                     BigDecimal(0)
                                             ) - BigDecimal(transaction.value)
                                     ) +
                                     Pair(
                                             transaction.to!!,
-                                            balances.getOrDefault(
+                                            getOrDefault(
+                                                    balances,
                                                     transaction.to,
                                                     BigDecimal(0)
                                             ) + BigDecimal(transaction.value)
