@@ -266,7 +266,7 @@ class ServerConnection(filesDir: File,
                             is SubState.Companion.ConnectedSubState.Companion
                             .OnlineSubState ->
                                 doClose(state.executorService, CloseCause.SERVER_DISCONNECT)
-                            is SubState.Companion.DisconnectingSubState ->
+                            SubState.Companion.DisconnectingSubState ->
                                 doClose(state.executorService, CloseCause.CLIENT_DISCONNECT)
                         }
                     }
@@ -283,7 +283,7 @@ class ServerConnection(filesDir: File,
                 is State.Companion.ActiveState ->
                     state.executorService.execute {
                         when (state.subState) {
-                            is SubState.Companion.DisconnectingSubState ->
+                            SubState.Companion.DisconnectingSubState ->
                                 doClose(state.executorService, CloseCause.CLIENT_DISCONNECT)
                             else -> {
                                 if (response == null) {
@@ -407,7 +407,7 @@ class ServerConnection(filesDir: File,
                                             }
                                         }
                                     }
-                                    is SubState.Companion.DisconnectingSubState -> {
+                                    SubState.Companion.DisconnectingSubState -> {
                                     }
                                 }
                             }
@@ -440,7 +440,7 @@ class ServerConnection(filesDir: File,
                                                         )
                                                     }
                                                 }
-                                            is SubState.Companion.DisconnectingSubState -> {
+                                            SubState.Companion.DisconnectingSubState -> {
                                             }
                                         }
                                     }
@@ -484,9 +484,9 @@ class ServerConnection(filesDir: File,
     private fun connect() = when (state) {
         is State.Companion.ActiveState ->
             throw IllegalStateException("Already connecting/connected/disconnecting")
-        is State.Companion.IdleState.Companion.UnavailableIdleState ->
+        State.Companion.IdleState.Companion.UnavailableIdleState ->
             throw IllegalStateException("Connection unavailable")
-        is State.Companion.IdleState.Companion.AvailableIdleState,
+        State.Companion.IdleState.Companion.AvailableIdleState,
         State.Companion.IdleState.Companion.GeneralFailureIdleState,
         State.Companion.IdleState.Companion.TlsErrorIdleState ->
             doOpen()
@@ -501,7 +501,7 @@ class ServerConnection(filesDir: File,
                 state.executorService.execute {
                     val subState = state.subState
                     when (subState) {
-                        is SubState.Companion.DisconnectingSubState ->
+                        SubState.Companion.DisconnectingSubState ->
                             throw IllegalStateException("Already disconnecting")
                         is SubState.Companion.ConnectingSubState -> {
                             state.subState = SubState.Companion.DisconnectingSubState
