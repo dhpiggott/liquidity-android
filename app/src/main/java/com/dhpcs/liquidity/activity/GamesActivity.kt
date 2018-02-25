@@ -49,7 +49,7 @@ class GamesActivity :
                 val contents = result.contents
                 if (contents != null) {
                     startActivity(
-                            Intent(this@GamesActivity, BoardGameActivity::class.java)
+                            Intent(this, BoardGameActivity::class.java)
                                     .putExtra(BoardGameActivity.EXTRA_ZONE_ID, contents)
                     )
                 }
@@ -62,21 +62,11 @@ class GamesActivity :
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.action_preferences -> {
-                startActivity(
-                        Intent(
-                                this@GamesActivity,
-                                PreferencesActivity::class.java
-                        )
-                )
+                startActivity(Intent(this, PreferencesActivity::class.java))
                 return true
             }
             R.id.action_about -> {
-                startActivity(
-                        Intent(
-                                this@GamesActivity,
-                                AboutActivity::class.java
-                        )
-                )
+                startActivity(Intent(this, AboutActivity::class.java))
                 return true
             }
         }
@@ -92,14 +82,14 @@ class GamesActivity :
 
     override fun onGameDetailsEntered(name: String, currency: Currency) {
         startActivity(
-                Intent(this@GamesActivity, BoardGameActivity::class.java)
+                Intent(this, BoardGameActivity::class.java)
                         .putExtra(BoardGameActivity.EXTRA_CURRENCY, currency)
                         .putExtra(BoardGameActivity.EXTRA_GAME_NAME, name)
         )
     }
 
     override fun onJoinGameClicked() {
-        IntentIntegrator(this@GamesActivity)
+        IntentIntegrator(this)
                 .setCaptureActivity(JoinGameActivity::class.java)
                 .setDesiredBarcodeFormats(setOf("QR_CODE"))
                 .setBeepEnabled(false)
@@ -109,7 +99,7 @@ class GamesActivity :
 
     override fun onGameClicked(gameId: Long, zoneId: String, gameName: String?) {
         startActivity(
-                Intent(this@GamesActivity, BoardGameActivity::class.java)
+                Intent(this, BoardGameActivity::class.java)
                         .putExtra(BoardGameActivity.EXTRA_GAME_ID, gameId)
                         .putExtra(BoardGameActivity.EXTRA_ZONE_ID, zoneId)
                         .putExtra(BoardGameActivity.EXTRA_GAME_NAME, gameName)

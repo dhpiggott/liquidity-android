@@ -134,7 +134,7 @@ class JoinGameActivity : AppCompatActivity() {
                     Snackbar.LENGTH_INDEFINITE
             ).setAction(R.string.ok) {
                 ActivityCompat.requestPermissions(
-                        this@JoinGameActivity,
+                        this,
                         arrayOf(Manifest.permission.CAMERA),
                         REQUEST_CODE_GRANT_CAMERA_PERMISSION
                 )

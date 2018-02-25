@@ -145,7 +145,7 @@ class TransferIdentityActivity : BoardGameChildActivity() {
                     Snackbar.LENGTH_INDEFINITE
             ).setAction(R.string.ok) {
                 ActivityCompat.requestPermissions(
-                        this@TransferIdentityActivity,
+                        this,
                         arrayOf(Manifest.permission.CAMERA),
                         REQUEST_CODE_GRANT_CAMERA_PERMISSION
                 )

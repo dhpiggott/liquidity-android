@@ -9,8 +9,7 @@ import com.dhpcs.liquidity.BoardGame.Companion.TransferWithCurrency
 
 abstract class BoardGameChildActivity :
         AppCompatActivity(),
-        BoardGame.Companion.GameActionListener,
-        BoardGame.Companion.JoinStateListener {
+        BoardGame.Companion.GameActionListener {
 
     companion object {
 
@@ -20,7 +19,6 @@ abstract class BoardGameChildActivity :
     }
 
     private var joinRequestToken: BoardGame.Companion.JoinRequestToken? = null
-    private var retry: Boolean = false
 
     private var boardGame: BoardGame? = null
 
@@ -36,18 +34,14 @@ abstract class BoardGameChildActivity :
 
         if (joinRequestToken == null) joinRequestToken = BoardGame.Companion.JoinRequestToken()
 
-        retry = savedInstanceState == null
-
         boardGame = BoardGame.Companion.getInstance(zoneId)
 
-        boardGame!!.registerListener(this as BoardGame.Companion.JoinStateListener)
-        boardGame!!.registerListener(this as BoardGame.Companion.GameActionListener)
+        boardGame!!.registerListener(this)
     }
 
     override fun onStart() {
         super.onStart()
-        boardGame!!.requestJoin(joinRequestToken!!, retry)
-        retry = false
+        boardGame!!.requestJoin(joinRequestToken!!)
     }
 
     override fun onStop() {
@@ -61,8 +55,7 @@ abstract class BoardGameChildActivity :
 
     override fun onDestroy() {
         super.onDestroy()
-        boardGame!!.unregisterListener(this as BoardGame.Companion.GameActionListener)
-        boardGame!!.unregisterListener(this as BoardGame.Companion.JoinStateListener)
+        boardGame!!.unregisterListener(this)
     }
 
     override fun onJoinStateChanged(joinState: BoardGame.Companion.JoinState) {

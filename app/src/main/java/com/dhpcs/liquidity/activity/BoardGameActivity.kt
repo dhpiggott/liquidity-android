@@ -38,7 +38,6 @@ class BoardGameActivity :
         CreateIdentityDialogFragment.Companion.Listener,
         IdentitiesFragment.Companion.Listener,
         BoardGame.Companion.GameActionListener,
-        BoardGame.Companion.JoinStateListener,
         PlayersFragment.Companion.Listener,
         RestoreIdentityDialogFragment.Companion.Listener,
         TransferToPlayerDialogFragment.Companion.Listener {
@@ -199,7 +198,6 @@ class BoardGameActivity :
     private var transferReceiptMediaPlayer: MediaPlayer? = null
 
     private var joinRequestToken: BoardGame.Companion.JoinRequestToken? = null
-    private var retry: Boolean = false
     private var boardGame: BoardGame? = null
 
     private var progressBarState: ProgressBar? = null
@@ -282,8 +280,6 @@ class BoardGameActivity :
 
         if (joinRequestToken == null) joinRequestToken = BoardGame.Companion.JoinRequestToken()
 
-        retry = savedInstanceState == null
-
         val zoneId = if (savedInstanceState != null) {
             savedInstanceState.getString(EXTRA_ZONE_ID)
         } else {
@@ -294,6 +290,7 @@ class BoardGameActivity :
             val currency = intent.extras!!.getSerializable(EXTRA_CURRENCY) as Currency
             val gameName = intent.extras!!.getString(EXTRA_GAME_NAME)
             boardGame = BoardGame(
+                    applicationContext,
                     LiquidityApplication.getServerConnection(applicationContext),
                     LiquidityApplication.getGameDatabase(applicationContext),
                     currency,
@@ -305,12 +302,14 @@ class BoardGameActivity :
             if (boardGame == null) {
                 boardGame = if (!intent.extras!!.containsKey(EXTRA_GAME_ID)) {
                     BoardGame(
+                            applicationContext,
                             LiquidityApplication.getServerConnection(applicationContext),
                             LiquidityApplication.getGameDatabase(applicationContext),
                             zoneId
                     )
                 } else {
                     BoardGame(
+                            applicationContext,
                             LiquidityApplication.getServerConnection(applicationContext),
                             LiquidityApplication.getGameDatabase(applicationContext),
                             zoneId,
@@ -323,14 +322,12 @@ class BoardGameActivity :
             }
         }
 
-        boardGame!!.registerListener(this as BoardGame.Companion.JoinStateListener)
-        boardGame!!.registerListener(this as BoardGame.Companion.GameActionListener)
+        boardGame!!.registerListener(this)
     }
 
     override fun onStart() {
         super.onStart()
-        boardGame!!.requestJoin(joinRequestToken!!, retry)
-        retry = false
+        boardGame!!.requestJoin(joinRequestToken!!)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -465,7 +462,7 @@ class BoardGameActivity :
                         BoardGameChildActivity.EXTRA_ZONE_ID,
                         boardGame!!.zoneId
                 )
-                IntentIntegrator(this@BoardGameActivity)
+                IntentIntegrator(this)
                         .setCaptureActivity(TransferIdentityActivity::class.java)
                         .addExtra(
                                 TransferIdentityActivity.EXTRA_IDENTITY_NAME_HOLDER,
@@ -550,8 +547,7 @@ class BoardGameActivity :
 
     override fun onDestroy() {
         super.onDestroy()
-        boardGame!!.unregisterListener(this as BoardGame.Companion.GameActionListener)
-        boardGame!!.unregisterListener(this as BoardGame.Companion.JoinStateListener)
+        boardGame!!.unregisterListener(this)
         transferReceiptMediaPlayer!!.release()
     }
 
@@ -569,7 +565,7 @@ class BoardGameActivity :
                 buttonReconnect!!.visibility = View.GONE
 
             }
-            BoardGame.Companion.JoinState.GENERAL_FAILURE -> {
+            BoardGame.Companion.JoinState.FAILED -> {
 
                 closeDialogFragments()
 
@@ -578,18 +574,6 @@ class BoardGameActivity :
 
                 textViewState!!.visibility = View.VISIBLE
                 textViewState!!.setText(R.string.join_state_general_failure)
-                buttonReconnect!!.visibility = View.VISIBLE
-
-            }
-            BoardGame.Companion.JoinState.TLS_ERROR -> {
-
-                closeDialogFragments()
-
-                slidingUpPanelLayout!!.visibility = View.GONE
-                progressBarState!!.visibility = View.GONE
-
-                textViewState!!.visibility = View.VISIBLE
-                textViewState!!.setText(R.string.join_state_tls_error)
                 buttonReconnect!!.visibility = View.VISIBLE
 
             }
@@ -603,30 +587,6 @@ class BoardGameActivity :
                 textViewState!!.visibility = View.VISIBLE
                 textViewState!!.setText(R.string.join_state_available)
                 buttonReconnect!!.visibility = View.VISIBLE
-
-            }
-            BoardGame.Companion.JoinState.CONNECTING -> {
-
-                closeDialogFragments()
-
-                slidingUpPanelLayout!!.visibility = View.GONE
-                buttonReconnect!!.visibility = View.GONE
-
-                progressBarState!!.visibility = View.VISIBLE
-                textViewState!!.visibility = View.VISIBLE
-                textViewState!!.setText(R.string.join_state_connecting)
-
-            }
-            BoardGame.Companion.JoinState.AUTHENTICATING -> {
-
-                closeDialogFragments()
-
-                slidingUpPanelLayout!!.visibility = View.GONE
-                buttonReconnect!!.visibility = View.GONE
-
-                progressBarState!!.visibility = View.VISIBLE
-                textViewState!!.visibility = View.VISIBLE
-                textViewState!!.setText(R.string.join_state_authenticating)
 
             }
             BoardGame.Companion.JoinState.CREATING -> {
@@ -663,32 +623,8 @@ class BoardGameActivity :
                 slidingUpPanelLayout!!.visibility = View.VISIBLE
 
             }
-            BoardGame.Companion.JoinState.QUITTING -> {
-
-                closeDialogFragments()
-
-                slidingUpPanelLayout!!.visibility = View.GONE
-                buttonReconnect!!.visibility = View.GONE
-
-                progressBarState!!.visibility = View.VISIBLE
-                textViewState!!.visibility = View.VISIBLE
-                textViewState!!.setText(R.string.join_state_quitting)
-
-            }
-            BoardGame.Companion.JoinState.DISCONNECTING -> {
-
-                closeDialogFragments()
-
-                slidingUpPanelLayout!!.visibility = View.GONE
-                buttonReconnect!!.visibility = View.GONE
-
-                progressBarState!!.visibility = View.VISIBLE
-                textViewState!!.visibility = View.VISIBLE
-                textViewState!!.setText(R.string.join_state_disconnecting)
-
-            }
         }
-        supportInvalidateOptionsMenu()
+        invalidateOptionsMenu()
     }
 
     override fun onCreateGameError(name: String?) {

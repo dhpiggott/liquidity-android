@@ -1,8 +1,9 @@
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile
 
--dontwarn java.beans.*
--dontwarn java.lang.management.*
--dontwarn javax.**
+-dontwarn javax.naming.**
+-dontwarn org.bouncycastle.**
 -dontwarn org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement
--dontwarn sun.**
+-dontwarn org.conscrypt.Conscrypt
+-dontwarn org.conscrypt.OpenSSLProvider
+-dontwarn sun.misc.Unsafe

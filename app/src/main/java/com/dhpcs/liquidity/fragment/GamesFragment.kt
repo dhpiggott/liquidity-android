@@ -39,7 +39,7 @@ class GamesFragment : Fragment(),
 
     private val refreshHandler = Handler()
     private val refreshRunnable = Runnable {
-        loaderManager.restartLoader(GAMES_LOADER, null, this@GamesFragment)
+        loaderManager.restartLoader(GAMES_LOADER, null, this)
     }
 
     private var gamesAdapter: SimpleCursorAdapter? = null

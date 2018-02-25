@@ -2,8 +2,9 @@ package com.dhpcs.liquidity
 
 import android.annotation.SuppressLint
 import android.app.Application
-import android.content.*
-import android.net.ConnectivityManager
+import android.content.ContentUris
+import android.content.ContentValues
+import android.content.Context
 import com.dhpcs.liquidity.provider.LiquidityContract
 import net.danlew.android.joda.JodaTimeAndroid
 import org.joda.time.*
@@ -53,10 +54,10 @@ class LiquidityApplication : Application() {
                                         )
                                 )
                                 if (existingEntry.getString(
-                                        existingEntry.getColumnIndexOrThrow(
-                                                LiquidityContract.Games.NAME
-                                        )
-                                ) != name) {
+                                                existingEntry.getColumnIndexOrThrow(
+                                                        LiquidityContract.Games.NAME
+                                                )
+                                        ) != name) {
                                     updateGameName(gameId, name)
                                 }
                                 gameId
@@ -88,51 +89,7 @@ class LiquidityApplication : Application() {
         fun getServerConnection(context: Context): ServerConnection {
             if (serverConnection == null) {
                 PRNGFixes.apply()
-                serverConnection = ServerConnection(
-                        context.filesDir,
-                        object : ServerConnection.Companion.ConnectivityStatePublisherProvider {
-                            override fun provide(serverConnection: ServerConnection
-                            ): ServerConnection.Companion.ConnectivityStatePublisher {
-                                return object :
-                                        ServerConnection.Companion.ConnectivityStatePublisher {
-
-                                    private val connectionStateFilter =
-                                            IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
-                                    private val connectionStateReceiver = object :
-                                            BroadcastReceiver() {
-
-                                        override fun onReceive(context1: Context, intent: Intent) {
-                                            Companion.serverConnection!!
-                                                    .handleConnectivityStateChange()
-                                        }
-
-                                    }
-
-                                    private val connectivityManager =
-                                            context.getSystemService(
-                                                    Context.CONNECTIVITY_SERVICE
-                                            ) as ConnectivityManager
-
-                                    override fun register() {
-                                        context.registerReceiver(
-                                                connectionStateReceiver,
-                                                connectionStateFilter
-                                        )
-                                    }
-
-                                    override fun unregister() {
-                                        context.unregisterReceiver(connectionStateReceiver)
-                                    }
-
-                                    override fun isConnectionAvailable(): Boolean {
-                                        val activeNetwork = connectivityManager.activeNetworkInfo
-                                        return activeNetwork != null && activeNetwork.isConnected
-                                    }
-
-                                }
-                            }
-                        }
-                )
+                serverConnection = ServerConnection(context.filesDir)
             }
             return serverConnection!!
         }

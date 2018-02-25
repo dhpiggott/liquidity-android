@@ -20,6 +20,12 @@
         <license>MIT License</license>
     </notice>
     <notice>
+        <name>Nimbus JOSE + JWT</name>
+        <url>https://connect2id.com/products/nimbus-jose-jwt</url>
+        <copyright>Copyright 2012-2016, Connect2id Ltd.</copyright>
+        <license>Apache Software License 2.0</license>
+    </notice>
+    <notice>
         <name>OkHttp</name>
         <url>https://square.github.io/okhttp/</url>
         <copyright>Copyright 2016 Square, Inc.</copyright>
