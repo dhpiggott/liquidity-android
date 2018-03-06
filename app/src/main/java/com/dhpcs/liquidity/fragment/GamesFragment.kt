@@ -107,24 +107,20 @@ class GamesFragment : Fragment(),
         }
     }
 
-    override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor>? {
-        return when (id) {
-            GAMES_LOADER ->
-                CursorLoader(
-                        activity!!,
-                        LiquidityContract.Games.CONTENT_URI,
-                        arrayOf(LiquidityContract.Games.ID,
-                                LiquidityContract.Games.ZONE_ID,
-                                LiquidityContract.Games.CREATED,
-                                LiquidityContract.Games.EXPIRES,
-                                LiquidityContract.Games.NAME
-                        ),
-                        "${LiquidityContract.Games.EXPIRES} > ?",
-                        arrayOf(java.lang.Long.toString(System.currentTimeMillis())),
-                        "${LiquidityContract.Games.CREATED} DESC"
-                )
-            else -> null
-        }
+    override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
+        return CursorLoader(
+                activity!!,
+                LiquidityContract.Games.CONTENT_URI,
+                arrayOf(LiquidityContract.Games.ID,
+                        LiquidityContract.Games.ZONE_ID,
+                        LiquidityContract.Games.CREATED,
+                        LiquidityContract.Games.EXPIRES,
+                        LiquidityContract.Games.NAME
+                ),
+                "${LiquidityContract.Games.EXPIRES} > ?",
+                arrayOf(java.lang.Long.toString(System.currentTimeMillis())),
+                "${LiquidityContract.Games.CREATED} DESC"
+        )
     }
 
     override fun onCreateView(inflater: LayoutInflater,
