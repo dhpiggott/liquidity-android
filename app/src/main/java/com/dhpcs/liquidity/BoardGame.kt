@@ -180,7 +180,6 @@ class BoardGame private constructor(
 
         class JoinRequestToken
 
-        // TODO
         const val MAXIMUM_TAG_LENGTH = 160
 
         private const val CURRENCY_CODE_KEY = "currency"
