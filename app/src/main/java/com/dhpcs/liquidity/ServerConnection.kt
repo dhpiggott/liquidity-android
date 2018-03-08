@@ -10,7 +10,6 @@ import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposables
-import io.reactivex.subjects.BehaviorSubject
 import okhttp3.*
 import okio.ByteString
 import java.io.File
@@ -30,17 +29,6 @@ class ServerConnection(filesDir: File) {
 
     private val clientKeyStore by lazy { ClientKeyStore(filesDir) }
 
-    private val selfSignedJwt by lazy { BehaviorSubject.createDefault(selfSignedJwt()) }
-
-    init {
-        Observable
-                .interval(30, TimeUnit.MINUTES)
-                .map {
-                    selfSignedJwt()
-                }
-                .subscribe(selfSignedJwt)
-    }
-
     val clientKey: com.google.protobuf.ByteString by lazy {
         com.google.protobuf.ByteString.copyFrom(clientKeyStore.publicKey.encoded)
     }
@@ -57,7 +45,7 @@ class ServerConnection(filesDir: File) {
             val call = okHttpClient.newCall(
                     Request.Builder()
                             .url("https://api.liquidityapp.com/zone/$zoneId")
-                            .header("Authorization", "Bearer ${selfSignedJwt.value}")
+                            .header("Authorization", "Bearer ${selfSignedJwt()}")
                             .header("Accept", "application/x-protobuf; delimited=true")
                             .get()
                             .build()
@@ -104,7 +92,7 @@ class ServerConnection(filesDir: File) {
             val call = okHttpClient.newCall(
                     Request.Builder()
                             .url("https://api.liquidityapp.com/zone$zoneSubPath")
-                            .header("Authorization", "Bearer ${selfSignedJwt.value}")
+                            .header("Authorization", "Bearer ${selfSignedJwt()}")
                             .header("Accept", "application/x-protobuf")
                             .put(RequestBody.create(
                                     MediaType.parse("application/x-protobuf"),
@@ -143,8 +131,8 @@ class ServerConnection(filesDir: File) {
                 JWTClaimsSet.Builder()
                         .subject(ByteString.of(*clientKeyStore.publicKey.encoded).base64())
                         .issueTime(Date(now.time))
-                        .notBeforeTime(Date(now.time))
-                        .expirationTime(Date(now.time + TimeUnit.HOURS.toMillis(1)))
+                        .notBeforeTime(Date(now.time - TimeUnit.MINUTES.toMillis(1)))
+                        .expirationTime(Date(now.time + TimeUnit.MINUTES.toMillis(1)))
                         .build()
         )
         jwt.sign(RSASSASigner(clientKeyStore.privateKey))
