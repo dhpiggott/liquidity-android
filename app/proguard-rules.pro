@@ -7,3 +7,5 @@
 -dontwarn org.conscrypt.Conscrypt
 -dontwarn org.conscrypt.OpenSSLProvider
 -dontwarn sun.misc.Unsafe
+
+-keep class android.support.v7.app.AppCompatViewInflater { *; }
