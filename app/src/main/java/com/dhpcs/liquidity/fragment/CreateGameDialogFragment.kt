@@ -126,7 +126,7 @@ class CreateGameDialogFragment : AppCompatDialogFragment() {
             for (locale in Locale.getAvailableLocales()) {
                 try {
                     currencies.add(Currency.getInstance(locale))
-                } catch (ignored: IllegalArgumentException) {
+                } catch (_: IllegalArgumentException) {
                 }
             }
         } else {

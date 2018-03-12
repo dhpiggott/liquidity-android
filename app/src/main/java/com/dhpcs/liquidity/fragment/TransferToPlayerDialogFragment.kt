@@ -246,7 +246,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                                     ""
                             )
                     )
-                } catch (ignored: IllegalArgumentException) {
+                } catch (_: IllegalArgumentException) {
                     null
                 }
 
@@ -380,7 +380,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
             buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE)
             value = try {
                 BigDecimal(editTextValue.text.toString())
-            } catch (ignored: IllegalArgumentException) {
+            } catch (_: IllegalArgumentException) {
                 null
             }
 

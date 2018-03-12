@@ -89,7 +89,7 @@ class Identicon @JvmOverloads constructor(context: Context,
                     ByteBuffer.allocate(8)
                             .putLong(zoneIdAsUuid.leastSignificantBits).array()
             )
-        } catch (ignored: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
             hash.update(zoneId.toByteArray())
         }
 
@@ -104,7 +104,7 @@ class Identicon @JvmOverloads constructor(context: Context,
                         ByteBuffer.allocate(8).putLong(memberIdAsInt).array()
                 )
             }
-        } catch (ignored: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
             hash.update(memberId.toByteArray())
         }
 

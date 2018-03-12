@@ -500,7 +500,7 @@ class BoardGameActivity :
                                 throw IllegalArgumentException()
                             }
                             boardGame!!.transferIdentity(identity!!, publicKey)
-                        } catch (ignored: IllegalArgumentException) {
+                        } catch (_: IllegalArgumentException) {
                             Toast.makeText(
                                     this,
                                     getString(

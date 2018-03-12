@@ -66,7 +66,14 @@ class ServerConnection(filesDir: File) {
                             ))
                         }
                     } else {
-                        while (!source.exhausted()) {
+                        fun exhausted(): Boolean {
+                            return try {
+                                source.exhausted()
+                            } catch (_: IOException) {
+                                true
+                            }
+                        }
+                        while (!exhausted()) {
                             it.onNext(WsProtocol.ZoneNotification.parseDelimitedFrom(
                                     source.inputStream()
                             ))
