@@ -54,15 +54,17 @@ class ServerConnection(filesDir: File) {
             call.enqueue(object : Callback {
 
                 override fun onFailure(call: Call, e: IOException) {
-                    it.onError(e)
+                    if (!it.isDisposed) it.onError(e)
                 }
 
                 override fun onResponse(call: Call, response: Response) {
                     val source = response.body()!!.source()
                     if (response.code() != 200) {
-                        it.onError(IOException(
-                                "response.code() != 200 (response.code() = ${response.code()})"
-                        ))
+                        if (!it.isDisposed) {
+                            it.onError(IOException(
+                                    "response.code() != 200 (response.code() = ${response.code()})"
+                            ))
+                        }
                     } else {
                         while (!call.isCanceled && !source.exhausted()) {
                             it.onNext(WsProtocol.ZoneNotification.parseDelimitedFrom(
@@ -104,14 +106,16 @@ class ServerConnection(filesDir: File) {
             call.enqueue(object : Callback {
 
                 override fun onFailure(call: Call, e: IOException) {
-                    it.onError(e)
+                    if (!it.isDisposed) it.onError(e)
                 }
 
                 override fun onResponse(call: Call, response: Response) {
                     if (response.code() != 200) {
-                        it.onError(IOException(
-                                "response.code() != 200 (response.code() = ${response.code()})"
-                        ))
+                        if (!it.isDisposed) {
+                            it.onError(IOException(
+                                    "response.code() != 200 (response.code() = ${response.code()})"
+                            ))
+                        }
                         response.body()!!.source().close()
                     } else {
                         it.onSuccess(WsProtocol.ZoneResponse.parseFrom(
