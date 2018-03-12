@@ -319,7 +319,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
         spinnerFrom.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
 
             override fun onItemSelected(parent: AdapterView<*>,
-                                        view: View,
+                                        view: View?,
                                         position: Int,
                                         id: Long) {
                 from = identitiesSpinnerAdapter!!.getItem(position)
@@ -333,7 +333,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
         spinnerTo.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
 
             override fun onItemSelected(parent: AdapterView<*>,
-                                        view: View,
+                                        view: View?,
                                         position: Int,
                                         id: Long) {
                 to = playersSpinnerAdapter!!.getItem(position)
