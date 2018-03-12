@@ -551,9 +551,8 @@ class BoardGame private constructor(
                             }
                         },
                         {
-                            joinState = AVAILABLE
                             gameActionListeners.forEach {
-                                it.onJoinStateChanged(joinState)
+                                it.onJoinGameError()
                             }
                         }
                 )
