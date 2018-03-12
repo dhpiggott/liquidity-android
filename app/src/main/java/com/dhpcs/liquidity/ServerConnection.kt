@@ -66,7 +66,7 @@ class ServerConnection(filesDir: File) {
                             ))
                         }
                     } else {
-                        while (!call.isCanceled && !source.exhausted()) {
+                        while (!source.exhausted()) {
                             it.onNext(WsProtocol.ZoneNotification.parseDelimitedFrom(
                                     source.inputStream()
                             ))

@@ -458,22 +458,23 @@ class BoardGame private constructor(
             }
         }
         joinRequestTokens += token
-        if (joinState == AVAILABLE || (joinState == FAILED && retryIfFailed))
+        if (joinState == AVAILABLE || (joinState == FAILED && retryIfFailed)) {
             if (zoneId == null) {
                 createAndThenJoinZone(_currency!!, _gameName!!)
             } else {
                 join(zoneId)
             }
+        }
     }
 
     fun unrequestJoin(token: JoinRequestToken) {
         joinRequestTokens -= token
         if (joinRequestTokens.isEmpty()) {
+            quit()
             val zoneId = zoneId
             if (zoneId != null && instances.contains(zoneId)) {
                 instances -= zoneId
             }
-            quit()
         }
     }
 
@@ -561,6 +562,10 @@ class BoardGame private constructor(
     private fun quit() {
         zoneNotificationDisposable?.dispose()
         zoneNotificationDisposable = null
+        joinState = AVAILABLE
+        gameActionListeners.forEach {
+            it.onJoinStateChanged(joinState)
+        }
     }
 
     private fun onZoneNotificationReceived(
