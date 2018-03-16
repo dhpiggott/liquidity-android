@@ -81,18 +81,18 @@ class LastTransferFragment : Fragment() {
         val summary = getString(
                 R.string.transfer_summary_format_string,
                 BoardGameActivity.formatAccountOrPlayer(
-                        activity!!,
+                        requireActivity(),
                         lastTransfer!!.fromAccountId,
                         lastTransfer!!.fromAccountName,
                         lastTransfer!!.fromPlayer
                 ),
                 BoardGameActivity.formatCurrencyValue(
-                        activity!!,
+                        requireActivity(),
                         transfer!!.currency,
                         transfer.value
                 ),
                 BoardGameActivity.formatAccountOrPlayer(
-                        activity!!,
+                        requireActivity(),
                         lastTransfer!!.toAccountId,
                         lastTransfer!!.toAccountName,
                         lastTransfer!!.toPlayer
@@ -101,7 +101,7 @@ class LastTransferFragment : Fragment() {
         val createdTimeMillis = transfer.created
         val currentTimeMillis = System.currentTimeMillis()
         val created = LiquidityApplication.getRelativeTimeSpanString(
-                activity!!,
+                requireActivity(),
                 Instant(createdTimeMillis),
                 Instant(
                         if (currentTimeMillis < createdTimeMillis)

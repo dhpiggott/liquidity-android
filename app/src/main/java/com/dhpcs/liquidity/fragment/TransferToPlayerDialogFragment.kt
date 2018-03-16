@@ -192,15 +192,15 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
         }
         this.toList = toList
 
-        val playerComparator = BoardGameActivity.playerComparator(activity!!)
-        identitiesSpinnerAdapter = IdentitiesAdapter(activity!!, identities)
+        val playerComparator = BoardGameActivity.playerComparator(requireActivity())
+        identitiesSpinnerAdapter = IdentitiesAdapter(requireActivity(), identities)
         identitiesSpinnerAdapter!!.sort(playerComparator)
-        playersSpinnerAdapter = PlayersAdapter(activity!!, players)
+        playersSpinnerAdapter = PlayersAdapter(requireActivity(), players)
         playersSpinnerAdapter!!.sort(playerComparator)
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        @SuppressLint("InflateParams") val view = activity!!.layoutInflater.inflate(
+        @SuppressLint("InflateParams") val view = requireActivity().layoutInflater.inflate(
                 R.layout.fragment_transfer_to_player_dialog, null
         )
 
@@ -213,7 +213,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
         val linearLayoutTo = view.findViewById<LinearLayout>(R.id.linearlayout_to)
         val spinnerTo = view.findViewById<Spinner>(R.id.spinner_to)
 
-        val alertDialog = AlertDialog.Builder(activity!!)
+        val alertDialog = AlertDialog.Builder(requireActivity())
                 .setTitle(getString(
                         R.string.enter_transfer_details
                 ))
@@ -301,7 +301,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                         editTextScaledValue.text = getString(
                                 R.string.transfer_to_player_scaled_value_format_string,
                                 BoardGameActivity.formatCurrencyValue(
-                                        activity!!,
+                                        requireActivity(),
                                         currency!!,
                                         value!!
                                 )
@@ -344,7 +344,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
 
         }
 
-        textViewCurrency.text = BoardGameActivity.formatCurrency(activity!!, currency!!)
+        textViewCurrency.text = BoardGameActivity.formatCurrency(requireActivity(), currency!!)
 
         spinnerFrom.setSelection(identitiesSpinnerAdapter!!.getPosition(from))
 
@@ -355,14 +355,14 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
             val players = arguments!!.getSerializable(ARG_PLAYERS) as
                     List<BoardGame.Companion.Player>
             for (player in players) {
-                val checkedTextViewPlayer = activity!!.layoutInflater.inflate(
+                val checkedTextViewPlayer = requireActivity().layoutInflater.inflate(
                         android.R.layout.simple_list_item_multiple_choice,
                         linearLayoutTo,
                         false
                 ) as CheckedTextView
                 linearLayoutTo.addView(checkedTextViewPlayer)
                 checkedTextViewPlayer.text =
-                        BoardGameActivity.formatNullable(activity!!, player.name)
+                        BoardGameActivity.formatNullable(requireActivity(), player.name)
                 checkedTextViewPlayer.isChecked = toList!!.contains(player)
                 checkedTextViewPlayer.setOnClickListener {
                     checkedTextViewPlayer.toggle()
@@ -434,12 +434,12 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                 textViewValueError!!.text = getString(
                         R.string.transfer_value_invalid_format_string,
                         BoardGameActivity.formatCurrencyValue(
-                                activity!!,
+                                requireActivity(),
                                 currency!!,
                                 currentBalance
                         ),
                         BoardGameActivity.formatCurrencyValue(
-                                activity!!,
+                                requireActivity(),
                                 currency!!,
                                 requiredBalance
                         )
@@ -458,7 +458,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
         val isFromValid = if (toAccountIds.contains(from!!.accountId)) {
             textViewFromError!!.text = getString(
                     R.string.transfer_from_invalid_format_string,
-                    BoardGameActivity.formatNullable(activity!!, from!!.name)
+                    BoardGameActivity.formatNullable(requireActivity(), from!!.name)
             )
             false
         } else {

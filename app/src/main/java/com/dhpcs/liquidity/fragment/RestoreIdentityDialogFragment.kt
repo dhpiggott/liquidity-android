@@ -87,12 +87,12 @@ class RestoreIdentityDialogFragment : AppCompatDialogFragment() {
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val identitiesAdapter = IdentitiesAdapter(activity!!)
+        val identitiesAdapter = IdentitiesAdapter(requireActivity())
         val identities = arguments!!.getSerializable(ARG_IDENTITIES) as
                 ArrayList<BoardGame.Companion.IdentityWithBalance>
         identitiesAdapter.addAll(identities)
-        identitiesAdapter.sort(BoardGameActivity.playerComparator(activity!!))
-        return AlertDialog.Builder(activity!!)
+        identitiesAdapter.sort(BoardGameActivity.playerComparator(requireActivity()))
+        return AlertDialog.Builder(requireActivity())
                 .setTitle(R.string.choose_identity_to_restore)
                 .setAdapter(identitiesAdapter) { _, which ->
                     listener?.onIdentityRestorationRequested(identitiesAdapter.getItem(which))

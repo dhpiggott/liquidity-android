@@ -117,7 +117,7 @@ class CreateGameDialogFragment : AppCompatDialogFragment() {
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        @SuppressLint("InflateParams") val view = activity!!.layoutInflater.inflate(
+        @SuppressLint("InflateParams") val view = requireActivity().layoutInflater.inflate(
                 R.layout.fragment_create_game_dialog, null
         )
 
@@ -132,7 +132,7 @@ class CreateGameDialogFragment : AppCompatDialogFragment() {
         } else {
             currencies.addAll(Currency.getAvailableCurrencies())
         }
-        val currenciesSpinnerAdapter = CurrenciesAdapter(activity!!, ArrayList(currencies))
+        val currenciesSpinnerAdapter = CurrenciesAdapter(requireActivity(), ArrayList(currencies))
 
         val textInputLayoutGameName =
                 view.findViewById<TextInputLayout>(R.id.textinputlayout_game_name)
@@ -140,7 +140,7 @@ class CreateGameDialogFragment : AppCompatDialogFragment() {
                 view.findViewById<TextInputEditText>(R.id.textinputedittext_game_name)
         val spinnerCurrency = view.findViewById<Spinner>(R.id.spinner_game_currency)
 
-        val alertDialog = AlertDialog.Builder(activity!!)
+        val alertDialog = AlertDialog.Builder(requireActivity())
                 .setTitle(getString(
                         R.string.enter_game_details
                 ))

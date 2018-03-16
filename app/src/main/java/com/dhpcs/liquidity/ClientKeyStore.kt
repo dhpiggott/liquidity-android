@@ -72,9 +72,8 @@ class ClientKeyStore(filesDir: File) {
     init {
         val keyStoreFile = File(filesDir, LEGACY_BKS_KEYSTORE_FILENAME)
         val privateKeyFile = File(filesDir, PRIVATE_KEY_FILENAME)
-        val keyPair = readKey(privateKeyFile) ?:
-                loadFromLegacyBksKeyStore(keyStoreFile) ?:
-                generateKey()
+        val keyPair = readKey(privateKeyFile) ?: loadFromLegacyBksKeyStore(keyStoreFile)
+        ?: generateKey()
         if (!privateKeyFile.exists()) writeKey(privateKeyFile, keyPair)
         deleteLegacyBksKeyStoreIfExists(keyStoreFile)
         publicKey = keyPair.public as RSAPublicKey

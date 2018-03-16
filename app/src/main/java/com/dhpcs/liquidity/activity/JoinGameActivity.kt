@@ -126,8 +126,8 @@ class JoinGameActivity : AppCompatActivity() {
 
     private fun requestCameraPermission() {
         if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                Manifest.permission.CAMERA
-        )) {
+                        Manifest.permission.CAMERA
+                )) {
             Snackbar.make(
                     linearLayoutJoinGame!!,
                     R.string.camera_permission_rationale,

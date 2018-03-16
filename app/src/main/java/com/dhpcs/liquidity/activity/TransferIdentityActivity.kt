@@ -137,8 +137,8 @@ class TransferIdentityActivity : BoardGameChildActivity() {
 
     private fun requestCameraPermission() {
         if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                Manifest.permission.CAMERA
-        )) {
+                        Manifest.permission.CAMERA
+                )) {
             Snackbar.make(
                     linearLayoutTransferIdentity!!,
                     R.string.camera_permission_rationale,

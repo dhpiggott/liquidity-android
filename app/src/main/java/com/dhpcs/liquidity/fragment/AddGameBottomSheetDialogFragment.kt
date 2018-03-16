@@ -43,7 +43,7 @@ class AddGameBottomSheetDialogFragment : BottomSheetDialogFragment() {
     override fun onCreateView(inflater: LayoutInflater,
                               container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        @SuppressLint("InflateParams") val view = activity!!.layoutInflater.inflate(
+        @SuppressLint("InflateParams") val view = requireActivity().layoutInflater.inflate(
                 R.layout.fragment_add_game_bottom_sheet_dialog, null
         )
 

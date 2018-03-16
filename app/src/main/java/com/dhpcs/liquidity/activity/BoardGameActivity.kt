@@ -860,8 +860,8 @@ class BoardGameActivity :
                 PreferenceManager.getDefaultSharedPreferences(this)
                         .getBoolean("play_transfer_receipt_sounds", true) &&
                 addedTransfer.toPlayer.ownerPublicKey ==
-                        LiquidityApplication.getServerConnection(applicationContext).clientKey
-                ) {
+                LiquidityApplication.getServerConnection(applicationContext).clientKey
+        ) {
             if (transferReceiptMediaPlayer!!.isPlaying) {
                 transferReceiptMediaPlayer!!.seekTo(0)
             } else {

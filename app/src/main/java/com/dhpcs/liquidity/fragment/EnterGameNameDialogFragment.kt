@@ -54,7 +54,7 @@ class EnterGameNameDialogFragment : AppCompatDialogFragment() {
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        @SuppressLint("InflateParams") val view = activity!!.layoutInflater.inflate(
+        @SuppressLint("InflateParams") val view = requireActivity().layoutInflater.inflate(
                 R.layout.fragment_enter_game_name_dialog, null
         )
 
@@ -65,7 +65,7 @@ class EnterGameNameDialogFragment : AppCompatDialogFragment() {
         val textInputEditTextGameName =
                 view.findViewById<TextInputEditText>(R.id.textinputedittext_game_name)
 
-        val alertDialog = AlertDialog.Builder(activity!!)
+        val alertDialog = AlertDialog.Builder(requireActivity())
                 .setTitle(R.string.enter_game_name)
                 .setView(view)
                 .setNegativeButton(R.string.cancel, null)

@@ -48,7 +48,7 @@ class CreateIdentityDialogFragment : AppCompatDialogFragment() {
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        @SuppressLint("InflateParams") val view = activity!!.layoutInflater.inflate(
+        @SuppressLint("InflateParams") val view = requireActivity().layoutInflater.inflate(
                 R.layout.fragment_create_identity_dialog, null
         )
 
@@ -57,7 +57,7 @@ class CreateIdentityDialogFragment : AppCompatDialogFragment() {
         val textInputEditTextIdentityName = view
                 .findViewById<TextInputEditText>(R.id.textinputedittext_identity_name)
 
-        val alertDialog = AlertDialog.Builder(activity!!)
+        val alertDialog = AlertDialog.Builder(requireActivity())
                 .setTitle(R.string.enter_identity_name)
                 .setView(view)
                 .setNegativeButton(R.string.cancel, null)
@@ -82,16 +82,13 @@ class CreateIdentityDialogFragment : AppCompatDialogFragment() {
             validateInput(textInputEditTextIdentityName.text)
         }
 
-        val window = alertDialog.window!!
-        window.setSoftInputMode(
-                WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE
-        )
+        alertDialog.window!!.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
 
         return alertDialog
     }
 
     private fun validateInput(identityName: CharSequence) {
-        buttonPositive?.isEnabled = (activity as BoardGameActivity).isIdentityNameValid(
+        buttonPositive?.isEnabled = (requireActivity() as BoardGameActivity).isIdentityNameValid(
                 identityName
         )
     }
