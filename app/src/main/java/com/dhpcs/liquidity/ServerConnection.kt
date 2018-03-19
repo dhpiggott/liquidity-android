@@ -138,7 +138,8 @@ class ServerConnection(filesDir: File) {
     private fun selfSignedJwt(): String {
         val now = Date()
         val jwt = SignedJWT(
-                JWSHeader(JWSAlgorithm.RS256),
+                JWSHeader.Builder(JWSAlgorithm.RS256)
+                        .build(),
                 JWTClaimsSet.Builder()
                         .subject(ByteString.of(*clientKeyStore.publicKey.encoded).base64())
                         .issueTime(Date(now.time))
