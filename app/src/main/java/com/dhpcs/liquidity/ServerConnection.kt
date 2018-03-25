@@ -1,5 +1,6 @@
 package com.dhpcs.liquidity
 
+import android.net.Uri
 import com.dhpcs.liquidity.proto.ws.protocol.WsProtocol
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.JWSHeader
@@ -89,7 +90,7 @@ class ServerConnection(filesDir: File) {
 
     fun sendZoneCommand(zoneId: String, zoneCommand: WsProtocol.ZoneCommand
     ): Single<WsProtocol.ZoneResponse> {
-        return sendZoneCommand("/$zoneId", zoneCommand.toByteArray())
+        return sendZoneCommand("/${Uri.encode(zoneId)}", zoneCommand.toByteArray())
     }
 
     private fun sendZoneCommand(
