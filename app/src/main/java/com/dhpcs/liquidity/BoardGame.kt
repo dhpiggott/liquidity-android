@@ -503,7 +503,7 @@ class BoardGame private constructor(
                         CURRENCY_CODE_KEY,
                         Value.newBuilder().setStringValue(currency.currencyCode).build()
                 )
-        serverConnection.sendCreateZoneCommand(
+        serverConnection.createZone(
                 WsProtocol.ZoneCommand.CreateZoneCommand.newBuilder()
                         .setEquityOwnerPublicKey(serverConnection.clientKey)
                         .setEquityOwnerName(StringValue.newBuilder().setValue(bankMemberName))
@@ -1165,7 +1165,7 @@ class BoardGame private constructor(
                 )
             }
         }
-        serverConnection.sendZoneCommand(
+        serverConnection.execZoneCommand(
                 zoneId!!,
                 WsProtocol.ZoneCommand.newBuilder()
                         .setCreateAccountCommand(
@@ -1193,7 +1193,7 @@ class BoardGame private constructor(
                 it.onChangeGameNameError(name)
             }
         }
-        serverConnection.sendZoneCommand(
+        serverConnection.execZoneCommand(
                 zoneId!!,
                 WsProtocol.ZoneCommand.newBuilder()
                         .setChangeZoneNameCommand(
@@ -1228,7 +1228,7 @@ class BoardGame private constructor(
                 it.onCreateIdentityMemberError(name)
             }
         }
-        serverConnection.sendZoneCommand(
+        serverConnection.execZoneCommand(
                 zoneId!!,
                 WsProtocol.ZoneCommand.newBuilder()
                         .setCreateMemberCommand(
@@ -1262,7 +1262,7 @@ class BoardGame private constructor(
         val member = state!!.zone.membersList.find {
             it.id == identity.memberId
         }!!
-        serverConnection.sendZoneCommand(
+        serverConnection.execZoneCommand(
                 zoneId!!,
                 WsProtocol.ZoneCommand.newBuilder()
                         .setUpdateMemberCommand(
@@ -1304,7 +1304,7 @@ class BoardGame private constructor(
         val member = state!!.zone.membersList.find {
             it.id == identity.memberId
         }!!
-        serverConnection.sendZoneCommand(
+        serverConnection.execZoneCommand(
                 zoneId!!,
                 WsProtocol.ZoneCommand.newBuilder()
                         .setUpdateMemberCommand(
@@ -1351,7 +1351,7 @@ class BoardGame private constructor(
         }!!
         val metadata = member.metadata.toBuilder()
                 .putFields(HIDDEN_FLAG_KEY, Value.newBuilder().setBoolValue(true).build())
-        serverConnection.sendZoneCommand(
+        serverConnection.execZoneCommand(
                 zoneId!!,
                 WsProtocol.ZoneCommand.newBuilder()
                         .setUpdateMemberCommand(
@@ -1385,7 +1385,7 @@ class BoardGame private constructor(
         }!!
         val metadata = member.metadata.toBuilder()
                 .removeFields(HIDDEN_FLAG_KEY)
-        serverConnection.sendZoneCommand(
+        serverConnection.execZoneCommand(
                 zoneId!!,
                 WsProtocol.ZoneCommand.newBuilder()
                         .setUpdateMemberCommand(
@@ -1417,7 +1417,7 @@ class BoardGame private constructor(
                 it.onTransferToPlayerError(to.name)
             }
         }
-        serverConnection.sendZoneCommand(
+        serverConnection.execZoneCommand(
                 zoneId!!,
                 WsProtocol.ZoneCommand.newBuilder()
                         .setAddTransactionCommand(

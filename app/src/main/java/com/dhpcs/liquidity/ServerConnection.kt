@@ -34,10 +34,10 @@ class ServerConnection(filesDir: File) {
         com.google.protobuf.ByteString.copyFrom(clientKeyStore.publicKey.encoded)
     }
 
-    fun sendCreateZoneCommand(
+    fun createZone(
             createZoneCommand: WsProtocol.ZoneCommand.CreateZoneCommand
     ): Single<WsProtocol.ZoneResponse> {
-        return sendZoneCommand("", createZoneCommand.toByteArray())
+        return execZoneCommand("", createZoneCommand.toByteArray())
     }
 
     fun zoneNotifications(zoneId: String): Observable<WsProtocol.ZoneNotification> {
@@ -88,12 +88,12 @@ class ServerConnection(filesDir: File) {
         }.observeOn(AndroidSchedulers.mainThread())
     }
 
-    fun sendZoneCommand(zoneId: String, zoneCommand: WsProtocol.ZoneCommand
+    fun execZoneCommand(zoneId: String, zoneCommand: WsProtocol.ZoneCommand
     ): Single<WsProtocol.ZoneResponse> {
-        return sendZoneCommand("/${Uri.encode(zoneId)}", zoneCommand.toByteArray())
+        return execZoneCommand("/${Uri.encode(zoneId)}", zoneCommand.toByteArray())
     }
 
-    private fun sendZoneCommand(
+    private fun execZoneCommand(
             zoneSubPath: String,
             entity: ByteArray
     ): Single<WsProtocol.ZoneResponse> {
