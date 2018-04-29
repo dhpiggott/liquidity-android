@@ -5,14 +5,12 @@ import android.content.Intent
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.preference.PreferenceManager
-import android.support.v4.app.DialogFragment
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
-import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
@@ -202,7 +200,6 @@ class BoardGameActivity :
 
     private var progressBarState: ProgressBar? = null
     private var textViewState: TextView? = null
-    private var buttonReconnect: Button? = null
     private var slidingUpPanelLayout: SlidingUpPanelLayout? = null
 
     private var identitiesFragment: IdentitiesFragment? = null
@@ -224,12 +221,7 @@ class BoardGameActivity :
 
         progressBarState = findViewById(R.id.progressbar_state)
         textViewState = findViewById(R.id.textview_state)
-        buttonReconnect = findViewById(R.id.button_reconnect)
         slidingUpPanelLayout = findViewById(R.id.slidinguppanellayout)
-
-        buttonReconnect!!.setOnClickListener {
-            boardGame!!.requestJoin(joinRequestToken!!, true)
-        }
 
         slidingUpPanelLayout!!.addPanelSlideListener(
                 object : SlidingUpPanelLayout.PanelSlideListener {
@@ -298,7 +290,7 @@ class BoardGameActivity :
                     getString(R.string.bank_member_name)
             )
         } else {
-            boardGame = BoardGame.Companion.getInstance(zoneId)
+            boardGame = BoardGame.getInstance(zoneId)
             if (boardGame == null) {
                 boardGame = if (!intent.extras!!.containsKey(EXTRA_GAME_ID)) {
                     BoardGame(
@@ -526,11 +518,6 @@ class BoardGameActivity :
             super.onBackPressed()
     }
 
-    override fun onPause() {
-        super.onPause()
-        if (!isChangingConfigurations) closeDialogFragments()
-    }
-
     override fun onStop() {
         super.onStop()
         if (!isChangingConfigurations) boardGame!!.unrequestJoin(joinRequestToken!!)
@@ -555,46 +542,36 @@ class BoardGameActivity :
         when (joinState) {
             BoardGame.Companion.JoinState.UNAVAILABLE -> {
 
-                closeDialogFragments()
-
-                slidingUpPanelLayout!!.visibility = View.GONE
-                progressBarState!!.visibility = View.GONE
-
-                textViewState!!.visibility = View.VISIBLE
-                textViewState!!.setText(R.string.join_state_unavailable)
-                buttonReconnect!!.visibility = View.GONE
-
-            }
-            BoardGame.Companion.JoinState.FAILED -> {
-
-                closeDialogFragments()
-
-                slidingUpPanelLayout!!.visibility = View.GONE
-                progressBarState!!.visibility = View.GONE
-
-                textViewState!!.visibility = View.VISIBLE
-                textViewState!!.setText(R.string.join_state_general_failure)
-                buttonReconnect!!.visibility = View.VISIBLE
+                Toast.makeText(
+                        this,
+                        R.string.join_state_unavailable,
+                        Toast.LENGTH_LONG
+                ).show()
+                finish()
 
             }
             BoardGame.Companion.JoinState.AVAILABLE -> {
-
-                closeDialogFragments()
 
                 slidingUpPanelLayout!!.visibility = View.GONE
                 progressBarState!!.visibility = View.GONE
 
                 textViewState!!.visibility = View.VISIBLE
                 textViewState!!.setText(R.string.join_state_available)
-                buttonReconnect!!.visibility = View.VISIBLE
+
+            }
+            BoardGame.Companion.JoinState.FAILED -> {
+
+                Toast.makeText(
+                        this,
+                        R.string.join_state_general_failure,
+                        Toast.LENGTH_LONG
+                ).show()
+                finish()
 
             }
             BoardGame.Companion.JoinState.CREATING -> {
 
-                closeDialogFragments()
-
                 slidingUpPanelLayout!!.visibility = View.GONE
-                buttonReconnect!!.visibility = View.GONE
 
                 progressBarState!!.visibility = View.VISIBLE
                 textViewState!!.visibility = View.VISIBLE
@@ -603,10 +580,7 @@ class BoardGameActivity :
             }
             BoardGame.Companion.JoinState.JOINING -> {
 
-                closeDialogFragments()
-
                 slidingUpPanelLayout!!.visibility = View.GONE
-                buttonReconnect!!.visibility = View.GONE
 
                 progressBarState!!.visibility = View.VISIBLE
                 textViewState!!.visibility = View.VISIBLE
@@ -615,7 +589,6 @@ class BoardGameActivity :
             }
             BoardGame.Companion.JoinState.JOINED -> {
 
-                buttonReconnect!!.visibility = View.GONE
                 textViewState!!.text = null
                 textViewState!!.visibility = View.GONE
                 progressBarState!!.visibility = View.GONE
@@ -649,10 +622,12 @@ class BoardGameActivity :
     }
 
     override fun onIdentityRequired() {
-        CreateIdentityDialogFragment.newInstance().show(
-                supportFragmentManager,
-                CreateIdentityDialogFragment.TAG
-        )
+        if (supportFragmentManager.findFragmentByTag(CreateIdentityDialogFragment.TAG) == null) {
+            CreateIdentityDialogFragment.newInstance().show(
+                    supportFragmentManager,
+                    CreateIdentityDialogFragment.TAG
+            )
+        }
     }
 
     override fun onNoIdentitiesTextClicked() {
@@ -908,17 +883,4 @@ class BoardGameActivity :
         ).show()
         finish()
     }
-
-    private fun closeDialogFragments() {
-        arrayOf(ConfirmIdentityDeletionDialogFragment.TAG,
-                CreateIdentityDialogFragment.TAG,
-                EnterGameNameDialogFragment.TAG,
-                EnterIdentityNameDialogFragment.TAG,
-                RestoreIdentityDialogFragment.TAG,
-                TransferToPlayerDialogFragment.TAG
-        )
-                .map { supportFragmentManager.findFragmentByTag(it) as DialogFragment? }
-                .forEach { it?.dismiss() }
-    }
-
 }

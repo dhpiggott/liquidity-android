@@ -51,8 +51,8 @@ class BoardGame private constructor(
 
         enum class JoinState {
             UNAVAILABLE,
-            FAILED,
             AVAILABLE,
+            FAILED,
             CREATING,
             JOINING,
             JOINED
@@ -338,7 +338,9 @@ class BoardGame private constructor(
     private val connectionStateReceiver = object : BroadcastReceiver() {
 
         override fun onReceive(context1: Context, intent: Intent) {
-            handleConnectivityStateChange()
+            if (joinState != CREATING && joinState != JOINING && joinState != JOINED) {
+                updateIdleJoinState()
+            }
         }
 
     }
@@ -414,21 +416,14 @@ class BoardGame private constructor(
     val players get() = state!!.players.values
 
     init {
-        handleConnectivityStateChange()
+        updateIdleJoinState()
     }
 
-    private fun handleConnectivityStateChange() {
-        if (connectivityManager.activeNetworkInfo?.isConnected != true &&
-                (joinState == AVAILABLE || joinState == FAILED)) {
-            joinState = UNAVAILABLE
-            gameActionListeners.forEach {
-                it.onJoinStateChanged(joinState)
-            }
-        } else if (joinState == UNAVAILABLE) {
-            joinState = AVAILABLE
-            gameActionListeners.forEach {
-                it.onJoinStateChanged(joinState)
-            }
+    private fun updateIdleJoinState() {
+        val isConnected = connectivityManager.activeNetworkInfo?.isConnected == true
+        joinState = if (!isConnected) UNAVAILABLE else AVAILABLE
+        gameActionListeners.forEach {
+            it.onJoinStateChanged(joinState)
         }
     }
 
@@ -450,7 +445,7 @@ class BoardGame private constructor(
         }
     }
 
-    fun requestJoin(token: JoinRequestToken, retryIfFailed: Boolean = false) {
+    fun requestJoin(token: JoinRequestToken) {
         val zoneId = zoneId
         if (joinRequestTokens.isEmpty()) {
             if (zoneId != null && !instances.contains(zoneId)) {
@@ -458,7 +453,7 @@ class BoardGame private constructor(
             }
         }
         joinRequestTokens += token
-        if (joinState == AVAILABLE || (joinState == FAILED && retryIfFailed)) {
+        if (joinState != CREATING && joinState != JOINING && joinState != JOINED) {
             if (zoneId == null) {
                 createAndThenJoinZone(_currency!!, _gameName!!)
             } else {
@@ -561,10 +556,7 @@ class BoardGame private constructor(
     private fun quit() {
         zoneNotificationDisposable?.dispose()
         zoneNotificationDisposable = null
-        joinState = AVAILABLE
-        gameActionListeners.forEach {
-            it.onJoinStateChanged(joinState)
-        }
+        updateIdleJoinState()
     }
 
     private fun onZoneNotificationReceived(

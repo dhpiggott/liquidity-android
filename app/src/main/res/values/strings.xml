@@ -76,7 +76,6 @@
     <string name="quit_game_error">Couldn\'t quit game!</string>
     <string name="receive_identity">Receive identity</string>
     <string name="receive_identity_instruction">Show the QR code to the sender.</string>
-    <string name="reconnect">Reconnect</string>
     <string name="restore_identity">Restore identity</string>
     <string name="restore_identity_error_format_string">Couldn\'t restore identity %1$s!</string>
     <string name="settings">Settings</string>

@@ -34,7 +34,7 @@ abstract class BoardGameChildActivity :
 
         if (joinRequestToken == null) joinRequestToken = BoardGame.Companion.JoinRequestToken()
 
-        boardGame = BoardGame.Companion.getInstance(zoneId)
+        boardGame = BoardGame.getInstance(zoneId)
 
         boardGame!!.registerListener(this)
     }
