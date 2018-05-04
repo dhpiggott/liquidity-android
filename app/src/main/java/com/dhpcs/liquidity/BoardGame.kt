@@ -546,8 +546,10 @@ class BoardGame private constructor(
                             }
                         },
                         {
-                            gameActionListeners.forEach {
-                                it.onJoinGameError()
+                            if (joinState == JOINING) {
+                                gameActionListeners.forEach {
+                                    it.onJoinGameError()
+                                }
                             }
                         }
                 )
