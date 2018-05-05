@@ -550,6 +550,11 @@ class BoardGame private constructor(
                                 gameActionListeners.forEach {
                                     it.onJoinGameError()
                                 }
+                            } else {
+                                joinState = FAILED
+                                gameActionListeners.forEach {
+                                    it.onJoinStateChanged(joinState)
+                                }
                             }
                         }
                 )
