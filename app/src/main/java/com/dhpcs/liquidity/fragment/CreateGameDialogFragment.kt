@@ -149,7 +149,7 @@ class CreateGameDialogFragment : AppCompatDialogFragment() {
                 .setPositiveButton(R.string.ok) { _, _ ->
                     listener?.onGameDetailsEntered(
                             textInputEditTextGameName.text.toString(),
-                            currenciesSpinnerAdapter.getItem(spinnerCurrency.selectedItemPosition)
+                            currenciesSpinnerAdapter.getItem(spinnerCurrency.selectedItemPosition)!!
                     )
                 }
                 .create()
@@ -174,7 +174,7 @@ class CreateGameDialogFragment : AppCompatDialogFragment() {
 
         alertDialog.setOnShowListener {
             buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE)
-            validateInput(textInputEditTextGameName.text)
+            validateInput(textInputEditTextGameName.text!!)
         }
 
         val window = alertDialog.window!!

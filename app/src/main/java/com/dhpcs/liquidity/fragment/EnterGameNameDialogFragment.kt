@@ -89,7 +89,7 @@ class EnterGameNameDialogFragment : AppCompatDialogFragment() {
 
         alertDialog.setOnShowListener {
             buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE)
-            validateInput(textInputEditTextGameName.text)
+            validateInput(textInputEditTextGameName.text!!)
         }
 
         val window = alertDialog.window!!

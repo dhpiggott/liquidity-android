@@ -79,7 +79,7 @@ class CreateIdentityDialogFragment : AppCompatDialogFragment() {
 
         alertDialog.setOnShowListener {
             buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE)
-            validateInput(textInputEditTextIdentityName.text)
+            validateInput(textInputEditTextIdentityName.text!!)
         }
 
         alertDialog.window!!.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
