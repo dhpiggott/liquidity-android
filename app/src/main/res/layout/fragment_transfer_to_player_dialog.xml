@@ -48,7 +48,9 @@
                     android:layout_height="wrap_content"
                     android:hint="@string/transfer_to_player_value_hint"
                     android:inputType="numberDecimal"
-                    android:selectAllOnFocus="true" />
+                    android:selectAllOnFocus="true"
+                    android:importantForAutofill="no"
+                    tools:ignore="UnusedAttribute" />
 
                 <TextView
                     android:id="@+id/textview_scaled_value"

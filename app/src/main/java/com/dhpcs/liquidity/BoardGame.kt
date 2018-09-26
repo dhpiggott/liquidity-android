@@ -1,5 +1,6 @@
 package com.dhpcs.liquidity
 
+import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -480,6 +481,7 @@ class BoardGame private constructor(
         }
     }
 
+    @SuppressLint("CheckResult")
     private fun createAndThenJoinZone(currency: Currency, name: String) {
         state = null
         joinState = CREATING
@@ -1152,6 +1154,7 @@ class BoardGame private constructor(
         }
     }
 
+    @SuppressLint("CheckResult")
     private fun createAccount(ownerMember: Model.Member) {
         fun onError() {
             gameActionListeners.forEach {
@@ -1186,6 +1189,7 @@ class BoardGame private constructor(
         })
     }
 
+    @SuppressLint("CheckResult")
     fun changeGameName(name: String?) {
         fun onError() {
             gameActionListeners.forEach {
@@ -1221,6 +1225,7 @@ class BoardGame private constructor(
         }!!.name?.value
     }
 
+    @SuppressLint("CheckResult")
     fun createIdentity(name: String?) {
         fun onError() {
             gameActionListeners.forEach {
@@ -1251,6 +1256,7 @@ class BoardGame private constructor(
         })
     }
 
+    @SuppressLint("CheckResult")
     fun changeIdentityName(identity: Identity, name: String?) {
         fun onError() {
             gameActionListeners.forEach {
@@ -1293,6 +1299,7 @@ class BoardGame private constructor(
         return state!!.connectedClients.values.contains(publicKey)
     }
 
+    @SuppressLint("CheckResult")
     fun transferIdentity(identity: Identity, toPublicKey: ByteString) {
         fun onError() {
             gameActionListeners.forEach {
@@ -1338,6 +1345,7 @@ class BoardGame private constructor(
         })
     }
 
+    @SuppressLint("CheckResult")
     fun deleteIdentity(identity: Identity) {
         fun onError() {
             gameActionListeners.forEach {
@@ -1372,6 +1380,7 @@ class BoardGame private constructor(
         })
     }
 
+    @SuppressLint("CheckResult")
     fun restoreIdentity(identity: Identity) {
         fun onError() {
             gameActionListeners.forEach {
@@ -1406,6 +1415,7 @@ class BoardGame private constructor(
         })
     }
 
+    @SuppressLint("CheckResult")
     fun transferToPlayer(actingAs: Identity,
                          from: Identity,
                          to: Player,
