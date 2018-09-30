@@ -88,7 +88,6 @@ class LiquidityApplication : Application() {
 
         fun getServerConnection(context: Context): ServerConnection {
             if (serverConnection == null) {
-                PRNGFixes.apply()
                 serverConnection = ServerConnection(context.filesDir)
             }
             return serverConnection!!
