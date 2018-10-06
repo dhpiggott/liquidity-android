@@ -28,7 +28,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
         interface Listener {
 
             fun onTransferValueEntered(from: BoardGame.Companion.Identity,
-                                       to: Collection<BoardGame.Companion.Player>,
+                                       tos: Collection<BoardGame.Companion.Player>,
                                        transferValue: BigDecimal
             )
 

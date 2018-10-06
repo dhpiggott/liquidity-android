@@ -65,24 +65,16 @@ abstract class BoardGameChildActivity :
     }
 
     override fun onCreateGameError(name: String?) {}
+
     override fun onJoinGameError() {}
 
     override fun onIdentityRequired() {}
 
-    override fun onCreateIdentityMemberError(name: String?) {}
-    override fun onCreateIdentityAccountError(name: String?) {}
     override fun onIdentityCreated(identity: IdentityWithBalance) {}
-
-    override fun onTransferIdentityError(name: String?) {}
 
     override fun onIdentityReceived(identity: IdentityWithBalance) {}
 
-    override fun onDeleteIdentityError(name: String?) {}
-
-    override fun onRestoreIdentityError(name: String?) {}
     override fun onIdentityRestored(identity: IdentityWithBalance) {}
-
-    override fun onChangeIdentityNameError(name: String?) {}
 
     override fun onIdentitiesUpdated(identities: Map<String,
             BoardGame.Companion.IdentityWithBalance>
@@ -95,14 +87,11 @@ abstract class BoardGameChildActivity :
     override fun onPlayerRemoved(removedPlayer: PlayerWithBalanceAndConnectionState) {}
     override fun onPlayersUpdated(players: Map<String, PlayerWithBalanceAndConnectionState>) {}
 
-    override fun onTransferToPlayerError(name: String?) {}
-
     override fun onTransfersInitialized(transfers: Collection<TransferWithCurrency>) {}
     override fun onTransferAdded(addedTransfer: TransferWithCurrency) {}
     override fun onTransfersChanged(changedTransfers: Collection<TransferWithCurrency>) {}
     override fun onTransfersUpdated(transfers: Map<String, TransferWithCurrency>) {}
 
-    override fun onChangeGameNameError(name: String?) {}
     override fun onGameNameChanged(name: String?) {}
     override fun onQuitGameError() {}
 

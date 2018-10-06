@@ -1,5 +1,7 @@
 package com.dhpcs.liquidity.activity
 
+import android.arch.lifecycle.DefaultLifecycleObserver
+import android.arch.lifecycle.LifecycleOwner
 import android.content.Context
 import android.content.Intent
 import android.media.MediaPlayer
@@ -554,7 +556,7 @@ class BoardGameActivity :
                             if (!boardGame!!.isPublicKeyConnectedAndImplicitlyValid(publicKey)) {
                                 throw IllegalArgumentException()
                             }
-                            boardGame!!.transferIdentity(identity!!, publicKey)
+                            transferIdentityToPlayer(identity!!, publicKey)
                         } catch (_: IllegalArgumentException) {
                             Toast.makeText(
                                     this,
@@ -640,43 +642,31 @@ class BoardGameActivity :
         )
     }
 
-    override fun onIdentityNameEntered(name: String) = boardGame!!.createIdentity(name)
-
-    override fun onCreateIdentityMemberError(name: String?) {
-        Toast.makeText(
-                this,
-                getString(
-                        R.string.create_identity_member_error_format_string,
-                        formatNullable(this, name)
-                ),
-                Toast.LENGTH_LONG
-        ).show()
-    }
-
-    override fun onCreateIdentityAccountError(name: String?) {
-        Toast.makeText(
-                this,
-                getString(
-                        R.string.create_identity_account_error_format_string,
-                        formatNullable(this, name)
-                ),
-                Toast.LENGTH_LONG
-        ).show()
+    override fun onIdentityNameEntered(name: String) {
+        val createIdentityDisposable = boardGame!!
+                .createIdentity(name)
+                .subscribe(
+                        {},
+                        {
+                            Toast.makeText(
+                                    this,
+                                    getString(
+                                            R.string.create_identity_error_format_string,
+                                            name
+                                    ),
+                                    Toast.LENGTH_LONG
+                            ).show()
+                        }
+                )
+        lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onDestroy(owner: LifecycleOwner) {
+                createIdentityDisposable.dispose()
+            }
+        })
     }
 
     override fun onIdentityCreated(identity: BoardGame.Companion.IdentityWithBalance) {
         identitiesFragment!!.selectedPage = identitiesFragment!!.getPage(identity)
-    }
-
-    override fun onTransferIdentityError(name: String?) {
-        Toast.makeText(
-                this,
-                getString(
-                        R.string.transfer_identity_error_format_string,
-                        formatNullable(this, name)
-                ),
-                Toast.LENGTH_LONG
-        ).show()
     }
 
     override fun onIdentityReceived(identity: BoardGame.Companion.IdentityWithBalance) {
@@ -684,33 +674,49 @@ class BoardGameActivity :
     }
 
     override fun onIdentityDeleteConfirmed(identity: BoardGame.Companion.Identity) {
-        boardGame!!.deleteIdentity(identity)
-    }
-
-    override fun onDeleteIdentityError(name: String?) {
-        Toast.makeText(
-                this,
-                getString(
-                        R.string.delete_identity_error_format_string,
-                        formatNullable(this, name)
-                ),
-                Toast.LENGTH_LONG
-        ).show()
+        val deleteIdentityDisposable = boardGame!!
+                .deleteIdentity(identity)
+                .subscribe(
+                        {},
+                        {
+                            Toast.makeText(
+                                    this,
+                                    getString(
+                                            R.string.delete_identity_error_format_string,
+                                            formatNullable(this, identity.name)
+                                    ),
+                                    Toast.LENGTH_LONG
+                            ).show()
+                        }
+                )
+        lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onDestroy(owner: LifecycleOwner) {
+                deleteIdentityDisposable.dispose()
+            }
+        })
     }
 
     override fun onIdentityRestorationRequested(identity: BoardGame.Companion.Identity) {
-        boardGame!!.restoreIdentity(identity)
-    }
-
-    override fun onRestoreIdentityError(name: String?) {
-        Toast.makeText(
-                this,
-                getString(
-                        R.string.restore_identity_error_format_string,
-                        formatNullable(this, name)
-                ),
-                Toast.LENGTH_LONG
-        ).show()
+        val restoreIdentityDisposable = boardGame!!
+                .restoreIdentity(identity)
+                .subscribe(
+                        {},
+                        {
+                            Toast.makeText(
+                                    this,
+                                    getString(
+                                            R.string.restore_identity_error_format_string,
+                                            formatNullable(this, identity.name)
+                                    ),
+                                    Toast.LENGTH_LONG
+                            ).show()
+                        }
+                )
+        lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onDestroy(owner: LifecycleOwner) {
+                restoreIdentityDisposable.dispose()
+            }
+        })
     }
 
     override fun onIdentityRestored(identity: BoardGame.Companion.IdentityWithBalance) {
@@ -718,18 +724,26 @@ class BoardGameActivity :
     }
 
     override fun onIdentityNameEntered(identity: BoardGame.Companion.Identity, name: String) {
-        boardGame!!.changeIdentityName(identity, name)
-    }
-
-    override fun onChangeIdentityNameError(name: String?) {
-        Toast.makeText(
-                this,
-                getString(
-                        R.string.change_identity_name_error_format_string,
-                        formatNullable(this, name)
-                ),
-                Toast.LENGTH_LONG
-        ).show()
+        val changeIdentityNameDisposable = boardGame!!
+                .changeIdentityName(identity, name)
+                .subscribe(
+                        {},
+                        {
+                            Toast.makeText(
+                                    this,
+                                    getString(
+                                            R.string.change_identity_name_error_format_string,
+                                            name
+                                    ),
+                                    Toast.LENGTH_LONG
+                            ).show()
+                        }
+                )
+        lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onDestroy(owner: LifecycleOwner) {
+                changeIdentityNameDisposable.dispose()
+            }
+        })
     }
 
     override fun onIdentityPageSelected(page: Int) {
@@ -803,28 +817,31 @@ class BoardGameActivity :
     }
 
     override fun onTransferValueEntered(from: BoardGame.Companion.Identity,
-                                        to: Collection<BoardGame.Companion.Player>,
+                                        tos: Collection<BoardGame.Companion.Player>,
                                         transferValue: BigDecimal
     ) {
-        to.forEach {
-            boardGame!!.transferToPlayer(
-                    from,
-                    from,
-                    it,
-                    transferValue
-            )
+        tos.forEach { to ->
+            val transferToPlayerDisposable = boardGame!!
+                    .transferToPlayer(from, from, to, transferValue)
+                    .subscribe(
+                            {},
+                            {
+                                Toast.makeText(
+                                        this,
+                                        getString(
+                                                R.string.transfer_to_player_error_format_string,
+                                                to.name
+                                        ),
+                                        Toast.LENGTH_LONG
+                                ).show()
+                            }
+                    )
+            lifecycle.addObserver(object : DefaultLifecycleObserver {
+                override fun onDestroy(owner: LifecycleOwner) {
+                    transferToPlayerDisposable.dispose()
+                }
+            })
         }
-    }
-
-    override fun onTransferToPlayerError(name: String?) {
-        Toast.makeText(
-                this,
-                getString(
-                        R.string.transfer_to_player_error_format_string,
-                        formatNullable(this, name)
-                ),
-                Toast.LENGTH_LONG
-        ).show()
     }
 
     override fun onTransfersInitialized(transfers:
@@ -861,17 +878,27 @@ class BoardGameActivity :
         playersTransfersFragment!!.onTransfersUpdated(transfers)
     }
 
-    override fun onGameNameEntered(name: String) = boardGame!!.changeGameName(name)
-
-    override fun onChangeGameNameError(name: String?) {
-        Toast.makeText(
-                this,
-                getString(
-                        R.string.change_game_name_error_format_string,
-                        formatNullable(this, name)
-                ),
-                Toast.LENGTH_LONG
-        ).show()
+    override fun onGameNameEntered(name: String) {
+        val changeGameNameDisposable = boardGame!!
+                .changeGameName(name)
+                .subscribe(
+                        {},
+                        {
+                            Toast.makeText(
+                                    this,
+                                    getString(
+                                            R.string.change_game_name_error_format_string,
+                                            name
+                                    ),
+                                    Toast.LENGTH_LONG
+                            ).show()
+                        }
+                )
+        lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onDestroy(owner: LifecycleOwner) {
+                changeGameNameDisposable.dispose()
+            }
+        })
     }
 
     override fun onGameNameChanged(name: String?) {
@@ -886,4 +913,34 @@ class BoardGameActivity :
         ).show()
         finish()
     }
+
+    private fun transferIdentityToPlayer(
+            identity: BoardGame.Companion.Identity,
+            publicKey: ByteString
+    ) {
+        val transferIdentityDisposable = boardGame!!
+                .transferIdentity(identity, publicKey)
+                .subscribe(
+                        {},
+                        {
+                            Toast.makeText(
+                                    this,
+                                    getString(
+                                            R.string.transfer_identity_error_format_string,
+                                            formatNullable(
+                                                    this,
+                                                    identity.name
+                                            )
+                                    ),
+                                    Toast.LENGTH_LONG
+                            ).show()
+                        }
+                )
+        lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onDestroy(owner: LifecycleOwner) {
+                transferIdentityDisposable.dispose()
+            }
+        })
+    }
+
 }

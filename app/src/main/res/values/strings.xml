@@ -29,8 +29,7 @@
     <string name="choose_identity_to_restore">Choose identity to restore</string>
     <string name="create_game_error_format_string">Couldn\'t create game %1$s!</string>
     <string name="create_identity">Create identity</string>
-    <string name="create_identity_account_error_format_string">Couldn\'t create account for identity %1$s!</string>
-    <string name="create_identity_member_error_format_string">Couldn\'t create member for identity %1$s!</string>
+    <string name="create_identity_error_format_string">Couldn\'t create identity %1$s!</string>
     <string name="create_new_game">Create new game</string>
     <string name="currency_code_format_string">"%1$s "</string>
     <string name="currency_value_format_string">%1$s%2$s%3$s</string>

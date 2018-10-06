@@ -1,6 +1,5 @@
 package com.dhpcs.liquidity
 
-import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -19,6 +18,7 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import java.io.Serializable
+import java.lang.IllegalArgumentException
 import java.math.BigDecimal
 import java.util.Currency
 import kotlin.collections.HashMap
@@ -125,17 +125,7 @@ class BoardGame private constructor(
 
         interface GameActionListener {
 
-            fun onChangeGameNameError(name: String?)
-
-            fun onChangeIdentityNameError(name: String?)
-
-            fun onCreateIdentityAccountError(name: String?)
-
-            fun onCreateIdentityMemberError(name: String?)
-
             fun onCreateGameError(name: String?)
-
-            fun onDeleteIdentityError(name: String?)
 
             fun onGameNameChanged(name: String?)
 
@@ -163,13 +153,7 @@ class BoardGame private constructor(
 
             fun onQuitGameError()
 
-            fun onRestoreIdentityError(name: String?)
-
             fun onTransferAdded(addedTransfer: TransferWithCurrency)
-
-            fun onTransferIdentityError(name: String?)
-
-            fun onTransferToPlayerError(name: String?)
 
             fun onTransfersChanged(changedTransfers: Collection<TransferWithCurrency>)
 
@@ -480,23 +464,17 @@ class BoardGame private constructor(
         }
     }
 
-    @SuppressLint("CheckResult")
+    private var createZoneDisposable: Disposable? = null
+
     private fun createAndThenJoinZone(currency: Currency, name: String) {
         state = null
         joinStateSubject.onNext(CREATING)
-
-        fun onError() {
-            gameActionListeners.forEach {
-                it.onCreateGameError(name)
-            }
-        }
-
         val metadata = Struct.newBuilder()
                 .putFields(
                         CURRENCY_CODE_KEY,
                         Value.newBuilder().setStringValue(currency.currencyCode).build()
                 )
-        serverConnection.createZone(
+        createZoneDisposable = serverConnection.createZone(
                 WsProtocol.ZoneCommand.CreateZoneCommand.newBuilder()
                         .setEquityOwnerPublicKey(serverConnection.clientKey)
                         .setEquityOwnerName(StringValue.newBuilder().setValue(bankMemberName))
@@ -505,10 +483,10 @@ class BoardGame private constructor(
                         .build()
         ).subscribe({ zoneResponse ->
             when (zoneResponse.createZoneResponse.resultCase) {
-                WsProtocol.ZoneResponse.CreateZoneResponse.ResultCase.RESULT_NOT_SET -> {
-                }
+                WsProtocol.ZoneResponse.CreateZoneResponse.ResultCase.RESULT_NOT_SET ->
+                    gameActionListeners.forEach { it.onCreateGameError(name) }
                 WsProtocol.ZoneResponse.CreateZoneResponse.ResultCase.ERRORS ->
-                    onError()
+                    gameActionListeners.forEach { it.onCreateGameError(name) }
                 WsProtocol.ZoneResponse.CreateZoneResponse.ResultCase.SUCCESS -> {
                     val zone = zoneResponse.createZoneResponse.success.zone!!
                     instances += Pair(zone.id, this)
@@ -516,8 +494,8 @@ class BoardGame private constructor(
                     join(zone.id)
                 }
             }
-        }, {
-            onError()
+        }, { _ ->
+            gameActionListeners.forEach { it.onCreateGameError(name) }
         })
     }
 
@@ -550,6 +528,8 @@ class BoardGame private constructor(
     }
 
     private fun quit() {
+        createZoneDisposable?.dispose()
+        createZoneDisposable = null
         zoneNotificationDisposable?.dispose()
         zoneNotificationDisposable = null
         updateIdleJoinState()
@@ -1073,18 +1053,6 @@ class BoardGame private constructor(
                 gameActionListeners.forEach {
                     it.onTransfersUpdated(transfers)
                 }
-                val partiallyCreatedIdentities = zone.membersList.filter { member ->
-                    member.ownerPublicKeysCount == 1 &&
-                            member.getOwnerPublicKeys(0) ==
-                            serverConnection.clientKey &&
-                            !zone.accountsList.any { account ->
-                                account.ownerMemberIdsCount == 1 &&
-                                        account.getOwnerMemberIds(0) == member.id
-                            }
-                }
-                partiallyCreatedIdentities.forEach {
-                    createAccount(it)
-                }
 
                 // Since we must only prompt for a required identity if none exist yet and since
                 // having one or more partially created identities implies that gameId would be
@@ -1138,68 +1106,62 @@ class BoardGame private constructor(
         }
     }
 
-    @SuppressLint("CheckResult")
-    private fun createAccount(ownerMember: Model.Member) {
-        fun onError() {
-            gameActionListeners.forEach {
-                it.onCreateIdentityAccountError(
-                        if (!ownerMember.hasName()) {
-                            null
-                        } else {
-                            ownerMember.name.value
-                        }
-                )
-            }
+    private fun createAccount(ownerMember: Model.Member): Single<Model.Account> {
+        return Single.create<Model.Account> { singleEmitter ->
+            serverConnection.execZoneCommand(
+                    zoneId!!,
+                    WsProtocol.ZoneCommand.newBuilder()
+                            .setCreateAccountCommand(
+                                    WsProtocol.ZoneCommand.CreateAccountCommand.newBuilder()
+                                            .addOwnerMemberIds(ownerMember.id)
+                            )
+                            .build()
+            ).subscribe({ zoneResponse ->
+                when (zoneResponse.createAccountResponse.resultCase) {
+                    WsProtocol.ZoneResponse.CreateAccountResponse.ResultCase.RESULT_NOT_SET ->
+                        singleEmitter.onError(IllegalArgumentException(
+                                zoneResponse.createAccountResponse.resultCase.name
+                        ))
+                    WsProtocol.ZoneResponse.CreateAccountResponse.ResultCase.ERRORS ->
+                        singleEmitter.onError(IllegalArgumentException(
+                                zoneResponse.createAccountResponse.errors.toString()
+                        ))
+                    WsProtocol.ZoneResponse.CreateAccountResponse.ResultCase.SUCCESS ->
+                        singleEmitter.onSuccess(zoneResponse.createAccountResponse.success.account)
+                }
+            }, { error ->
+                singleEmitter.onError(error)
+            })
         }
-        serverConnection.execZoneCommand(
-                zoneId!!,
-                WsProtocol.ZoneCommand.newBuilder()
-                        .setCreateAccountCommand(
-                                WsProtocol.ZoneCommand.CreateAccountCommand.newBuilder()
-                                        .addOwnerMemberIds(ownerMember.id)
-                        )
-                        .build()
-        ).subscribe({ zoneResponse ->
-            when (zoneResponse.createAccountResponse.resultCase) {
-                WsProtocol.ZoneResponse.CreateAccountResponse.ResultCase.RESULT_NOT_SET -> {
-                }
-                WsProtocol.ZoneResponse.CreateAccountResponse.ResultCase.ERRORS ->
-                    onError()
-                WsProtocol.ZoneResponse.CreateAccountResponse.ResultCase.SUCCESS -> {
-                }
-            }
-        }, {
-            onError()
-        })
     }
 
-    @SuppressLint("CheckResult")
-    fun changeGameName(name: String?) {
-        fun onError() {
-            gameActionListeners.forEach {
-                it.onChangeGameNameError(name)
-            }
+    fun changeGameName(name: String): Single<Unit> {
+        return Single.create<Unit> { singleEmitter ->
+            serverConnection.execZoneCommand(
+                    zoneId!!,
+                    WsProtocol.ZoneCommand.newBuilder()
+                            .setChangeZoneNameCommand(
+                                    WsProtocol.ZoneCommand.ChangeZoneNameCommand.newBuilder()
+                                            .setName(StringValue.newBuilder().setValue(name))
+                            )
+                            .build()
+            ).subscribe({ zoneResponse ->
+                when (zoneResponse.changeZoneNameResponse.resultCase) {
+                    WsProtocol.ZoneResponse.ChangeZoneNameResponse.ResultCase.RESULT_NOT_SET ->
+                        singleEmitter.onError(IllegalArgumentException(
+                                zoneResponse.changeZoneNameResponse.resultCase.name
+                        ))
+                    WsProtocol.ZoneResponse.ChangeZoneNameResponse.ResultCase.ERRORS ->
+                        singleEmitter.onError(IllegalArgumentException(
+                                zoneResponse.changeZoneNameResponse.errors.toString()
+                        ))
+                    WsProtocol.ZoneResponse.ChangeZoneNameResponse.ResultCase.SUCCESS ->
+                        singleEmitter.onSuccess(Unit)
+                }
+            }, { error ->
+                singleEmitter.onError(error)
+            })
         }
-        serverConnection.execZoneCommand(
-                zoneId!!,
-                WsProtocol.ZoneCommand.newBuilder()
-                        .setChangeZoneNameCommand(
-                                WsProtocol.ZoneCommand.ChangeZoneNameCommand.newBuilder()
-                                        .setName(StringValue.newBuilder().setValue(name))
-                        )
-                        .build()
-        ).subscribe({ zoneResponse ->
-            when (zoneResponse.changeZoneNameResponse.resultCase) {
-                WsProtocol.ZoneResponse.ChangeZoneNameResponse.ResultCase.RESULT_NOT_SET -> {
-                }
-                WsProtocol.ZoneResponse.ChangeZoneNameResponse.ResultCase.ERRORS ->
-                    onError()
-                WsProtocol.ZoneResponse.ChangeZoneNameResponse.ResultCase.SUCCESS -> {
-                }
-            }
-        }, {
-            onError()
-        })
     }
 
     fun isIdentityNameValid(name: CharSequence): Boolean {
@@ -1209,230 +1171,227 @@ class BoardGame private constructor(
         }!!.name?.value
     }
 
-    @SuppressLint("CheckResult")
-    fun createIdentity(name: String?) {
-        fun onError() {
-            gameActionListeners.forEach {
-                it.onCreateIdentityMemberError(name)
-            }
-        }
-        serverConnection.execZoneCommand(
-                zoneId!!,
-                WsProtocol.ZoneCommand.newBuilder()
-                        .setCreateMemberCommand(
-                                WsProtocol.ZoneCommand.CreateMemberCommand.newBuilder()
-                                        .addOwnerPublicKeys(serverConnection.clientKey)
-                                        .setName(StringValue.newBuilder().setValue(name))
-                        )
-                        .build()
-        ).subscribe({ zoneResponse ->
-            when (zoneResponse.createMemberResponse.resultCase) {
-                WsProtocol.ZoneResponse.CreateMemberResponse.ResultCase.RESULT_NOT_SET -> {
+    fun createIdentity(name: String): Single<Model.Member> {
+        return Single.create<Model.Member> { singleEmitter ->
+            serverConnection.execZoneCommand(
+                    zoneId!!,
+                    WsProtocol.ZoneCommand.newBuilder()
+                            .setCreateMemberCommand(
+                                    WsProtocol.ZoneCommand.CreateMemberCommand.newBuilder()
+                                            .addOwnerPublicKeys(serverConnection.clientKey)
+                                            .setName(StringValue.newBuilder().setValue(name))
+                            )
+                            .build()
+            ).subscribe({ zoneResponse ->
+                when (zoneResponse.createMemberResponse.resultCase) {
+                    WsProtocol.ZoneResponse.CreateMemberResponse.ResultCase.RESULT_NOT_SET ->
+                        singleEmitter.onError(IllegalArgumentException(
+                                zoneResponse.createMemberResponse.resultCase.name
+                        ))
+                    WsProtocol.ZoneResponse.CreateMemberResponse.ResultCase.ERRORS ->
+                        singleEmitter.onError(IllegalArgumentException(
+                                zoneResponse.createMemberResponse.errors.toString()
+                        ))
+                    WsProtocol.ZoneResponse.CreateMemberResponse.ResultCase.SUCCESS ->
+                        singleEmitter.onSuccess(zoneResponse.createMemberResponse.success.member)
                 }
-                WsProtocol.ZoneResponse.CreateMemberResponse.ResultCase.ERRORS ->
-                    onError()
-                WsProtocol.ZoneResponse.CreateMemberResponse.ResultCase.SUCCESS -> {
-                    createAccount(zoneResponse.createMemberResponse.success.member)
-                }
-            }
-        }, {
-            onError()
-        })
+            }, { error ->
+                singleEmitter.onError(error)
+            })
+        }.flatMap { createAccount(it).map { _ -> it } }
     }
 
-    @SuppressLint("CheckResult")
-    fun changeIdentityName(identity: Identity, name: String?) {
-        fun onError() {
-            gameActionListeners.forEach {
-                it.onChangeIdentityNameError(name)
-            }
-        }
-
+    fun changeIdentityName(identity: Identity, name: String): Single<Unit> {
         val member = state!!.zone.membersList.find {
             it.id == identity.memberId
         }!!
-        serverConnection.execZoneCommand(
-                zoneId!!,
-                WsProtocol.ZoneCommand.newBuilder()
-                        .setUpdateMemberCommand(
-                                WsProtocol.ZoneCommand.UpdateMemberCommand.newBuilder()
-                                        .setMember(
-                                                member.toBuilder()
-                                                        .setName(
-                                                                StringValue.newBuilder()
-                                                                        .setValue(name)
-                                                        )
-                                        )
-                        )
-                        .build()
-        ).subscribe({ zoneResponse ->
-            when (zoneResponse.updateMemberResponse.resultCase) {
-                WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.RESULT_NOT_SET -> {
+        return Single.create<Unit> { singleEmitter ->
+            serverConnection.execZoneCommand(
+                    zoneId!!,
+                    WsProtocol.ZoneCommand.newBuilder()
+                            .setUpdateMemberCommand(
+                                    WsProtocol.ZoneCommand.UpdateMemberCommand.newBuilder()
+                                            .setMember(
+                                                    member.toBuilder()
+                                                            .setName(
+                                                                    StringValue.newBuilder()
+                                                                            .setValue(name)
+                                                            )
+                                            )
+                            )
+                            .build()
+            ).subscribe({ zoneResponse ->
+                when (zoneResponse.updateMemberResponse.resultCase) {
+                    WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.RESULT_NOT_SET ->
+                        singleEmitter.onError(IllegalArgumentException(
+                                zoneResponse.updateMemberResponse.resultCase.name
+                        ))
+                    WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.ERRORS ->
+                        singleEmitter.onError(IllegalArgumentException(
+                                zoneResponse.updateMemberResponse.errors.toString()
+                        ))
+                    WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.SUCCESS ->
+                        singleEmitter.onSuccess(Unit)
                 }
-                WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.ERRORS ->
-                    onError()
-                WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.SUCCESS -> {
-                }
-            }
-        }, {
-            onError()
-        })
+            }, { error ->
+                singleEmitter.onError(error)
+            })
+        }
     }
 
     fun isPublicKeyConnectedAndImplicitlyValid(publicKey: ByteString): Boolean {
         return state!!.connectedClients.values.contains(publicKey)
     }
 
-    @SuppressLint("CheckResult")
-    fun transferIdentity(identity: Identity, toPublicKey: ByteString) {
-        fun onError() {
-            gameActionListeners.forEach {
-                it.onTransferIdentityError(identity.name)
-            }
-        }
-
+    fun transferIdentity(identity: Identity, toPublicKey: ByteString): Single<Unit> {
         val member = state!!.zone.membersList.find {
             it.id == identity.memberId
         }!!
-        serverConnection.execZoneCommand(
-                zoneId!!,
-                WsProtocol.ZoneCommand.newBuilder()
-                        .setUpdateMemberCommand(
-                                WsProtocol.ZoneCommand.UpdateMemberCommand.newBuilder()
-                                        .setMember(
-                                                member.toBuilder()
-                                                        .clearOwnerPublicKeys()
-                                                        .addAllOwnerPublicKeys(
-                                                                member.ownerPublicKeysList
-                                                                        .minusElement(
-                                                                                serverConnection
-                                                                                        .clientKey
-                                                                        )
-                                                                        .plusElement(
-                                                                                toPublicKey
-                                                                        )
-                                                        )
-                                        )
-                        )
-                        .build()
-        ).subscribe({ zoneResponse ->
-            when (zoneResponse.updateMemberResponse.resultCase) {
-                WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.RESULT_NOT_SET -> {
+        return Single.create<Unit> { singleEmitter ->
+            serverConnection.execZoneCommand(
+                    zoneId!!,
+                    WsProtocol.ZoneCommand
+                            .newBuilder()
+                            .setUpdateMemberCommand(
+                                    WsProtocol.ZoneCommand.UpdateMemberCommand.newBuilder()
+                                            .setMember(member.toBuilder()
+                                                    .clearOwnerPublicKeys()
+                                                    .addAllOwnerPublicKeys(
+                                                            member.ownerPublicKeysList
+                                                                    .asSequence()
+                                                                    .minusElement(
+                                                                            serverConnection
+                                                                                    .clientKey
+                                                                    )
+                                                                    .plusElement(
+                                                                            toPublicKey
+                                                                    )
+                                                                    .toList()
+                                                    )
+                                            )
+                            )
+                            .build()
+            ).subscribe({ zoneResponse ->
+                when (zoneResponse.updateMemberResponse.resultCase) {
+                    WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.RESULT_NOT_SET ->
+                        singleEmitter.onError(IllegalArgumentException(
+                                zoneResponse.updateMemberResponse.resultCase.name
+                        ))
+                    WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.ERRORS ->
+                        singleEmitter.onError(IllegalArgumentException(
+                                zoneResponse.updateMemberResponse.errors.toString()
+                        ))
+                    WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.SUCCESS ->
+                        singleEmitter.onSuccess(Unit)
                 }
-                WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.ERRORS ->
-                    onError()
-                WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.SUCCESS -> {
-                }
-            }
-        }, {
-            onError()
-        })
+            }, { error ->
+                singleEmitter.onError(error)
+            })
+        }
     }
 
-    @SuppressLint("CheckResult")
-    fun deleteIdentity(identity: Identity) {
-        fun onError() {
-            gameActionListeners.forEach {
-                it.onDeleteIdentityError(identity.name)
-            }
-        }
-
+    fun deleteIdentity(identity: Identity): Single<Unit> {
         val member = state!!.zone.membersList.find {
             it.id == identity.memberId
         }!!
         val metadata = member.metadata.toBuilder()
                 .putFields(HIDDEN_FLAG_KEY, Value.newBuilder().setBoolValue(true).build())
-        serverConnection.execZoneCommand(
-                zoneId!!,
-                WsProtocol.ZoneCommand.newBuilder()
-                        .setUpdateMemberCommand(
-                                WsProtocol.ZoneCommand.UpdateMemberCommand.newBuilder()
-                                        .setMember(member.toBuilder().setMetadata(metadata))
-                        )
-                        .build()
-        ).subscribe({ zoneResponse ->
-            when (zoneResponse.updateMemberResponse.resultCase) {
-                WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.RESULT_NOT_SET -> {
+        return Single.create<Unit> { singleEmitter ->
+            serverConnection.execZoneCommand(
+                    zoneId!!,
+                    WsProtocol.ZoneCommand.newBuilder()
+                            .setUpdateMemberCommand(
+                                    WsProtocol.ZoneCommand.UpdateMemberCommand.newBuilder()
+                                            .setMember(member.toBuilder().setMetadata(metadata))
+                            )
+                            .build()
+            ).subscribe({ zoneResponse ->
+                when (zoneResponse.updateMemberResponse.resultCase) {
+                    WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.RESULT_NOT_SET ->
+                        singleEmitter.onError(IllegalArgumentException(
+                                zoneResponse.updateMemberResponse.resultCase.name
+                        ))
+                    WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.ERRORS ->
+                        singleEmitter.onError(IllegalArgumentException(
+                                zoneResponse.updateMemberResponse.errors.toString()
+                        ))
+                    WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.SUCCESS ->
+                        singleEmitter.onSuccess(Unit)
                 }
-                WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.ERRORS ->
-                    onError()
-                WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.SUCCESS -> {
-                }
-            }
-        }, {
-            onError()
-        })
+            }, { error ->
+                singleEmitter.onError(error)
+            })
+        }
     }
 
-    @SuppressLint("CheckResult")
-    fun restoreIdentity(identity: Identity) {
-        fun onError() {
-            gameActionListeners.forEach {
-                it.onRestoreIdentityError(identity.name)
-            }
-        }
-
+    fun restoreIdentity(identity: Identity): Single<Unit> {
         val member = state!!.zone.membersList.find {
             it.id == identity.memberId
         }!!
         val metadata = member.metadata.toBuilder()
                 .removeFields(HIDDEN_FLAG_KEY)
-        serverConnection.execZoneCommand(
-                zoneId!!,
-                WsProtocol.ZoneCommand.newBuilder()
-                        .setUpdateMemberCommand(
-                                WsProtocol.ZoneCommand.UpdateMemberCommand.newBuilder()
-                                        .setMember(member.toBuilder().setMetadata(metadata))
-                        )
-                        .build()
-        ).subscribe({ zoneResponse ->
-            when (zoneResponse.updateMemberResponse.resultCase) {
-                WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.RESULT_NOT_SET -> {
+        return Single.create<Unit> { singleEmitter ->
+            serverConnection.execZoneCommand(
+                    zoneId!!,
+                    WsProtocol.ZoneCommand.newBuilder()
+                            .setUpdateMemberCommand(
+                                    WsProtocol.ZoneCommand.UpdateMemberCommand.newBuilder()
+                                            .setMember(member.toBuilder().setMetadata(metadata))
+                            )
+                            .build()
+            ).subscribe({ zoneResponse ->
+                when (zoneResponse.updateMemberResponse.resultCase) {
+                    WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.RESULT_NOT_SET ->
+                        singleEmitter.onError(IllegalArgumentException(
+                                zoneResponse.updateMemberResponse.resultCase.name
+                        ))
+                    WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.ERRORS ->
+                        singleEmitter.onError(IllegalArgumentException(
+                                zoneResponse.updateMemberResponse.errors.toString()
+                        ))
+                    WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.SUCCESS ->
+                        singleEmitter.onSuccess(Unit)
                 }
-                WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.ERRORS ->
-                    onError()
-                WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.SUCCESS -> {
-                }
-            }
-        }, {
-            onError()
-        })
+            }, { error ->
+                singleEmitter.onError(error)
+            })
+        }
     }
 
-    @SuppressLint("CheckResult")
     fun transferToPlayer(actingAs: Identity,
                          from: Identity,
                          to: Player,
                          value: BigDecimal
-    ) {
-        fun onError() {
-            gameActionListeners.forEach {
-                it.onTransferToPlayerError(to.name)
-            }
+    ): Single<Unit> {
+        return Single.create<Unit> { singleEmitter ->
+            serverConnection.execZoneCommand(
+                    zoneId!!,
+                    WsProtocol.ZoneCommand.newBuilder()
+                            .setAddTransactionCommand(
+                                    WsProtocol.ZoneCommand.AddTransactionCommand.newBuilder()
+                                            .setActingAs(actingAs.memberId)
+                                            .setFrom(from.accountId)
+                                            .setTo(to.accountId)
+                                            .setValue(value.toString())
+                            )
+                            .build()
+            ).subscribe({ zoneResponse ->
+                when (zoneResponse.addTransactionResponse.resultCase) {
+                    WsProtocol.ZoneResponse.AddTransactionResponse.ResultCase.RESULT_NOT_SET ->
+                        singleEmitter.onError(IllegalArgumentException(
+                                zoneResponse.updateMemberResponse.resultCase.name
+                        ))
+                    WsProtocol.ZoneResponse.AddTransactionResponse.ResultCase.ERRORS ->
+                        singleEmitter.onError(IllegalArgumentException(
+                                zoneResponse.updateMemberResponse.errors.toString()
+                        ))
+                    WsProtocol.ZoneResponse.AddTransactionResponse.ResultCase.SUCCESS ->
+                        singleEmitter.onSuccess(Unit)
+                }
+            }, { error ->
+                singleEmitter.onError(error)
+            })
         }
-        serverConnection.execZoneCommand(
-                zoneId!!,
-                WsProtocol.ZoneCommand.newBuilder()
-                        .setAddTransactionCommand(
-                                WsProtocol.ZoneCommand.AddTransactionCommand.newBuilder()
-                                        .setActingAs(actingAs.memberId)
-                                        .setFrom(from.accountId)
-                                        .setTo(to.accountId)
-                                        .setValue(value.toString())
-                        )
-                        .build()
-        ).subscribe({ zoneResponse ->
-            when (zoneResponse.addTransactionResponse.resultCase) {
-                WsProtocol.ZoneResponse.AddTransactionResponse.ResultCase.RESULT_NOT_SET -> {
-                }
-                WsProtocol.ZoneResponse.AddTransactionResponse.ResultCase.ERRORS ->
-                    onError()
-                WsProtocol.ZoneResponse.AddTransactionResponse.ResultCase.SUCCESS -> {
-                }
-            }
-        }, {
-            onError()
-        })
     }
 
 }
