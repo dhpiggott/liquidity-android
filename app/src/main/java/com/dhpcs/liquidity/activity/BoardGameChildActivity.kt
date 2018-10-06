@@ -92,7 +92,6 @@ abstract class BoardGameChildActivity :
     override fun onTransfersChanged(changedTransfers: Collection<TransferWithCurrency>) {}
     override fun onTransfersUpdated(transfers: Map<String, TransferWithCurrency>) {}
 
-    override fun onGameNameChanged(name: String?) {}
     override fun onQuitGameError() {}
 
 }

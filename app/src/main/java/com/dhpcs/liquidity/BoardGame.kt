@@ -127,8 +127,6 @@ class BoardGame private constructor(
 
             fun onCreateGameError(name: String?)
 
-            fun onGameNameChanged(name: String?)
-
             fun onIdentitiesUpdated(identities: Map<String, IdentityWithBalance>)
 
             fun onIdentityCreated(identity: IdentityWithBalance)
@@ -395,7 +393,11 @@ class BoardGame private constructor(
 
     val currency get() = state!!.currency
 
-    val gameName: String? get() = if (!state!!.zone.hasName()) null else state!!.zone.name.value
+    private val gameNameSubject = BehaviorSubject.createDefault("")
+
+    val gameName: String get() = gameNameSubject.value!!
+
+    val gameNameObservable: Observable<String> = gameNameSubject
 
     val hiddenIdentities get() = state!!.hiddenIdentities.values
 
@@ -418,8 +420,8 @@ class BoardGame private constructor(
         }
         gameActionListeners += listener
         if (joinState == JOINED) {
-            listener.onGameNameChanged(
-                    if (!state!!.zone.hasName()) null else state!!.zone.name.value
+            gameNameSubject.onNext(
+                    if (!state!!.zone.hasName()) "" else state!!.zone.name.value
             )
             listener.onIdentitiesUpdated(state!!.identities)
             listener.onPlayersInitialized(state!!.players.values)
@@ -695,15 +697,13 @@ class BoardGame private constructor(
                 state!!.zone = state!!.zone.toBuilder()
                         .setName(name)
                         .build()
-                gameActionListeners.forEach {
-                    it.onGameNameChanged(
-                            if (!zoneNotification.zoneNameChangedNotification.hasName()) {
-                                null
-                            } else {
-                                zoneNotification.zoneNameChangedNotification.name.value
-                            }
-                    )
-                }
+                gameNameSubject.onNext(
+                        if (!zoneNotification.zoneNameChangedNotification.hasName()) {
+                            ""
+                        } else {
+                            zoneNotification.zoneNameChangedNotification.name.value
+                        }
+                )
                 gameId!!.subscribeOn(Schedulers.io()).subscribe { gameId ->
                     gameDatabase.updateGameName(
                             gameId,
@@ -1035,9 +1035,7 @@ class BoardGame private constructor(
                         transfers
                 )
                 joinStateSubject.onNext(JOINED)
-                gameActionListeners.forEach {
-                    it.onGameNameChanged(if (!zone.hasName()) null else zone.name.value)
-                }
+                gameNameSubject.onNext(if (!zone.hasName()) "" else zone.name.value)
                 gameActionListeners.forEach {
                     it.onIdentitiesUpdated(identities)
                 }

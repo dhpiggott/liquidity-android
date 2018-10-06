@@ -24,7 +24,6 @@ import com.google.protobuf.ByteString
 import com.google.zxing.integration.android.IntentIntegrator
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState
-import io.reactivex.disposables.Disposable
 import java.math.BigDecimal
 import java.text.Collator
 import java.text.DecimalFormat
@@ -200,7 +199,6 @@ class BoardGameActivity :
 
     private var joinRequestToken: BoardGame.Companion.JoinRequestToken? = null
     private var boardGame: BoardGame? = null
-    private var joinStateDisposable: Disposable? = null
 
     private var progressBarState: ProgressBar? = null
     private var textViewState: TextView? = null
@@ -319,67 +317,80 @@ class BoardGameActivity :
         }
 
         boardGame!!.registerListener(this)
-        joinStateDisposable = boardGame!!.joinStateObservable.subscribe {
-            when (it) {
-                BoardGame.Companion.JoinState.UNAVAILABLE -> {
+        val joinStateDisposable = boardGame!!
+                .joinStateObservable
+                .subscribe {
+                    when (it) {
+                        BoardGame.Companion.JoinState.UNAVAILABLE -> {
 
-                    Toast.makeText(
-                            this,
-                            R.string.join_state_unavailable,
-                            Toast.LENGTH_LONG
-                    ).show()
-                    finish()
+                            Toast.makeText(
+                                    this,
+                                    R.string.join_state_unavailable,
+                                    Toast.LENGTH_LONG
+                            ).show()
+                            finish()
 
+                        }
+                        BoardGame.Companion.JoinState.AVAILABLE -> {
+
+                            slidingUpPanelLayout!!.visibility = View.GONE
+                            progressBarState!!.visibility = View.GONE
+
+                            textViewState!!.visibility = View.VISIBLE
+                            textViewState!!.setText(R.string.join_state_available)
+
+                        }
+                        BoardGame.Companion.JoinState.FAILED -> {
+
+                            Toast.makeText(
+                                    this,
+                                    R.string.join_state_general_failure,
+                                    Toast.LENGTH_LONG
+                            ).show()
+                            finish()
+
+                        }
+                        BoardGame.Companion.JoinState.CREATING -> {
+
+                            slidingUpPanelLayout!!.visibility = View.GONE
+
+                            progressBarState!!.visibility = View.VISIBLE
+                            textViewState!!.visibility = View.VISIBLE
+                            textViewState!!.setText(R.string.join_state_creating)
+
+                        }
+                        BoardGame.Companion.JoinState.JOINING -> {
+
+                            slidingUpPanelLayout!!.visibility = View.GONE
+
+                            progressBarState!!.visibility = View.VISIBLE
+                            textViewState!!.visibility = View.VISIBLE
+                            textViewState!!.setText(R.string.join_state_joining)
+
+                        }
+                        BoardGame.Companion.JoinState.JOINED -> {
+
+                            textViewState!!.text = null
+                            textViewState!!.visibility = View.GONE
+                            progressBarState!!.visibility = View.GONE
+
+                            slidingUpPanelLayout!!.visibility = View.VISIBLE
+
+                        }
+                    }
+                    invalidateOptionsMenu()
                 }
-                BoardGame.Companion.JoinState.AVAILABLE -> {
-
-                    slidingUpPanelLayout!!.visibility = View.GONE
-                    progressBarState!!.visibility = View.GONE
-
-                    textViewState!!.visibility = View.VISIBLE
-                    textViewState!!.setText(R.string.join_state_available)
-
+        val gameNameDisposable = boardGame!!
+                .gameNameObservable
+                .subscribe {
+                    title = it
                 }
-                BoardGame.Companion.JoinState.FAILED -> {
-
-                    Toast.makeText(
-                            this,
-                            R.string.join_state_general_failure,
-                            Toast.LENGTH_LONG
-                    ).show()
-                    finish()
-
-                }
-                BoardGame.Companion.JoinState.CREATING -> {
-
-                    slidingUpPanelLayout!!.visibility = View.GONE
-
-                    progressBarState!!.visibility = View.VISIBLE
-                    textViewState!!.visibility = View.VISIBLE
-                    textViewState!!.setText(R.string.join_state_creating)
-
-                }
-                BoardGame.Companion.JoinState.JOINING -> {
-
-                    slidingUpPanelLayout!!.visibility = View.GONE
-
-                    progressBarState!!.visibility = View.VISIBLE
-                    textViewState!!.visibility = View.VISIBLE
-                    textViewState!!.setText(R.string.join_state_joining)
-
-                }
-                BoardGame.Companion.JoinState.JOINED -> {
-
-                    textViewState!!.text = null
-                    textViewState!!.visibility = View.GONE
-                    progressBarState!!.visibility = View.GONE
-
-                    slidingUpPanelLayout!!.visibility = View.VISIBLE
-
-                }
+        lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onDestroy(owner: LifecycleOwner) {
+                joinStateDisposable.dispose()
+                gameNameDisposable.dispose()
             }
-            invalidateOptionsMenu()
-        }
+        })
     }
 
     override fun onStart() {
@@ -600,8 +611,6 @@ class BoardGameActivity :
     override fun onDestroy() {
         super.onDestroy()
         boardGame!!.unregisterListener(this)
-        joinStateDisposable?.dispose()
-        joinStateDisposable = null
         transferReceiptMediaPlayer!!.release()
     }
 
@@ -899,10 +908,6 @@ class BoardGameActivity :
                 changeGameNameDisposable.dispose()
             }
         })
-    }
-
-    override fun onGameNameChanged(name: String?) {
-        title = formatNullable(this, name)
     }
 
     override fun onQuitGameError() {
