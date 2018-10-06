@@ -6,6 +6,7 @@ import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.BoardGame.Companion.IdentityWithBalance
 import com.dhpcs.liquidity.BoardGame.Companion.PlayerWithBalanceAndConnectionState
 import com.dhpcs.liquidity.BoardGame.Companion.TransferWithCurrency
+import io.reactivex.disposables.Disposable
 
 abstract class BoardGameChildActivity :
         AppCompatActivity(),
@@ -19,8 +20,8 @@ abstract class BoardGameChildActivity :
     }
 
     private var joinRequestToken: BoardGame.Companion.JoinRequestToken? = null
-
     private var boardGame: BoardGame? = null
+    private var joinStateDisposable: Disposable? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,6 +38,9 @@ abstract class BoardGameChildActivity :
         boardGame = BoardGame.getInstance(zoneId)
 
         boardGame!!.registerListener(this)
+        joinStateDisposable = boardGame!!.joinStateObservable.subscribe {
+            if (it != BoardGame.Companion.JoinState.JOINED) finish()
+        }
     }
 
     override fun onStart() {
@@ -56,10 +60,8 @@ abstract class BoardGameChildActivity :
     override fun onDestroy() {
         super.onDestroy()
         boardGame!!.unregisterListener(this)
-    }
-
-    override fun onJoinStateChanged(joinState: BoardGame.Companion.JoinState) {
-        if (joinState != BoardGame.Companion.JoinState.JOINED) finish()
+        joinStateDisposable?.dispose()
+        joinStateDisposable = null
     }
 
     override fun onCreateGameError(name: String?) {}

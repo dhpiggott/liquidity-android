@@ -13,9 +13,11 @@ import com.google.protobuf.ByteString
 import com.google.protobuf.StringValue
 import com.google.protobuf.Struct
 import com.google.protobuf.Value
+import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
+import io.reactivex.subjects.BehaviorSubject
 import java.io.Serializable
 import java.math.BigDecimal
 import java.util.Currency
@@ -122,8 +124,6 @@ class BoardGame private constructor(
         ) : Transfer
 
         interface GameActionListener {
-
-            fun onJoinStateChanged(joinState: JoinState)
 
             fun onChangeGameNameError(name: String?)
 
@@ -401,8 +401,11 @@ class BoardGame private constructor(
 
     private var gameId: Single<Long>? = if (_gameId == null) null else Single.just(_gameId)
 
-    var joinState: JoinState = UNAVAILABLE
-        private set
+    private val joinStateSubject = BehaviorSubject.createDefault(UNAVAILABLE)
+
+    val joinState: JoinState get() = joinStateSubject.value!!
+
+    val joinStateObservable: Observable<JoinState> = joinStateSubject
 
     private var state: State? = null
 
@@ -422,10 +425,7 @@ class BoardGame private constructor(
 
     private fun updateIdleJoinState() {
         val isConnected = connectivityManager.activeNetworkInfo?.isConnected == true
-        joinState = if (!isConnected) UNAVAILABLE else AVAILABLE
-        gameActionListeners.forEach {
-            it.onJoinStateChanged(joinState)
-        }
+        joinStateSubject.onNext(if (!isConnected) UNAVAILABLE else AVAILABLE)
     }
 
     fun registerListener(listener: GameActionListener) {
@@ -433,7 +433,6 @@ class BoardGame private constructor(
             context.registerReceiver(connectionStateReceiver, connectionStateFilter)
         }
         gameActionListeners += listener
-        listener.onJoinStateChanged(joinState)
         if (joinState == JOINED) {
             listener.onGameNameChanged(
                     if (!state!!.zone.hasName()) null else state!!.zone.name.value
@@ -484,10 +483,7 @@ class BoardGame private constructor(
     @SuppressLint("CheckResult")
     private fun createAndThenJoinZone(currency: Currency, name: String) {
         state = null
-        joinState = CREATING
-        gameActionListeners.forEach {
-            it.onJoinStateChanged(joinState)
-        }
+        joinStateSubject.onNext(CREATING)
 
         fun onError() {
             gameActionListeners.forEach {
@@ -529,10 +525,7 @@ class BoardGame private constructor(
 
     private fun join(zoneId: String) {
         state = null
-        joinState = JOINING
-        gameActionListeners.forEach {
-            it.onJoinStateChanged(joinState)
-        }
+        joinStateSubject.onNext(JOINING)
         zoneNotificationDisposable = serverConnection
                 .zoneNotifications(zoneId)
                 .subscribe(
@@ -542,10 +535,7 @@ class BoardGame private constructor(
                             }
                         },
                         {
-                            joinState = FAILED
-                            gameActionListeners.forEach {
-                                it.onJoinStateChanged(joinState)
-                            }
+                            joinStateSubject.onNext(FAILED)
                         },
                         {
                             if (joinState == JOINING) {
@@ -553,10 +543,7 @@ class BoardGame private constructor(
                                     it.onJoinGameError()
                                 }
                             } else {
-                                joinState = FAILED
-                                gameActionListeners.forEach {
-                                    it.onJoinStateChanged(joinState)
-                                }
+                                joinStateSubject.onNext(FAILED)
                             }
                         }
                 )
@@ -1067,10 +1054,7 @@ class BoardGame private constructor(
                         hiddenPlayers,
                         transfers
                 )
-                joinState = JOINED
-                gameActionListeners.forEach {
-                    it.onJoinStateChanged(joinState)
-                }
+                joinStateSubject.onNext(JOINED)
                 gameActionListeners.forEach {
                     it.onGameNameChanged(if (!zone.hasName()) null else zone.name.value)
                 }
