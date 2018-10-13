@@ -201,7 +201,7 @@ class BoardGame private constructor(
 
         private fun membersAccountsFromAccounts(accounts: List<Model.Account>
         ): Map<String, String> {
-            return accounts.filter {
+            return accounts.asSequence().filter {
                 it.ownerMemberIdsCount == 1
             }.groupBy {
                 it.getOwnerMemberIds(0)
@@ -292,7 +292,7 @@ class BoardGame private constructor(
                                               players: Map<String, Player>,
                                               accounts: List<Model.Account>
         ): Map<String, TransferWithCurrency> {
-            return transactions.map { transaction ->
+            return transactions.asSequence().map { transaction ->
                 val fromAccount = accounts.find { it.id == transaction.from }!!
                 val fromMemberId = accountsMembers[transaction.from]
                 val toAccount = accounts.find { it.id == transaction.to }!!

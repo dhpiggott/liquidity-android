@@ -160,7 +160,7 @@ class CreateGameDialogFragment : AppCompatDialogFragment() {
     }
 
     private fun validateInput(gameName: CharSequence) {
-        buttonPositive?.isEnabled = BoardGame.Companion.isGameNameValid(gameName)
+        buttonPositive?.isEnabled = BoardGame.isGameNameValid(gameName)
     }
 
 }

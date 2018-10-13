@@ -17,7 +17,7 @@ object LiquidityContract {
         private const val BASE_CONTENT_TYPE = "vnd.com.dhpcs.liquidity.game"
         internal const val CONTENT_ITEM_TYPE =
                 "${ContentResolver.CURSOR_ITEM_BASE_TYPE}/$BASE_CONTENT_TYPE"
-        internal val CONTENT_TYPE =
+        internal const val CONTENT_TYPE =
                 "${ContentResolver.CURSOR_DIR_BASE_TYPE}/$BASE_CONTENT_TYPE"
 
         const val ID = BaseColumns._ID

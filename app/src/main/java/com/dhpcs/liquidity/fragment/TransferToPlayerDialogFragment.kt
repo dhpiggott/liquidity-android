@@ -453,7 +453,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
         val toAccountIds = if (to != null) {
             setOf(to!!.accountId)
         } else {
-            toList!!.map { it.accountId }.toSet()
+            toList!!.asSequence().map { it.accountId }.toSet()
         }
         val isFromValid = if (toAccountIds.contains(from!!.accountId)) {
             textViewFromError!!.text = getString(

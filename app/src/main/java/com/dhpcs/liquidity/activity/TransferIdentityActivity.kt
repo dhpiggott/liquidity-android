@@ -100,7 +100,7 @@ class TransferIdentityActivity : BoardGameChildActivity() {
                         try {
                             startActivity(
                                     Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                                            .setData(Uri.parse("package:" + packageName))
+                                            .setData(Uri.parse("package:$packageName"))
                             )
                         } catch (_: ActivityNotFoundException) {
                             try {

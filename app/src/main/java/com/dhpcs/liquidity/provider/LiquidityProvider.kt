@@ -111,7 +111,7 @@ class LiquidityProvider : ContentProvider() {
                         if (TextUtils.isEmpty(selection)) {
                             where
                         } else {
-                            "$where AND " + selection
+                            "$where AND $selection"
                         },
                         selectionArgs
                 )
@@ -169,7 +169,7 @@ class LiquidityProvider : ContentProvider() {
                         if (TextUtils.isEmpty(selection)) {
                             where
                         } else {
-                            "$where AND " + selection
+                            "$where AND $selection"
                         },
                         selectionArgs
                 )
