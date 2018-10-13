@@ -1,11 +1,9 @@
 package com.dhpcs.liquidity.fragment
 
 import android.annotation.SuppressLint
-import android.annotation.TargetApi
 import android.app.Dialog
 import android.content.Context
 import android.content.DialogInterface
-import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -45,35 +43,21 @@ class CreateGameDialogFragment : AppCompatDialogFragment() {
                 sort { lhs, rhs -> lhs.currencyCode.compareTo(rhs.currencyCode) }
             }
 
-            @TargetApi(Build.VERSION_CODES.KITKAT)
-            private fun bindView(textView: TextView, currency: Currency?): View {
-                val displayName = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
-                    null
-                } else {
-                    currency!!.displayName
-                }
-                val symbolAndOrName = if (currency!!.symbol == currency.currencyCode) {
-                    displayName
-                } else {
-                    if (displayName == null) {
-                        currency.symbol
-                    } else {
-                        context.getString(
-                                R.string.game_currency_symbol_and_name_format_string,
-                                currency.symbol,
-                                displayName
-                        )
-                    }
-                }
-                textView.text = if (symbolAndOrName == null) {
-                    currency.currencyCode
+            private fun bindView(textView: TextView, currency: Currency): View {
+                val symbolAndOrName = if (currency.symbol == currency.currencyCode) {
+                    currency.displayName
                 } else {
                     context.getString(
-                            R.string.game_currency_format_string,
-                            currency.currencyCode,
-                            symbolAndOrName
+                            R.string.game_currency_symbol_and_name_format_string,
+                            currency.symbol,
+                            currency.displayName
                     )
                 }
+                textView.text = context.getString(
+                        R.string.game_currency_format_string,
+                        currency.currencyCode,
+                        symbolAndOrName
+                )
                 return textView
             }
 
@@ -83,14 +67,14 @@ class CreateGameDialogFragment : AppCompatDialogFragment() {
             ): View {
                 return bindView(
                         super.getDropDownView(position, convertView, parent) as TextView,
-                        getItem(position)
+                        getItem(position)!!
                 )
             }
 
             override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
                 return bindView(
                         super.getView(position, convertView, parent) as TextView,
-                        getItem(position)
+                        getItem(position)!!
                 )
             }
 
@@ -121,18 +105,10 @@ class CreateGameDialogFragment : AppCompatDialogFragment() {
                 R.layout.fragment_create_game_dialog, null
         )
 
-        val currencies = HashSet<Currency>()
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
-            for (locale in Locale.getAvailableLocales()) {
-                try {
-                    currencies.add(Currency.getInstance(locale))
-                } catch (_: IllegalArgumentException) {
-                }
-            }
-        } else {
-            currencies.addAll(Currency.getAvailableCurrencies())
-        }
-        val currenciesSpinnerAdapter = CurrenciesAdapter(requireActivity(), ArrayList(currencies))
+        val currenciesSpinnerAdapter = CurrenciesAdapter(
+                requireActivity(),
+                ArrayList(Currency.getAvailableCurrencies())
+        )
 
         val textInputLayoutGameName =
                 view.findViewById<TextInputLayout>(R.id.textinputlayout_game_name)
