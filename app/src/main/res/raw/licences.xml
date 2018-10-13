@@ -4,13 +4,13 @@
     <notice>
         <name>The Kotlin Language libraries</name>
         <url>https://kotlinlang.org/</url>
-        <copyright>Copyright 2010-2017 JetBrains s.r.o.</copyright>
+        <copyright>Copyright 2010-2018 JetBrains s.r.o.</copyright>
         <license>Apache Software License 2.0</license>
     </notice>
     <notice>
         <name>Protocol Buffers</name>
         <url>https://developers.google.com/protocol-buffers/</url>
-        <copyright>Copyright 2014, Google Inc.</copyright>
+        <copyright>Copyright 2008, Google Inc.</copyright>
         <license>BSD 3-Clause License</license>
     </notice>
     <notice>
@@ -22,7 +22,7 @@
     <notice>
         <name>Nimbus JOSE + JWT</name>
         <url>https://connect2id.com/products/nimbus-jose-jwt</url>
-        <copyright>Copyright 2012-2016, Connect2id Ltd.</copyright>
+        <copyright>Copyright 2012 - 2018, Connect2id Ltd.</copyright>
         <license>Apache Software License 2.0</license>
     </notice>
     <notice>
@@ -49,9 +49,9 @@
         <license>Apache Software License 2.0</license>
     </notice>
     <notice>
-        <name>The Android Support libraries</name>
-        <url>https://developer.android.com/topic/libraries/support-library/index.html</url>
-        <copyright>Copyright (C) 2011-2017 The Android Open Source Project</copyright>
+        <name>AndroidX</name>
+        <url>https://developer.android.com/jetpack/androidx/</url>
+        <copyright>Copyright (C) 2011-2018 The Android Open Source Project</copyright>
         <license>Apache Software License 2.0</license>
     </notice>
     <notice>
@@ -67,7 +67,7 @@
     <notice>
         <name>ZXing Android Embedded</name>
         <url>https://github.com/journeyapps/zxing-android-embedded</url>
-        <copyright>Copyright (C) 2012-2017 ZXing authors, Journey Mobile</copyright>
+        <copyright>Copyright (C) 2012-2018 ZXing authors, Journey Mobile</copyright>
         <license>Apache Software License 2.0</license>
     </notice>
     <notice>
