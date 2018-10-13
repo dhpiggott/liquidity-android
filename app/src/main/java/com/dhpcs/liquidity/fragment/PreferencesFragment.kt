@@ -1,7 +1,7 @@
 package com.dhpcs.liquidity.fragment
 
 import android.os.Bundle
-import android.support.v7.preference.PreferenceFragmentCompat
+import androidx.preference.PreferenceFragmentCompat
 
 import com.dhpcs.liquidity.R
 

@@ -2,15 +2,15 @@ package com.dhpcs.liquidity.fragment
 
 import android.content.Context
 import android.os.Bundle
-import android.support.v4.app.Fragment
-import android.support.v7.util.SortedList
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.util.SortedListAdapterCallback
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.SortedList
+import androidx.recyclerview.widget.SortedListAdapterCallback
 import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.BoardGameActivity

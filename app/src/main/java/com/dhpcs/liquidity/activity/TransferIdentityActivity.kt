@@ -7,14 +7,14 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
-import android.support.design.widget.Snackbar
-import android.support.v4.app.ActivityCompat
-import android.support.v7.widget.Toolbar
 import android.view.KeyEvent
 import android.widget.LinearLayout
+import androidx.appcompat.widget.Toolbar
+import androidx.core.app.ActivityCompat
 import com.dhpcs.liquidity.R
 import com.journeyapps.barcodescanner.CaptureManager
 import com.journeyapps.barcodescanner.DecoratedBarcodeView
+import com.google.android.material.snackbar.Snackbar
 
 class TransferIdentityActivity : BoardGameChildActivity() {
 

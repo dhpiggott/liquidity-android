@@ -2,12 +2,12 @@ package com.dhpcs.liquidity.fragment
 
 import android.os.Bundle
 import android.os.Handler
-import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextSwitcher
 import android.widget.TextView
+import androidx.fragment.app.Fragment
 import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.LiquidityApplication
 import com.dhpcs.liquidity.R

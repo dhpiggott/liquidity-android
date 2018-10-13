@@ -15,7 +15,7 @@
         android:text="@string/no_other_players"
         android:textColor="?android:attr/textColorSecondary" />
 
-    <android.support.v7.widget.RecyclerView
+    <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerview_players"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

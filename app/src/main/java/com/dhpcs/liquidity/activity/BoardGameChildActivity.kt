@@ -1,7 +1,7 @@
 package com.dhpcs.liquidity.activity
 
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.BoardGame.Companion.IdentityWithBalance
 import com.dhpcs.liquidity.BoardGame.Companion.PlayerWithBalanceAndConnectionState

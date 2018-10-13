@@ -1,11 +1,11 @@
 package com.dhpcs.liquidity.fragment
 
 import android.os.Bundle
-import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.fragment.app.Fragment
 import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.BoardGameActivity

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v7.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <android.support.v7.preference.SwitchPreferenceCompat
+    <androidx.preference.SwitchPreferenceCompat
         android:defaultValue="true"
         android:key="play_transfer_receipt_sounds"
         android:summary="@string/play_transfer_receipt_sounds_summary"
         android:title="@string/play_transfer_receipt_sounds_title" />
 
-</android.support.v7.preference.PreferenceScreen>
+</androidx.preference.PreferenceScreen>

@@ -1,10 +1,10 @@
 package com.dhpcs.liquidity.activity
 
 import android.os.Bundle
-import android.support.v7.widget.Toolbar
 import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.appcompat.widget.Toolbar
 import com.dhpcs.liquidity.R
 import net.glxn.qrgen.android.QRCode
 

@@ -5,17 +5,17 @@ import android.app.Dialog
 import android.content.Context
 import android.content.DialogInterface
 import android.os.Bundle
-import android.support.design.widget.TextInputEditText
-import android.support.design.widget.TextInputLayout
-import android.support.v7.app.AlertDialog
-import android.support.v7.app.AppCompatDialogFragment
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.WindowManager
 import android.widget.Button
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatDialogFragment
 import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.BoardGameActivity
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 
 class CreateIdentityDialogFragment : AppCompatDialogFragment() {
 

@@ -2,9 +2,9 @@ package com.dhpcs.liquidity.activity
 
 import android.app.Activity
 import android.os.Bundle
-import android.support.v7.widget.Toolbar
 import android.view.WindowManager
 import android.widget.ImageView
+import androidx.appcompat.widget.Toolbar
 import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.R
 import com.google.protobuf.ByteString

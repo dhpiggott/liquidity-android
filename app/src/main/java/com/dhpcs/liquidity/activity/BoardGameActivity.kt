@@ -1,14 +1,10 @@
 package com.dhpcs.liquidity.activity
 
-import android.arch.lifecycle.DefaultLifecycleObserver
-import android.arch.lifecycle.LifecycleOwner
 import android.content.Context
 import android.content.Intent
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.preference.PreferenceManager
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.Toolbar
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -16,6 +12,10 @@ import android.view.WindowManager
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.LiquidityApplication
 import com.dhpcs.liquidity.R
