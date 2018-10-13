@@ -1,9 +1,9 @@
 package com.dhpcs.liquidity.activity
 
-import android.app.Activity
 import android.os.Bundle
 import android.view.WindowManager
 import android.widget.ImageView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.R
@@ -42,7 +42,7 @@ class ReceiveIdentityActivity : BoardGameChildActivity() {
     }
 
     override fun onIdentityReceived(identity: BoardGame.Companion.IdentityWithBalance) {
-        setResult(Activity.RESULT_OK)
+        setResult(AppCompatActivity.RESULT_OK)
         finish()
     }
 

@@ -73,7 +73,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_marginTop="8dp"
-                android:background="?android:attr/dividerHorizontal" />
+                android:background="?attr/dividerHorizontal" />
 
             <TextView
                 style="@style/TextAppearance.AppCompat.Body2"
@@ -101,7 +101,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_marginTop="8dp"
-                android:background="?android:attr/dividerHorizontal" />
+                android:background="?attr/dividerHorizontal" />
 
             <TextView
                 style="@style/TextAppearance.AppCompat.Body2"
@@ -135,13 +135,13 @@
         android:layout_height="1dp"
         android:layout_gravity="top"
         android:layout_marginTop="-1dp"
-        android:background="?android:attr/dividerHorizontal" />
+        android:background="?attr/dividerHorizontal" />
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_gravity="bottom"
         android:layout_marginBottom="-1dp"
-        android:background="?android:attr/dividerHorizontal" />
+        android:background="?attr/dividerHorizontal" />
 
 </FrameLayout>
