@@ -39,7 +39,7 @@ class GamesFragment : Fragment(),
 
     private val refreshHandler = Handler()
     private val refreshRunnable = Runnable {
-        loaderManager.restartLoader(GAMES_LOADER, null, this)
+        LoaderManager.getInstance(this).restartLoader(GAMES_LOADER, null, this)
     }
 
     private var gamesAdapter: SimpleCursorAdapter? = null
@@ -49,7 +49,7 @@ class GamesFragment : Fragment(),
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        loaderManager.initLoader(GAMES_LOADER, null, this)
+        LoaderManager.getInstance(this).initLoader(GAMES_LOADER, null, this)
 
         gamesAdapter = SimpleCursorAdapter(
                 activity,
