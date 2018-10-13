@@ -30,6 +30,7 @@ import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.util.*
 
+@Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
 class BoardGameActivity :
         AppCompatActivity(),
         EnterGameNameDialogFragment.Companion.Listener,
@@ -282,7 +283,7 @@ class BoardGameActivity :
 
         if (zoneId == null) {
             val currency = intent.extras!!.getSerializable(EXTRA_CURRENCY) as Currency
-            val gameName = intent.extras!!.getString(EXTRA_GAME_NAME)
+            val gameName = intent.extras!!.getString(EXTRA_GAME_NAME)!!
             boardGame = BoardGame(
                     applicationContext,
                     LiquidityApplication.getServerConnection(applicationContext),
