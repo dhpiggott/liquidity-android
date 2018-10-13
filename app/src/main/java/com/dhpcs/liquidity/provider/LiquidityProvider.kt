@@ -68,7 +68,7 @@ class LiquidityProvider : ContentProvider() {
     private var databaseHelper: LiquidityDatabaseHelper? = null
 
     override fun onCreate(): Boolean {
-        databaseHelper = LiquidityDatabaseHelper(context)
+        databaseHelper = LiquidityDatabaseHelper(context!!)
         return true
     }
 
@@ -87,7 +87,7 @@ class LiquidityProvider : ContentProvider() {
                 )
             else -> throw IllegalArgumentException("Unsupported URI: $uri")
         }
-        context.contentResolver.notifyChange(uri, null)
+        context!!.contentResolver.notifyChange(uri, null)
         return ContentUris.withAppendedId(uri, id)
     }
 
@@ -118,7 +118,7 @@ class LiquidityProvider : ContentProvider() {
             }
             else -> throw IllegalArgumentException("Unsupported URI: $uri")
         }
-        if (rowsAffected > 0) context.contentResolver.notifyChange(uri, null)
+        if (rowsAffected > 0) context!!.contentResolver.notifyChange(uri, null)
         return rowsAffected
     }
 
@@ -150,7 +150,7 @@ class LiquidityProvider : ContentProvider() {
                     sortOrder
                 }
         )
-        cursor.setNotificationUri(context.contentResolver, uri)
+        cursor.setNotificationUri(context!!.contentResolver, uri)
         return cursor
     }
 
@@ -176,7 +176,7 @@ class LiquidityProvider : ContentProvider() {
             }
             else -> throw IllegalArgumentException("Unsupported URI: $uri")
         }
-        if (rowsAffected > 0) context.contentResolver.notifyChange(uri, null)
+        if (rowsAffected > 0) context!!.contentResolver.notifyChange(uri, null)
         return rowsAffected
     }
 
