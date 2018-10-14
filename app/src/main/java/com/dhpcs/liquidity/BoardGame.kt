@@ -1051,11 +1051,6 @@ class BoardGame private constructor(
                     it.onTransfersUpdated(transfers)
                 }
 
-                // Since we must only prompt for a required identity if none exist yet and since
-                // having one or more partially created identities implies that gameId would be
-                // set, we can proceed here without checking that partiallyCreatedIdentityIds is
-                // non empty.
-                //
                 // The second condition isn't usually of significance but exists to prevent
                 // incorrectly prompting for an identity if a user rejoins a game by scanning its
                 // code again rather than by clicking its list item.
@@ -1169,33 +1164,48 @@ class BoardGame private constructor(
     }
 
     fun createIdentity(name: String): Single<Model.Member> {
-        return Single.create<Model.Member> { singleEmitter ->
-            serverConnection.execZoneCommand(
-                    zoneId!!,
-                    WsProtocol.ZoneCommand.newBuilder()
-                            .setCreateMemberCommand(
-                                    WsProtocol.ZoneCommand.CreateMemberCommand.newBuilder()
-                                            .addOwnerPublicKeys(serverConnection.clientKey)
-                                            .setName(StringValue.newBuilder().setValue(name))
-                            )
-                            .build()
-            ).subscribe({ zoneResponse ->
-                when (zoneResponse.createMemberResponse.resultCase) {
-                    WsProtocol.ZoneResponse.CreateMemberResponse.ResultCase.RESULT_NOT_SET ->
-                        singleEmitter.onError(IllegalArgumentException(
-                                zoneResponse.createMemberResponse.resultCase.name
-                        ))
-                    WsProtocol.ZoneResponse.CreateMemberResponse.ResultCase.ERRORS ->
-                        singleEmitter.onError(IllegalArgumentException(
-                                zoneResponse.createMemberResponse.errors.toString()
-                        ))
-                    WsProtocol.ZoneResponse.CreateMemberResponse.ResultCase.SUCCESS ->
-                        singleEmitter.onSuccess(zoneResponse.createMemberResponse.success.member)
-                }
-            }, { error ->
-                singleEmitter.onError(error)
-            })
-        }.flatMap { createAccount(it).map { _ -> it } }
+        val partiallyCreatedIdentity = state!!.zone.membersList.find { member ->
+            member.ownerPublicKeysCount == 1 &&
+                    member.getOwnerPublicKeys(0) ==
+                    serverConnection.clientKey &&
+                    member.hasName() && member.name.value == name &&
+                    !state!!.zone.accountsList.any { account ->
+                        account.ownerMemberIdsCount == 1 &&
+                                account.getOwnerMemberIds(0) == member.id
+                    }
+        }
+        val member = if (partiallyCreatedIdentity != null) {
+            Single.just(partiallyCreatedIdentity)
+        } else {
+            Single.create<Model.Member> { singleEmitter ->
+                serverConnection.execZoneCommand(
+                        zoneId!!,
+                        WsProtocol.ZoneCommand.newBuilder()
+                                .setCreateMemberCommand(
+                                        WsProtocol.ZoneCommand.CreateMemberCommand.newBuilder()
+                                                .addOwnerPublicKeys(serverConnection.clientKey)
+                                                .setName(StringValue.newBuilder().setValue(name))
+                                )
+                                .build()
+                ).subscribe({ zoneResponse ->
+                    when (zoneResponse.createMemberResponse.resultCase) {
+                        WsProtocol.ZoneResponse.CreateMemberResponse.ResultCase.RESULT_NOT_SET ->
+                            singleEmitter.onError(IllegalArgumentException(
+                                    zoneResponse.createMemberResponse.resultCase.name
+                            ))
+                        WsProtocol.ZoneResponse.CreateMemberResponse.ResultCase.ERRORS ->
+                            singleEmitter.onError(IllegalArgumentException(
+                                    zoneResponse.createMemberResponse.errors.toString()
+                            ))
+                        WsProtocol.ZoneResponse.CreateMemberResponse.ResultCase.SUCCESS ->
+                            singleEmitter.onSuccess(zoneResponse.createMemberResponse.success.member)
+                    }
+                }, { error ->
+                    singleEmitter.onError(error)
+                })
+            }
+        }
+        return member.flatMap { createAccount(it).map { _ -> it } }
     }
 
     fun changeIdentityName(identity: Identity, name: String): Single<Unit> {
