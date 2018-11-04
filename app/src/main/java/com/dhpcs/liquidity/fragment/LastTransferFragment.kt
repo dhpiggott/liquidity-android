@@ -48,31 +48,22 @@ class LastTransferFragment : Fragment() {
         super.onDestroy()
     }
 
-    fun onTransfersInitialized(transfers: Collection<BoardGame.Companion.TransferWithCurrency>) {
-        transfers.forEach {
+    fun onTransferAdded(transfer: BoardGame.Companion.TransferWithCurrency) {
+        if (lastTransfer == null ||
+                transfer.created > lastTransfer!!.created) {
+            lastTransfer = transfer
+            showTransfer(lastTransfer, true)
+        }
+    }
+
+    fun onTransfersUpdated(transfers: Map<String, BoardGame.Companion.TransferWithCurrency>) {
+        transfers.values.forEach {
             if (lastTransfer == null ||
                     it.created > lastTransfer!!.created) {
                 lastTransfer = it
             }
         }
         if (lastTransfer != null) showTransfer(lastTransfer, false)
-    }
-
-    fun onTransferAdded(addedTransfer: BoardGame.Companion.TransferWithCurrency) {
-        if (lastTransfer == null ||
-                addedTransfer.created > lastTransfer!!.created) {
-            lastTransfer = addedTransfer
-            showTransfer(lastTransfer, true)
-        }
-    }
-
-    fun onTransfersChanged(changedTransfers: Collection<BoardGame.Companion.TransferWithCurrency>) {
-        changedTransfers.filter {
-            it.transactionId == lastTransfer!!.transactionId
-        }.forEach {
-            lastTransfer = it
-            showTransfer(lastTransfer, false)
-        }
     }
 
     private fun showTransfer(transfer: BoardGame.Companion.TransferWithCurrency?,

@@ -125,37 +125,17 @@ class BoardGame private constructor(
         interface GameActionListener {
 
             fun onCreateGameError(name: String?)
-
-            fun onIdentitiesUpdated(identities: Map<String, IdentityWithBalance>)
-
-            fun onIdentityCreated(identity: IdentityWithBalance)
-
-            fun onIdentityReceived(identity: IdentityWithBalance)
+            fun onJoinGameError()
+            fun onQuitGameError()
 
             fun onIdentityRequired()
 
-            fun onIdentityRestored(identity: IdentityWithBalance)
-
-            fun onJoinGameError()
-
-            fun onPlayerAdded(addedPlayer: PlayerWithBalanceAndConnectionState)
-
-            fun onPlayerChanged(changedPlayer: PlayerWithBalanceAndConnectionState)
-
-            fun onPlayersInitialized(players: Collection<PlayerWithBalanceAndConnectionState>)
-
-            fun onPlayerRemoved(removedPlayer: PlayerWithBalanceAndConnectionState)
+            fun onIdentityAdded(identity: IdentityWithBalance)
+            fun onIdentitiesUpdated(identities: Map<String, IdentityWithBalance>)
 
             fun onPlayersUpdated(players: Map<String, PlayerWithBalanceAndConnectionState>)
 
-            fun onQuitGameError()
-
-            fun onTransferAdded(addedTransfer: TransferWithCurrency)
-
-            fun onTransfersChanged(changedTransfers: Collection<TransferWithCurrency>)
-
-            fun onTransfersInitialized(transfers: Collection<TransferWithCurrency>)
-
+            fun onTransferAdded(transfer: TransferWithCurrency)
             fun onTransfersUpdated(transfers: Map<String, TransferWithCurrency>)
 
         }
@@ -423,9 +403,7 @@ class BoardGame private constructor(
                     if (!state!!.zone.hasName()) "" else state!!.zone.name.value
             )
             listener.onIdentitiesUpdated(state!!.identities)
-            listener.onPlayersInitialized(state!!.players.values)
             listener.onPlayersUpdated(state!!.players)
-            listener.onTransfersInitialized(state!!.transfers.values)
             listener.onTransfersUpdated(state!!.transfers)
         }
     }
@@ -552,33 +530,6 @@ class BoardGame private constructor(
                     state!!.connectedClients.values
             )
             if (updatedPlayers != state!!.players) {
-                val addedPlayers = updatedPlayers - state!!.players.keys
-                val changedPlayers = updatedPlayers.filter { (memberId, player) ->
-                    val previousPlayer = state!!.players[memberId]
-                    previousPlayer != null && previousPlayer != player
-                }
-                val removedPlayers = state!!.players - updatedPlayers.keys
-                if (addedPlayers.isNotEmpty()) {
-                    gameActionListeners.forEach { listener ->
-                        addedPlayers.values.forEach {
-                            listener.onPlayerAdded(it)
-                        }
-                    }
-                }
-                if (changedPlayers.isNotEmpty()) {
-                    gameActionListeners.forEach { listener ->
-                        changedPlayers.values.forEach {
-                            listener.onPlayerChanged(it)
-                        }
-                    }
-                }
-                if (removedPlayers.isNotEmpty()) {
-                    gameActionListeners.forEach { listener ->
-                        removedPlayers.values.forEach {
-                            listener.onPlayerRemoved(it)
-                        }
-                    }
-                }
                 state!!.players = updatedPlayers
                 gameActionListeners.forEach {
                     it.onPlayersUpdated(updatedPlayers)
@@ -594,15 +545,6 @@ class BoardGame private constructor(
                     state!!.zone.accountsList
             )
             if (updatedTransfers != state!!.transfers) {
-                val changedTransfers = updatedTransfers.filter { (transactionId, transfer) ->
-                    val previousTransfer = state!!.transfers[transactionId]
-                    previousTransfer != null && previousTransfer != transfer
-                }
-                if (changedTransfers.isNotEmpty()) {
-                    gameActionListeners.forEach {
-                        it.onTransfersChanged(changedTransfers.values)
-                    }
-                }
                 state!!.transfers = updatedTransfers
                 gameActionListeners.forEach {
                     it.onTransfersUpdated(updatedTransfers)
@@ -639,11 +581,6 @@ class BoardGame private constructor(
                     )
                     if (joinedPlayers.isNotEmpty()) {
                         state!!.players = state!!.players + joinedPlayers
-                        gameActionListeners.forEach { listener ->
-                            joinedPlayers.values.forEach {
-                                listener.onPlayerChanged(it)
-                            }
-                        }
                         gameActionListeners.forEach {
                             it.onPlayersUpdated(state!!.players)
                         }
@@ -677,11 +614,6 @@ class BoardGame private constructor(
                     )
                     if (quitPlayers.isNotEmpty()) {
                         state!!.players = state!!.players + quitPlayers
-                        gameActionListeners.forEach { listener ->
-                            quitPlayers.values.forEach {
-                                listener.onPlayerChanged(it)
-                            }
-                        }
                         gameActionListeners.forEach {
                             it.onPlayersUpdated(state!!.players)
                         }
@@ -746,30 +678,17 @@ class BoardGame private constructor(
                                 serverConnection.clientKey
                         )
                 if (updatedIdentities != state!!.identities) {
-                    val receivedIdentity =
-                            if (!state!!.identities.contains(member.id) &&
-                                    !state!!.hiddenIdentities.contains(member.id)) {
-                                updatedIdentities[member.id]
-                            } else {
-                                null
-                            }
-                    val restoredIdentity =
-                            if (!state!!.identities.contains(member.id) &&
-                                    state!!.hiddenIdentities.contains(member.id)) {
+                    val receivedOrRestoredIdentity =
+                            if (!state!!.identities.contains(member.id)) {
                                 updatedIdentities[member.id]
                             } else {
                                 null
                             }
                     state!!.identities = updatedIdentities
                     gameActionListeners.forEach { it.onIdentitiesUpdated(updatedIdentities) }
-                    if (receivedIdentity != null) {
+                    if (receivedOrRestoredIdentity != null) {
                         gameActionListeners.forEach {
-                            it.onIdentityReceived(receivedIdentity)
-                        }
-                    }
-                    if (restoredIdentity != null) {
-                        gameActionListeners.forEach {
-                            it.onIdentityRestored(restoredIdentity)
+                            it.onIdentityAdded(receivedOrRestoredIdentity)
                         }
                     }
                 }
@@ -807,7 +726,7 @@ class BoardGame private constructor(
                     state!!.identities = state!!.identities + createdIdentity
                     gameActionListeners.forEach { it.onIdentitiesUpdated(state!!.identities) }
                     gameActionListeners.forEach {
-                        it.onIdentityCreated(
+                        it.onIdentityAdded(
                                 state!!.identities[account.getOwnerMemberIds(0)]!!
                         )
                     }
@@ -827,11 +746,6 @@ class BoardGame private constructor(
                 )
                 if (createdPlayer.isNotEmpty()) {
                     state!!.players = state!!.players + createdPlayer
-                    gameActionListeners.forEach { listener ->
-                        createdPlayer.values.forEach {
-                            listener.onPlayerAdded(it)
-                        }
-                    }
                     gameActionListeners.forEach { it.onPlayersUpdated(state!!.players) }
                 }
                 if (createdHiddenPlayer.isNotEmpty()) {
@@ -934,9 +848,6 @@ class BoardGame private constructor(
                 )
                 if (changedPlayers.isNotEmpty()) {
                     state!!.players = state!!.players + changedPlayers
-                    gameActionListeners.forEach { listener ->
-                        changedPlayers.values.forEach { listener.onPlayerChanged(it) }
-                    }
                     gameActionListeners.forEach {
                         it.onPlayersUpdated(state!!.players)
                     }
@@ -1039,13 +950,7 @@ class BoardGame private constructor(
                     it.onIdentitiesUpdated(identities)
                 }
                 gameActionListeners.forEach {
-                    it.onPlayersInitialized(players.values)
-                }
-                gameActionListeners.forEach {
                     it.onPlayersUpdated(players)
-                }
-                gameActionListeners.forEach {
-                    it.onTransfersInitialized(transfers.values)
                 }
                 gameActionListeners.forEach {
                     it.onTransfersUpdated(transfers)

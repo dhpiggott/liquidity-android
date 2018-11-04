@@ -7,10 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.SortedList
-import androidx.recyclerview.widget.SortedListAdapterCallback
+import androidx.recyclerview.widget.*
 import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.BoardGameActivity
@@ -30,36 +27,24 @@ class PlayersFragment : Fragment() {
 
         private class PlayersAdapter
         internal constructor(private val playersFragment: PlayersFragment
-        ) : RecyclerView.Adapter<PlayerViewHolder>() {
+        ) : ListAdapter<BoardGame.Companion.PlayerWithBalanceAndConnectionState, PlayerViewHolder>(
+                object : DiffUtil.ItemCallback<BoardGame.Companion.PlayerWithBalanceAndConnectionState>() {
 
-            private val players = SortedList(
-                    BoardGame.Companion.PlayerWithBalanceAndConnectionState::class.java,
-                    object : SortedListAdapterCallback<
-                            BoardGame.Companion.PlayerWithBalanceAndConnectionState
-                            >(this) {
+                    override fun areContentsTheSame(
+                            oldItem: BoardGame.Companion.PlayerWithBalanceAndConnectionState,
+                            newItem: BoardGame.Companion.PlayerWithBalanceAndConnectionState
+                    ): Boolean = oldItem == newItem
 
-                        private val playerComparator = BoardGameActivity
-                                .playerComparator(playersFragment.context!!)
+                    override fun areItemsTheSame(
+                            item1: BoardGame.Companion.PlayerWithBalanceAndConnectionState,
+                            item2: BoardGame.Companion.PlayerWithBalanceAndConnectionState
+                    ): Boolean = item1.memberId == item2.memberId
 
-                        override fun compare(
-                                o1: BoardGame.Companion.PlayerWithBalanceAndConnectionState,
-                                o2: BoardGame.Companion.PlayerWithBalanceAndConnectionState
-                        ): Int = playerComparator.compare(o1, o2)
+                }
+        ) {
 
-                        override fun areContentsTheSame(
-                                oldItem: BoardGame.Companion.PlayerWithBalanceAndConnectionState,
-                                newItem: BoardGame.Companion.PlayerWithBalanceAndConnectionState
-                        ): Boolean = oldItem == newItem
-
-                        override fun areItemsTheSame(
-                                item1: BoardGame.Companion.PlayerWithBalanceAndConnectionState,
-                                item2: BoardGame.Companion.PlayerWithBalanceAndConnectionState
-                        ): Boolean = item1.memberId == item2.memberId
-
-                    }
-            )
-
-            override fun getItemCount(): Int = players.size()
+            private val playerComparator = BoardGameActivity
+                    .playerComparator(playersFragment.context!!)
 
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlayerViewHolder {
                 val view = LayoutInflater
@@ -69,30 +54,12 @@ class PlayersFragment : Fragment() {
             }
 
             override fun onBindViewHolder(holder: PlayerViewHolder, position: Int) {
-                val player = players.get(position)
-                holder.bindPlayer(player)
+                holder.bindPlayer(getItem(position))
             }
 
-            /**
-             * @param player Must have same position according to the lists order as any item it
-             * replaces. If properties of the player (i.e. its name) have changed
-             * relative to any previous item, the replace method must instead be called.
-             */
-            internal fun replaceOrAdd(
-                    player: BoardGame.Companion.PlayerWithBalanceAndConnectionState
-            ) {
-                players.add(player)
-            }
-
-            internal fun replace(oldPlayer:
-                                 BoardGame.Companion.PlayerWithBalanceAndConnectionState,
-                                 newPlayer:
-                                 BoardGame.Companion.PlayerWithBalanceAndConnectionState) {
-                players.updateItemAt(players.indexOf(oldPlayer), newPlayer)
-            }
-
-            internal fun remove(player: BoardGame.Companion.PlayerWithBalanceAndConnectionState) {
-                players.remove(player)
+            internal fun updatePlayers(
+                    players: Collection<BoardGame.Companion.PlayerWithBalanceAndConnectionState>) {
+                submitList(players.sortedWith(playerComparator))
             }
 
         }
@@ -148,8 +115,8 @@ class PlayersFragment : Fragment() {
     private var textViewEmpty: TextView? = null
     private var recyclerViewPlayers: RecyclerView? = null
 
-    private var players: Map<String, BoardGame.Companion.PlayerWithBalanceAndConnectionState>? =
-            null
+    private var players: Collection<BoardGame.Companion.PlayerWithBalanceAndConnectionState> =
+            emptyList()
     private var selectedIdentity: BoardGame.Companion.Identity? = null
 
     internal var listener: Listener? = null
@@ -188,70 +155,31 @@ class PlayersFragment : Fragment() {
         listener = null
     }
 
-    fun onPlayersInitialized(
-            players: Collection<BoardGame.Companion.PlayerWithBalanceAndConnectionState>
-    ) {
-        players.forEach {
-            replaceOrAddPlayer(it)
-        }
-        if (playersAdapter!!.itemCount != 0) {
-            textViewEmpty!!.visibility = View.GONE
-            recyclerViewPlayers!!.visibility = View.VISIBLE
-        }
-    }
-
-    fun onPlayerAdded(addedPlayer: BoardGame.Companion.PlayerWithBalanceAndConnectionState) {
-        replaceOrAddPlayer(addedPlayer)
-        if (playersAdapter!!.itemCount != 0) {
-            textViewEmpty!!.visibility = View.GONE
-            recyclerViewPlayers!!.visibility = View.VISIBLE
-        }
-    }
-
-    fun onPlayerChanged(changedPlayer: BoardGame.Companion.PlayerWithBalanceAndConnectionState) {
-        if (selectedIdentity == null ||
-                changedPlayer.memberId != selectedIdentity!!.memberId) {
-            playersAdapter!!.replace(players!![changedPlayer.memberId]!!, changedPlayer)
-        }
-    }
-
     fun onPlayersUpdated(players: Map<String,
             BoardGame.Companion.PlayerWithBalanceAndConnectionState>) {
-        this.players = players
-    }
-
-    fun onPlayerRemoved(removedPlayer: BoardGame.Companion.PlayerWithBalanceAndConnectionState) {
-        if (selectedIdentity == null ||
-                removedPlayer.memberId != selectedIdentity!!.memberId) {
-            playersAdapter!!.remove(removedPlayer)
-        }
-        if (playersAdapter!!.itemCount == 0) {
-            textViewEmpty!!.visibility = View.VISIBLE
-            recyclerViewPlayers!!.visibility = View.GONE
-        }
+        this.players = players.values
+        updatePlayers(this.players, selectedIdentity)
     }
 
     fun onSelectedIdentityChanged(selectedIdentity: BoardGame.Companion.Identity?) {
-        if (this.selectedIdentity != null && players != null) {
-            val player = players!![this.selectedIdentity!!.memberId]
-            if (player != null) playersAdapter!!.replaceOrAdd(player)
-        }
         this.selectedIdentity = selectedIdentity
-        if (this.selectedIdentity != null && players != null) {
-            val player = players!![this.selectedIdentity!!.memberId]
-            if (player != null) playersAdapter!!.remove(player)
-        }
-        textViewEmpty!!.visibility =
-                if (playersAdapter!!.itemCount == 0) View.VISIBLE else View.GONE
-        recyclerViewPlayers!!.visibility =
-                if (playersAdapter!!.itemCount == 0) View.GONE else View.VISIBLE
+        updatePlayers(players, selectedIdentity)
     }
 
-    private fun replaceOrAddPlayer(
-            player: BoardGame.Companion.PlayerWithBalanceAndConnectionState
-    ) {
-        if (selectedIdentity == null || player.memberId != selectedIdentity!!.memberId) {
-            playersAdapter!!.replaceOrAdd(player)
+    private fun updatePlayers(
+            players: Collection<BoardGame.Companion.PlayerWithBalanceAndConnectionState>,
+            selectedIdentity: BoardGame.Companion.Identity?) {
+        val visiblePlayers = players.filter {
+            selectedIdentity == null ||
+                    it.memberId != selectedIdentity.memberId
+        }
+        playersAdapter!!.updatePlayers(visiblePlayers)
+        if (visiblePlayers.isNotEmpty()) {
+            textViewEmpty!!.visibility = View.GONE
+            recyclerViewPlayers!!.visibility = View.VISIBLE
+        } else {
+            textViewEmpty!!.visibility = View.VISIBLE
+            recyclerViewPlayers!!.visibility = View.GONE
         }
     }
 

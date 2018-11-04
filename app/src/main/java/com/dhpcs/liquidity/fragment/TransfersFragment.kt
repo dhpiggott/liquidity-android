@@ -25,7 +25,7 @@ class TransfersFragment : Fragment() {
         private val dateFormat = DateFormat.getDateInstance()
 
         fun newInstance(player: BoardGame.Companion.Player?,
-                        transfers: ArrayList<BoardGame.Companion.TransferWithCurrency>?
+                        transfers: ArrayList<BoardGame.Companion.TransferWithCurrency>
         ): TransfersFragment {
             val transfersFragment = TransfersFragment()
             val args = Bundle()
@@ -37,47 +37,36 @@ class TransfersFragment : Fragment() {
 
         private class TransfersAdapter
         internal constructor(private val player: BoardGame.Companion.Player?) :
-                RecyclerView.Adapter<TransferViewHolder>() {
+                ListAdapter<BoardGame.Companion.TransferWithCurrency, TransferViewHolder>(
+                        object : DiffUtil.ItemCallback<BoardGame.Companion.TransferWithCurrency>() {
 
-            private val transfers = SortedList(
-                    BoardGame.Companion.TransferWithCurrency::class.java,
-                    object : SortedListAdapterCallback<
-                            BoardGame.Companion.TransferWithCurrency
-                            >(this) {
+                            override fun areContentsTheSame(
+                                    oldItem: BoardGame.Companion.TransferWithCurrency,
+                                    newItem: BoardGame.Companion.TransferWithCurrency
+                            ): Boolean = oldItem == newItem
 
-                        override fun compare(
-                                o1: BoardGame.Companion.TransferWithCurrency,
-                                o2: BoardGame.Companion.TransferWithCurrency
-                        ): Int {
-                            val lhsCreated = o1.created
-                            val rhsCreated = o2.created
-                            return when {
-                                lhsCreated < rhsCreated -> 1
-                                lhsCreated > rhsCreated -> -1
-                                else -> {
-                                    val lhsId = o1.transactionId
-                                    val rhsId = o2.transactionId
-                                    lhsId.compareTo(rhsId)
-                                }
+                            override fun areItemsTheSame(
+                                    item1: BoardGame.Companion.TransferWithCurrency,
+                                    item2: BoardGame.Companion.TransferWithCurrency
+                            ): Boolean = item1.transactionId == item2.transactionId
+
+                        }
+                ) {
+
+            private val transferComparator =
+                    Comparator<BoardGame.Companion.TransferWithCurrency> { o1, o2 ->
+                        val lhsCreated = o1.created
+                        val rhsCreated = o2.created
+                        when {
+                            lhsCreated < rhsCreated -> 1
+                            lhsCreated > rhsCreated -> -1
+                            else -> {
+                                val lhsId = o1.transactionId
+                                val rhsId = o2.transactionId
+                                lhsId.compareTo(rhsId)
                             }
                         }
-
-                        override fun areContentsTheSame(
-                                oldItem: BoardGame.Companion.TransferWithCurrency,
-                                newItem: BoardGame.Companion.TransferWithCurrency
-                        ): Boolean = oldItem == newItem
-
-                        override fun areItemsTheSame(
-                                item1: BoardGame.Companion.TransferWithCurrency,
-                                item2: BoardGame.Companion.TransferWithCurrency
-                        ): Boolean = item1.transactionId == item2.transactionId
-
                     }
-            )
-
-            override fun getItemCount(): Int {
-                return transfers.size()
-            }
 
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TransferViewHolder {
                 val view = LayoutInflater
@@ -87,17 +76,13 @@ class TransfersFragment : Fragment() {
             }
 
             override fun onBindViewHolder(holder: TransferViewHolder, position: Int) {
-                val transfer = transfers.get(position)
-                holder.bindTransfer(transfer)
+                holder.bindTransfer(getItem(position))
             }
 
-            internal fun beginBatchedUpdates() = transfers.beginBatchedUpdates()
-
-            internal fun replaceOrAdd(transfer: BoardGame.Companion.TransferWithCurrency) {
-                transfers.add(transfer)
+            internal fun updateTransfers(
+                    transfers: Collection<BoardGame.Companion.TransferWithCurrency>) {
+                submitList(transfers.sortedWith(transferComparator))
             }
-
-            internal fun endBatchedUpdates() = transfers.endBatchedUpdates()
 
         }
 
@@ -180,6 +165,7 @@ class TransfersFragment : Fragment() {
 
     }
 
+    private var player: BoardGame.Companion.Player? = null
     private var transfersAdapter: TransfersAdapter? = null
 
     private var textViewEmpty: TextView? = null
@@ -188,19 +174,8 @@ class TransfersFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val player = arguments!!.getSerializable(ARG_PLAYER) as BoardGame.Companion.Player?
-        val transfers = arguments!!.getSerializable(ARG_TRANSFERS) as
-                List<BoardGame.Companion.TransferWithCurrency>?
-
+        player = arguments!!.getSerializable(ARG_PLAYER) as BoardGame.Companion.Player?
         transfersAdapter = TransfersAdapter(player)
-
-        if (transfers != null) {
-            transfersAdapter!!.beginBatchedUpdates()
-            for (transfer in transfers) {
-                replaceOrAddTransfer(player, transfer)
-            }
-            transfersAdapter!!.endBatchedUpdates()
-        }
     }
 
     override fun onCreateView(inflater: LayoutInflater,
@@ -224,46 +199,32 @@ class TransfersFragment : Fragment() {
             recyclerViewTransfers!!.visibility = View.VISIBLE
         }
 
+        val transfers = arguments!!.getSerializable(ARG_TRANSFERS) as
+                Collection<BoardGame.Companion.TransferWithCurrency>
+        updateTransfers(transfers, player)
+
         return view
     }
 
-    fun onTransfersInitialized(transfers: Collection<BoardGame.Companion.TransferWithCurrency>) {
-        replaceOrAddTransfers(transfers)
-        if (transfers.isNotEmpty()) {
+    fun onTransfersUpdated(transfers: Map<String, BoardGame.Companion.TransferWithCurrency>) {
+        updateTransfers(transfers.values, player)
+    }
+
+    private fun updateTransfers(
+            transfers: Collection<BoardGame.Companion.TransferWithCurrency>,
+            player: BoardGame.Companion.Player?) {
+        val visibleTransfers = transfers.filter {
+            player == null ||
+                    (it.fromPlayer != null && player.memberId == it.fromPlayer.memberId) ||
+                    (it.toPlayer != null && player.memberId == it.toPlayer.memberId)
+        }
+        transfersAdapter!!.updateTransfers(visibleTransfers)
+        if (visibleTransfers.isNotEmpty()) {
             textViewEmpty!!.visibility = View.GONE
             recyclerViewTransfers!!.visibility = View.VISIBLE
-        }
-    }
-
-    fun onTransferAdded(addedTransfer: BoardGame.Companion.TransferWithCurrency) {
-        replaceOrAddTransfer(
-                arguments!!.getSerializable(ARG_PLAYER) as BoardGame.Companion.Player?,
-                addedTransfer
-        )
-        textViewEmpty!!.visibility = View.GONE
-        recyclerViewTransfers!!.visibility = View.VISIBLE
-    }
-
-    fun onTransfersChanged(changedTransfers: Collection<BoardGame.Companion.TransferWithCurrency>) {
-        replaceOrAddTransfers(changedTransfers)
-    }
-
-    private fun replaceOrAddTransfers(
-            transfers: Collection<BoardGame.Companion.TransferWithCurrency>
-    ) {
-        val player = arguments!!.getSerializable(ARG_PLAYER) as BoardGame.Companion.Player?
-        transfers.forEach {
-            replaceOrAddTransfer(player, it)
-        }
-    }
-
-    private fun replaceOrAddTransfer(player: BoardGame.Companion.Player?,
-                                     transfer: BoardGame.Companion.TransferWithCurrency
-    ) {
-        if (player == null ||
-                transfer.fromPlayer != null && player.memberId == transfer.fromPlayer.memberId ||
-                transfer.toPlayer != null && player.memberId == transfer.toPlayer.memberId) {
-            transfersAdapter!!.replaceOrAdd(transfer)
+        } else {
+            textViewEmpty!!.visibility = View.VISIBLE
+            recyclerViewTransfers!!.visibility = View.GONE
         }
     }
 

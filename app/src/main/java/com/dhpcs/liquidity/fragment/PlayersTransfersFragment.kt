@@ -31,7 +31,7 @@ class PlayersTransfersFragment : Fragment() {
             private val players = ArrayList<BoardGame.Companion.Player>()
             private val transfersFragments = HashSet<TransfersFragment>()
 
-            private var transfers: ArrayList<BoardGame.Companion.TransferWithCurrency>? = null
+            private var transfers: ArrayList<BoardGame.Companion.TransferWithCurrency> = ArrayList()
 
             fun add(player: BoardGame.Companion.Player) = players.add(player)
 
@@ -75,30 +75,13 @@ class PlayersTransfersFragment : Fragment() {
                 return players.indexOf(player) + 1
             }
 
-            internal fun onTransfersInitialized(
-                    transfers: Collection<BoardGame.Companion.TransferWithCurrency>) {
-                for (transfersFragment in transfersFragments) {
-                    transfersFragment.onTransfersInitialized(transfers)
-                }
-            }
-
-            internal fun onTransferAdded(addedTransfer: BoardGame.Companion.TransferWithCurrency) {
-                for (transfersFragment in transfersFragments) {
-                    transfersFragment.onTransferAdded(addedTransfer)
-                }
-            }
-
-            internal fun onTransfersChanged(
-                    changedTransfers: Collection<BoardGame.Companion.TransferWithCurrency>) {
-                for (transfersFragment in transfersFragments) {
-                    transfersFragment.onTransfersChanged(changedTransfers)
-                }
-            }
-
             internal fun onTransfersUpdated(
                     transfers: Map<String, BoardGame.Companion.TransferWithCurrency>
             ) {
                 this.transfers = ArrayList(transfers.values)
+                for (transfersFragment in transfersFragments) {
+                    transfersFragment.onTransfersUpdated(transfers)
+                }
             }
 
             internal fun sort(comparator: Comparator<BoardGame.Companion.Player>) {
@@ -181,23 +164,13 @@ class PlayersTransfersFragment : Fragment() {
         }
     }
 
-    fun onTransfersInitialized(transfers: Collection<BoardGame.Companion.TransferWithCurrency>) {
-        lastTransferFragment!!.onTransfersInitialized(transfers)
-        playersTransfersFragmentStatePagerAdapter!!.onTransfersInitialized(transfers)
-    }
-
-    fun onTransferAdded(addedTransfer: BoardGame.Companion.TransferWithCurrency) {
-        lastTransferFragment!!.onTransferAdded(addedTransfer)
-        playersTransfersFragmentStatePagerAdapter!!.onTransferAdded(addedTransfer)
-    }
-
-    fun onTransfersChanged(changedTransfers: Collection<BoardGame.Companion.TransferWithCurrency>) {
-        lastTransferFragment!!.onTransfersChanged(changedTransfers)
-        playersTransfersFragmentStatePagerAdapter!!.onTransfersChanged(changedTransfers)
+    fun onTransferAdded(transfer: BoardGame.Companion.TransferWithCurrency) {
+        lastTransferFragment!!.onTransferAdded(transfer)
     }
 
     fun onTransfersUpdated(
             transfers: Map<String, BoardGame.Companion.TransferWithCurrency>) {
+        lastTransferFragment!!.onTransfersUpdated(transfers)
         playersTransfersFragmentStatePagerAdapter!!.onTransfersUpdated(transfers)
     }
 

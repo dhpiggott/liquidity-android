@@ -636,6 +636,15 @@ class BoardGameActivity :
         finish()
     }
 
+    override fun onQuitGameError() {
+        Toast.makeText(
+                this,
+                R.string.quit_game_error,
+                Toast.LENGTH_LONG
+        ).show()
+        finish()
+    }
+
     override fun onIdentityRequired() {
         if (supportFragmentManager.findFragmentByTag(CreateIdentityDialogFragment.TAG) == null) {
             CreateIdentityDialogFragment.newInstance().show(
@@ -675,11 +684,7 @@ class BoardGameActivity :
         })
     }
 
-    override fun onIdentityCreated(identity: BoardGame.Companion.IdentityWithBalance) {
-        identitiesFragment!!.selectedPage = identitiesFragment!!.getPage(identity)
-    }
-
-    override fun onIdentityReceived(identity: BoardGame.Companion.IdentityWithBalance) {
+    override fun onIdentityAdded(identity: BoardGame.Companion.IdentityWithBalance) {
         identitiesFragment!!.selectedPage = identitiesFragment!!.getPage(identity)
     }
 
@@ -729,10 +734,6 @@ class BoardGameActivity :
         })
     }
 
-    override fun onIdentityRestored(identity: BoardGame.Companion.IdentityWithBalance) {
-        identitiesFragment!!.selectedPage = identitiesFragment!!.getPage(identity)
-    }
-
     override fun onIdentityNameEntered(identity: BoardGame.Companion.Identity, name: String) {
         val changeIdentityNameDisposable = boardGame!!
                 .changeIdentityName(identity, name)
@@ -773,12 +774,6 @@ class BoardGameActivity :
         transferToPlayerDialogFragment?.onIdentitiesUpdated(identities)
     }
 
-    override fun onPlayersInitialized(players: Collection<
-            BoardGame.Companion.PlayerWithBalanceAndConnectionState>
-    ) {
-        playersFragment!!.onPlayersInitialized(players)
-    }
-
     override fun onNoPlayersTextClicked() {
         val zoneIdHolder = Bundle()
         zoneIdHolder.putString(BoardGameChildActivity.EXTRA_ZONE_ID, boardGame!!.zoneId)
@@ -787,12 +782,6 @@ class BoardGameActivity :
                         .putExtra(BoardGameChildActivity.EXTRA_ZONE_ID_HOLDER, zoneIdHolder)
                         .putExtra(AddPlayersActivity.EXTRA_GAME_NAME, boardGame!!.gameName)
         )
-    }
-
-    override fun onPlayerAdded(
-            addedPlayer: BoardGame.Companion.PlayerWithBalanceAndConnectionState
-    ) {
-        playersFragment!!.onPlayerAdded(addedPlayer)
     }
 
     override fun onPlayerClicked(player: BoardGame.Companion.Player) {
@@ -806,18 +795,6 @@ class BoardGameActivity :
                     player
             ).show(supportFragmentManager, TransferToPlayerDialogFragment.TAG)
         }
-    }
-
-    override fun onPlayerChanged(
-            changedPlayer: BoardGame.Companion.PlayerWithBalanceAndConnectionState
-    ) {
-        playersFragment!!.onPlayerChanged(changedPlayer)
-    }
-
-    override fun onPlayerRemoved(
-            removedPlayer: BoardGame.Companion.PlayerWithBalanceAndConnectionState
-    ) {
-        playersFragment!!.onPlayerRemoved(removedPlayer)
     }
 
     override fun onPlayersUpdated(players: Map<String,
@@ -854,17 +831,11 @@ class BoardGameActivity :
         }
     }
 
-    override fun onTransfersInitialized(transfers:
-                                        Collection<BoardGame.Companion.TransferWithCurrency>
-    ) {
-        playersTransfersFragment!!.onTransfersInitialized(transfers)
-    }
-
-    override fun onTransferAdded(addedTransfer: BoardGame.Companion.TransferWithCurrency) {
-        if (addedTransfer.toPlayer != null &&
+    override fun onTransferAdded(transfer: BoardGame.Companion.TransferWithCurrency) {
+        if (transfer.toPlayer != null &&
                 PreferenceManager.getDefaultSharedPreferences(this)
                         .getBoolean("play_transfer_receipt_sounds", true) &&
-                addedTransfer.toPlayer.ownerPublicKey ==
+                transfer.toPlayer.ownerPublicKey ==
                 LiquidityApplication.getServerConnection(applicationContext).clientKey
         ) {
             if (transferReceiptMediaPlayer!!.isPlaying) {
@@ -873,13 +844,7 @@ class BoardGameActivity :
                 transferReceiptMediaPlayer!!.start()
             }
         }
-        playersTransfersFragment!!.onTransferAdded(addedTransfer)
-    }
-
-    override fun onTransfersChanged(changedTransfers: Collection<
-            BoardGame.Companion.TransferWithCurrency>
-    ) {
-        playersTransfersFragment!!.onTransfersChanged(changedTransfers)
+        playersTransfersFragment!!.onTransferAdded(transfer)
     }
 
     override fun onTransfersUpdated(transfers: Map<String,
@@ -909,15 +874,6 @@ class BoardGameActivity :
                 changeGameNameDisposable.dispose()
             }
         })
-    }
-
-    override fun onQuitGameError() {
-        Toast.makeText(
-                this,
-                R.string.quit_game_error,
-                Toast.LENGTH_LONG
-        ).show()
-        finish()
     }
 
     private fun transferIdentityToPlayer(
