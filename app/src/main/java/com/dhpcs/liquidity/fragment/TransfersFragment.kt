@@ -43,7 +43,20 @@ class TransfersFragment : Fragment() {
                             override fun areContentsTheSame(
                                     oldItem: BoardGame.Companion.TransferWithCurrency,
                                     newItem: BoardGame.Companion.TransferWithCurrency
-                            ): Boolean = oldItem == newItem
+                            ): Boolean {
+                                val isFromPlayer = player != null &&
+                                        oldItem.fromPlayer?.memberId == player.memberId
+                                val isToPlayer = player != null &&
+                                        oldItem.toPlayer?.memberId == player.memberId
+                                return if (isFromPlayer && !isToPlayer) {
+                                    oldItem.toPlayer?.name == newItem.toPlayer?.name
+                                } else if (!isFromPlayer && isToPlayer) {
+                                    oldItem.fromPlayer?.name == newItem.fromPlayer?.name
+                                } else {
+                                    oldItem.fromPlayer?.name == newItem.fromPlayer?.name &&
+                                            oldItem.toPlayer?.name == newItem.toPlayer?.name
+                                }
+                            }
 
                             override fun areItemsTheSame(
                                     item1: BoardGame.Companion.TransferWithCurrency,
@@ -112,40 +125,20 @@ class TransfersFragment : Fragment() {
                     context.getString(
                             R.string.transfer_summary_sent_to_format_string,
                             value,
-                            BoardGameActivity.formatAccountOrPlayer(
-                                    context,
-                                    transfer.toAccountId,
-                                    transfer.toAccountName,
-                                    transfer.toPlayer
-                            )
+                            BoardGameActivity.formatNullable(context, transfer.toPlayer?.name)
                     )
                 } else if (!isFromPlayer && isToPlayer) {
                     context.getString(
                             R.string.transfer_summary_received_from_format_string,
                             value,
-                            BoardGameActivity.formatAccountOrPlayer(
-                                    context,
-                                    transfer.fromAccountId,
-                                    transfer.fromAccountName,
-                                    transfer.fromPlayer
-                            )
+                            BoardGameActivity.formatNullable(context, transfer.fromPlayer?.name)
                     )
                 } else {
                     context.getString(
                             R.string.transfer_summary_format_string,
-                            BoardGameActivity.formatAccountOrPlayer(
-                                    context,
-                                    transfer.fromAccountId,
-                                    transfer.fromAccountName,
-                                    transfer.fromPlayer
-                            ),
+                            BoardGameActivity.formatNullable(context, transfer.fromPlayer?.name),
                             value,
-                            BoardGameActivity.formatAccountOrPlayer(
-                                    context,
-                                    transfer.toAccountId,
-                                    transfer.toAccountName,
-                                    transfer.toPlayer
-                            )
+                            BoardGameActivity.formatNullable(context, transfer.toPlayer?.name)
                     )
                 }
                 val createdTime = context.getString(

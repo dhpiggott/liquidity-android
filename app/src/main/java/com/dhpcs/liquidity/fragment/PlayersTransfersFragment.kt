@@ -113,7 +113,7 @@ class PlayersTransfersFragment : Fragment() {
 
         playersTransfersFragmentStatePagerAdapter = PlayersTransfersFragmentStatePagerAdapter(
                 fragmentManager!!,
-                requireActivity()
+                requireContext()
         )
 
         selectedPlayer = savedInstanceState?.getSerializable(STATE_SELECTED_PLAYER) as
@@ -150,7 +150,7 @@ class PlayersTransfersFragment : Fragment() {
             playersTransfersFragmentStatePagerAdapter!!.add(it)
         }
         playersTransfersFragmentStatePagerAdapter!!.sort(
-                BoardGameActivity.playerComparator(requireActivity())
+                BoardGameActivity.playerComparator(requireContext())
         )
         playersTransfersFragmentStatePagerAdapter!!.notifyDataSetChanged()
 

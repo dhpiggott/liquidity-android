@@ -67,10 +67,10 @@ class GamesFragment : Fragment(),
                 cursor.getColumnIndexOrThrow(LiquidityContract.Games.CREATED) -> {
                     val createdTimeMillis = cursor.getLong(columnIndex)
                     val currentTimeMillis = System.currentTimeMillis()
-                    (view as TextView).text = requireActivity().getString(
+                    (view as TextView).text = requireContext().getString(
                             R.string.game_created_format_string,
                             LiquidityApplication.getRelativeTimeSpanString(
-                                    requireActivity(),
+                                    requireContext(),
                                     Instant(createdTimeMillis),
                                     Instant(if (currentTimeMillis < createdTimeMillis) {
                                         createdTimeMillis
@@ -85,10 +85,10 @@ class GamesFragment : Fragment(),
                 cursor.getColumnIndexOrThrow(LiquidityContract.Games.EXPIRES) -> {
                     val expiresTimeMillis = cursor.getLong(columnIndex)
                     val currentTimeMillis = System.currentTimeMillis()
-                    (view as TextView).text = requireActivity().getString(
+                    (view as TextView).text = requireContext().getString(
                             R.string.game_expires_format_string,
                             LiquidityApplication.getRelativeTimeSpanString(
-                                    requireActivity(),
+                                    requireContext(),
                                     Instant(expiresTimeMillis),
                                     Instant(if (currentTimeMillis >= expiresTimeMillis) {
                                         expiresTimeMillis
@@ -109,7 +109,7 @@ class GamesFragment : Fragment(),
 
     override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
         return CursorLoader(
-                requireActivity(),
+                requireContext(),
                 LiquidityContract.Games.CONTENT_URI,
                 arrayOf(LiquidityContract.Games.ID,
                         LiquidityContract.Games.ZONE_ID,

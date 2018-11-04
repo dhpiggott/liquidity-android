@@ -23,7 +23,7 @@ class LastTransferFragment : Fragment() {
     }
 
     private val refreshHandler = Handler()
-    private val refreshRunnable = Runnable { showTransfer(lastTransfer, false) }
+    private val refreshRunnable = Runnable { showTransfer(lastTransfer!!, false) }
 
     private var textViewEmpty: TextView? = null
     private var textSwitcherSummary: TextSwitcher? = null
@@ -52,7 +52,7 @@ class LastTransferFragment : Fragment() {
         if (lastTransfer == null ||
                 transfer.created > lastTransfer!!.created) {
             lastTransfer = transfer
-            showTransfer(lastTransfer, true)
+            showTransfer(lastTransfer!!, true)
         }
     }
 
@@ -63,36 +63,26 @@ class LastTransferFragment : Fragment() {
                 lastTransfer = it
             }
         }
-        if (lastTransfer != null) showTransfer(lastTransfer, false)
+        if (lastTransfer != null) showTransfer(lastTransfer!!, false)
     }
 
-    private fun showTransfer(transfer: BoardGame.Companion.TransferWithCurrency?,
+    private fun showTransfer(transfer: BoardGame.Companion.TransferWithCurrency,
                              animate: Boolean
     ) {
         val summary = getString(
                 R.string.transfer_summary_format_string,
-                BoardGameActivity.formatAccountOrPlayer(
-                        requireActivity(),
-                        lastTransfer!!.fromAccountId,
-                        lastTransfer!!.fromAccountName,
-                        lastTransfer!!.fromPlayer
-                ),
+                BoardGameActivity.formatNullable(requireContext(), transfer.fromPlayer?.name),
                 BoardGameActivity.formatCurrencyValue(
-                        requireActivity(),
-                        transfer!!.currency,
+                        requireContext(),
+                        transfer.currency,
                         transfer.value
                 ),
-                BoardGameActivity.formatAccountOrPlayer(
-                        requireActivity(),
-                        lastTransfer!!.toAccountId,
-                        lastTransfer!!.toAccountName,
-                        lastTransfer!!.toPlayer
-                )
+                BoardGameActivity.formatNullable(requireContext(), transfer.toPlayer?.name)
         )
         val createdTimeMillis = transfer.created
         val currentTimeMillis = System.currentTimeMillis()
         val created = LiquidityApplication.getRelativeTimeSpanString(
-                requireActivity(),
+                requireContext(),
                 Instant(createdTimeMillis),
                 Instant(
                         if (currentTimeMillis < createdTimeMillis)

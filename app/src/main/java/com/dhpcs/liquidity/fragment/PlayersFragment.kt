@@ -33,7 +33,11 @@ class PlayersFragment : Fragment() {
                     override fun areContentsTheSame(
                             oldItem: BoardGame.Companion.PlayerWithBalanceAndConnectionState,
                             newItem: BoardGame.Companion.PlayerWithBalanceAndConnectionState
-                    ): Boolean = oldItem == newItem
+                    ): Boolean {
+                        return oldItem.name == newItem.name &&
+                                oldItem.balance == newItem.balance &&
+                                oldItem.isConnected == newItem.isConnected
+                    }
 
                     override fun areItemsTheSame(
                             item1: BoardGame.Companion.PlayerWithBalanceAndConnectionState,

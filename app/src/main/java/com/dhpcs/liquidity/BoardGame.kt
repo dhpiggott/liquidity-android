@@ -98,11 +98,9 @@ class BoardGame private constructor(
         ) : Identity
 
         interface Transfer : Serializable {
-            val fromAccountName: String?
             val fromAccountId: String
             val fromPlayer: Player?
             val toAccountId: String
-            val toAccountName: String?
             val toPlayer: Player?
             val transactionId: String
             val created: Long
@@ -111,10 +109,8 @@ class BoardGame private constructor(
 
         data class TransferWithCurrency(
                 override val fromAccountId: String,
-                override val fromAccountName: String?,
                 override val fromPlayer: Player?,
                 override val toAccountId: String,
-                override val toAccountName: String?,
                 override val toPlayer: Player?,
                 override val transactionId: String,
                 override val created: Long,
@@ -279,10 +275,8 @@ class BoardGame private constructor(
                 val toMemberId = accountsMembers[transaction.to]
                 TransferWithCurrency(
                         fromAccount.id,
-                        if (!fromAccount.hasName()) null else fromAccount.name.value,
                         players[fromMemberId]!!,
                         toAccount.id,
-                        if (!toAccount.hasName()) null else toAccount.name.value,
                         players[toMemberId]!!,
                         transaction.id,
                         transaction.created,

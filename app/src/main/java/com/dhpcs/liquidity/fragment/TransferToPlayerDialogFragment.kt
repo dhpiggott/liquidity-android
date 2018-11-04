@@ -192,10 +192,10 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
         }
         this.toList = toList
 
-        val playerComparator = BoardGameActivity.playerComparator(requireActivity())
-        identitiesSpinnerAdapter = IdentitiesAdapter(requireActivity(), identities)
+        val playerComparator = BoardGameActivity.playerComparator(requireContext())
+        identitiesSpinnerAdapter = IdentitiesAdapter(requireContext(), identities)
         identitiesSpinnerAdapter!!.sort(playerComparator)
-        playersSpinnerAdapter = PlayersAdapter(requireActivity(), players)
+        playersSpinnerAdapter = PlayersAdapter(requireContext(), players)
         playersSpinnerAdapter!!.sort(playerComparator)
     }
 
@@ -213,7 +213,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
         val linearLayoutTo = view.findViewById<LinearLayout>(R.id.linearlayout_to)
         val spinnerTo = view.findViewById<Spinner>(R.id.spinner_to)
 
-        val alertDialog = AlertDialog.Builder(requireActivity())
+        val alertDialog = AlertDialog.Builder(requireContext())
                 .setTitle(getString(
                         R.string.enter_transfer_details
                 ))
@@ -301,7 +301,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                         editTextScaledValue.text = getString(
                                 R.string.transfer_to_player_scaled_value_format_string,
                                 BoardGameActivity.formatCurrencyValue(
-                                        requireActivity(),
+                                        requireContext(),
                                         currency!!,
                                         value!!
                                 )
@@ -344,7 +344,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
 
         }
 
-        textViewCurrency.text = BoardGameActivity.formatCurrency(requireActivity(), currency!!)
+        textViewCurrency.text = BoardGameActivity.formatCurrency(requireContext(), currency!!)
 
         spinnerFrom.setSelection(identitiesSpinnerAdapter!!.getPosition(from))
 
@@ -362,7 +362,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                 ) as CheckedTextView
                 linearLayoutTo.addView(checkedTextViewPlayer)
                 checkedTextViewPlayer.text =
-                        BoardGameActivity.formatNullable(requireActivity(), player.name)
+                        BoardGameActivity.formatNullable(requireContext(), player.name)
                 checkedTextViewPlayer.isChecked = toList!!.contains(player)
                 checkedTextViewPlayer.setOnClickListener {
                     checkedTextViewPlayer.toggle()
@@ -434,12 +434,12 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                 textViewValueError!!.text = getString(
                         R.string.transfer_value_invalid_format_string,
                         BoardGameActivity.formatCurrencyValue(
-                                requireActivity(),
+                                requireContext(),
                                 currency!!,
                                 currentBalance
                         ),
                         BoardGameActivity.formatCurrencyValue(
-                                requireActivity(),
+                                requireContext(),
                                 currency!!,
                                 requiredBalance
                         )
@@ -458,7 +458,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
         val isFromValid = if (toAccountIds.contains(from!!.accountId)) {
             textViewFromError!!.text = getString(
                     R.string.transfer_from_invalid_format_string,
-                    BoardGameActivity.formatNullable(requireActivity(), from!!.name)
+                    BoardGameActivity.formatNullable(requireContext(), from!!.name)
             )
             false
         } else {

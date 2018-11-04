@@ -63,7 +63,6 @@
     <string name="no_last_transfer">Click a player to send money to them.</string>
     <string name="no_other_players">No one else has joined yet. Touch here to invite them.</string>
     <string name="no_transfers">No transfers have been made yet.</string>
-    <string name="non_player_transfer_location_format_string">account %1$s (%2$s)</string>
     <string name="ok">OK</string>
     <string name="play_transfer_receipt_sounds_summary">Only when the screen is on</string>
     <string name="play_transfer_receipt_sounds_title">Play transfer receipt sounds</string>

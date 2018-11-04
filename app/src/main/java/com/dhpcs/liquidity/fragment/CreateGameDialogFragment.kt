@@ -106,7 +106,7 @@ class CreateGameDialogFragment : AppCompatDialogFragment() {
         )
 
         val currenciesSpinnerAdapter = CurrenciesAdapter(
-                requireActivity(),
+                requireContext(),
                 ArrayList(Currency.getAvailableCurrencies())
         )
 
@@ -116,7 +116,7 @@ class CreateGameDialogFragment : AppCompatDialogFragment() {
                 view.findViewById<TextInputEditText>(R.id.textinputedittext_game_name)
         val spinnerCurrency = view.findViewById<Spinner>(R.id.spinner_game_currency)
 
-        val alertDialog = AlertDialog.Builder(requireActivity())
+        val alertDialog = AlertDialog.Builder(requireContext())
                 .setTitle(getString(
                         R.string.enter_game_details
                 ))

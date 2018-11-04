@@ -57,7 +57,7 @@ class CreateIdentityDialogFragment : AppCompatDialogFragment() {
         val textInputEditTextIdentityName = view
                 .findViewById<TextInputEditText>(R.id.textinputedittext_identity_name)
 
-        val alertDialog = AlertDialog.Builder(requireActivity())
+        val alertDialog = AlertDialog.Builder(requireContext())
                 .setTitle(R.string.enter_identity_name)
                 .setView(view)
                 .setNegativeButton(R.string.cancel, null)

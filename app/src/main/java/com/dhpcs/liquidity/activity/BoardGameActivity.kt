@@ -144,21 +144,6 @@ class BoardGameActivity :
             )
         }
 
-        fun formatAccountOrPlayer(context: Context,
-                                  accountId: String,
-                                  accountName: String?,
-                                  player: BoardGame.Companion.Player?): String {
-            return if (player == null) {
-                context.getString(
-                        R.string.non_player_transfer_location_format_string,
-                        accountId,
-                        formatNullable(context, accountName)
-                )
-            } else {
-                formatNullable(context, player.name)
-            }
-        }
-
         fun formatNullable(context: Context, nullable: String?): String {
             return nullable ?: context.getString(R.string.unnamed)
         }

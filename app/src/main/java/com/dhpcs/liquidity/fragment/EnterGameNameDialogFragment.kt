@@ -65,7 +65,7 @@ class EnterGameNameDialogFragment : AppCompatDialogFragment() {
         val textInputEditTextGameName =
                 view.findViewById<TextInputEditText>(R.id.textinputedittext_game_name)
 
-        val alertDialog = AlertDialog.Builder(requireActivity())
+        val alertDialog = AlertDialog.Builder(requireContext())
                 .setTitle(R.string.enter_game_name)
                 .setView(view)
                 .setNegativeButton(R.string.cancel, null)

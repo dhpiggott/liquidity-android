@@ -41,9 +41,9 @@ class IdentityFragment : Fragment() {
 
         val zoneId = identity.zoneId
         val memberId = identity.memberId
-        val name = BoardGameActivity.formatNullable(requireActivity(), identity.name)
+        val name = BoardGameActivity.formatNullable(requireContext(), identity.name)
         val balance = BoardGameActivity.formatCurrencyValue(
-                requireActivity(),
+                requireContext(),
                 identity.currency,
                 identity.balance
         )

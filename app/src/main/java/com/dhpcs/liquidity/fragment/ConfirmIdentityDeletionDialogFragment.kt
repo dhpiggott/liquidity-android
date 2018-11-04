@@ -48,11 +48,11 @@ class ConfirmIdentityDeletionDialogFragment : AppCompatDialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val identity = arguments!!.getSerializable(ARG_IDENTITY) as BoardGame.Companion.Identity
-        return AlertDialog.Builder(requireActivity())
+        return AlertDialog.Builder(requireContext())
                 .setTitle(
                         getString(
                                 R.string.delete_identity_title_format_string,
-                                BoardGameActivity.formatNullable(requireActivity(), identity.name)
+                                BoardGameActivity.formatNullable(requireContext(), identity.name)
                         )
                 )
                 .setMessage(R.string.delete_identity_message)
