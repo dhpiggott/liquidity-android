@@ -41,7 +41,7 @@ class ReceiveIdentityActivity : BoardGameChildActivity() {
         }
     }
 
-    override fun onIdentityAdded(identity: BoardGame.Companion.IdentityWithBalance) {
+    override fun onIdentityAdded(identity: BoardGame.Companion.Identity) {
         setResult(AppCompatActivity.RESULT_OK)
         finish()
     }

@@ -45,10 +45,10 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
         private const val EXTRA_TO_LIST = "to_list"
 
         fun newInstance(
-                identities: ArrayList<BoardGame.Companion.IdentityWithBalance>,
+                identities: ArrayList<BoardGame.Companion.Identity>,
                 players: ArrayList<out BoardGame.Companion.Player>,
                 currency: String?,
-                from: BoardGame.Companion.IdentityWithBalance,
+                from: BoardGame.Companion.Identity,
                 to: BoardGame.Companion.Player?): TransferToPlayerDialogFragment {
             val transferToPlayerDialogFragment = TransferToPlayerDialogFragment()
             val args = Bundle()
@@ -100,8 +100,8 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
         private class IdentitiesAdapter internal constructor(context: Context,
                                                              identities:
                                                              List<BoardGame.Companion
-                                                             .IdentityWithBalance>
-        ) : ArrayAdapter<BoardGame.Companion.IdentityWithBalance>(
+                                                             .Identity>
+        ) : ArrayAdapter<BoardGame.Companion.Identity>(
                 context,
                 android.R.layout.simple_spinner_item,
                 identities
@@ -129,7 +129,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
             }
 
             private fun bindView(textView: TextView,
-                                 identity: BoardGame.Companion.IdentityWithBalance?
+                                 identity: BoardGame.Companion.Identity?
             ): View {
                 textView.text = if (identity!!.isBanker) {
                     BoardGameActivity.formatNullable(context, identity.name)
@@ -154,11 +154,11 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
     private var listener: Listener? = null
 
     private var currency: String? = null
-    private var from: BoardGame.Companion.IdentityWithBalance? = null
+    private var from: BoardGame.Companion.Identity? = null
     private var to: BoardGame.Companion.Player? = null
     private var toList: ArrayList<BoardGame.Companion.Player>? = null
 
-    private var identitiesSpinnerAdapter: ArrayAdapter<BoardGame.Companion.IdentityWithBalance>? =
+    private var identitiesSpinnerAdapter: ArrayAdapter<BoardGame.Companion.Identity>? =
             null
     private var playersSpinnerAdapter: ArrayAdapter<BoardGame.Companion.Player>? = null
 
@@ -168,18 +168,18 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
 
     private var value: BigDecimal? = null
 
-    private var identities: Map<String, BoardGame.Companion.IdentityWithBalance>? = null
+    private var identities: Map<String, BoardGame.Companion.Identity>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val identities = arguments!!.getSerializable(ARG_IDENTITIES) as
-                List<BoardGame.Companion.IdentityWithBalance>
+                List<BoardGame.Companion.Identity>
         val players = arguments!!.getSerializable(ARG_PLAYERS) as
                 List<BoardGame.Companion.Player>
         val currency = arguments!!.getString(ARG_CURRENCY)
         this.currency = currency
-        from = arguments!!.getSerializable(ARG_FROM) as BoardGame.Companion.IdentityWithBalance
+        from = arguments!!.getSerializable(ARG_FROM) as BoardGame.Companion.Identity
         to = arguments!!.getSerializable(ARG_TO) as BoardGame.Companion.Player?
         val toList = when {
             to != null ->
@@ -192,9 +192,10 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
         }
         this.toList = toList
 
+        val identityComparator = BoardGameActivity.identityComparator(requireContext())
         val playerComparator = BoardGameActivity.playerComparator(requireContext())
         identitiesSpinnerAdapter = IdentitiesAdapter(requireContext(), identities)
-        identitiesSpinnerAdapter!!.sort(playerComparator)
+        identitiesSpinnerAdapter!!.sort(identityComparator)
         playersSpinnerAdapter = PlayersAdapter(requireContext(), players)
         playersSpinnerAdapter!!.sort(playerComparator)
     }
@@ -408,7 +409,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
         outState.putSerializable(EXTRA_TO_LIST, toList)
     }
 
-    fun onIdentitiesUpdated(identities: Map<String, BoardGame.Companion.IdentityWithBalance>) {
+    fun onIdentitiesUpdated(identities: Map<String, BoardGame.Companion.Identity>) {
         this.identities = identities
         identitiesSpinnerAdapter!!.clear()
         identitiesSpinnerAdapter!!.addAll(identities.values)

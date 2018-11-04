@@ -29,7 +29,7 @@ class LastTransferFragment : Fragment() {
     private var textSwitcherSummary: TextSwitcher? = null
     private var textSwitcherCreated: TextSwitcher? = null
 
-    private var lastTransfer: BoardGame.Companion.TransferWithCurrency? = null
+    private var lastTransfer: BoardGame.Companion.Transfer? = null
 
     override fun onCreateView(inflater: LayoutInflater,
                               container: ViewGroup?,
@@ -48,7 +48,7 @@ class LastTransferFragment : Fragment() {
         super.onDestroy()
     }
 
-    fun onTransferAdded(transfer: BoardGame.Companion.TransferWithCurrency) {
+    fun onTransferAdded(transfer: BoardGame.Companion.Transfer) {
         if (lastTransfer == null ||
                 transfer.created > lastTransfer!!.created) {
             lastTransfer = transfer
@@ -56,7 +56,7 @@ class LastTransferFragment : Fragment() {
         }
     }
 
-    fun onTransfersUpdated(transfers: Map<String, BoardGame.Companion.TransferWithCurrency>) {
+    fun onTransfersUpdated(transfers: Map<String, BoardGame.Companion.Transfer>) {
         transfers.values.forEach {
             if (lastTransfer == null ||
                     it.created > lastTransfer!!.created) {
@@ -66,7 +66,7 @@ class LastTransferFragment : Fragment() {
         if (lastTransfer != null) showTransfer(lastTransfer!!, false)
     }
 
-    private fun showTransfer(transfer: BoardGame.Companion.TransferWithCurrency,
+    private fun showTransfer(transfer: BoardGame.Companion.Transfer,
                              animate: Boolean
     ) {
         val summary = getString(

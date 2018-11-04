@@ -25,7 +25,7 @@ class TransfersFragment : Fragment() {
         private val dateFormat = DateFormat.getDateInstance()
 
         fun newInstance(player: BoardGame.Companion.Player?,
-                        transfers: ArrayList<BoardGame.Companion.TransferWithCurrency>
+                        transfers: ArrayList<BoardGame.Companion.Transfer>
         ): TransfersFragment {
             val transfersFragment = TransfersFragment()
             val args = Bundle()
@@ -37,12 +37,12 @@ class TransfersFragment : Fragment() {
 
         private class TransfersAdapter
         internal constructor(private val player: BoardGame.Companion.Player?) :
-                ListAdapter<BoardGame.Companion.TransferWithCurrency, TransferViewHolder>(
-                        object : DiffUtil.ItemCallback<BoardGame.Companion.TransferWithCurrency>() {
+                ListAdapter<BoardGame.Companion.Transfer, TransferViewHolder>(
+                        object : DiffUtil.ItemCallback<BoardGame.Companion.Transfer>() {
 
                             override fun areContentsTheSame(
-                                    oldItem: BoardGame.Companion.TransferWithCurrency,
-                                    newItem: BoardGame.Companion.TransferWithCurrency
+                                    oldItem: BoardGame.Companion.Transfer,
+                                    newItem: BoardGame.Companion.Transfer
                             ): Boolean {
                                 val isFromPlayer = player != null &&
                                         oldItem.fromPlayer?.memberId == player.memberId
@@ -59,15 +59,15 @@ class TransfersFragment : Fragment() {
                             }
 
                             override fun areItemsTheSame(
-                                    item1: BoardGame.Companion.TransferWithCurrency,
-                                    item2: BoardGame.Companion.TransferWithCurrency
+                                    item1: BoardGame.Companion.Transfer,
+                                    item2: BoardGame.Companion.Transfer
                             ): Boolean = item1.transactionId == item2.transactionId
 
                         }
                 ) {
 
             private val transferComparator =
-                    Comparator<BoardGame.Companion.TransferWithCurrency> { o1, o2 ->
+                    Comparator<BoardGame.Companion.Transfer> { o1, o2 ->
                         val lhsCreated = o1.created
                         val rhsCreated = o2.created
                         when {
@@ -93,7 +93,7 @@ class TransfersFragment : Fragment() {
             }
 
             internal fun updateTransfers(
-                    transfers: Collection<BoardGame.Companion.TransferWithCurrency>) {
+                    transfers: Collection<BoardGame.Companion.Transfer>) {
                 submitList(transfers.sortedWith(transferComparator))
             }
 
@@ -111,7 +111,7 @@ class TransfersFragment : Fragment() {
             private val textViewCreatedDate =
                     itemView.findViewById<TextView>(R.id.textview_created_date)
 
-            fun bindTransfer(transfer: BoardGame.Companion.TransferWithCurrency) {
+            fun bindTransfer(transfer: BoardGame.Companion.Transfer) {
                 val isFromPlayer = player != null &&
                         transfer.fromPlayer?.memberId == player.memberId
                 val value = BoardGameActivity.formatCurrencyValue(
@@ -193,18 +193,18 @@ class TransfersFragment : Fragment() {
         }
 
         val transfers = arguments!!.getSerializable(ARG_TRANSFERS) as
-                Collection<BoardGame.Companion.TransferWithCurrency>
+                Collection<BoardGame.Companion.Transfer>
         updateTransfers(transfers, player)
 
         return view
     }
 
-    fun onTransfersUpdated(transfers: Map<String, BoardGame.Companion.TransferWithCurrency>) {
+    fun onTransfersUpdated(transfers: Map<String, BoardGame.Companion.Transfer>) {
         updateTransfers(transfers.values, player)
     }
 
     private fun updateTransfers(
-            transfers: Collection<BoardGame.Companion.TransferWithCurrency>,
+            transfers: Collection<BoardGame.Companion.Transfer>,
             player: BoardGame.Companion.Player?) {
         val visibleTransfers = transfers.filter {
             player == null ||

@@ -60,63 +60,41 @@ class BoardGame private constructor(
             JOINED
         }
 
-        interface Player : Serializable {
-            val zoneId: String
-            val memberId: String
-            val ownerPublicKey: ByteString
-            val name: String?
-            val isHidden: Boolean
-            val accountId: String
-            val isBanker: Boolean
-        }
-
-        interface Identity : Player
-
-        data class PlayerWithBalanceAndConnectionState(
-                override val zoneId: String,
-                override val memberId: String,
-                override val ownerPublicKey: ByteString,
-                override val name: String?,
-                override val isHidden: Boolean,
-                override val accountId: String,
+        data class Player(
+                val zoneId: String,
+                val memberId: String,
+                val ownerPublicKey: ByteString,
+                val name: String?,
+                val isHidden: Boolean,
+                val accountId: String,
                 val balance: BigDecimal,
                 val currency: String?,
-                override val isBanker: Boolean,
+                val isBanker: Boolean,
                 val isConnected: Boolean
-        ) : Player
+        ) : Serializable
 
-        data class IdentityWithBalance(
-                override val zoneId: String,
-                override val memberId: String,
-                override val ownerPublicKey: ByteString,
-                override val name: String?,
-                override val isHidden: Boolean,
-                override val accountId: String,
+        data class Identity(
+                val zoneId: String,
+                val memberId: String,
+                val ownerPublicKey: ByteString,
+                val name: String?,
+                val isHidden: Boolean,
+                val accountId: String,
                 val balance: BigDecimal,
                 val currency: String?,
-                override val isBanker: Boolean
-        ) : Identity
+                val isBanker: Boolean
+        ) : Serializable
 
-        interface Transfer : Serializable {
-            val fromAccountId: String
-            val fromPlayer: Player?
-            val toAccountId: String
-            val toPlayer: Player?
-            val transactionId: String
-            val created: Long
-            val value: BigDecimal
-        }
-
-        data class TransferWithCurrency(
-                override val fromAccountId: String,
-                override val fromPlayer: Player?,
-                override val toAccountId: String,
-                override val toPlayer: Player?,
-                override val transactionId: String,
-                override val created: Long,
-                override val value: BigDecimal,
+        data class Transfer(
+                val fromAccountId: String,
+                val fromPlayer: Player?,
+                val toAccountId: String,
+                val toPlayer: Player?,
+                val transactionId: String,
+                val created: Long,
+                val value: BigDecimal,
                 val currency: String?
-        ) : Transfer
+        ) : Serializable
 
         interface GameActionListener {
 
@@ -126,13 +104,13 @@ class BoardGame private constructor(
 
             fun onIdentityRequired()
 
-            fun onIdentityAdded(identity: IdentityWithBalance)
-            fun onIdentitiesUpdated(identities: Map<String, IdentityWithBalance>)
+            fun onIdentityAdded(identity: Identity)
+            fun onIdentitiesUpdated(identities: Map<String, Identity>)
 
-            fun onPlayersUpdated(players: Map<String, PlayerWithBalanceAndConnectionState>)
+            fun onPlayersUpdated(players: Map<String, Player>)
 
-            fun onTransferAdded(transfer: TransferWithCurrency)
-            fun onTransfersUpdated(transfers: Map<String, TransferWithCurrency>)
+            fun onTransferAdded(transfer: Transfer)
+            fun onTransfersUpdated(transfers: Map<String, Transfer>)
 
         }
 
@@ -150,11 +128,11 @@ class BoardGame private constructor(
                 var currency: String?,
                 var memberIdsToAccountIds: Map<String, String>,
                 var accountIdsToMemberIds: Map<String, String>,
-                var identities: Map<String, IdentityWithBalance>,
-                var hiddenIdentities: Map<String, IdentityWithBalance>,
-                var players: Map<String, PlayerWithBalanceAndConnectionState>,
-                var hiddenPlayers: Map<String, PlayerWithBalanceAndConnectionState>,
-                var transfers: Map<String, TransferWithCurrency>
+                var identities: Map<String, Identity>,
+                var hiddenIdentities: Map<String, Identity>,
+                var players: Map<String, Player>,
+                var hiddenPlayers: Map<String, Player>,
+                var transfers: Map<String, Transfer>
         )
 
         private var instances: Map<String, BoardGame> = HashMap()
@@ -197,14 +175,14 @@ class BoardGame private constructor(
                 members: List<Model.Member>,
                 equityAccountId: String,
                 clientKey: ByteString
-        ): Pair<Map<String, IdentityWithBalance>, Map<String, IdentityWithBalance>> {
+        ): Pair<Map<String, Identity>, Map<String, Identity>> {
             val identitiesFromMembersAccounts = membersAccounts.filterKeys { memberId ->
                 val member = members.find { it.id == memberId }!!
                 member.ownerPublicKeysCount == 1 &&
                         member.getOwnerPublicKeys(0) == clientKey
             }.mapValues { (memberId, accountId) ->
                 val member = members.find { it.id == memberId }!!
-                IdentityWithBalance(
+                Identity(
                         zoneId,
                         member.id,
                         member.getOwnerPublicKeys(0),
@@ -229,13 +207,13 @@ class BoardGame private constructor(
                                                members: List<Model.Member>,
                                                equityAccountId: String,
                                                connectedClients: Collection<ByteString>
-        ): Pair<Map<String, PlayerWithBalanceAndConnectionState>,
-                Map<String, PlayerWithBalanceAndConnectionState>> {
+        ): Pair<Map<String, Player>,
+                Map<String, Player>> {
             val playersFromMembersAccounts = membersAccounts.filterKeys { memberId ->
                 members.find { it.id == memberId }!!.ownerPublicKeysCount == 1
             }.mapValues { (memberId, accountId) ->
                 val member = members.find { it.id == memberId }!!
-                PlayerWithBalanceAndConnectionState(
+                Player(
                         zoneId,
                         member.id,
                         member.getOwnerPublicKeys(0),
@@ -267,13 +245,13 @@ class BoardGame private constructor(
                                               accountsMembers: Map<String, String>,
                                               players: Map<String, Player>,
                                               accounts: List<Model.Account>
-        ): Map<String, TransferWithCurrency> {
+        ): Map<String, Transfer> {
             return transactions.asSequence().map { transaction ->
                 val fromAccount = accounts.find { it.id == transaction.from }!!
                 val fromMemberId = accountsMembers[transaction.from]
                 val toAccount = accounts.find { it.id == transaction.to }!!
                 val toMemberId = accountsMembers[transaction.to]
-                TransferWithCurrency(
+                Transfer(
                         fromAccount.id,
                         players[fromMemberId]!!,
                         toAccount.id,

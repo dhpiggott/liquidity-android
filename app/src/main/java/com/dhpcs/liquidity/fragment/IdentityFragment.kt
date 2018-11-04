@@ -17,7 +17,7 @@ class IdentityFragment : Fragment() {
 
         private const val ARG_IDENTITY = "identity"
 
-        fun newInstance(identity: BoardGame.Companion.IdentityWithBalance): IdentityFragment {
+        fun newInstance(identity: BoardGame.Companion.Identity): IdentityFragment {
             val identityFragment = IdentityFragment()
             val args = Bundle()
             args.putSerializable(ARG_IDENTITY, identity)
@@ -33,7 +33,7 @@ class IdentityFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_identity, container, false)
 
         val identity = arguments!!.getSerializable(ARG_IDENTITY) as
-                BoardGame.Companion.IdentityWithBalance
+                BoardGame.Companion.Identity
 
         val identiconId = view.findViewById<Identicon>(R.id.identicon_id)
         val textViewName = view.findViewById<TextView>(R.id.textview_name)

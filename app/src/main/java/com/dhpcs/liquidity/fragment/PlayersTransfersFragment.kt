@@ -31,7 +31,7 @@ class PlayersTransfersFragment : Fragment() {
             private val players = ArrayList<BoardGame.Companion.Player>()
             private val transfersFragments = HashSet<TransfersFragment>()
 
-            private var transfers: ArrayList<BoardGame.Companion.TransferWithCurrency> = ArrayList()
+            private var transfers: ArrayList<BoardGame.Companion.Transfer> = ArrayList()
 
             fun add(player: BoardGame.Companion.Player) = players.add(player)
 
@@ -76,7 +76,7 @@ class PlayersTransfersFragment : Fragment() {
             }
 
             internal fun onTransfersUpdated(
-                    transfers: Map<String, BoardGame.Companion.TransferWithCurrency>
+                    transfers: Map<String, BoardGame.Companion.Transfer>
             ) {
                 this.transfers = ArrayList(transfers.values)
                 for (transfersFragment in transfersFragments) {
@@ -164,12 +164,12 @@ class PlayersTransfersFragment : Fragment() {
         }
     }
 
-    fun onTransferAdded(transfer: BoardGame.Companion.TransferWithCurrency) {
+    fun onTransferAdded(transfer: BoardGame.Companion.Transfer) {
         lastTransferFragment!!.onTransferAdded(transfer)
     }
 
     fun onTransfersUpdated(
-            transfers: Map<String, BoardGame.Companion.TransferWithCurrency>) {
+            transfers: Map<String, BoardGame.Companion.Transfer>) {
         lastTransferFragment!!.onTransfersUpdated(transfers)
         playersTransfersFragmentStatePagerAdapter!!.onTransfersUpdated(transfers)
     }

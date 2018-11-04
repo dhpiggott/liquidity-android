@@ -26,7 +26,7 @@ class RestoreIdentityDialogFragment : AppCompatDialogFragment() {
         }
 
         private class IdentitiesAdapter internal constructor(context: Context
-        ) : ArrayAdapter<BoardGame.Companion.IdentityWithBalance>(context,
+        ) : ArrayAdapter<BoardGame.Companion.Identity>(context,
                 R.layout.linearlayout_identity,
                 R.id.textview_name
         ) {
@@ -63,7 +63,7 @@ class RestoreIdentityDialogFragment : AppCompatDialogFragment() {
         private const val ARG_IDENTITIES = "identities"
 
         fun newInstance(
-                identities: ArrayList<BoardGame.Companion.IdentityWithBalance>
+                identities: ArrayList<BoardGame.Companion.Identity>
         ): RestoreIdentityDialogFragment {
             val restoreIdentityDialogFragment = RestoreIdentityDialogFragment()
             val args = Bundle()
@@ -89,9 +89,9 @@ class RestoreIdentityDialogFragment : AppCompatDialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val identitiesAdapter = IdentitiesAdapter(requireContext())
         val identities = arguments!!.getSerializable(ARG_IDENTITIES) as
-                ArrayList<BoardGame.Companion.IdentityWithBalance>
+                ArrayList<BoardGame.Companion.Identity>
         identitiesAdapter.addAll(identities)
-        identitiesAdapter.sort(BoardGameActivity.playerComparator(requireContext()))
+        identitiesAdapter.sort(BoardGameActivity.identityComparator(requireContext()))
         return AlertDialog.Builder(requireContext())
                 .setTitle(R.string.choose_identity_to_restore)
                 .setAdapter(identitiesAdapter) { _, which ->

@@ -148,6 +148,37 @@ class BoardGameActivity :
             return nullable ?: context.getString(R.string.unnamed)
         }
 
+        fun identityComparator(context: Context): Comparator<BoardGame.Companion.Identity> {
+            return object : Comparator<BoardGame.Companion.Identity> {
+
+                private val collator = Collator.getInstance()
+
+                override fun compare(lhs: BoardGame.Companion.Identity,
+                                     rhs: BoardGame.Companion.Identity
+                ): Int {
+                    val nameOrdered = collator.compare(
+                            BoardGameActivity.formatNullable(
+                                    context,
+                                    lhs.name
+                            ),
+                            BoardGameActivity.formatNullable(
+                                    context,
+                                    rhs.name
+                            )
+                    )
+                    return when (nameOrdered) {
+                        0 -> {
+                            val lhsId = lhs.memberId
+                            val rhsId = rhs.memberId
+                            lhsId.compareTo(rhsId)
+                        }
+                        else -> nameOrdered
+                    }
+                }
+
+            }
+        }
+
         fun playerComparator(context: Context): Comparator<BoardGame.Companion.Player> {
             return object : Comparator<BoardGame.Companion.Player> {
 
@@ -669,7 +700,7 @@ class BoardGameActivity :
         })
     }
 
-    override fun onIdentityAdded(identity: BoardGame.Companion.IdentityWithBalance) {
+    override fun onIdentityAdded(identity: BoardGame.Companion.Identity) {
         identitiesFragment!!.selectedPage = identitiesFragment!!.getPage(identity)
     }
 
@@ -747,7 +778,7 @@ class BoardGameActivity :
     }
 
     override fun onIdentitiesUpdated(identities: Map<String,
-            BoardGame.Companion.IdentityWithBalance>
+            BoardGame.Companion.Identity>
     ) {
         identitiesFragment!!.onIdentitiesUpdated(identities)
         playersFragment!!.onSelectedIdentityChanged(
@@ -783,7 +814,7 @@ class BoardGameActivity :
     }
 
     override fun onPlayersUpdated(players: Map<String,
-            BoardGame.Companion.PlayerWithBalanceAndConnectionState>) {
+            BoardGame.Companion.Player>) {
         playersFragment!!.onPlayersUpdated(players)
         playersTransfersFragment!!.onPlayersUpdated(players)
     }
@@ -816,7 +847,7 @@ class BoardGameActivity :
         }
     }
 
-    override fun onTransferAdded(transfer: BoardGame.Companion.TransferWithCurrency) {
+    override fun onTransferAdded(transfer: BoardGame.Companion.Transfer) {
         if (transfer.toPlayer != null &&
                 PreferenceManager.getDefaultSharedPreferences(this)
                         .getBoolean("play_transfer_receipt_sounds", true) &&
@@ -833,7 +864,7 @@ class BoardGameActivity :
     }
 
     override fun onTransfersUpdated(transfers: Map<String,
-            BoardGame.Companion.TransferWithCurrency>
+            BoardGame.Companion.Transfer>
     ) {
         playersTransfersFragment!!.onTransfersUpdated(transfers)
     }

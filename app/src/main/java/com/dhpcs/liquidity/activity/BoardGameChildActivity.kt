@@ -3,9 +3,9 @@ package com.dhpcs.liquidity.activity
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.dhpcs.liquidity.BoardGame
-import com.dhpcs.liquidity.BoardGame.Companion.IdentityWithBalance
-import com.dhpcs.liquidity.BoardGame.Companion.PlayerWithBalanceAndConnectionState
-import com.dhpcs.liquidity.BoardGame.Companion.TransferWithCurrency
+import com.dhpcs.liquidity.BoardGame.Companion.Identity
+import com.dhpcs.liquidity.BoardGame.Companion.Player
+import com.dhpcs.liquidity.BoardGame.Companion.Transfer
 import io.reactivex.disposables.Disposable
 
 abstract class BoardGameChildActivity :
@@ -70,15 +70,15 @@ abstract class BoardGameChildActivity :
 
     override fun onIdentityRequired() {}
 
-    override fun onIdentityAdded(identity: IdentityWithBalance) {}
+    override fun onIdentityAdded(identity: Identity) {}
     override fun onIdentitiesUpdated(identities: Map<String,
-            BoardGame.Companion.IdentityWithBalance>
+            BoardGame.Companion.Identity>
     ) {
     }
 
-    override fun onPlayersUpdated(players: Map<String, PlayerWithBalanceAndConnectionState>) {}
+    override fun onPlayersUpdated(players: Map<String, Player>) {}
 
-    override fun onTransferAdded(transfer: TransferWithCurrency) {}
-    override fun onTransfersUpdated(transfers: Map<String, TransferWithCurrency>) {}
+    override fun onTransferAdded(transfer: Transfer) {}
+    override fun onTransfersUpdated(transfers: Map<String, Transfer>) {}
 
 }

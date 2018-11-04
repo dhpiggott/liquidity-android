@@ -34,7 +34,7 @@ class IdentitiesFragment : Fragment() {
         internal constructor(fragmentManager: FragmentManager
         ) : FragmentStatePagerAdapter(fragmentManager) {
 
-            private val identities = ArrayList<BoardGame.Companion.IdentityWithBalance>()
+            private val identities = ArrayList<BoardGame.Companion.Identity>()
 
             override fun getCount(): Int = identities.size
 
@@ -44,21 +44,21 @@ class IdentitiesFragment : Fragment() {
 
             override fun getItemPosition(item: Any): Int = PagerAdapter.POSITION_NONE
 
-            internal fun add(identity: BoardGame.Companion.IdentityWithBalance) {
+            internal fun add(identity: BoardGame.Companion.Identity) {
                 identities.add(identity)
             }
 
             internal fun clear() = identities.clear()
 
-            internal operator fun get(position: Int): BoardGame.Companion.IdentityWithBalance {
+            internal operator fun get(position: Int): BoardGame.Companion.Identity {
                 return identities[position]
             }
 
-            internal fun getPosition(identity: BoardGame.Companion.IdentityWithBalance): Int {
+            internal fun getPosition(identity: BoardGame.Companion.Identity): Int {
                 return identities.indexOf(identity)
             }
 
-            internal fun sort(comparator: Comparator<BoardGame.Companion.Player>) {
+            internal fun sort(comparator: Comparator<BoardGame.Companion.Identity>) {
                 Collections.sort(identities, comparator)
             }
 
@@ -90,7 +90,7 @@ class IdentitiesFragment : Fragment() {
             viewPagerIdentities!!.currentItem = page
         }
 
-    fun getIdentity(page: Int): BoardGame.Companion.IdentityWithBalance? {
+    fun getIdentity(page: Int): BoardGame.Companion.Identity? {
         return if (identitiesFragmentStatePagerAdapter!!.count == 0) {
             null
         } else {
@@ -98,7 +98,7 @@ class IdentitiesFragment : Fragment() {
         }
     }
 
-    fun getPage(identity: BoardGame.Companion.IdentityWithBalance): Int {
+    fun getPage(identity: BoardGame.Companion.Identity): Int {
         return if (identitiesFragmentStatePagerAdapter!!.count == 0) {
             0
         } else {
@@ -106,13 +106,13 @@ class IdentitiesFragment : Fragment() {
         }
     }
 
-    fun onIdentitiesUpdated(identities: Map<String, BoardGame.Companion.IdentityWithBalance>) {
+    fun onIdentitiesUpdated(identities: Map<String, BoardGame.Companion.Identity>) {
         identitiesFragmentStatePagerAdapter!!.clear()
         identities.values.forEach {
             identitiesFragmentStatePagerAdapter!!.add(it)
         }
         identitiesFragmentStatePagerAdapter!!.sort(
-                BoardGameActivity.playerComparator(requireContext())
+                BoardGameActivity.identityComparator(requireContext())
         )
         identitiesFragmentStatePagerAdapter!!.notifyDataSetChanged()
         textViewEmpty!!.visibility = if (identitiesFragmentStatePagerAdapter!!.count == 0) {

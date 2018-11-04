@@ -27,12 +27,12 @@ class PlayersFragment : Fragment() {
 
         private class PlayersAdapter
         internal constructor(private val playersFragment: PlayersFragment
-        ) : ListAdapter<BoardGame.Companion.PlayerWithBalanceAndConnectionState, PlayerViewHolder>(
-                object : DiffUtil.ItemCallback<BoardGame.Companion.PlayerWithBalanceAndConnectionState>() {
+        ) : ListAdapter<BoardGame.Companion.Player, PlayerViewHolder>(
+                object : DiffUtil.ItemCallback<BoardGame.Companion.Player>() {
 
                     override fun areContentsTheSame(
-                            oldItem: BoardGame.Companion.PlayerWithBalanceAndConnectionState,
-                            newItem: BoardGame.Companion.PlayerWithBalanceAndConnectionState
+                            oldItem: BoardGame.Companion.Player,
+                            newItem: BoardGame.Companion.Player
                     ): Boolean {
                         return oldItem.name == newItem.name &&
                                 oldItem.balance == newItem.balance &&
@@ -40,8 +40,8 @@ class PlayersFragment : Fragment() {
                     }
 
                     override fun areItemsTheSame(
-                            item1: BoardGame.Companion.PlayerWithBalanceAndConnectionState,
-                            item2: BoardGame.Companion.PlayerWithBalanceAndConnectionState
+                            item1: BoardGame.Companion.Player,
+                            item2: BoardGame.Companion.Player
                     ): Boolean = item1.memberId == item2.memberId
 
                 }
@@ -62,7 +62,7 @@ class PlayersFragment : Fragment() {
             }
 
             internal fun updatePlayers(
-                    players: Collection<BoardGame.Companion.PlayerWithBalanceAndConnectionState>) {
+                    players: Collection<BoardGame.Companion.Player>) {
                 submitList(players.sortedWith(playerComparator))
             }
 
@@ -83,7 +83,7 @@ class PlayersFragment : Fragment() {
 
             private var player: BoardGame.Companion.Player? = null
 
-            fun bindPlayer(player: BoardGame.Companion.PlayerWithBalanceAndConnectionState) {
+            fun bindPlayer(player: BoardGame.Companion.Player) {
                 this.player = player
 
                 val zoneId = player.zoneId
@@ -119,7 +119,7 @@ class PlayersFragment : Fragment() {
     private var textViewEmpty: TextView? = null
     private var recyclerViewPlayers: RecyclerView? = null
 
-    private var players: Collection<BoardGame.Companion.PlayerWithBalanceAndConnectionState> =
+    private var players: Collection<BoardGame.Companion.Player> =
             emptyList()
     private var selectedIdentity: BoardGame.Companion.Identity? = null
 
@@ -160,7 +160,7 @@ class PlayersFragment : Fragment() {
     }
 
     fun onPlayersUpdated(players: Map<String,
-            BoardGame.Companion.PlayerWithBalanceAndConnectionState>) {
+            BoardGame.Companion.Player>) {
         this.players = players.values
         updatePlayers(this.players, selectedIdentity)
     }
@@ -171,7 +171,7 @@ class PlayersFragment : Fragment() {
     }
 
     private fun updatePlayers(
-            players: Collection<BoardGame.Companion.PlayerWithBalanceAndConnectionState>,
+            players: Collection<BoardGame.Companion.Player>,
             selectedIdentity: BoardGame.Companion.Identity?) {
         val visiblePlayers = players.filter {
             selectedIdentity == null ||
