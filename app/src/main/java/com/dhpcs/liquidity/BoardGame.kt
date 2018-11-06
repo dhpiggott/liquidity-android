@@ -126,22 +126,15 @@ class BoardGame private constructor(
                 var connectedClients: Map<String, ByteString>,
                 var balances: Map<String, BigDecimal>,
                 var currency: String?,
-                var memberIdsToAccountIds: Map<String, String>,
-                var accountIdsToMemberIds: Map<String, String>,
                 var identities: Map<String, Identity>,
                 var hiddenIdentities: Map<String, Identity>,
                 var players: Map<String, Player>,
-                var hiddenPlayers: Map<String, Player>,
                 var transfers: Map<String, Transfer>
         )
 
         private var instances: Map<String, BoardGame> = HashMap()
 
         fun getInstance(zoneId: String): BoardGame? = instances[zoneId]
-
-        fun <K, V> getOrDefault(map: Map<K, V>, key: K, defaultValue: V): V {
-            return map[key] ?: defaultValue
-        }
 
         fun isGameNameValid(name: CharSequence): Boolean = isTagValid(name)
 
@@ -153,84 +146,6 @@ class BoardGame private constructor(
             return metadata?.fieldsMap?.get((CURRENCY_CODE_KEY))?.stringValue
         }
 
-        private fun membersAccountsFromAccounts(accounts: List<Model.Account>
-        ): Map<String, String> {
-            return accounts.asSequence().filter {
-                it.ownerMemberIdsCount == 1
-            }.groupBy {
-                it.getOwnerMemberIds(0)
-            }.filterValues {
-                it.size == 1
-            }.mapValues {
-                it.value.first().id
-            }
-        }
-
-        private fun identitiesFromMembersAccounts(
-                zoneId: String,
-                membersAccounts: Map<String, String>,
-                accounts: List<Model.Account>,
-                balances: Map<String, BigDecimal>,
-                currency: String?,
-                members: List<Model.Member>,
-                equityAccountId: String,
-                clientKey: ByteString
-        ): Pair<Map<String, Identity>, Map<String, Identity>> {
-            val identitiesFromMembersAccounts = membersAccounts.filterKeys { memberId ->
-                val member = members.find { it.id == memberId }!!
-                member.ownerPublicKeysCount == 1 &&
-                        member.getOwnerPublicKeys(0) == clientKey
-            }.mapValues { (memberId, accountId) ->
-                val member = members.find { it.id == memberId }!!
-                Identity(
-                        zoneId,
-                        member.id,
-                        member.getOwnerPublicKeys(0),
-                        if (!member.hasName()) null else member.name.value,
-                        isHidden(member),
-                        accounts.find { it.id == accountId }!!.id,
-                        getOrDefault(balances, accountId, BigDecimal(0)),
-                        currency,
-                        accountId == equityAccountId
-                )
-            }
-            val notHidden = identitiesFromMembersAccounts.filterValues { !it.isHidden }
-            val hidden = identitiesFromMembersAccounts.filterValues { it.isHidden }
-            return Pair(notHidden, hidden)
-        }
-
-        private fun playersFromMembersAccounts(zoneId: String,
-                                               membersAccounts: Map<String, String>,
-                                               accounts: List<Model.Account>,
-                                               balances: Map<String, BigDecimal>,
-                                               currency: String?,
-                                               members: List<Model.Member>,
-                                               equityAccountId: String,
-                                               connectedClients: Collection<ByteString>
-        ): Pair<Map<String, Player>,
-                Map<String, Player>> {
-            val playersFromMembersAccounts = membersAccounts.filterKeys { memberId ->
-                members.find { it.id == memberId }!!.ownerPublicKeysCount == 1
-            }.mapValues { (memberId, accountId) ->
-                val member = members.find { it.id == memberId }!!
-                Player(
-                        zoneId,
-                        member.id,
-                        member.getOwnerPublicKeys(0),
-                        if (!member.hasName()) null else member.name.value,
-                        isHidden(member),
-                        accounts.find { it.id == accountId }!!.id,
-                        getOrDefault(balances, accountId, BigDecimal(0)),
-                        currency,
-                        accountId == equityAccountId,
-                        connectedClients.any { member.ownerPublicKeysList.contains(it) }
-                )
-            }
-            val notHidden = playersFromMembersAccounts.filterValues { !it.isHidden }
-            val hidden = playersFromMembersAccounts.filterValues { it.isHidden }
-            return Pair(notHidden, hidden)
-        }
-
         private fun isHidden(member: Model.Member): Boolean {
             return if (!member.hasMetadata()) {
                 false
@@ -238,30 +153,6 @@ class BoardGame private constructor(
                 val hidden = member.metadata.fieldsMap[HIDDEN_FLAG_KEY]
                 hidden?.boolValue ?: false
             }
-        }
-
-        private fun transfersFromTransactions(transactions: List<Model.Transaction>,
-                                              currency: String?,
-                                              accountsMembers: Map<String, String>,
-                                              players: Map<String, Player>,
-                                              accounts: List<Model.Account>
-        ): Map<String, Transfer> {
-            return transactions.asSequence().map { transaction ->
-                val fromAccount = accounts.find { it.id == transaction.from }!!
-                val fromMemberId = accountsMembers[transaction.from]
-                val toAccount = accounts.find { it.id == transaction.to }!!
-                val toMemberId = accountsMembers[transaction.to]
-                Transfer(
-                        fromAccount.id,
-                        players[fromMemberId]!!,
-                        toAccount.id,
-                        players[toMemberId]!!,
-                        transaction.id,
-                        transaction.created,
-                        BigDecimal(transaction.value),
-                        currency
-                )
-            }.associateBy { it.transactionId }
         }
 
     }
@@ -490,36 +381,122 @@ class BoardGame private constructor(
             zoneId: String,
             zoneNotification: WsProtocol.ZoneNotification
     ) {
-        fun updatePlayersAndTransactions() {
-            val (updatedPlayers, updatedHiddenPlayers) = playersFromMembersAccounts(
-                    zoneId,
-                    state!!.memberIdsToAccountIds,
-                    state!!.zone.accountsList,
-                    state!!.balances,
-                    state!!.currency,
-                    state!!.zone.membersList,
-                    state!!.zone.equityAccountId,
-                    state!!.connectedClients.values
+        fun updateState(
+                zone: Model.Zone,
+                connectedClients: Map<String, ByteString>,
+                balances: Map<String, BigDecimal>,
+                currency: String?
+        ): State {
+            val memberIdsToAccountIds = zone.accountsList.asSequence().filter {
+                it.ownerMemberIdsCount == 1
+            }.groupBy {
+                it.getOwnerMemberIds(0)
+            }.filterValues {
+                it.size == 1
+            }.mapValues {
+                it.value.first().id
+            }
+            val accountIdsToMemberIds = memberIdsToAccountIds
+                    .map { (accountId, memberId) ->
+                        Pair(memberId, accountId)
+                    }
+                    .toMap()
+            val allIdentities = memberIdsToAccountIds.filterKeys { memberId ->
+                val member = zone.membersList.find { it.id == memberId }!!
+                member.ownerPublicKeysCount == 1 &&
+                        member.getOwnerPublicKeys(0) == serverConnection.clientKey
+            }.mapValues { (memberId, accountId) ->
+                val member = zone.membersList.find { it.id == memberId }!!
+                Identity(
+                        zoneId,
+                        member.id,
+                        member.getOwnerPublicKeys(0),
+                        if (!member.hasName()) null else member.name.value,
+                        isHidden(member),
+                        zone.accountsList.find { it.id == accountId }!!.id,
+                        balances.getOrElse(accountId) { BigDecimal.ZERO },
+                        currency,
+                        accountId == zone.equityAccountId
+                )
+            }
+            val identities = allIdentities.filterValues { !it.isHidden }
+            val hiddenIdentities = allIdentities.filterValues { it.isHidden }
+            val allPlayers = memberIdsToAccountIds.filterKeys { memberId ->
+                zone.membersList.find { it.id == memberId }!!.ownerPublicKeysCount == 1
+            }.mapValues { (memberId, accountId) ->
+                val member = zone.membersList.find { it.id == memberId }!!
+                Player(
+                        zoneId,
+                        member.id,
+                        member.getOwnerPublicKeys(0),
+                        if (!member.hasName()) null else member.name.value,
+                        isHidden(member),
+                        zone.accountsList.find { it.id == accountId }!!.id,
+                        balances.getOrElse(accountId) { BigDecimal.ZERO },
+                        currency,
+                        accountId == zone.equityAccountId,
+                        connectedClients.values.any { member.ownerPublicKeysList.contains(it) }
+                )
+            }
+            val players = allPlayers.filterValues { !it.isHidden }
+            val transfers = zone.transactionsList.asSequence().map { transaction ->
+                val fromAccount = zone.accountsList.find { it.id == transaction.from }!!
+                val fromMemberId = accountIdsToMemberIds[transaction.from]
+                val toAccount = zone.accountsList.find { it.id == transaction.to }!!
+                val toMemberId = accountIdsToMemberIds[transaction.to]
+                Transfer(
+                        fromAccount.id,
+                        players[fromMemberId]!!,
+                        toAccount.id,
+                        players[toMemberId]!!,
+                        transaction.id,
+                        transaction.created,
+                        BigDecimal(transaction.value),
+                        currency
+                )
+            }.associateBy { it.transactionId }
+            return State(
+                    zone,
+                    connectedClients,
+                    balances,
+                    currency,
+                    identities,
+                    hiddenIdentities,
+                    players,
+                    transfers
             )
-            if (updatedPlayers != state!!.players) {
-                state!!.players = updatedPlayers
+        }
+
+        fun dispatchUpdates(oldState: State?, newState: State) {
+            if (newState.identities != oldState?.identities) {
+                val addedIdentities = newState.identities - oldState?.identities
+                if (oldState != null) {
+                    gameActionListeners.forEach { listener ->
+                        addedIdentities.values.forEach {
+                            listener.onIdentityAdded(it)
+                        }
+                    }
+                }
                 gameActionListeners.forEach {
-                    it.onPlayersUpdated(updatedPlayers)
+                    it.onIdentitiesUpdated(newState.identities)
                 }
             }
-            if (updatedHiddenPlayers != state!!.hiddenPlayers)
-                state!!.hiddenPlayers = updatedHiddenPlayers
-            val updatedTransfers = transfersFromTransactions(
-                    state!!.zone.transactionsList,
-                    state!!.currency,
-                    state!!.accountIdsToMemberIds,
-                    state!!.players + state!!.hiddenPlayers,
-                    state!!.zone.accountsList
-            )
-            if (updatedTransfers != state!!.transfers) {
-                state!!.transfers = updatedTransfers
+            if (newState.players != oldState?.players) {
                 gameActionListeners.forEach {
-                    it.onTransfersUpdated(updatedTransfers)
+                    it.onPlayersUpdated(newState.players)
+                }
+            }
+            if (newState.transfers != oldState?.transfers) {
+                val addedTransfers = newState.transfers - oldState?.transfers
+                if (oldState != null) {
+                    gameActionListeners.forEach { listener ->
+                        addedTransfers.values.forEach {
+                            listener.onTransferAdded(it)
+                        }
+                    }
+                }
+                gameActionListeners.forEach {
+                    it.onTransfersUpdated(newState.transfers)
                 }
             }
         }
@@ -533,66 +510,31 @@ class BoardGame private constructor(
                 val wasPublicKeyAlreadyJoined =
                         state!!.connectedClients.values.contains(publicKey)
                 if (!wasPublicKeyAlreadyJoined) {
-                    state!!.connectedClients =
-                            state!!.connectedClients + Pair(connectionId, publicKey)
-                    val (joinedPlayers, joinedHiddenPlayers) = playersFromMembersAccounts(
-                            zoneId,
-                            state!!.memberIdsToAccountIds.filterKeys { memberId ->
-                                val member = state!!.zone.membersList.find {
-                                    it.id == memberId
-                                }!!
-                                member.ownerPublicKeysCount == 1 &&
-                                        member.getOwnerPublicKeys(0) == publicKey
-                            },
-                            state!!.zone.accountsList,
+                    val connectedClients = state!!.connectedClients + Pair(connectionId, publicKey)
+                    val newState = updateState(
+                            state!!.zone,
+                            connectedClients,
                             state!!.balances,
-                            state!!.currency,
-                            state!!.zone.membersList,
-                            state!!.zone.equityAccountId,
-                            hashSetOf(publicKey)
+                            state!!.currency
                     )
-                    if (joinedPlayers.isNotEmpty()) {
-                        state!!.players = state!!.players + joinedPlayers
-                        gameActionListeners.forEach {
-                            it.onPlayersUpdated(state!!.players)
-                        }
-                    }
-                    if (joinedHiddenPlayers.isNotEmpty()) {
-                        state!!.hiddenPlayers = state!!.hiddenPlayers + joinedHiddenPlayers
-                    }
+                    dispatchUpdates(state, newState)
+                    state = newState
                 }
             }
             WsProtocol.ZoneNotification.ZoneNotificationCase.CLIENT_QUIT_ZONE_NOTIFICATION -> {
                 val connectionId = zoneNotification.clientQuitZoneNotification.connectionId
                 val publicKey = zoneNotification.clientQuitZoneNotification.publicKey
-                state!!.connectedClients = state!!.connectedClients - connectionId
+                val connectedClients = state!!.connectedClients - connectionId
                 val isPublicKeyStillJoined = state!!.connectedClients.values.contains(publicKey)
                 if (!isPublicKeyStillJoined) {
-                    val (quitPlayers, quitHiddenPlayers) = playersFromMembersAccounts(
-                            zoneId,
-                            state!!.memberIdsToAccountIds.filterKeys { memberId ->
-                                val member = state!!.zone.membersList.find {
-                                    it.id == memberId
-                                }!!
-                                member.ownerPublicKeysCount == 1 &&
-                                        member.getOwnerPublicKeys(0) == publicKey
-                            },
-                            state!!.zone.accountsList,
+                    val newState = updateState(
+                            state!!.zone,
+                            connectedClients,
                             state!!.balances,
-                            state!!.currency,
-                            state!!.zone.membersList,
-                            state!!.zone.equityAccountId,
-                            hashSetOf()
+                            state!!.currency
                     )
-                    if (quitPlayers.isNotEmpty()) {
-                        state!!.players = state!!.players + quitPlayers
-                        gameActionListeners.forEach {
-                            it.onPlayersUpdated(state!!.players)
-                        }
-                    }
-                    if (quitHiddenPlayers.isNotEmpty()) {
-                        state!!.hiddenPlayers = state!!.hiddenPlayers + quitHiddenPlayers
-                    }
+                    dispatchUpdates(state, newState)
+                    state = newState
                 }
             }
             WsProtocol.ZoneNotification.ZoneNotificationCase.ZONE_NAME_CHANGED_NOTIFICATION -> {
@@ -630,7 +572,7 @@ class BoardGame private constructor(
             }
             WsProtocol.ZoneNotification.ZoneNotificationCase.MEMBER_UPDATED_NOTIFICATION -> {
                 val member = zoneNotification.memberUpdatedNotification.member
-                state!!.zone = state!!.zone.toBuilder()
+                val zone = state!!.zone.toBuilder()
                         .removeMembers(
                                 state!!.zone.membersList.indexOfFirst {
                                     it.id == member.id
@@ -638,95 +580,32 @@ class BoardGame private constructor(
                         )
                         .addMembers(member)
                         .build()
-                val (updatedIdentities, updatedHiddenIdentities) =
-                        identitiesFromMembersAccounts(
-                                zoneId,
-                                state!!.memberIdsToAccountIds,
-                                state!!.zone.accountsList,
-                                state!!.balances,
-                                state!!.currency,
-                                state!!.zone.membersList,
-                                state!!.zone.equityAccountId,
-                                serverConnection.clientKey
-                        )
-                if (updatedIdentities != state!!.identities) {
-                    val receivedOrRestoredIdentity =
-                            if (!state!!.identities.contains(member.id)) {
-                                updatedIdentities[member.id]
-                            } else {
-                                null
-                            }
-                    state!!.identities = updatedIdentities
-                    gameActionListeners.forEach { it.onIdentitiesUpdated(updatedIdentities) }
-                    if (receivedOrRestoredIdentity != null) {
-                        gameActionListeners.forEach {
-                            it.onIdentityAdded(receivedOrRestoredIdentity)
-                        }
-                    }
-                }
-                if (updatedHiddenIdentities != state!!.hiddenIdentities) {
-                    state!!.hiddenIdentities = updatedHiddenIdentities
-                }
-                updatePlayersAndTransactions()
+                val newState = updateState(
+                        zone,
+                        state!!.connectedClients,
+                        state!!.balances,
+                        state!!.currency
+                )
+                dispatchUpdates(state, newState)
+                state = newState
             }
             WsProtocol.ZoneNotification.ZoneNotificationCase.ACCOUNT_CREATED_NOTIFICATION -> {
                 val account = zoneNotification.accountCreatedNotification.account
-                state!!.zone = state!!.zone.toBuilder()
+                val zone = state!!.zone.toBuilder()
                         .addAccounts(account)
                         .build()
-                val createdMembersAccounts = membersAccountsFromAccounts(
-                        state!!.zone.accountsList.filter { it.id == account.id }
-                )
-                state!!.memberIdsToAccountIds =
-                        state!!.memberIdsToAccountIds + createdMembersAccounts
-                state!!.accountIdsToMemberIds =
-                        state!!.accountIdsToMemberIds + createdMembersAccounts
-                        .map { (memberId, accountId) ->
-                            Pair(accountId, memberId)
-                        }
-                val (createdIdentity, createdHiddenIdentity) = identitiesFromMembersAccounts(
-                        zoneId,
-                        createdMembersAccounts,
-                        state!!.zone.accountsList,
+                val newState = updateState(
+                        zone,
+                        state!!.connectedClients,
                         state!!.balances,
-                        state!!.currency,
-                        state!!.zone.membersList,
-                        state!!.zone.equityAccountId,
-                        serverConnection.clientKey
+                        state!!.currency
                 )
-                if (createdIdentity.isNotEmpty()) {
-                    state!!.identities = state!!.identities + createdIdentity
-                    gameActionListeners.forEach { it.onIdentitiesUpdated(state!!.identities) }
-                    gameActionListeners.forEach {
-                        it.onIdentityAdded(
-                                state!!.identities[account.getOwnerMemberIds(0)]!!
-                        )
-                    }
-                }
-                if (createdHiddenIdentity.isNotEmpty()) {
-                    state!!.hiddenIdentities = state!!.hiddenIdentities + createdHiddenIdentity
-                }
-                val (createdPlayer, createdHiddenPlayer) = playersFromMembersAccounts(
-                        zoneId,
-                        createdMembersAccounts,
-                        state!!.zone.accountsList,
-                        state!!.balances,
-                        state!!.currency,
-                        state!!.zone.membersList,
-                        state!!.zone.equityAccountId,
-                        state!!.connectedClients.values
-                )
-                if (createdPlayer.isNotEmpty()) {
-                    state!!.players = state!!.players + createdPlayer
-                    gameActionListeners.forEach { it.onPlayersUpdated(state!!.players) }
-                }
-                if (createdHiddenPlayer.isNotEmpty()) {
-                    state!!.hiddenPlayers = state!!.hiddenPlayers + createdHiddenPlayer
-                }
+                dispatchUpdates(state, newState)
+                state = newState
             }
             WsProtocol.ZoneNotification.ZoneNotificationCase.ACCOUNT_UPDATED_NOTIFICATION -> {
                 val account = zoneNotification.accountUpdatedNotification.account
-                state!!.zone = state!!.zone.toBuilder()
+                val zone = state!!.zone.toBuilder()
                         .removeAccounts(
                                 state!!.zone.accountsList.indexOfFirst {
                                     it.id == account.id
@@ -734,205 +613,74 @@ class BoardGame private constructor(
                         )
                         .addAccounts(account)
                         .build()
-                state!!.memberIdsToAccountIds =
-                        membersAccountsFromAccounts(state!!.zone.accountsList)
-                state!!.accountIdsToMemberIds =
-                        state!!.memberIdsToAccountIds
-                                .map { (memberId, accountId) ->
-                                    Pair(accountId, memberId)
-                                }.toMap()
-                val (updatedIdentities, updatedHiddenIdentities) =
-                        identitiesFromMembersAccounts(
-                                zoneId,
-                                state!!.memberIdsToAccountIds,
-                                state!!.zone.accountsList,
-                                state!!.balances,
-                                state!!.currency,
-                                state!!.zone.membersList,
-                                state!!.zone.equityAccountId,
-                                serverConnection.clientKey
-                        )
-                if (updatedIdentities != state!!.identities) {
-                    state!!.identities = updatedIdentities
-                    gameActionListeners.forEach { it.onIdentitiesUpdated(updatedIdentities) }
-                }
-                if (updatedHiddenIdentities != state!!.hiddenIdentities) {
-                    state!!.hiddenIdentities = updatedHiddenIdentities
-                }
-                updatePlayersAndTransactions()
+                val newState = updateState(
+                        zone,
+                        state!!.connectedClients,
+                        state!!.balances,
+                        state!!.currency
+                )
+                dispatchUpdates(state, newState)
+                state = newState
             }
             WsProtocol.ZoneNotification.ZoneNotificationCase.TRANSACTION_ADDED_NOTIFICATION -> {
                 val transaction = zoneNotification.transactionAddedNotification.transaction
-                state!!.zone = state!!.zone.toBuilder()
+                val zone = state!!.zone.toBuilder()
                         .addTransactions(transaction)
                         .build()
-                state!!.balances = state!!.balances +
+                val balances = state!!.balances +
                         Pair(
                                 transaction.from!!,
-                                getOrDefault(
-                                        state!!.balances,
-                                        transaction.from,
-                                        BigDecimal(0)
-                                ) - BigDecimal(transaction.value)
+                                state!!.balances.getOrElse(transaction.from) { BigDecimal.ZERO } -
+                                        BigDecimal(transaction.value)
                         ) +
                         Pair(
                                 transaction.to!!,
-                                getOrDefault(
-                                        state!!.balances,
-                                        transaction.to,
-                                        BigDecimal(0)
-                                ) + BigDecimal(transaction.value)
+                                state!!.balances.getOrElse(transaction.to) { BigDecimal.ZERO } +
+                                        BigDecimal(transaction.value)
                         )
-                val changedMembersAccounts = membersAccountsFromAccounts(listOf(
-                        state!!.zone.accountsList.find { it.id == transaction.from }!!,
-                        state!!.zone.accountsList.find { it.id == transaction.to }!!
-                ))
-                val (changedIdentities, changedHiddenIdentities) =
-                        identitiesFromMembersAccounts(
-                                zoneId,
-                                changedMembersAccounts,
-                                state!!.zone.accountsList,
-                                state!!.balances,
-                                state!!.currency,
-                                state!!.zone.membersList,
-                                state!!.zone.equityAccountId,
-                                serverConnection.clientKey
-                        )
-                if (changedIdentities.isNotEmpty()) {
-                    state!!.identities = state!!.identities + changedIdentities
-                    gameActionListeners.forEach {
-                        it.onIdentitiesUpdated(state!!.identities)
-                    }
-                }
-                if (changedHiddenIdentities.isNotEmpty()) {
-                    state!!.hiddenIdentities =
-                            state!!.hiddenIdentities + changedHiddenIdentities
-                }
-                val (changedPlayers, changedHiddenPlayers) = playersFromMembersAccounts(
-                        zoneId,
-                        changedMembersAccounts,
-                        state!!.zone.accountsList,
-                        state!!.balances,
-                        state!!.currency,
-                        state!!.zone.membersList,
-                        state!!.zone.equityAccountId,
-                        state!!.connectedClients.values
+                val newState = updateState(
+                        zone,
+                        state!!.connectedClients,
+                        balances,
+                        state!!.currency
                 )
-                if (changedPlayers.isNotEmpty()) {
-                    state!!.players = state!!.players + changedPlayers
-                    gameActionListeners.forEach {
-                        it.onPlayersUpdated(state!!.players)
-                    }
-                }
-                if (changedHiddenPlayers.isNotEmpty()) {
-                    state!!.hiddenPlayers = state!!.hiddenPlayers + changedHiddenPlayers
-                }
-                val createdTransfer = transfersFromTransactions(
-                        listOf(transaction),
-                        state!!.currency,
-                        state!!.accountIdsToMemberIds,
-                        state!!.players + state!!.hiddenPlayers,
-                        state!!.zone.accountsList
-                )
-                if (createdTransfer.isNotEmpty()) {
-                    state!!.transfers = state!!.transfers + createdTransfer
-                    gameActionListeners.forEach { listener ->
-                        createdTransfer.values.forEach {
-                            listener.onTransferAdded(it)
-                        }
-                    }
-                    gameActionListeners.forEach {
-                        it.onTransfersUpdated(state!!.transfers)
-                    }
-                }
+                dispatchUpdates(state, newState)
+                state = newState
             }
             WsProtocol.ZoneNotification.ZoneNotificationCase.ZONE_STATE_NOTIFICATION -> {
                 val zone = zoneNotification.zoneStateNotification.zone
-                val connectedClients =
-                        zoneNotification.zoneStateNotification.connectedClientsMap
-                var balances: Map<String, BigDecimal> = HashMap()
-                zone.transactionsList.forEach { transaction ->
-                    balances = balances +
-                            Pair(
-                                    transaction.from!!,
-                                    getOrDefault(
-                                            balances,
+                val connectedClients = zoneNotification.zoneStateNotification.connectedClientsMap
+                val balances = zone.transactionsList
+                        .fold(emptyMap<String, BigDecimal>()) { acc, transaction ->
+                            acc +
+                                    Pair(
                                             transaction.from,
-                                            BigDecimal(0)
-                                    ) - BigDecimal(transaction.value)
-                            ) +
-                            Pair(
-                                    transaction.to!!,
-                                    getOrDefault(
-                                            balances,
+                                            acc.getOrElse(transaction.from) { BigDecimal.ZERO } -
+                                                    BigDecimal(transaction.value)
+                                    ) +
+                                    Pair(
                                             transaction.to,
-                                            BigDecimal(0)
-                                    ) + BigDecimal(transaction.value)
-                            )
-                }
+                                            acc.getOrElse(transaction.to) { BigDecimal.ZERO } +
+                                                    BigDecimal(transaction.value)
+                                    )
+                        }
                 val currency = currencyFromMetadata(zone.metadata)
-                val memberIdsToAccountIds = membersAccountsFromAccounts(zone.accountsList)
-                val accountIdsToMemberIds =
-                        memberIdsToAccountIds.map { (accountId, memberId) ->
-                            Pair(memberId, accountId)
-                        }.toMap()
-                val (identities, hiddenIdentities) = identitiesFromMembersAccounts(
-                        zoneId,
-                        memberIdsToAccountIds,
-                        zone.accountsList,
-                        balances,
-                        currency,
-                        zone.membersList,
-                        zone.equityAccountId,
-                        serverConnection.clientKey
-                )
-                val (players, hiddenPlayers) = playersFromMembersAccounts(
-                        zoneId,
-                        memberIdsToAccountIds,
-                        zone.accountsList,
-                        balances,
-                        currency,
-                        zone.membersList,
-                        zone.equityAccountId,
-                        connectedClients.values
-                )
-                val transfers = transfersFromTransactions(
-                        zone.transactionsList,
-                        currency,
-                        accountIdsToMemberIds,
-                        players + hiddenPlayers,
-                        zone.accountsList
-                )
-                state = State(
+                joinStateSubject.onNext(JOINED)
+                gameNameSubject.onNext(if (!zone.hasName()) "" else zone.name.value)
+                val newState = updateState(
                         zone,
                         connectedClients,
                         balances,
-                        currency,
-                        memberIdsToAccountIds,
-                        accountIdsToMemberIds,
-                        identities,
-                        hiddenIdentities,
-                        players,
-                        hiddenPlayers,
-                        transfers
+                        currency
                 )
-                joinStateSubject.onNext(JOINED)
-                gameNameSubject.onNext(if (!zone.hasName()) "" else zone.name.value)
-                gameActionListeners.forEach {
-                    it.onIdentitiesUpdated(identities)
-                }
-                gameActionListeners.forEach {
-                    it.onPlayersUpdated(players)
-                }
-                gameActionListeners.forEach {
-                    it.onTransfersUpdated(transfers)
-                }
+                dispatchUpdates(state, newState)
+                state = newState
 
                 // The second condition isn't usually of significance but exists to prevent
                 // incorrectly prompting for an identity if a user rejoins a game by scanning its
                 // code again rather than by clicking its list item.
                 if (gameId == null &&
-                        !(identities + hiddenIdentities).values.any {
+                        !(state!!.identities + state!!.hiddenIdentities).values.any {
                             it.accountId != zone.equityAccountId
                         }) {
                     gameActionListeners.forEach {
@@ -1034,9 +782,12 @@ class BoardGame private constructor(
     }
 
     fun isIdentityNameValid(name: CharSequence): Boolean {
+        val equityMemberId = state!!.zone.accountsList.find {
+            it.id == state!!.zone.equityAccountId && it.ownerMemberIdsCount == 1
+        }?.getOwnerMemberIds(0)
         return isTagValid(name) &&
                 name.toString() != state!!.zone.membersList.find {
-            it.id == state!!.accountIdsToMemberIds[state!!.zone.equityAccountId]
+            it.id == equityMemberId
         }!!.name?.value
     }
 
