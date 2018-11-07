@@ -311,22 +311,17 @@ class BoardGameActivity :
         } else {
             boardGame = BoardGame.getInstance(zoneId)
             if (boardGame == null) {
-                boardGame = if (!intent.extras!!.containsKey(EXTRA_GAME_ID)) {
-                    BoardGame(
-                            applicationContext,
-                            LiquidityApplication.getServerConnection(applicationContext),
-                            LiquidityApplication.getGameDatabase(applicationContext),
-                            zoneId
-                    )
-                } else {
-                    BoardGame(
-                            applicationContext,
-                            LiquidityApplication.getServerConnection(applicationContext),
-                            LiquidityApplication.getGameDatabase(applicationContext),
-                            zoneId,
+                boardGame = BoardGame(
+                        applicationContext,
+                        LiquidityApplication.getServerConnection(applicationContext),
+                        LiquidityApplication.getGameDatabase(applicationContext),
+                        zoneId,
+                        gameId = if (intent.extras!!.containsKey(EXTRA_GAME_ID)) {
                             intent.extras!!.getLong(EXTRA_GAME_ID)
-                    )
-                }
+                        } else {
+                            null
+                        }
+                )
                 if (intent.extras!!.containsKey(EXTRA_GAME_NAME)) {
                     title = intent.extras!!.getString(EXTRA_GAME_NAME)
                 }

@@ -188,31 +188,16 @@ class BoardGame private constructor(
     constructor(context: Context,
                 serverConnection: ServerConnection,
                 gameDatabase: GameDatabase,
-                _zoneId: String
-    ) : this(
-            context,
-            serverConnection,
-            gameDatabase,
-            null,
-            null,
-            null,
-            _zoneId,
-            null
-    )
-
-    constructor(context: Context,
-                serverConnection: ServerConnection,
-                gameDatabase: GameDatabase,
-                _zoneId: String,
-                _gameId: Long
+                zoneId: String,
+                gameId: Long?
     ) : this(context,
             serverConnection,
             gameDatabase,
             null,
             null,
             null,
-            _zoneId,
-            _gameId
+            zoneId,
+            gameId
     )
 
     private var joinRequestTokens: Set<JoinRequestToken> = emptySet()
