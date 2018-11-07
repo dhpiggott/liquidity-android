@@ -499,6 +499,24 @@ class BoardGame private constructor(
                     it.onIdentityRequired()
                 }
             }
+
+            if (gameId == null) {
+                gameId = Single.fromCallable {
+                    // This is in case a user rejoins a game by scanning its code again rather
+                    // than by clicking its list item.
+                    gameDatabase.checkAndUpdateGame(zoneId, newName) ?: gameDatabase.insertGame(
+                            zoneId,
+                            newState.zone.created,
+                            newState.zone.expires,
+                            newName
+                    )
+                }.subscribeOn(Schedulers.io()).cache()
+                gameId!!.subscribe()
+            } else {
+                gameId!!.subscribeOn(Schedulers.io()).subscribe { _ ->
+                    gameDatabase.checkAndUpdateGame(zoneId, newName)
+                }
+            }
         }
         when (zoneNotification.zoneNotificationCase) {
             WsProtocol.ZoneNotification.ZoneNotificationCase.ZONENOTIFICATION_NOT_SET -> {
@@ -661,30 +679,6 @@ class BoardGame private constructor(
                 )
                 dispatchUpdates(state, newState)
                 state = newState
-
-                if (gameId == null) {
-                    gameId = Single.fromCallable {
-                        // This is in case a user rejoins a game by scanning its code again rather
-                        // than by clicking its list item.
-                        gameDatabase.checkAndUpdateGame(
-                                zoneId,
-                                if (!zone.hasName()) null else zone.name.value
-                        ) ?: gameDatabase.insertGame(
-                                zoneId,
-                                zone.created,
-                                zone.expires,
-                                if (!zone.hasName()) null else zone.name.value
-                        )
-                    }.subscribeOn(Schedulers.io()).cache()
-                    gameId!!.subscribe()
-                } else {
-                    gameId!!.subscribeOn(Schedulers.io()).subscribe { _ ->
-                        gameDatabase.checkAndUpdateGame(
-                                zoneId,
-                                if (!zone.hasName()) null else zone.name.value
-                        )
-                    }
-                }
             }
             WsProtocol.ZoneNotification.ZoneNotificationCase.PING_NOTIFICATION -> {
             }
