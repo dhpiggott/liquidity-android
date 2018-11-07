@@ -64,6 +64,5 @@ abstract class BoardGameChildActivity :
 
     override fun onCreateGameError(name: String?) {}
     override fun onJoinGameError() {}
-    override fun onIdentityRequired() {}
 
 }

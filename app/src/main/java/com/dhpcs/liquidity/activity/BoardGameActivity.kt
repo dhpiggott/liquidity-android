@@ -400,6 +400,17 @@ class BoardGameActivity :
                 .subscribe {
                     title = it
                 }
+        val identityRequiredDisposable = boardGame!!
+                .identityRequiredObservable
+                .subscribe {
+                    if (supportFragmentManager
+                                    .findFragmentByTag(CreateIdentityDialogFragment.TAG) == null) {
+                        CreateIdentityDialogFragment.newInstance().show(
+                                supportFragmentManager,
+                                CreateIdentityDialogFragment.TAG
+                        )
+                    }
+                }
         val addedIdentitiesDisposable = boardGame!!
                 .addedIdentitiesObservable
                 .subscribe {
@@ -450,6 +461,7 @@ class BoardGameActivity :
             override fun onDestroy(owner: LifecycleOwner) {
                 joinStateDisposable.dispose()
                 gameNameDisposable.dispose()
+                identityRequiredDisposable.dispose()
                 addedIdentitiesDisposable.dispose()
                 addedTransfersDisposable.dispose()
                 playersDisposable.dispose()
@@ -699,15 +711,6 @@ class BoardGameActivity :
                 Toast.LENGTH_LONG
         ).show()
         finish()
-    }
-
-    override fun onIdentityRequired() {
-        if (supportFragmentManager.findFragmentByTag(CreateIdentityDialogFragment.TAG) == null) {
-            CreateIdentityDialogFragment.newInstance().show(
-                    supportFragmentManager,
-                    CreateIdentityDialogFragment.TAG
-            )
-        }
     }
 
     override fun onNoIdentitiesTextClicked() {

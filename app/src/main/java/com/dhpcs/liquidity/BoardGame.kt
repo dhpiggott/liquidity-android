@@ -95,7 +95,6 @@ class BoardGame private constructor(
 
             fun onCreateGameError(name: String?)
             fun onJoinGameError()
-            fun onIdentityRequired()
 
         }
 
@@ -207,6 +206,9 @@ class BoardGame private constructor(
     private val gameNameSubject = BehaviorSubject.createDefault("")
     val gameNameObservable: Observable<String> = gameNameSubject
     val gameName: String get() = gameNameSubject.value!!
+
+    private val identityRequiredSubject = PublishSubject.create<Unit>()
+    val identityRequiredObservable: Observable<Unit> = identityRequiredSubject
 
     private val addedIdentitiesSubject = PublishSubject.create<Identity>()
     val addedIdentitiesObservable: Observable<Identity> = addedIdentitiesSubject
@@ -489,9 +491,7 @@ class BoardGame private constructor(
                     !(newState.identities + newState.hiddenIdentities).values.any {
                         it.accountId != newState.zone.equityAccountId
                     }) {
-                gameActionListeners.forEach {
-                    it.onIdentityRequired()
-                }
+                identityRequiredSubject.onNext(Unit)
             }
 
             if (gameId == null) {
