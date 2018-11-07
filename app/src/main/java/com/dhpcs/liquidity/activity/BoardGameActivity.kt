@@ -400,6 +400,29 @@ class BoardGameActivity :
                 .subscribe {
                     title = it
                 }
+        val addedIdentitiesDisposable = boardGame!!
+                .addedIdentitiesObservable
+                .subscribe {
+                    identitiesFragment!!.selectedPage = identitiesFragment!!.getPage(it)
+                }
+        val addedTransfersDisposable = boardGame!!
+                .addedTransfersObservable
+                .subscribe {
+                    val playTransferReceiptSounds =
+                            PreferenceManager.getDefaultSharedPreferences(this)
+                                    .getBoolean("play_transfer_receipt_sounds", true)
+                    if (it.toPlayer != null && playTransferReceiptSounds &&
+                            it.toPlayer.ownerPublicKey ==
+                            LiquidityApplication.getServerConnection(applicationContext).clientKey
+                    ) {
+                        if (transferReceiptMediaPlayer!!.isPlaying) {
+                            transferReceiptMediaPlayer!!.seekTo(0)
+                        } else {
+                            transferReceiptMediaPlayer!!.start()
+                        }
+                    }
+                    playersTransfersFragment!!.onTransferAdded(it)
+                }
         val playersDisposable = boardGame!!
                 .playersObservable
                 .subscribe {
@@ -427,6 +450,8 @@ class BoardGameActivity :
             override fun onDestroy(owner: LifecycleOwner) {
                 joinStateDisposable.dispose()
                 gameNameDisposable.dispose()
+                addedIdentitiesDisposable.dispose()
+                addedTransfersDisposable.dispose()
                 playersDisposable.dispose()
                 identitiesDisposable.dispose()
                 transfersDisposable.dispose()
@@ -715,10 +740,6 @@ class BoardGameActivity :
         })
     }
 
-    override fun onIdentityAdded(identity: BoardGame.Companion.Identity) {
-        identitiesFragment!!.selectedPage = identitiesFragment!!.getPage(identity)
-    }
-
     override fun onIdentityDeleteConfirmed(identity: BoardGame.Companion.Identity) {
         val deleteIdentityDisposable = boardGame!!
                 .deleteIdentity(identity)
@@ -841,22 +862,6 @@ class BoardGameActivity :
                 }
             })
         }
-    }
-
-    override fun onTransferAdded(transfer: BoardGame.Companion.Transfer) {
-        if (transfer.toPlayer != null &&
-                PreferenceManager.getDefaultSharedPreferences(this)
-                        .getBoolean("play_transfer_receipt_sounds", true) &&
-                transfer.toPlayer.ownerPublicKey ==
-                LiquidityApplication.getServerConnection(applicationContext).clientKey
-        ) {
-            if (transferReceiptMediaPlayer!!.isPlaying) {
-                transferReceiptMediaPlayer!!.seekTo(0)
-            } else {
-                transferReceiptMediaPlayer!!.start()
-            }
-        }
-        playersTransfersFragment!!.onTransferAdded(transfer)
     }
 
     override fun onGameNameEntered(name: String) {

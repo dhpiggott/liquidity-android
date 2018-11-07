@@ -15,6 +15,7 @@ import io.reactivex.Single
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
+import io.reactivex.subjects.PublishSubject
 import java.io.Serializable
 import java.math.BigDecimal
 import java.util.Currency
@@ -94,10 +95,7 @@ class BoardGame private constructor(
 
             fun onCreateGameError(name: String?)
             fun onJoinGameError()
-
             fun onIdentityRequired()
-            fun onIdentityAdded(identity: Identity)
-            fun onTransferAdded(transfer: Transfer)
 
         }
 
@@ -209,6 +207,12 @@ class BoardGame private constructor(
     private val gameNameSubject = BehaviorSubject.createDefault("")
     val gameNameObservable: Observable<String> = gameNameSubject
     val gameName: String get() = gameNameSubject.value!!
+
+    private val addedIdentitiesSubject = PublishSubject.create<Identity>()
+    val addedIdentitiesObservable: Observable<Identity> = addedIdentitiesSubject
+
+    private val addedTransfersSubject = PublishSubject.create<Transfer>()
+    val addedTransfersObservable: Observable<Transfer> = addedTransfersSubject
 
     private val playersSubject = BehaviorSubject.createDefault(emptyMap<String, Player>())
     val playersObservable: Observable<Map<String, Player>> = playersSubject
@@ -461,11 +465,9 @@ class BoardGame private constructor(
             if (newState.identities != oldState?.identities) {
                 val addedIdentities = newState.identities - oldState?.identities
                 if (oldState != null) {
-                    gameActionListeners.forEach { listener ->
                         addedIdentities.values.forEach {
-                            listener.onIdentityAdded(it)
+                            addedIdentitiesSubject.onNext(it)
                         }
-                    }
                 }
                 identitiesSubject.onNext(newState.identities)
                 hiddenIdentitiesSubject.onNext(newState.hiddenIdentities)
@@ -476,11 +478,9 @@ class BoardGame private constructor(
             if (newState.transfers != oldState?.transfers) {
                 val addedTransfers = newState.transfers - oldState?.transfers
                 if (oldState != null) {
-                    gameActionListeners.forEach { listener ->
                         addedTransfers.values.forEach {
-                            listener.onTransferAdded(it)
+                            addedTransfersSubject.onNext(it)
                         }
-                    }
                 }
                 transfersSubject.onNext(newState.transfers)
             }

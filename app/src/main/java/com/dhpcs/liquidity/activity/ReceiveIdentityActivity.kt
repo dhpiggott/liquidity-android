@@ -5,7 +5,8 @@ import android.view.WindowManager
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
-import com.dhpcs.liquidity.BoardGame
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import com.dhpcs.liquidity.R
 import com.google.protobuf.ByteString
 import net.glxn.qrgen.android.QRCode
@@ -39,11 +40,18 @@ class ReceiveIdentityActivity : BoardGameChildActivity() {
                             .bitmap()
             )
         }
-    }
 
-    override fun onIdentityAdded(identity: BoardGame.Companion.Identity) {
-        setResult(AppCompatActivity.RESULT_OK)
-        finish()
+        val addedIdentitiesDisposable = boardGame!!
+                .addedIdentitiesObservable
+                .subscribe {
+                    setResult(AppCompatActivity.RESULT_OK)
+                    finish()
+                }
+        lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onDestroy(owner: LifecycleOwner) {
+                addedIdentitiesDisposable.dispose()
+            }
+        })
     }
 
 }

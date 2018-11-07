@@ -3,8 +3,6 @@ package com.dhpcs.liquidity.activity
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.dhpcs.liquidity.BoardGame
-import com.dhpcs.liquidity.BoardGame.Companion.Identity
-import com.dhpcs.liquidity.BoardGame.Companion.Transfer
 import io.reactivex.disposables.Disposable
 
 abstract class BoardGameChildActivity :
@@ -19,8 +17,9 @@ abstract class BoardGameChildActivity :
     }
 
     private var joinRequestToken: BoardGame.Companion.JoinRequestToken? = null
-    private var boardGame: BoardGame? = null
     private var joinStateDisposable: Disposable? = null
+
+    protected var boardGame: BoardGame? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,9 +64,6 @@ abstract class BoardGameChildActivity :
 
     override fun onCreateGameError(name: String?) {}
     override fun onJoinGameError() {}
-
     override fun onIdentityRequired() {}
-    override fun onIdentityAdded(identity: Identity) {}
-    override fun onTransferAdded(transfer: Transfer) {}
 
 }
