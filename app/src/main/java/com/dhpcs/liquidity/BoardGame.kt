@@ -490,6 +490,15 @@ class BoardGame private constructor(
                     it.onTransfersUpdated(newState.transfers)
                 }
             }
+
+            if (oldState == null &&
+                    !(newState.identities + newState.hiddenIdentities).values.any {
+                        it.accountId != newState.zone.equityAccountId
+                    }) {
+                gameActionListeners.forEach {
+                    it.onIdentityRequired()
+                }
+            }
         }
         when (zoneNotification.zoneNotificationCase) {
             WsProtocol.ZoneNotification.ZoneNotificationCase.ZONENOTIFICATION_NOT_SET -> {
@@ -653,28 +662,10 @@ class BoardGame private constructor(
                 dispatchUpdates(state, newState)
                 state = newState
 
-                // The second condition isn't usually of significance but exists to prevent
-                // incorrectly prompting for an identity if a user rejoins a game by scanning its
-                // code again rather than by clicking its list item.
-                if (gameId == null &&
-                        !(state!!.identities + state!!.hiddenIdentities).values.any {
-                            it.accountId != zone.equityAccountId
-                        }) {
-                    gameActionListeners.forEach {
-                        it.onIdentityRequired()
-                    }
-                }
-
-                // We don't set gameId until now as it also indicates above whether we've prompted
-                // for the required identity - which we must do at most once.
-                val gameId = gameId
                 if (gameId == null) {
-                    this.gameId = Single.fromCallable {
+                    gameId = Single.fromCallable {
                         // This is in case a user rejoins a game by scanning its code again rather
-                        // than by clicking its list item - in such cases we mustn't attempt to
-                        // insert an entry as that would silently fail (as it happens on the
-                        // Future's worker thread), but we may need to update the existing entry's
-                        // name.
+                        // than by clicking its list item.
                         gameDatabase.checkAndUpdateGame(
                                 zoneId,
                                 if (!zone.hasName()) null else zone.name.value
@@ -685,9 +676,9 @@ class BoardGame private constructor(
                                 if (!zone.hasName()) null else zone.name.value
                         )
                     }.subscribeOn(Schedulers.io()).cache()
-                    this.gameId!!.subscribe()
+                    gameId!!.subscribe()
                 } else {
-                    gameId.subscribeOn(Schedulers.io()).subscribe { _ ->
+                    gameId!!.subscribeOn(Schedulers.io()).subscribe { _ ->
                         gameDatabase.checkAndUpdateGame(
                                 zoneId,
                                 if (!zone.hasName()) null else zone.name.value
