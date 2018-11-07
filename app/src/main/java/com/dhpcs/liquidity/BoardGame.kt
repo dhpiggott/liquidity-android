@@ -507,8 +507,8 @@ class BoardGame private constructor(
                 }.subscribeOn(Schedulers.io()).cache()
                 gameId!!.subscribe()
             } else {
-                gameId!!.subscribeOn(Schedulers.io()).subscribe { _ ->
-                    gameDatabase.checkAndUpdateGame(zoneId, newName)
+                gameId!!.subscribeOn(Schedulers.io()).subscribe { gameId ->
+                    gameDatabase.updateGameName(gameId, newName)
                 }
             }
         }
