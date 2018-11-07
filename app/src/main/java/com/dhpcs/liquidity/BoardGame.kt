@@ -20,8 +20,6 @@ import io.reactivex.subjects.BehaviorSubject
 import java.io.Serializable
 import java.math.BigDecimal
 import java.util.Currency
-import kotlin.collections.HashMap
-import kotlin.collections.HashSet
 import kotlin.collections.component1
 import kotlin.collections.component2
 
@@ -132,7 +130,7 @@ class BoardGame private constructor(
                 val transfers: Map<String, Transfer>
         )
 
-        private var instances: Map<String, BoardGame> = HashMap()
+        private var instances: Map<String, BoardGame> = emptyMap()
 
         fun getInstance(zoneId: String): BoardGame? = instances[zoneId]
 
@@ -217,8 +215,8 @@ class BoardGame private constructor(
             _gameId
     )
 
-    private var joinRequestTokens: Set<JoinRequestToken> = HashSet()
-    private var gameActionListeners: Set<GameActionListener> = HashSet()
+    private var joinRequestTokens: Set<JoinRequestToken> = emptySet()
+    private var gameActionListeners: Set<GameActionListener> = emptySet()
 
     var zoneId = _zoneId
         private set
