@@ -451,6 +451,9 @@ class BoardGame private constructor(
         }
 
         fun dispatchUpdates(oldState: State?, newState: State) {
+            if (oldState == null) {
+                joinStateSubject.onNext(JOINED)
+            }
             val oldName = if (oldState?.zone?.hasName() == true) oldState.zone.name.value else null
             val newName = if (newState.zone.hasName()) newState.zone.name.value else null
             if (oldState == null || newName != oldName) {
@@ -518,62 +521,54 @@ class BoardGame private constructor(
                 }
             }
         }
-        when (zoneNotification.zoneNotificationCase) {
-            WsProtocol.ZoneNotification.ZoneNotificationCase.ZONENOTIFICATION_NOT_SET -> {
-            }
-            WsProtocol.ZoneNotification.ZoneNotificationCase
-                    .CLIENT_JOINED_ZONE_NOTIFICATION -> {
+
+        val newState = when (zoneNotification.zoneNotificationCase) {
+            WsProtocol.ZoneNotification.ZoneNotificationCase.ZONENOTIFICATION_NOT_SET ->
+                null
+            WsProtocol.ZoneNotification.ZoneNotificationCase.CLIENT_JOINED_ZONE_NOTIFICATION -> {
                 val connectionId = zoneNotification.clientJoinedZoneNotification.connectionId
                 val publicKey = zoneNotification.clientJoinedZoneNotification.publicKey
                 val connectedClients = state!!.connectedClients + Pair(connectionId, publicKey)
-                val newState = updateState(
+                updateState(
                         state!!.zone,
                         connectedClients,
                         state!!.balances,
                         state!!.currency
                 )
-                dispatchUpdates(state, newState)
-                state = newState
             }
             WsProtocol.ZoneNotification.ZoneNotificationCase.CLIENT_QUIT_ZONE_NOTIFICATION -> {
                 val connectionId = zoneNotification.clientQuitZoneNotification.connectionId
                 val connectedClients = state!!.connectedClients - connectionId
-                val newState = updateState(
+                updateState(
                         state!!.zone,
                         connectedClients,
                         state!!.balances,
                         state!!.currency
                 )
-                dispatchUpdates(state, newState)
-                state = newState
             }
             WsProtocol.ZoneNotification.ZoneNotificationCase.ZONE_NAME_CHANGED_NOTIFICATION -> {
                 val name = zoneNotification.zoneNameChangedNotification.name
                 val zone = state!!.zone.toBuilder()
                         .setName(name)
                         .build()
-                val newState = updateState(
+                updateState(
                         zone,
                         state!!.connectedClients,
                         state!!.balances,
                         state!!.currency
                 )
-                dispatchUpdates(state, newState)
-                state = newState
             }
             WsProtocol.ZoneNotification.ZoneNotificationCase.MEMBER_CREATED_NOTIFICATION -> {
                 val member = zoneNotification.memberCreatedNotification.member
                 val zone = state!!.zone.toBuilder()
                         .addMembers(member)
                         .build()
-                val newState = updateState(
+                updateState(
                         zone,
                         state!!.connectedClients,
                         state!!.balances,
                         state!!.currency
                 )
-                dispatchUpdates(state, newState)
-                state = newState
             }
             WsProtocol.ZoneNotification.ZoneNotificationCase.MEMBER_UPDATED_NOTIFICATION -> {
                 val member = zoneNotification.memberUpdatedNotification.member
@@ -585,28 +580,24 @@ class BoardGame private constructor(
                         )
                         .addMembers(member)
                         .build()
-                val newState = updateState(
+                updateState(
                         zone,
                         state!!.connectedClients,
                         state!!.balances,
                         state!!.currency
                 )
-                dispatchUpdates(state, newState)
-                state = newState
             }
             WsProtocol.ZoneNotification.ZoneNotificationCase.ACCOUNT_CREATED_NOTIFICATION -> {
                 val account = zoneNotification.accountCreatedNotification.account
                 val zone = state!!.zone.toBuilder()
                         .addAccounts(account)
                         .build()
-                val newState = updateState(
+                updateState(
                         zone,
                         state!!.connectedClients,
                         state!!.balances,
                         state!!.currency
                 )
-                dispatchUpdates(state, newState)
-                state = newState
             }
             WsProtocol.ZoneNotification.ZoneNotificationCase.ACCOUNT_UPDATED_NOTIFICATION -> {
                 val account = zoneNotification.accountUpdatedNotification.account
@@ -618,14 +609,12 @@ class BoardGame private constructor(
                         )
                         .addAccounts(account)
                         .build()
-                val newState = updateState(
+                updateState(
                         zone,
                         state!!.connectedClients,
                         state!!.balances,
                         state!!.currency
                 )
-                dispatchUpdates(state, newState)
-                state = newState
             }
             WsProtocol.ZoneNotification.ZoneNotificationCase.TRANSACTION_ADDED_NOTIFICATION -> {
                 val transaction = zoneNotification.transactionAddedNotification.transaction
@@ -643,14 +632,12 @@ class BoardGame private constructor(
                                 state!!.balances.getOrElse(transaction.to) { BigDecimal.ZERO } +
                                         BigDecimal(transaction.value)
                         )
-                val newState = updateState(
+                updateState(
                         zone,
                         state!!.connectedClients,
                         balances,
                         state!!.currency
                 )
-                dispatchUpdates(state, newState)
-                state = newState
             }
             WsProtocol.ZoneNotification.ZoneNotificationCase.ZONE_STATE_NOTIFICATION -> {
                 val zone = zoneNotification.zoneStateNotification.zone
@@ -670,18 +657,19 @@ class BoardGame private constructor(
                                     )
                         }
                 val currency = currencyFromMetadata(zone.metadata)
-                joinStateSubject.onNext(JOINED)
-                val newState = updateState(
+                updateState(
                         zone,
                         connectedClients,
                         balances,
                         currency
                 )
-                dispatchUpdates(state, newState)
-                state = newState
             }
-            WsProtocol.ZoneNotification.ZoneNotificationCase.PING_NOTIFICATION -> {
-            }
+            WsProtocol.ZoneNotification.ZoneNotificationCase.PING_NOTIFICATION ->
+                null
+        }
+        if (newState != null) {
+            dispatchUpdates(state, newState)
+            state = newState
         }
     }
 
