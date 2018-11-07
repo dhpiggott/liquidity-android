@@ -369,9 +369,9 @@ class BoardGame private constructor(
                 val toMemberId = accountIdsToMemberIds[transaction.to]
                 Transfer(
                         fromAccount.id,
-                        players[fromMemberId]!!,
+                        players[fromMemberId],
                         toAccount.id,
-                        players[toMemberId]!!,
+                        players[toMemberId],
                         transaction.id,
                         transaction.created,
                         BigDecimal(transaction.value),
