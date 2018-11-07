@@ -94,7 +94,6 @@ class BoardGame private constructor(
 
             fun onCreateGameError(name: String?)
             fun onJoinGameError()
-            fun onQuitGameError()
 
             fun onIdentityRequired()
             fun onIdentityAdded(identity: Identity)

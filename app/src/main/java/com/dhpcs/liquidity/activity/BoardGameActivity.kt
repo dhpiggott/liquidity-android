@@ -676,15 +676,6 @@ class BoardGameActivity :
         finish()
     }
 
-    override fun onQuitGameError() {
-        Toast.makeText(
-                this,
-                R.string.quit_game_error,
-                Toast.LENGTH_LONG
-        ).show()
-        finish()
-    }
-
     override fun onIdentityRequired() {
         if (supportFragmentManager.findFragmentByTag(CreateIdentityDialogFragment.TAG) == null) {
             CreateIdentityDialogFragment.newInstance().show(

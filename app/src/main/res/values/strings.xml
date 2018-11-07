@@ -71,7 +71,6 @@
     <string name="preferences">Settings</string>
     <string name="privacy_content">Liquidity\'s privacy policy can be viewed at https://www.liquidityapp.com/privacy.\n\nBy using Liquidity you accept the policy.</string>
     <string name="privacy_title">Privacy</string>
-    <string name="quit_game_error">Couldn\'t quit game!</string>
     <string name="receive_identity">Receive identity</string>
     <string name="receive_identity_instruction">Show the QR code to the sender.</string>
     <string name="restore_identity">Restore identity</string>
