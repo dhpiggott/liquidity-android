@@ -122,14 +122,14 @@ class BoardGame private constructor(
         private const val HIDDEN_FLAG_KEY = "hidden"
 
         private class State(
-                var zone: Model.Zone,
-                var connectedClients: Map<String, ByteString>,
-                var balances: Map<String, BigDecimal>,
-                var currency: String?,
-                var identities: Map<String, Identity>,
-                var hiddenIdentities: Map<String, Identity>,
-                var players: Map<String, Player>,
-                var transfers: Map<String, Transfer>
+                val zone: Model.Zone,
+                val connectedClients: Map<String, ByteString>,
+                val balances: Map<String, BigDecimal>,
+                val currency: String?,
+                val identities: Map<String, Identity>,
+                val hiddenIdentities: Map<String, Identity>,
+                val players: Map<String, Player>,
+                val transfers: Map<String, Transfer>
         )
 
         private var instances: Map<String, BoardGame> = HashMap()
@@ -468,6 +468,14 @@ class BoardGame private constructor(
         }
 
         fun dispatchUpdates(oldState: State?, newState: State) {
+            val oldName = if (oldState?.zone?.hasName() == true) oldState.zone.name.value else null
+            val newName = if (newState.zone.hasName()) newState.zone.name.value else null
+            if (oldState == null || newName != oldName) {
+                gameNameSubject.onNext(newName ?: "")
+                gameId?.subscribeOn(Schedulers.io())?.subscribe { gameId ->
+                    gameDatabase.updateGameName(gameId, newName)
+                }
+            }
             if (newState.identities != oldState?.identities) {
                 val addedIdentities = newState.identities - oldState?.identities
                 if (oldState != null) {
@@ -539,36 +547,31 @@ class BoardGame private constructor(
             }
             WsProtocol.ZoneNotification.ZoneNotificationCase.ZONE_NAME_CHANGED_NOTIFICATION -> {
                 val name = zoneNotification.zoneNameChangedNotification.name
-                state!!.zone = state!!.zone.toBuilder()
+                val zone = state!!.zone.toBuilder()
                         .setName(name)
                         .build()
-                gameNameSubject.onNext(
-                        if (!zoneNotification.zoneNameChangedNotification.hasName()) {
-                            ""
-                        } else {
-                            zoneNotification.zoneNameChangedNotification.name.value
-                        }
+                val newState = updateState(
+                        zone,
+                        state!!.connectedClients,
+                        state!!.balances,
+                        state!!.currency
                 )
-                gameId!!.subscribeOn(Schedulers.io()).subscribe { gameId ->
-                    gameDatabase.updateGameName(
-                            gameId,
-                            if (!zoneNotification
-                                            .zoneNameChangedNotification
-                                            .hasName()) {
-                                null
-                            } else {
-                                zoneNotification
-                                        .zoneNameChangedNotification
-                                        .name.value
-                            }
-                    )
-                }
+                dispatchUpdates(state, newState)
+                state = newState
             }
             WsProtocol.ZoneNotification.ZoneNotificationCase.MEMBER_CREATED_NOTIFICATION -> {
                 val member = zoneNotification.memberCreatedNotification.member
-                state!!.zone = state!!.zone.toBuilder()
+                val zone = state!!.zone.toBuilder()
                         .addMembers(member)
                         .build()
+                val newState = updateState(
+                        zone,
+                        state!!.connectedClients,
+                        state!!.balances,
+                        state!!.currency
+                )
+                dispatchUpdates(state, newState)
+                state = newState
             }
             WsProtocol.ZoneNotification.ZoneNotificationCase.MEMBER_UPDATED_NOTIFICATION -> {
                 val member = zoneNotification.memberUpdatedNotification.member
@@ -666,7 +669,6 @@ class BoardGame private constructor(
                         }
                 val currency = currencyFromMetadata(zone.metadata)
                 joinStateSubject.onNext(JOINED)
-                gameNameSubject.onNext(if (!zone.hasName()) "" else zone.name.value)
                 val newState = updateState(
                         zone,
                         connectedClients,
