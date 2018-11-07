@@ -1,6 +1,5 @@
 package com.dhpcs.liquidity
 
-import android.net.Uri
 import com.dhpcs.liquidity.proto.ws.protocol.WsProtocol
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.JWSHeader
@@ -15,6 +14,8 @@ import okhttp3.*
 import okio.ByteString
 import java.io.File
 import java.io.IOException
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -90,7 +91,10 @@ class ServerConnection(filesDir: File) {
 
     fun execZoneCommand(zoneId: String, zoneCommand: WsProtocol.ZoneCommand
     ): Single<WsProtocol.ZoneResponse> {
-        return execZoneCommand("/${Uri.encode(zoneId)}", zoneCommand.toByteArray())
+        return execZoneCommand(
+                "/${URLEncoder.encode(zoneId, StandardCharsets.UTF_8.name())}",
+                zoneCommand.toByteArray()
+        )
     }
 
     private fun execZoneCommand(

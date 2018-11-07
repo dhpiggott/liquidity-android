@@ -1,8 +1,5 @@
 package com.dhpcs.liquidity
 
-import android.net.ConnectivityManager
-import android.net.Network
-import android.net.NetworkRequest
 import com.dhpcs.liquidity.BoardGame.Companion.JoinState.*
 import com.dhpcs.liquidity.proto.model.Model
 import com.dhpcs.liquidity.proto.ws.protocol.WsProtocol
@@ -24,7 +21,6 @@ import kotlin.collections.component2
 
 @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
 class BoardGame private constructor(
-        private val connectivityManager: ConnectivityManager,
         private val serverConnection: ServerConnection,
         private val gameDatabase: GameDatabase,
         private val _currency: Currency?,
@@ -47,8 +43,7 @@ class BoardGame private constructor(
         }
 
         enum class JoinState {
-            UNAVAILABLE,
-            AVAILABLE,
+            QUIT,
             FAILED,
             ERROR,
             CREATING,
@@ -135,28 +130,12 @@ class BoardGame private constructor(
 
     }
 
-    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
-        override fun onAvailable(network: Network) {
-            if (joinState != CREATING && joinState != JOINING && joinState != JOINED) {
-                joinStateSubject.onNext(AVAILABLE)
-            }
-        }
-
-        override fun onUnavailable() {
-            if (joinState != CREATING && joinState != JOINING && joinState != JOINED) {
-                joinStateSubject.onNext(UNAVAILABLE)
-            }
-        }
-    }
-
-    constructor (connectivityManager: ConnectivityManager,
-                 serverConnection: ServerConnection,
+    constructor (serverConnection: ServerConnection,
                  gameDatabase: GameDatabase,
                  currency: Currency,
                  gameName: String,
                  bankMemberName: String
     ) : this(
-            connectivityManager,
             serverConnection,
             gameDatabase,
             currency,
@@ -166,13 +145,11 @@ class BoardGame private constructor(
             null
     )
 
-    constructor(connectivityManager: ConnectivityManager,
-                serverConnection: ServerConnection,
+    constructor(serverConnection: ServerConnection,
                 gameDatabase: GameDatabase,
                 zoneId: String,
                 gameId: Long?
-    ) : this(connectivityManager,
-            serverConnection,
+    ) : this(serverConnection,
             gameDatabase,
             null,
             null,
@@ -188,7 +165,7 @@ class BoardGame private constructor(
 
     private var gameId: Single<Long>? = if (_gameId == null) null else Single.just(_gameId)
 
-    private val joinStateSubject = BehaviorSubject.createDefault(UNAVAILABLE)
+    private val joinStateSubject = BehaviorSubject.createDefault(QUIT)
     val joinState: JoinState get() = joinStateSubject.value!!
     val joinStateObservable: Observable<JoinState> = joinStateSubject
 
@@ -228,34 +205,19 @@ class BoardGame private constructor(
     val transfersObservable: Observable<Map<String, Transfer>> = transfersSubject
     val transfers get() = transfersSubject.value
 
-    init {
-        updateIdleJoinState()
-    }
-
-    private fun updateIdleJoinState() {
-        val isConnected = connectivityManager.activeNetworkInfo?.isConnected == true
-        joinStateSubject.onNext(if (!isConnected) UNAVAILABLE else AVAILABLE)
-    }
-
     fun requestJoin(token: JoinRequestToken) {
-        val zoneId = zoneId
         if (joinRequestTokens.isEmpty()) {
-            connectivityManager.registerNetworkCallback(
-                    NetworkRequest.Builder().build(),
-                    networkCallback
-            )
+            val zoneId = zoneId
             if (zoneId != null && !instances.contains(zoneId)) {
                 instances += Pair(zoneId, this)
             }
-        }
-        joinRequestTokens += token
-        if (joinState != CREATING && joinState != JOINING && joinState != JOINED) {
             if (zoneId == null) {
                 createAndThenJoinZone(_currency!!, _gameName!!)
             } else {
                 join(zoneId)
             }
         }
+        joinRequestTokens += token
     }
 
     fun unrequestJoin(token: JoinRequestToken) {
@@ -266,7 +228,6 @@ class BoardGame private constructor(
             if (zoneId != null && instances.contains(zoneId)) {
                 instances -= zoneId
             }
-            connectivityManager.unregisterNetworkCallback(networkCallback)
         }
     }
 
@@ -336,7 +297,7 @@ class BoardGame private constructor(
         createZoneDisposable = null
         zoneNotificationDisposable?.dispose()
         zoneNotificationDisposable = null
-        updateIdleJoinState()
+        joinStateSubject.onNext(QUIT)
     }
 
     private fun onZoneNotificationReceived(
@@ -444,9 +405,9 @@ class BoardGame private constructor(
             if (newState.identities != oldState?.identities) {
                 val addedIdentities = newState.identities - oldState?.identities
                 if (oldState != null) {
-                        addedIdentities.values.forEach {
-                            addedIdentitiesSubject.onNext(it)
-                        }
+                    addedIdentities.values.forEach {
+                        addedIdentitiesSubject.onNext(it)
+                    }
                 }
                 identitiesSubject.onNext(newState.identities)
                 hiddenIdentitiesSubject.onNext(newState.hiddenIdentities)
@@ -457,9 +418,9 @@ class BoardGame private constructor(
             if (newState.transfers != oldState?.transfers) {
                 val addedTransfers = newState.transfers - oldState?.transfers
                 if (oldState != null) {
-                        addedTransfers.values.forEach {
-                            addedTransfersSubject.onNext(it)
-                        }
+                    addedTransfers.values.forEach {
+                        addedTransfersSubject.onNext(it)
+                    }
                 }
                 transfersSubject.onNext(newState.transfers)
             }

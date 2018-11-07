@@ -3,7 +3,6 @@ package com.dhpcs.liquidity.activity
 import android.content.Context
 import android.content.Intent
 import android.media.MediaPlayer
-import android.net.ConnectivityManager
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.view.Menu
@@ -297,13 +296,10 @@ class BoardGameActivity :
             intent.extras!!.getString(EXTRA_ZONE_ID)
         }
 
-        val connectivityManager =
-                getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         if (zoneId == null) {
             val currency = intent.extras!!.getSerializable(EXTRA_CURRENCY) as Currency
             val gameName = intent.extras!!.getString(EXTRA_GAME_NAME)!!
             boardGame = BoardGame(
-                    connectivityManager,
                     LiquidityApplication.getServerConnection(applicationContext),
                     LiquidityApplication.getGameDatabase(applicationContext),
                     currency,
@@ -314,7 +310,6 @@ class BoardGameActivity :
             boardGame = BoardGame.getInstance(zoneId)
             if (boardGame == null) {
                 boardGame = BoardGame(
-                        connectivityManager,
                         LiquidityApplication.getServerConnection(applicationContext),
                         LiquidityApplication.getGameDatabase(applicationContext),
                         zoneId,
@@ -344,23 +339,13 @@ class BoardGameActivity :
                 .joinStateObservable
                 .subscribe {
                     when (it) {
-                        BoardGame.Companion.JoinState.UNAVAILABLE -> {
-
-                            Toast.makeText(
-                                    this,
-                                    R.string.join_state_unavailable,
-                                    Toast.LENGTH_LONG
-                            ).show()
-                            finish()
-
-                        }
-                        BoardGame.Companion.JoinState.AVAILABLE -> {
+                        BoardGame.Companion.JoinState.QUIT -> {
 
                             slidingUpPanelLayout!!.visibility = View.GONE
-                            progressBarState!!.visibility = View.GONE
 
+                            progressBarState!!.visibility = View.VISIBLE
                             textViewState!!.visibility = View.VISIBLE
-                            textViewState!!.setText(R.string.join_state_available)
+                            textViewState!!.setText(R.string.join_state_quit)
 
                         }
                         BoardGame.Companion.JoinState.FAILED -> {
