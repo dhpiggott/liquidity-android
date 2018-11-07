@@ -6,8 +6,7 @@ import com.dhpcs.liquidity.BoardGame
 import io.reactivex.disposables.Disposable
 
 abstract class BoardGameChildActivity :
-        AppCompatActivity(),
-        BoardGame.Companion.GameActionListener {
+        AppCompatActivity() {
 
     companion object {
 
@@ -35,7 +34,6 @@ abstract class BoardGameChildActivity :
 
         boardGame = BoardGame.getInstance(zoneId)
 
-        boardGame!!.registerListener(this)
         joinStateDisposable = boardGame!!.joinStateObservable.subscribe {
             if (it != BoardGame.Companion.JoinState.JOINED) finish()
         }
@@ -57,12 +55,8 @@ abstract class BoardGameChildActivity :
 
     override fun onDestroy() {
         super.onDestroy()
-        boardGame!!.unregisterListener(this)
         joinStateDisposable?.dispose()
         joinStateDisposable = null
     }
-
-    override fun onCreateGameError(name: String?) {}
-    override fun onJoinGameError() {}
 
 }

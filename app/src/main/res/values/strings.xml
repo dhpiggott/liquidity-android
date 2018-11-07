@@ -27,7 +27,7 @@
     <string name="change_identity_name">Change identity name</string>
     <string name="change_identity_name_error_format_string">Couldn\'t change identity name to %1$s!</string>
     <string name="choose_identity_to_restore">Choose identity to restore</string>
-    <string name="create_game_error_format_string">Couldn\'t create game %1$s!</string>
+    <string name="create_game_error">Couldn\'t create game!</string>
     <string name="create_identity">Create identity</string>
     <string name="create_identity_error_format_string">Couldn\'t create identity %1$s!</string>
     <string name="create_new_game">Create new game</string>
@@ -51,11 +51,11 @@
     <string name="group_transfer">Group transfer</string>
     <string name="identity_format_string">%1$s (%2$s available)</string>
     <string name="join_existing_game">Join existing game</string>
-    <string name="join_game_error">"Couldn't join game - are you sure it\'s a Liquidity game?"</string>
+    <string name="join_state_error">"Couldn't join game - are you sure it\'s a Liquidity game?"</string>
     <string name="join_game_instruction">Scan the QR code on the host\'s phone.</string>
     <string name="join_state_available">The connection was closed.</string>
     <string name="join_state_creating">Creating game</string>
-    <string name="join_state_general_failure">The connection failed. Ensure you are using the latest version of Liquidity.</string>
+    <string name="join_state_failed">The connection failed. Ensure you are using the latest version of Liquidity.</string>
     <string name="join_state_joining">Joining game</string>
     <string name="join_state_unavailable">Liquidity requires a data connection, but none is available.</string>
     <string name="no_games">You don\'t have any saved games. Click the button below to create or join one.</string>

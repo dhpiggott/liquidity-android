@@ -39,7 +39,6 @@ class BoardGameActivity :
         ConfirmIdentityDeletionDialogFragment.Companion.Listener,
         CreateIdentityDialogFragment.Companion.Listener,
         IdentitiesFragment.Companion.Listener,
-        BoardGame.Companion.GameActionListener,
         PlayersFragment.Companion.Listener,
         RestoreIdentityDialogFragment.Companion.Listener,
         TransferToPlayerDialogFragment.Companion.Listener {
@@ -331,7 +330,16 @@ class BoardGameActivity :
             }
         }
 
-        boardGame!!.registerListener(this)
+        val createGameErrorDisposable = boardGame!!
+                .createGameErrorObservable
+                .subscribe {
+                    Toast.makeText(
+                            this,
+                            R.string.create_game_error,
+                            Toast.LENGTH_LONG
+                    ).show()
+                    finish()
+                }
         val joinStateDisposable = boardGame!!
                 .joinStateObservable
                 .subscribe {
@@ -359,7 +367,17 @@ class BoardGameActivity :
 
                             Toast.makeText(
                                     this,
-                                    R.string.join_state_general_failure,
+                                    R.string.join_state_failed,
+                                    Toast.LENGTH_LONG
+                            ).show()
+                            finish()
+
+                        }
+                        BoardGame.Companion.JoinState.ERROR -> {
+
+                            Toast.makeText(
+                                    this,
+                                    R.string.join_state_error,
                                     Toast.LENGTH_LONG
                             ).show()
                             finish()
@@ -459,6 +477,7 @@ class BoardGameActivity :
                 }
         lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onDestroy(owner: LifecycleOwner) {
+                createGameErrorDisposable.dispose()
                 joinStateDisposable.dispose()
                 gameNameDisposable.dispose()
                 identityRequiredDisposable.dispose()
@@ -688,29 +707,7 @@ class BoardGameActivity :
 
     override fun onDestroy() {
         super.onDestroy()
-        boardGame!!.unregisterListener(this)
         transferReceiptMediaPlayer!!.release()
-    }
-
-    override fun onCreateGameError(name: String?) {
-        Toast.makeText(
-                this,
-                getString(
-                        R.string.create_game_error_format_string,
-                        formatNullable(this, name)
-                ),
-                Toast.LENGTH_LONG
-        ).show()
-        finish()
-    }
-
-    override fun onJoinGameError() {
-        Toast.makeText(
-                this,
-                R.string.join_game_error,
-                Toast.LENGTH_LONG
-        ).show()
-        finish()
     }
 
     override fun onNoIdentitiesTextClicked() {

@@ -50,6 +50,7 @@ class BoardGame private constructor(
             UNAVAILABLE,
             AVAILABLE,
             FAILED,
+            ERROR,
             CREATING,
             JOINING,
             JOINED
@@ -90,13 +91,6 @@ class BoardGame private constructor(
                 val value: BigDecimal,
                 val currency: String?
         ) : Serializable
-
-        interface GameActionListener {
-
-            fun onCreateGameError(name: String?)
-            fun onJoinGameError()
-
-        }
 
         class JoinRequestToken
 
@@ -188,7 +182,6 @@ class BoardGame private constructor(
     )
 
     private var joinRequestTokens: Set<JoinRequestToken> = emptySet()
-    private var gameActionListeners: Set<GameActionListener> = emptySet()
 
     var zoneId = _zoneId
         private set
@@ -202,6 +195,9 @@ class BoardGame private constructor(
     private var state: State? = null
 
     val currency get() = state!!.currency
+
+    private val createGameErrorSubject = PublishSubject.create<Unit>()
+    val createGameErrorObservable: Observable<Unit> = createGameErrorSubject
 
     private val gameNameSubject = BehaviorSubject.createDefault("")
     val gameNameObservable: Observable<String> = gameNameSubject
@@ -241,24 +237,13 @@ class BoardGame private constructor(
         joinStateSubject.onNext(if (!isConnected) UNAVAILABLE else AVAILABLE)
     }
 
-    fun registerListener(listener: GameActionListener) {
-        if (gameActionListeners.isEmpty()) {
+    fun requestJoin(token: JoinRequestToken) {
+        val zoneId = zoneId
+        if (joinRequestTokens.isEmpty()) {
             connectivityManager.registerNetworkCallback(
                     NetworkRequest.Builder().build(),
                     networkCallback
             )
-        }
-        gameActionListeners += listener
-        if (joinState == JOINED) {
-            gameNameSubject.onNext(
-                    if (!state!!.zone.hasName()) "" else state!!.zone.name.value
-            )
-        }
-    }
-
-    fun requestJoin(token: JoinRequestToken) {
-        val zoneId = zoneId
-        if (joinRequestTokens.isEmpty()) {
             if (zoneId != null && !instances.contains(zoneId)) {
                 instances += Pair(zoneId, this)
             }
@@ -281,12 +266,6 @@ class BoardGame private constructor(
             if (zoneId != null && instances.contains(zoneId)) {
                 instances -= zoneId
             }
-        }
-    }
-
-    fun unregisterListener(listener: GameActionListener) {
-        gameActionListeners -= listener
-        if (gameActionListeners.isEmpty()) {
             connectivityManager.unregisterNetworkCallback(networkCallback)
         }
     }
@@ -311,9 +290,9 @@ class BoardGame private constructor(
         ).subscribe({ zoneResponse ->
             when (zoneResponse.createZoneResponse.resultCase) {
                 WsProtocol.ZoneResponse.CreateZoneResponse.ResultCase.RESULT_NOT_SET ->
-                    gameActionListeners.forEach { it.onCreateGameError(name) }
+                    createGameErrorSubject.onNext(Unit)
                 WsProtocol.ZoneResponse.CreateZoneResponse.ResultCase.ERRORS ->
-                    gameActionListeners.forEach { it.onCreateGameError(name) }
+                    createGameErrorSubject.onNext(Unit)
                 WsProtocol.ZoneResponse.CreateZoneResponse.ResultCase.SUCCESS -> {
                     val zone = zoneResponse.createZoneResponse.success.zone!!
                     instances += Pair(zone.id, this)
@@ -322,7 +301,7 @@ class BoardGame private constructor(
                 }
             }
         }, { _ ->
-            gameActionListeners.forEach { it.onCreateGameError(name) }
+            createGameErrorSubject.onNext(Unit)
         })
     }
 
@@ -344,9 +323,7 @@ class BoardGame private constructor(
                         },
                         {
                             if (joinState == JOINING) {
-                                gameActionListeners.forEach {
-                                    it.onJoinGameError()
-                                }
+                                joinStateSubject.onNext(ERROR)
                             } else {
                                 joinStateSubject.onNext(FAILED)
                             }
