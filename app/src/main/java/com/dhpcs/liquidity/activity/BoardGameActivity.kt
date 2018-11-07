@@ -3,6 +3,7 @@ package com.dhpcs.liquidity.activity
 import android.content.Context
 import android.content.Intent
 import android.media.MediaPlayer
+import android.net.ConnectivityManager
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.view.Menu
@@ -297,11 +298,13 @@ class BoardGameActivity :
             intent.extras!!.getString(EXTRA_ZONE_ID)
         }
 
+        val connectivityManager =
+                getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         if (zoneId == null) {
             val currency = intent.extras!!.getSerializable(EXTRA_CURRENCY) as Currency
             val gameName = intent.extras!!.getString(EXTRA_GAME_NAME)!!
             boardGame = BoardGame(
-                    applicationContext,
+                    connectivityManager,
                     LiquidityApplication.getServerConnection(applicationContext),
                     LiquidityApplication.getGameDatabase(applicationContext),
                     currency,
@@ -312,7 +315,7 @@ class BoardGameActivity :
             boardGame = BoardGame.getInstance(zoneId)
             if (boardGame == null) {
                 boardGame = BoardGame(
-                        applicationContext,
+                        connectivityManager,
                         LiquidityApplication.getServerConnection(applicationContext),
                         LiquidityApplication.getGameDatabase(applicationContext),
                         zoneId,

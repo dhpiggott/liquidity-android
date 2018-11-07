@@ -1,10 +1,8 @@
 package com.dhpcs.liquidity
 
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
 import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkRequest
 import com.dhpcs.liquidity.BoardGame.Companion.JoinState.*
 import com.dhpcs.liquidity.proto.model.Model
 import com.dhpcs.liquidity.proto.ws.protocol.WsProtocol
@@ -25,7 +23,7 @@ import kotlin.collections.component2
 
 @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
 class BoardGame private constructor(
-        private val context: Context,
+        private val connectivityManager: ConnectivityManager,
         private val serverConnection: ServerConnection,
         private val gameDatabase: GameDatabase,
         private val _currency: Currency?,
@@ -36,8 +34,6 @@ class BoardGame private constructor(
 ) {
 
     companion object {
-
-        private val connectionStateFilter = IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
 
         interface GameDatabase {
 
@@ -155,27 +151,28 @@ class BoardGame private constructor(
 
     }
 
-    private val connectivityManager =
-            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-
-    private val connectionStateReceiver = object : BroadcastReceiver() {
-
-        override fun onReceive(context1: Context, intent: Intent) {
+    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) {
             if (joinState != CREATING && joinState != JOINING && joinState != JOINED) {
-                updateIdleJoinState()
+                joinStateSubject.onNext(AVAILABLE)
             }
         }
 
+        override fun onUnavailable() {
+            if (joinState != CREATING && joinState != JOINING && joinState != JOINED) {
+                joinStateSubject.onNext(UNAVAILABLE)
+            }
+        }
     }
 
-    constructor (context: Context,
+    constructor (connectivityManager: ConnectivityManager,
                  serverConnection: ServerConnection,
                  gameDatabase: GameDatabase,
                  currency: Currency,
                  gameName: String,
                  bankMemberName: String
     ) : this(
-            context,
+            connectivityManager,
             serverConnection,
             gameDatabase,
             currency,
@@ -185,12 +182,12 @@ class BoardGame private constructor(
             null
     )
 
-    constructor(context: Context,
+    constructor(connectivityManager: ConnectivityManager,
                 serverConnection: ServerConnection,
                 gameDatabase: GameDatabase,
                 zoneId: String,
                 gameId: Long?
-    ) : this(context,
+    ) : this(connectivityManager,
             serverConnection,
             gameDatabase,
             null,
@@ -241,7 +238,10 @@ class BoardGame private constructor(
 
     fun registerListener(listener: GameActionListener) {
         if (gameActionListeners.isEmpty()) {
-            context.registerReceiver(connectionStateReceiver, connectionStateFilter)
+            connectivityManager.registerNetworkCallback(
+                    NetworkRequest.Builder().build(),
+                    networkCallback
+            )
         }
         gameActionListeners += listener
         if (joinState == JOINED) {
@@ -285,7 +285,7 @@ class BoardGame private constructor(
     fun unregisterListener(listener: GameActionListener) {
         gameActionListeners -= listener
         if (gameActionListeners.isEmpty()) {
-            context.unregisterReceiver(connectionStateReceiver)
+            connectivityManager.unregisterNetworkCallback(networkCallback)
         }
     }
 
