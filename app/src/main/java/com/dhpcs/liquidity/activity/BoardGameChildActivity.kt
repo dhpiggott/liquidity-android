@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.BoardGame.Companion.Identity
-import com.dhpcs.liquidity.BoardGame.Companion.Player
 import com.dhpcs.liquidity.BoardGame.Companion.Transfer
 import io.reactivex.disposables.Disposable
 
@@ -69,16 +68,7 @@ abstract class BoardGameChildActivity :
     override fun onQuitGameError() {}
 
     override fun onIdentityRequired() {}
-
     override fun onIdentityAdded(identity: Identity) {}
-    override fun onIdentitiesUpdated(identities: Map<String,
-            BoardGame.Companion.Identity>
-    ) {
-    }
-
-    override fun onPlayersUpdated(players: Map<String, Player>) {}
-
     override fun onTransferAdded(transfer: Transfer) {}
-    override fun onTransfersUpdated(transfers: Map<String, Transfer>) {}
 
 }

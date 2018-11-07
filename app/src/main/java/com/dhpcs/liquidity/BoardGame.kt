@@ -97,14 +97,8 @@ class BoardGame private constructor(
             fun onQuitGameError()
 
             fun onIdentityRequired()
-
             fun onIdentityAdded(identity: Identity)
-            fun onIdentitiesUpdated(identities: Map<String, Identity>)
-
-            fun onPlayersUpdated(players: Map<String, Player>)
-
             fun onTransferAdded(transfer: Transfer)
-            fun onTransfersUpdated(transfers: Map<String, Transfer>)
 
         }
 
@@ -206,9 +200,7 @@ class BoardGame private constructor(
     private var gameId: Single<Long>? = if (_gameId == null) null else Single.just(_gameId)
 
     private val joinStateSubject = BehaviorSubject.createDefault(UNAVAILABLE)
-
     val joinState: JoinState get() = joinStateSubject.value!!
-
     val joinStateObservable: Observable<JoinState> = joinStateSubject
 
     private var state: State? = null
@@ -216,16 +208,24 @@ class BoardGame private constructor(
     val currency get() = state!!.currency
 
     private val gameNameSubject = BehaviorSubject.createDefault("")
-
+    val gameNameObservable: Observable<String> = gameNameSubject
     val gameName: String get() = gameNameSubject.value!!
 
-    val gameNameObservable: Observable<String> = gameNameSubject
+    private val playersSubject = BehaviorSubject.createDefault(emptyMap<String, Player>())
+    val playersObservable: Observable<Map<String, Player>> = playersSubject
+    val players get() = playersSubject.value
 
-    val hiddenIdentities get() = state!!.hiddenIdentities.values
+    private val identitiesSubject = BehaviorSubject.createDefault(emptyMap<String, Identity>())
+    val identitiesObservable: Observable<Map<String, Identity>> = identitiesSubject
+    val identities get() = identitiesSubject.value
 
-    val identities get() = state!!.identities.values
+    private val hiddenIdentitiesSubject =
+            BehaviorSubject.createDefault(emptyMap<String, Identity>())
+    val hiddenIdentities get() = hiddenIdentitiesSubject.value
 
-    val players get() = state!!.players.values
+    private val transfersSubject = BehaviorSubject.createDefault(emptyMap<String, Transfer>())
+    val transfersObservable: Observable<Map<String, Transfer>> = transfersSubject
+    val transfers get() = transfersSubject.value
 
     init {
         updateIdleJoinState()
@@ -248,9 +248,6 @@ class BoardGame private constructor(
             gameNameSubject.onNext(
                     if (!state!!.zone.hasName()) "" else state!!.zone.name.value
             )
-            listener.onIdentitiesUpdated(state!!.identities)
-            listener.onPlayersUpdated(state!!.players)
-            listener.onTransfersUpdated(state!!.transfers)
         }
     }
 
@@ -471,14 +468,11 @@ class BoardGame private constructor(
                         }
                     }
                 }
-                gameActionListeners.forEach {
-                    it.onIdentitiesUpdated(newState.identities)
-                }
+                identitiesSubject.onNext(newState.identities)
+                hiddenIdentitiesSubject.onNext(newState.hiddenIdentities)
             }
             if (newState.players != oldState?.players) {
-                gameActionListeners.forEach {
-                    it.onPlayersUpdated(newState.players)
-                }
+                playersSubject.onNext(newState.players)
             }
             if (newState.transfers != oldState?.transfers) {
                 val addedTransfers = newState.transfers - oldState?.transfers
@@ -489,9 +483,7 @@ class BoardGame private constructor(
                         }
                     }
                 }
-                gameActionListeners.forEach {
-                    it.onTransfersUpdated(newState.transfers)
-                }
+                transfersSubject.onNext(newState.transfers)
             }
 
             if (oldState == null &&

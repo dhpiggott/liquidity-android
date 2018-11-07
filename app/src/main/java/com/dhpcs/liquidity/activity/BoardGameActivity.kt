@@ -400,10 +400,36 @@ class BoardGameActivity :
                 .subscribe {
                     title = it
                 }
+        val playersDisposable = boardGame!!
+                .playersObservable
+                .subscribe {
+                    playersFragment!!.onPlayersUpdated(it)
+                    playersTransfersFragment!!.onPlayersUpdated(it)
+                }
+        val identitiesDisposable = boardGame!!
+                .identitiesObservable
+                .subscribe {
+                    identitiesFragment!!.onIdentitiesUpdated(it)
+                    playersFragment!!.onSelectedIdentityChanged(
+                            identitiesFragment!!.getIdentity(identitiesFragment!!.selectedPage)
+                    )
+                    val transferToPlayerDialogFragment = supportFragmentManager
+                            .findFragmentByTag(TransferToPlayerDialogFragment.TAG) as
+                            TransferToPlayerDialogFragment?
+                    transferToPlayerDialogFragment?.onIdentitiesUpdated(it)
+                }
+        val transfersDisposable = boardGame!!
+                .transfersObservable
+                .subscribe {
+                    playersTransfersFragment!!.onTransfersUpdated(it)
+                }
         lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onDestroy(owner: LifecycleOwner) {
                 joinStateDisposable.dispose()
                 gameNameDisposable.dispose()
+                playersDisposable.dispose()
+                identitiesDisposable.dispose()
+                transfersDisposable.dispose()
             }
         })
     }
@@ -433,7 +459,7 @@ class BoardGameActivity :
         menu.findItem(R.id.action_create_identity).isVisible =
                 isJoined && isPanelCollapsed
         menu.findItem(R.id.action_restore_identity).isVisible =
-                isJoined && isPanelCollapsed && boardGame!!.hiddenIdentities.isNotEmpty()
+                isJoined && isPanelCollapsed && boardGame!!.hiddenIdentities!!.isNotEmpty()
         menu.findItem(R.id.action_delete_identity).isVisible =
                 isJoined && identity != null && isPanelCollapsed
         menu.findItem(R.id.action_receive_identity).isVisible =
@@ -476,8 +502,8 @@ class BoardGameActivity :
                 val identity = identitiesFragment!!.getIdentity(identitiesFragment!!.selectedPage)
                 if (identity != null) {
                     TransferToPlayerDialogFragment.newInstance(
-                            ArrayList(boardGame!!.identities.toList()),
-                            ArrayList(boardGame!!.players.toList()),
+                            ArrayList(boardGame!!.identities!!.values.toList()),
+                            ArrayList(boardGame!!.players!!.values.toList()),
                             boardGame!!.currency,
                             identity, null
                     ).show(supportFragmentManager, TransferToPlayerDialogFragment.TAG)
@@ -504,7 +530,7 @@ class BoardGameActivity :
             }
             R.id.action_restore_identity -> {
                 RestoreIdentityDialogFragment.newInstance(
-                        ArrayList(boardGame!!.hiddenIdentities.toList())
+                        ArrayList(boardGame!!.hiddenIdentities!!.values.toList())
                 ).show(supportFragmentManager, RestoreIdentityDialogFragment.TAG)
                 return true
             }
@@ -775,19 +801,6 @@ class BoardGameActivity :
         playersFragment!!.onSelectedIdentityChanged(identitiesFragment!!.getIdentity(page)!!)
     }
 
-    override fun onIdentitiesUpdated(identities: Map<String,
-            BoardGame.Companion.Identity>
-    ) {
-        identitiesFragment!!.onIdentitiesUpdated(identities)
-        playersFragment!!.onSelectedIdentityChanged(
-                identitiesFragment!!.getIdentity(identitiesFragment!!.selectedPage)
-        )
-        val transferToPlayerDialogFragment = supportFragmentManager
-                .findFragmentByTag(TransferToPlayerDialogFragment.TAG) as
-                TransferToPlayerDialogFragment?
-        transferToPlayerDialogFragment?.onIdentitiesUpdated(identities)
-    }
-
     override fun onNoPlayersTextClicked() {
         val zoneIdHolder = Bundle()
         zoneIdHolder.putString(BoardGameChildActivity.EXTRA_ZONE_ID, boardGame!!.zoneId)
@@ -802,19 +815,13 @@ class BoardGameActivity :
         val identity = identitiesFragment!!.getIdentity(identitiesFragment!!.selectedPage)
         if (identity != null) {
             TransferToPlayerDialogFragment.newInstance(
-                    ArrayList(boardGame!!.identities.toList()),
-                    ArrayList(boardGame!!.players.toList()),
+                    ArrayList(boardGame!!.identities!!.values.toList()),
+                    ArrayList(boardGame!!.players!!.values.toList()),
                     boardGame!!.currency,
                     identity,
                     player
             ).show(supportFragmentManager, TransferToPlayerDialogFragment.TAG)
         }
-    }
-
-    override fun onPlayersUpdated(players: Map<String,
-            BoardGame.Companion.Player>) {
-        playersFragment!!.onPlayersUpdated(players)
-        playersTransfersFragment!!.onPlayersUpdated(players)
     }
 
     override fun onTransferValueEntered(from: BoardGame.Companion.Identity,
@@ -859,12 +866,6 @@ class BoardGameActivity :
             }
         }
         playersTransfersFragment!!.onTransferAdded(transfer)
-    }
-
-    override fun onTransfersUpdated(transfers: Map<String,
-            BoardGame.Companion.Transfer>
-    ) {
-        playersTransfersFragment!!.onTransfersUpdated(transfers)
     }
 
     override fun onGameNameEntered(name: String) {
