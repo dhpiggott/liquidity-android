@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/games_fragment">
+
+    <fragment
+        android:id="@+id/games_fragment"
+        android:name="com.dhpcs.liquidity.fragment.GamesFragment"
+        android:label="@string/fragment_games_title"
+        tools:layout="@layout/fragment_games">
+        <action
+            android:id="@+id/action_games_fragment_to_preferences_fragment"
+            app:destination="@id/preferences_fragment" />
+        <action
+            android:id="@+id/action_games_fragment_to_about_fragment"
+            app:destination="@id/about_fragment" />
+        <action
+            android:id="@+id/action_games_fragment_to_join_game_fragment"
+            app:destination="@id/join_game_fragment" />
+        <action
+            android:id="@+id/action_games_fragment_to_board_game_graph"
+            app:destination="@id/board_game_graph" />
+        <action
+            android:id="@+id/action_join_game_fragment_to_board_game_graph"
+            app:destination="@id/board_game_graph" />
+    </fragment>
+    <fragment
+        android:id="@+id/preferences_fragment"
+        android:name="com.dhpcs.liquidity.fragment.PreferencesFragment"
+        android:label="@string/fragment_preferences_title" />
+    <fragment
+        android:id="@+id/about_fragment"
+        android:name="com.dhpcs.liquidity.fragment.AboutFragment"
+        android:label="@string/fragment_about_title"
+        tools:layout="@layout/fragment_about" />
+    <fragment
+        android:id="@+id/join_game_fragment"
+        android:name="com.dhpcs.liquidity.fragment.JoinGameFragment"
+        android:label="@string/fragment_join_game_title"
+        tools:layout="@layout/fragment_join_game" />
+    <navigation
+        android:id="@+id/board_game_graph"
+        app:startDestination="@id/board_game_fragment">
+        <fragment
+            android:id="@+id/board_game_fragment"
+            android:name="com.dhpcs.liquidity.fragment.BoardGameFragment"
+            tools:layout="@layout/fragment_board_game">
+            <action
+                android:id="@+id/action_board_game_fragment_to_add_players_fragment"
+                app:destination="@id/add_players_fragment" />
+            <action
+                android:id="@+id/action_board_game_fragment_to_receive_identity_fragment"
+                app:destination="@id/receive_identity_fragment" />
+            <action
+                android:id="@+id/action_board_game_fragment_to_transfer_identity_fragment"
+                app:destination="@id/transfer_identity_fragment" />
+        </fragment>
+        <fragment
+            android:id="@+id/add_players_fragment"
+            android:name="com.dhpcs.liquidity.fragment.AddPlayersFragment"
+            android:label="@string/fragment_add_players_title"
+            tools:layout="@layout/fragment_add_players" />
+        <fragment
+            android:id="@+id/receive_identity_fragment"
+            android:name="com.dhpcs.liquidity.fragment.ReceiveIdentityFragment"
+            android:label="@string/fragment_receive_identity_title"
+            tools:layout="@layout/fragment_receive_identity" />
+        <fragment
+            android:id="@+id/transfer_identity_fragment"
+            android:name="com.dhpcs.liquidity.fragment.TransferIdentityFragment"
+            android:label="@string/fragment_transfer_identity_title"
+            tools:layout="@layout/fragment_transfer_identity">
+
+            <argument
+                android:name="identity"
+                app:argType="com.dhpcs.liquidity.BoardGame.Companion.Identity" />
+        </fragment>
+    </navigation>
+</navigation>

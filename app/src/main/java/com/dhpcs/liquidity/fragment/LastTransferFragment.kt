@@ -1,83 +1,86 @@
 package com.dhpcs.liquidity.fragment
 
+import android.media.MediaPlayer
 import android.os.Bundle
-import android.os.Handler
+import android.preference.PreferenceManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextSwitcher
-import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
 import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.LiquidityApplication
 import com.dhpcs.liquidity.R
-import com.dhpcs.liquidity.activity.BoardGameActivity
+import com.dhpcs.liquidity.activity.MainActivity
+import com.dhpcs.liquidity.activity.MainActivity.Companion.liveData
+import kotlinx.android.synthetic.main.fragment_last_transfer.*
 import org.joda.time.Instant
+import java.util.concurrent.TimeUnit
 
 class LastTransferFragment : Fragment() {
-
-    companion object {
-
-        private const val REFRESH_INTERVAL: Long = 60000
-
-    }
-
-    private val refreshHandler = Handler()
-    private val refreshRunnable = Runnable { showTransfer(lastTransfer!!, false) }
-
-    private var textViewEmpty: TextView? = null
-    private var textSwitcherSummary: TextSwitcher? = null
-    private var textSwitcherCreated: TextSwitcher? = null
-
-    private var lastTransfer: BoardGame.Companion.Transfer? = null
 
     override fun onCreateView(inflater: LayoutInflater,
                               container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        val view = inflater.inflate(R.layout.fragment_last_transfer, container, false)
-
-        textViewEmpty = view.findViewById(R.id.textview_empty)
-        textSwitcherSummary = view.findViewById(R.id.textswitcher_summary)
-        textSwitcherCreated = view.findViewById(R.id.textswitcher_created)
-
-        return view
+        return inflater.inflate(R.layout.fragment_last_transfer, container, false)
     }
 
-    override fun onDestroy() {
-        refreshHandler.removeCallbacks(refreshRunnable)
-        super.onDestroy()
-    }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
-    fun onTransferAdded(transfer: BoardGame.Companion.Transfer) {
-        if (lastTransfer == null ||
-                transfer.created > lastTransfer!!.created) {
-            lastTransfer = transfer
-            showTransfer(lastTransfer!!, true)
-        }
-    }
+        val model = ViewModelProviders.of(requireActivity())
+                .get(MainActivity.Companion.BoardGameModel::class.java)
 
-    fun onTransfersUpdated(transfers: Map<String, BoardGame.Companion.Transfer>) {
-        transfers.values.forEach {
-            if (lastTransfer == null ||
-                    it.created > lastTransfer!!.created) {
-                lastTransfer = it
+        val transferReceiptMediaPlayer = MediaPlayer.create(
+                requireContext(),
+                R.raw.antique_cash_register_punching_single_key
+        )
+        model.boardGame.liveData { it.transfersObservable }.observe(this, Observer { transfers ->
+            if (transfers.isNotEmpty()) {
+                showTransfer(transfers.last(), false)
             }
-        }
-        if (lastTransfer != null) showTransfer(lastTransfer!!, false)
+        })
+        model.boardGame.liveData { it.addedTransfersObservable }.observe(this, Observer {
+            showTransfer(it, true)
+            val playTransferReceiptSounds =
+                    PreferenceManager
+                            .getDefaultSharedPreferences(requireContext())
+                            .getBoolean("play_transfer_receipt_sounds", true)
+            if (it.toPlayer != null && playTransferReceiptSounds &&
+                    it.toPlayer.ownerPublicKey == LiquidityApplication.serverConnection!!.clientKey
+            ) {
+                if (transferReceiptMediaPlayer.isPlaying) {
+                    transferReceiptMediaPlayer.seekTo(0)
+                } else {
+                    transferReceiptMediaPlayer.start()
+                }
+            }
+        })
+        lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onDestroy(owner: LifecycleOwner) {
+                transferReceiptMediaPlayer.release()
+            }
+        })
     }
 
     private fun showTransfer(transfer: BoardGame.Companion.Transfer,
-                             animate: Boolean
+                             justAdded: Boolean
     ) {
+        textview_empty.visibility = View.GONE
+        textswitcher_summary.visibility = View.VISIBLE
+        textswitcher_created.visibility = View.VISIBLE
+
         val summary = getString(
                 R.string.transfer_summary_format_string,
-                BoardGameActivity.formatNullable(requireContext(), transfer.fromPlayer?.name),
-                BoardGameActivity.formatCurrencyValue(
+                LiquidityApplication.formatNullable(requireContext(), transfer.fromPlayer?.name),
+                LiquidityApplication.formatCurrencyValue(
                         requireContext(),
                         transfer.currency,
                         transfer.value
                 ),
-                BoardGameActivity.formatNullable(requireContext(), transfer.toPlayer?.name)
+                LiquidityApplication.formatNullable(requireContext(), transfer.toPlayer?.name)
         )
         val createdTimeMillis = transfer.created
         val currentTimeMillis = System.currentTimeMillis()
@@ -90,20 +93,21 @@ class LastTransferFragment : Fragment() {
                         else
                             currentTimeMillis
                 ),
-                REFRESH_INTERVAL
+                TimeUnit.MINUTES.toMillis(1)
         )
 
-        if (animate) {
-            textSwitcherSummary!!.setText(summary)
-            textSwitcherCreated!!.setText(created)
+        if (justAdded) {
+            view!!.handler.removeCallbacksAndMessages(null)
+            textswitcher_summary.setText(summary)
+            textswitcher_created.setText(created)
+            view!!.handler.postDelayed(
+                    { showTransfer(transfer, false) },
+                    TimeUnit.MINUTES.toMillis(1)
+            )
         } else {
-            textSwitcherSummary!!.setCurrentText(summary)
-            textSwitcherCreated!!.setCurrentText(created)
+            textswitcher_summary.setCurrentText(summary)
+            textswitcher_created.setCurrentText(created)
         }
-        textViewEmpty!!.visibility = View.GONE
-        textSwitcherSummary!!.visibility = View.VISIBLE
-        textSwitcherCreated!!.visibility = View.VISIBLE
-        refreshHandler.postDelayed(refreshRunnable, REFRESH_INTERVAL)
     }
 
 }

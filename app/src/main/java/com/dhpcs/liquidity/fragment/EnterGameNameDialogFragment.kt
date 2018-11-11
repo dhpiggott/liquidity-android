@@ -2,7 +2,6 @@ package com.dhpcs.liquidity.fragment
 
 import android.annotation.SuppressLint
 import android.app.Dialog
-import android.content.Context
 import android.content.DialogInterface
 import android.os.Bundle
 import android.text.Editable
@@ -11,20 +10,16 @@ import android.view.WindowManager
 import android.widget.Button
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDialogFragment
+import androidx.lifecycle.ViewModelProviders
 import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.R
+import com.dhpcs.liquidity.activity.MainActivity
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 
 class EnterGameNameDialogFragment : AppCompatDialogFragment() {
 
     companion object {
-
-        interface Listener {
-
-            fun onGameNameEntered(name: String)
-
-        }
 
         const val TAG = "enter_game_name_dialog_fragment"
 
@@ -40,18 +35,7 @@ class EnterGameNameDialogFragment : AppCompatDialogFragment() {
 
     }
 
-    private var listener: Listener? = null
     private var buttonPositive: Button? = null
-
-    override fun onAttach(context: Context?) {
-        super.onAttach(context)
-        listener = context as Listener?
-    }
-
-    override fun onDetach() {
-        super.onDetach()
-        listener = null
-    }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         @SuppressLint("InflateParams") val view = requireActivity().layoutInflater.inflate(
@@ -65,12 +49,19 @@ class EnterGameNameDialogFragment : AppCompatDialogFragment() {
         val textInputEditTextGameName =
                 view.findViewById<TextInputEditText>(R.id.textinputedittext_game_name)
 
+        val model = ViewModelProviders.of(requireActivity())
+                .get(MainActivity.Companion.BoardGameModel::class.java)
         val alertDialog = AlertDialog.Builder(requireContext())
                 .setTitle(R.string.enter_game_name)
                 .setView(view)
                 .setNegativeButton(R.string.cancel, null)
                 .setPositiveButton(R.string.ok) { _, _ ->
-                    listener?.onGameNameEntered(textInputEditTextGameName.text.toString())
+                    model.execCommand(
+                            model.boardGame
+                                    .changeGameName(textInputEditTextGameName.text.toString())
+                    ) {
+                        getString(R.string.change_game_name_error_format_string, name)
+                    }
                 }
                 .create()
 

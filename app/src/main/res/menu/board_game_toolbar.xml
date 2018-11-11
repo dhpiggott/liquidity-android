@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.dhpcs.liquidity.activity.BoardGameActivity">
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/action_add_players"
+        android:id="@+id/add_players_fragment"
         android:orderInCategory="1"
         android:title="@string/add_players"
         android:visible="false"
@@ -46,7 +44,7 @@
         android:visible="false"
         app:showAsAction="never" />
     <item
-        android:id="@+id/action_receive_identity"
+        android:id="@+id/receive_identity_fragment"
         android:orderInCategory="8"
         android:title="@string/receive_identity"
         android:visible="false"

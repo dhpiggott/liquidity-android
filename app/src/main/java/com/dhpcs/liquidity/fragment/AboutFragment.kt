@@ -1,33 +1,31 @@
-package com.dhpcs.liquidity.activity
+package com.dhpcs.liquidity.fragment
 
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
+import androidx.fragment.app.Fragment
 import com.dhpcs.liquidity.R
 import de.psdev.licensesdialog.NoticesXmlParser
+import kotlinx.android.synthetic.main.fragment_about.*
 
-class AboutActivity : AppCompatActivity() {
+class AboutFragment : Fragment() {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_about)
+    override fun onCreateView(inflater: LayoutInflater,
+                              container: ViewGroup?,
+                              savedInstanceState: Bundle?): View? {
+        return inflater.inflate(R.layout.fragment_about, container, false)
+    }
 
-        val toolbar = findViewById<Toolbar>(R.id.toolbar)
-
-        setSupportActionBar(toolbar)
-        val actionBar = supportActionBar!!
-        actionBar.setDisplayHomeAsUpEnabled(true)
-
-        val linearLayoutLicences = findViewById<LinearLayout>(R.id.linearlayout_licences)
-
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val notices = NoticesXmlParser.parse(resources.openRawResource(R.raw.licences)).notices
 
         for (notice in notices) {
             val linearLayoutAcknowledgement = layoutInflater.inflate(
                     R.layout.linearlayout_acknowledgement,
-                    linearLayoutLicences,
+                    linearlayout_licences,
                     false
             ) as LinearLayout
 
@@ -44,7 +42,7 @@ class AboutActivity : AppCompatActivity() {
             if (url == null) textViewUrl.visibility = TextView.GONE else textViewUrl.text = url
 
             val copyright = notice.copyright
-            val licenseSummary = notice.license.getSummaryText(this)
+            val licenseSummary = notice.license.getSummaryText(requireContext())
             textViewCopyrightAndLicense.text = if (copyright == null) {
                 licenseSummary
             } else {
@@ -55,7 +53,7 @@ class AboutActivity : AppCompatActivity() {
                 )
             }
 
-            linearLayoutLicences!!.addView(linearLayoutAcknowledgement)
+            linearlayout_licences!!.addView(linearLayoutAcknowledgement)
         }
     }
 

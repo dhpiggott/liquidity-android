@@ -3,14 +3,14 @@
 
     <string name="app_name">Liquidity</string>
 
-    <string name="activity_about_title">About Liquidity</string>
-    <string name="activity_add_players_title">Add Players</string>
-    <string name="activity_games_title">Liquidity</string>
-    <string name="activity_join_game_title">Join Game</string>
-    <string name="activity_board_game_title">Unnamed Game</string>
-    <string name="activity_preferences_title">Settings</string>
-    <string name="activity_receive_identity_title">Receive Identity</string>
-    <string name="activity_transfer_identity_title">Transfer Identity</string>
+    <string name="activity_main_title">Liquidity</string>
+    <string name="fragment_about_title">About Liquidity</string>
+    <string name="fragment_add_players_title">Add Players</string>
+    <string name="fragment_games_title">Liquidity</string>
+    <string name="fragment_join_game_title">Join Game</string>
+    <string name="fragment_preferences_title">Preferences</string>
+    <string name="fragment_receive_identity_title">Receive Identity</string>
+    <string name="fragment_transfer_identity_title">Transfer Identity</string>
 
     <string name="about">Help &amp; acknowledgements</string>
     <string name="acknowledgement_copyright_and_license_format_string">%1$s\n\n%2$s</string>
@@ -20,7 +20,6 @@
     <string name="add_players_game_name_format_string">Show the QR code to the joining players to admit them to %1$s.</string>
     <string name="all">All</string>
     <string name="bank_member_name">Bank</string>
-    <string name="camera_permission_rationale">Camera permission is required to scan Liquidity QR codes.</string>
     <string name="cancel">Cancel</string>
     <string name="change_game_name">Change game name</string>
     <string name="change_game_name_error_format_string">Couldn\'t change game name to %1$s!</string>
@@ -65,16 +64,15 @@
     <string name="ok">OK</string>
     <string name="play_transfer_receipt_sounds_summary">Only when the screen is on</string>
     <string name="play_transfer_receipt_sounds_title">Play transfer receipt sounds</string>
-    <string name="player_connected">(connected)</string>
-    <string name="player_disconnected">(disconnected)</string>
-    <string name="preferences">Settings</string>
+    <string name="player_connected">(online)</string>
+    <string name="player_disconnected">(offline)</string>
+    <string name="preferences">Preferences</string>
     <string name="privacy_content">Liquidity\'s privacy policy can be viewed at https://www.liquidityapp.com/privacy.\n\nBy using Liquidity you accept the policy.</string>
     <string name="privacy_title">Privacy</string>
     <string name="receive_identity">Receive identity</string>
     <string name="receive_identity_instruction">Show the QR code to the sender.</string>
     <string name="restore_identity">Restore identity</string>
     <string name="restore_identity_error_format_string">Couldn\'t restore identity %1$s!</string>
-    <string name="settings">Settings</string>
     <string name="terminology_content"><i>Identities</i> are accounts that you control and are displayed on the green area in each game. If you have multiple identities you can switch between them by swiping the current identity left or right.\n\nGenerally the creator of a game will have two identities (one representing the bank, and one representing them) while everyone else will have one identity. However, identities can be created as required at any point (or deleted, or transferred between devices). This allows one phone to represent multiple players in the case where not everyone has a suitable phone.\n\nOther players\' accounts are shown in the grey area below your currently selected identity.\n\nA <i>transfer</i> is a payment from one account to another. The simplest way to make a transfer is to tap the name of the intended recipient in the players list. It\'s also possible to make a single payment to multiple recipients by clicking the \"Group transfer\" option in the menu. Transfer history can be viewed by clicking or swiping the dark panel below the players\' list.\n\nThe money supply is limitless. This means the bank starts with a balance of zero and it can always make payments.</string>
     <string name="terminology_title">Terminology</string>
     <string name="transfers">Transfers</string>

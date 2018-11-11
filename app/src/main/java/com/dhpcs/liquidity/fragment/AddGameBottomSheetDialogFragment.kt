@@ -1,26 +1,19 @@
 package com.dhpcs.liquidity.fragment
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.navigation.fragment.findNavController
 
 import com.dhpcs.liquidity.R
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import kotlinx.android.synthetic.main.fragment_add_game_bottom_sheet_dialog.*
 
 class AddGameBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
     companion object {
-
-        interface Listener {
-
-            fun onNewGameClicked()
-
-            fun onJoinGameClicked()
-
-        }
 
         const val TAG = "add_game_bottom_sheet_dialog_fragment"
 
@@ -28,35 +21,28 @@ class AddGameBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
     }
 
-    private var listener: Listener? = null
-
-    override fun onAttach(context: Context?) {
-        super.onAttach(context)
-        listener = context as Listener?
-    }
-
-    override fun onDetach() {
-        super.onDetach()
-        listener = null
-    }
-
+    @SuppressLint("InflateParams")
     override fun onCreateView(inflater: LayoutInflater,
                               container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        @SuppressLint("InflateParams") val view = requireActivity().layoutInflater.inflate(
-                R.layout.fragment_add_game_bottom_sheet_dialog, null
+        return requireActivity().layoutInflater.inflate(
+                R.layout.fragment_add_game_bottom_sheet_dialog,
+                null
         )
+    }
 
-        view.findViewById<View>(R.id.textview_new_game).setOnClickListener {
-            listener?.onNewGameClicked()
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        textview_new_game.setOnClickListener {
+            CreateGameDialogFragment.newInstance().show(
+                    fragmentManager,
+                    CreateGameDialogFragment.TAG
+            )
             dismiss()
         }
-        view.findViewById<View>(R.id.textview_join_game).setOnClickListener {
-            listener?.onJoinGameClicked()
+        textview_join_game.setOnClickListener {
+            findNavController().navigate(R.id.action_games_fragment_to_join_game_fragment)
             dismiss()
         }
-
-        return view
     }
 
 }

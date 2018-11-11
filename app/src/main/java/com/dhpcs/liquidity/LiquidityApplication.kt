@@ -8,90 +8,20 @@ import android.content.Context
 import com.dhpcs.liquidity.provider.LiquidityContract
 import net.danlew.android.joda.JodaTimeAndroid
 import org.joda.time.*
+import java.math.BigDecimal
+import java.text.Collator
+import java.text.DecimalFormat
+import java.text.NumberFormat
+import java.util.*
 
 class LiquidityApplication : Application() {
 
     companion object {
 
-        private var gameDatabase: BoardGame.Companion.GameDatabase? = null
-
-        fun getGameDatabase(context: Context): BoardGame.Companion.GameDatabase {
-            if (gameDatabase == null) {
-                gameDatabase = object : BoardGame.Companion.GameDatabase {
-
-                    override fun insertGame(zoneId: String,
-                                            created: Long,
-                                            expires: Long,
-                                            name: String?
-                    ): Long {
-                        val contentValues = ContentValues()
-                        contentValues.put(LiquidityContract.Games.ZONE_ID, zoneId)
-                        contentValues.put(LiquidityContract.Games.CREATED, created)
-                        contentValues.put(LiquidityContract.Games.EXPIRES, expires)
-                        contentValues.put(LiquidityContract.Games.NAME, name)
-                        return ContentUris.parseId(
-                                context.contentResolver.insert(
-                                        LiquidityContract.Games.CONTENT_URI,
-                                        contentValues
-                                )
-                        )
-                    }
-
-                    override fun checkAndUpdateGame(zoneId: String, name: String?): Long? {
-                        val existingEntry = context.contentResolver.query(
-                                LiquidityContract.Games.CONTENT_URI,
-                                arrayOf(LiquidityContract.Games.ID, LiquidityContract.Games.NAME),
-                                "${LiquidityContract.Games.ZONE_ID} = ?",
-                                arrayOf(zoneId), null
-                        )
-                        return existingEntry?.use {
-                            if (!existingEntry.moveToFirst()) {
-                                null
-                            } else {
-                                val gameId = existingEntry.getLong(
-                                        existingEntry.getColumnIndexOrThrow(
-                                                LiquidityContract.Games.ID
-                                        )
-                                )
-                                if (existingEntry.getString(
-                                                existingEntry.getColumnIndexOrThrow(
-                                                        LiquidityContract.Games.NAME
-                                                )
-                                        ) != name) {
-                                    updateGameName(gameId, name)
-                                }
-                                gameId
-                            }
-                        }
-                    }
-
-                    override fun updateGameName(gameId: Long, name: String?) {
-                        val contentValues = ContentValues()
-                        contentValues.put(LiquidityContract.Games.NAME, name)
-                        context.contentResolver.update(
-                                ContentUris.withAppendedId(
-                                        LiquidityContract.Games.CONTENT_URI,
-                                        gameId
-                                ),
-                                contentValues,
-                                null,
-                                null
-                        )
-                    }
-
-                }
-            }
-            return gameDatabase!!
-        }
-
-        private var serverConnection: ServerConnection? = null
-
-        fun getServerConnection(context: Context): ServerConnection {
-            if (serverConnection == null) {
-                serverConnection = ServerConnection(context.filesDir)
-            }
-            return serverConnection!!
-        }
+        var serverConnection: ServerConnection? = null
+            private set
+        var gameDatabase: BoardGame.Companion.GameDatabase? = null
+            private set
 
         fun getRelativeTimeSpanString(context: Context,
                                       time: ReadableInstant,
@@ -101,6 +31,143 @@ class LiquidityApplication : Application() {
                     android.text.format.DateUtils.FORMAT_SHOW_YEAR or
                     android.text.format.DateUtils.FORMAT_ABBREV_MONTH)
             return getRelativeTimeSpanString(context, time, now, minResolution, flags)
+        }
+
+        fun formatCurrency(context: Context, currencyCode: String?): String {
+            return if (currencyCode == null) {
+                ""
+            } else {
+                try {
+                    val currency = Currency.getInstance(currencyCode)
+                    if (currency.symbol == currency.currencyCode) {
+                        context.getString(
+                                R.string.currency_code_format_string,
+                                currency.currencyCode
+                        )
+                    } else {
+                        currency.symbol
+                    }
+                } catch (_: IllegalArgumentException) {
+                    context.getString(
+                            R.string.currency_code_format_string,
+                            currencyCode
+                    )
+                }
+            }
+        }
+
+        fun formatCurrencyValue(context: Context, currencyCode: String?, value: BigDecimal): String {
+            val scaleAmount: Int
+            val scaledValue: BigDecimal
+            val multiplier: String
+            when {
+                value >= BigDecimal(1000000000000000) -> {
+                    scaleAmount = -15
+                    scaledValue = value.scaleByPowerOfTen(-15)
+                    multiplier = context.getString(R.string.value_multiplier_quadrillion)
+                }
+                value >= BigDecimal(1000000000000) -> {
+                    scaleAmount = -12
+                    scaledValue = value.scaleByPowerOfTen(-12)
+                    multiplier = context.getString(R.string.value_multiplier_trillion)
+                }
+                value >= BigDecimal(1000000000) -> {
+                    scaleAmount = -9
+                    scaledValue = value.scaleByPowerOfTen(-9)
+                    multiplier = context.getString(R.string.value_multiplier_billion)
+                }
+                value >= BigDecimal(1000000) -> {
+                    scaleAmount = -6
+                    scaledValue = value.scaleByPowerOfTen(-6)
+                    multiplier = context.getString(R.string.value_multiplier_million)
+                }
+                value >= BigDecimal(1000) -> {
+                    scaleAmount = -3
+                    scaledValue = value.scaleByPowerOfTen(-3)
+                    multiplier = context.getString(R.string.value_multiplier_thousand)
+                }
+                else -> {
+                    scaleAmount = 0
+                    scaledValue = value
+                    multiplier = ""
+                }
+            }
+
+            val maximumFractionDigits: Int
+            val minimumFractionDigits: Int
+            when (scaleAmount) {
+                0 -> when {
+                    scaledValue.scale() == 0 -> {
+                        maximumFractionDigits = 0
+                        minimumFractionDigits = 0
+                    }
+                    else -> {
+                        maximumFractionDigits = scaledValue.scale()
+                        minimumFractionDigits = 2
+                    }
+                }
+                else -> {
+                    maximumFractionDigits = scaledValue.scale()
+                    minimumFractionDigits = 0
+                }
+            }
+
+            val numberFormat = NumberFormat.getNumberInstance() as DecimalFormat
+            numberFormat.maximumFractionDigits = maximumFractionDigits
+            numberFormat.minimumFractionDigits = minimumFractionDigits
+
+            return context.getString(
+                    R.string.currency_value_format_string,
+                    formatCurrency(context, currencyCode),
+                    numberFormat.format(scaledValue),
+                    multiplier
+            )
+        }
+
+        fun formatNullable(context: Context, nullable: String?): String {
+            return nullable ?: context.getString(R.string.unnamed)
+        }
+
+        fun identityComparator(context: Context): Comparator<BoardGame.Companion.Identity> {
+            return object : Comparator<BoardGame.Companion.Identity> {
+
+                private val collator = Collator.getInstance()
+
+                override fun compare(lhs: BoardGame.Companion.Identity,
+                                     rhs: BoardGame.Companion.Identity
+                ): Int {
+                    val nameOrdered = collator.compare(
+                            formatNullable(context, lhs.name),
+                            formatNullable(context, rhs.name)
+                    )
+                    return when (nameOrdered) {
+                        0 -> lhs.memberId.compareTo(rhs.memberId)
+                        else -> nameOrdered
+                    }
+                }
+
+            }
+        }
+
+        fun playerComparator(context: Context): Comparator<BoardGame.Companion.Player> {
+            return object : Comparator<BoardGame.Companion.Player> {
+
+                private val collator = Collator.getInstance()
+
+                override fun compare(lhs: BoardGame.Companion.Player,
+                                     rhs: BoardGame.Companion.Player
+                ): Int {
+                    val nameOrdered = collator.compare(
+                            formatNullable(context, lhs.name),
+                            formatNullable(context, rhs.name)
+                    )
+                    return when (nameOrdered) {
+                        0 -> lhs.memberId.compareTo(rhs.memberId)
+                        else -> nameOrdered
+                    }
+                }
+
+            }
         }
 
         @SuppressLint("PrivateResource")
@@ -208,6 +275,66 @@ class LiquidityApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         JodaTimeAndroid.init(this)
+        serverConnection = ServerConnection(filesDir)
+        gameDatabase = object : BoardGame.Companion.GameDatabase {
+
+            override fun insertGame(zoneId: String,
+                                    created: Long,
+                                    expires: Long,
+                                    name: String?
+            ): Long {
+                val contentValues = ContentValues()
+                contentValues.put(LiquidityContract.Games.ZONE_ID, zoneId)
+                contentValues.put(LiquidityContract.Games.CREATED, created)
+                contentValues.put(LiquidityContract.Games.EXPIRES, expires)
+                contentValues.put(LiquidityContract.Games.NAME, name)
+                return ContentUris.parseId(
+                        contentResolver.insert(
+                                LiquidityContract.Games.CONTENT_URI,
+                                contentValues
+                        )
+                )
+            }
+
+            override fun checkAndUpdateGame(zoneId: String, name: String?): Long? {
+                val existingEntry = contentResolver.query(
+                        LiquidityContract.Games.CONTENT_URI,
+                        arrayOf(LiquidityContract.Games.ID, LiquidityContract.Games.NAME),
+                        "${LiquidityContract.Games.ZONE_ID} = ?",
+                        arrayOf(zoneId), null
+                )
+                return existingEntry?.use {
+                    if (!existingEntry.moveToFirst()) {
+                        null
+                    } else {
+                        val gameId = existingEntry.getLong(
+                                existingEntry.getColumnIndexOrThrow(
+                                        LiquidityContract.Games.ID
+                                )
+                        )
+                        if (existingEntry.getString(
+                                        existingEntry.getColumnIndexOrThrow(
+                                                LiquidityContract.Games.NAME
+                                        )
+                                ) != name) {
+                            val contentValues = ContentValues()
+                            contentValues.put(LiquidityContract.Games.NAME, name)
+                            contentResolver.update(
+                                    ContentUris.withAppendedId(
+                                            LiquidityContract.Games.CONTENT_URI,
+                                            gameId
+                                    ),
+                                    contentValues,
+                                    null,
+                                    null
+                            )
+                        }
+                        gameId
+                    }
+                }
+            }
+
+        }
     }
 
 }

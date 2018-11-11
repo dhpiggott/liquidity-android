@@ -7,26 +7,32 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.*
+import androidx.fragment.app.FragmentManager
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
+import androidx.navigation.Navigation
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.ListAdapter
+import androidx.recyclerview.widget.RecyclerView
 import com.dhpcs.liquidity.BoardGame
+import com.dhpcs.liquidity.LiquidityApplication
 import com.dhpcs.liquidity.R
-import com.dhpcs.liquidity.activity.BoardGameActivity
+import com.dhpcs.liquidity.activity.MainActivity
+import com.dhpcs.liquidity.activity.MainActivity.Companion.liveData
 import com.dhpcs.liquidity.view.Identicon
+import kotlinx.android.synthetic.main.fragment_players.*
+import java.util.*
 
 class PlayersFragment : Fragment() {
 
     companion object {
 
-        interface Listener {
-
-            fun onNoPlayersTextClicked()
-
-            fun onPlayerClicked(player: BoardGame.Companion.Player)
-
-        }
-
         private class PlayersAdapter
-        internal constructor(private val playersFragment: PlayersFragment
+        internal constructor(
+                private val model: MainActivity.Companion.BoardGameModel,
+                private val fragmentManager: FragmentManager,
+                context: Context
         ) : ListAdapter<BoardGame.Companion.Player, PlayerViewHolder>(
                 object : DiffUtil.ItemCallback<BoardGame.Companion.Player>() {
 
@@ -47,14 +53,13 @@ class PlayersFragment : Fragment() {
                 }
         ) {
 
-            private val playerComparator = BoardGameActivity
-                    .playerComparator(playersFragment.context!!)
+            private val playerComparator = LiquidityApplication.playerComparator(context)
 
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlayerViewHolder {
                 val view = LayoutInflater
                         .from(parent.context)
                         .inflate(R.layout.linearlayout_player, parent, false)
-                return PlayerViewHolder(playersFragment, view)
+                return PlayerViewHolder(model, fragmentManager, view)
             }
 
             override fun onBindViewHolder(holder: PlayerViewHolder, position: Int) {
@@ -68,8 +73,10 @@ class PlayersFragment : Fragment() {
 
         }
 
-        private class PlayerViewHolder(private val playersFragment: PlayersFragment,
-                                       itemView: View
+        private class PlayerViewHolder(
+                private val model: MainActivity.Companion.BoardGameModel,
+                private val fragmentManager: FragmentManager,
+                itemView: View
         ) : RecyclerView.ViewHolder(itemView), View.OnClickListener {
 
             private val identiconId = itemView.findViewById<Identicon>(R.id.identicon_id)
@@ -88,9 +95,9 @@ class PlayersFragment : Fragment() {
 
                 val zoneId = player.zoneId
                 val memberId = player.memberId
-                val name = BoardGameActivity.formatNullable(playersFragment.context!!, player.name)
-                val balance = BoardGameActivity.formatCurrencyValue(
-                        playersFragment.context!!,
+                val name = LiquidityApplication.formatNullable(textViewName.context, player.name)
+                val balance = LiquidityApplication.formatCurrencyValue(
+                        textViewBalance.context,
                         player.currency,
                         player.balance
                 )
@@ -107,84 +114,78 @@ class PlayersFragment : Fragment() {
             }
 
             override fun onClick(v: View) {
-                playersFragment.listener?.onPlayerClicked(player!!)
+                val identity = model.selectedIdentity
+                when (identity) {
+                    is MainActivity.Companion.Optional.None -> {
+                    }
+                    is MainActivity.Companion.Optional.Some -> {
+                        TransferToPlayerDialogFragment.newInstance(
+                                ArrayList(model.boardGame.identities.values),
+                                ArrayList(model.boardGame.players.values),
+                                model.boardGame.currency,
+                                identity.value,
+                                player
+                        ).show(fragmentManager, TransferToPlayerDialogFragment.TAG)
+                    }
+                }
             }
 
         }
 
     }
 
-    private var playersAdapter: PlayersAdapter? = null
-
-    private var textViewEmpty: TextView? = null
-    private var recyclerViewPlayers: RecyclerView? = null
-
-    private var players: Collection<BoardGame.Companion.Player> =
-            emptyList()
-    private var selectedIdentity: BoardGame.Companion.Identity? = null
-
-    internal var listener: Listener? = null
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        playersAdapter = PlayersAdapter(this)
-    }
 
     override fun onCreateView(inflater: LayoutInflater,
                               container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        val view = inflater.inflate(R.layout.fragment_players, container, false)
+        return inflater.inflate(R.layout.fragment_players, container, false)
+    }
 
-        textViewEmpty = view.findViewById(R.id.textview_empty)
-        recyclerViewPlayers = view.findViewById(R.id.recyclerview_players)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
-        textViewEmpty!!.setOnClickListener {
-            listener?.onNoPlayersTextClicked()
+        val model = ViewModelProviders.of(requireActivity())
+                .get(MainActivity.Companion.BoardGameModel::class.java)
+
+        val playersAdapter = PlayersAdapter(model, fragmentManager!!, requireContext())
+
+        textview_empty.setOnClickListener(
+                Navigation.createNavigateOnClickListener(
+                        R.id.action_board_game_fragment_to_add_players_fragment,
+                        null
+                )
+        )
+        recyclerview_players.setHasFixedSize(true)
+        recyclerview_players.layoutManager = LinearLayoutManager(activity)
+        recyclerview_players.adapter = playersAdapter
+
+        fun updatePlayers(
+                players: Collection<BoardGame.Companion.Player>,
+                selectedIdentity: MainActivity.Companion.Optional<BoardGame.Companion.Identity>) {
+            val visiblePlayers = players.filter {
+                when (selectedIdentity) {
+                    is MainActivity.Companion.Optional.None ->
+                        true
+                    is MainActivity.Companion.Optional.Some -> {
+                        it.memberId != selectedIdentity.value.memberId
+                    }
+                }
+            }
+            playersAdapter.updatePlayers(visiblePlayers)
+            if (visiblePlayers.isNotEmpty()) {
+                textview_empty.visibility = View.GONE
+                recyclerview_players.visibility = View.VISIBLE
+            } else {
+                textview_empty.visibility = View.VISIBLE
+                recyclerview_players.visibility = View.GONE
+            }
         }
-        recyclerViewPlayers!!.setHasFixedSize(true)
-        recyclerViewPlayers!!.layoutManager = LinearLayoutManager(activity)
-        recyclerViewPlayers!!.adapter = playersAdapter
 
-        return view
-    }
-
-    override fun onAttach(context: Context?) {
-        super.onAttach(context)
-        listener = context as Listener?
-    }
-
-    override fun onDetach() {
-        super.onDetach()
-        listener = null
-    }
-
-    fun onPlayersUpdated(players: Map<String,
-            BoardGame.Companion.Player>) {
-        this.players = players.values
-        updatePlayers(this.players, selectedIdentity)
-    }
-
-    fun onSelectedIdentityChanged(selectedIdentity: BoardGame.Companion.Identity?) {
-        this.selectedIdentity = selectedIdentity
-        updatePlayers(players, selectedIdentity)
-    }
-
-    private fun updatePlayers(
-            players: Collection<BoardGame.Companion.Player>,
-            selectedIdentity: BoardGame.Companion.Identity?) {
-        val visiblePlayers = players.filter {
-            selectedIdentity == null ||
-                    it.memberId != selectedIdentity.memberId
-        }
-        playersAdapter!!.updatePlayers(visiblePlayers)
-        if (visiblePlayers.isNotEmpty()) {
-            textViewEmpty!!.visibility = View.GONE
-            recyclerViewPlayers!!.visibility = View.VISIBLE
-        } else {
-            textViewEmpty!!.visibility = View.VISIBLE
-            recyclerViewPlayers!!.visibility = View.GONE
-        }
+        model.boardGame.liveData { it.playersObservable }.observe(this, Observer {
+            updatePlayers(it.values, model.selectedIdentity)
+        })
+        model.selectedIdentityLiveData.observe(this, Observer {
+            updatePlayers(model.boardGame.players.values, it)
+        })
     }
 
 }

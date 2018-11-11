@@ -1,187 +1,117 @@
 package com.dhpcs.liquidity.fragment
 
-import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentStatePagerAdapter
-import androidx.viewpager.widget.PagerAdapter
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
 import androidx.viewpager.widget.ViewPager
 import com.dhpcs.liquidity.BoardGame
+import com.dhpcs.liquidity.LiquidityApplication
 import com.dhpcs.liquidity.R
-import com.dhpcs.liquidity.activity.BoardGameActivity
-import java.util.*
+import com.dhpcs.liquidity.activity.MainActivity
+import com.dhpcs.liquidity.activity.MainActivity.Companion.liveData
+import kotlinx.android.synthetic.main.fragment_identities.*
 
 class IdentitiesFragment : Fragment() {
 
     companion object {
 
-        interface Listener {
-
-            fun onIdentityPageSelected(page: Int)
-
-            fun onNoIdentitiesTextClicked()
-
-        }
-
-        private const val STATE_SELECTED_IDENTITY = "selected_identity"
-
         private class IdentitiesFragmentStatePagerAdapter
         internal constructor(fragmentManager: FragmentManager
         ) : FragmentStatePagerAdapter(fragmentManager) {
 
-            private val identities = ArrayList<BoardGame.Companion.Identity>()
+            internal val identities = arrayListOf<BoardGame.Companion.Identity>()
 
             override fun getCount(): Int = identities.size
+            
+            override fun getItemPosition(item: Any): Int = POSITION_NONE
 
             override fun getItem(position: Int): Fragment {
                 return IdentityFragment.newInstance(identities[position])
             }
 
-            override fun getItemPosition(item: Any): Int = PagerAdapter.POSITION_NONE
-
-            internal fun add(identity: BoardGame.Companion.Identity) {
-                identities.add(identity)
-            }
-
-            internal fun clear() = identities.clear()
-
-            internal operator fun get(position: Int): BoardGame.Companion.Identity {
-                return identities[position]
-            }
-
-            internal fun getPosition(identity: BoardGame.Companion.Identity): Int {
-                return identities.indexOf(identity)
-            }
-
-            internal fun sort(comparator: Comparator<BoardGame.Companion.Identity>) {
-                Collections.sort(identities, comparator)
-            }
-
         }
 
-    }
-
-    private val pageChangeListener = object : ViewPager.SimpleOnPageChangeListener() {
-
-        override fun onPageSelected(position: Int) {
-            selectedIdentity = getIdentity(position)
-            listener?.onIdentityPageSelected(position)
-        }
-
-    }
-
-    private var identitiesFragmentStatePagerAdapter: IdentitiesFragmentStatePagerAdapter? = null
-
-    private var textViewEmpty: TextView? = null
-    private var viewPagerIdentities: ViewPager? = null
-
-    private var selectedIdentity: BoardGame.Companion.Identity? = null
-
-    private var listener: Listener? = null
-
-    var selectedPage: Int
-        get() = viewPagerIdentities!!.currentItem
-        set(page) {
-            viewPagerIdentities!!.currentItem = page
-        }
-
-    fun getIdentity(page: Int): BoardGame.Companion.Identity? {
-        return if (identitiesFragmentStatePagerAdapter!!.count == 0) {
-            null
-        } else {
-            identitiesFragmentStatePagerAdapter!![page]
-        }
-    }
-
-    fun getPage(identity: BoardGame.Companion.Identity): Int {
-        return if (identitiesFragmentStatePagerAdapter!!.count == 0) {
-            0
-        } else {
-            identitiesFragmentStatePagerAdapter!!.getPosition(identity)
-        }
-    }
-
-    fun onIdentitiesUpdated(identities: Map<String, BoardGame.Companion.Identity>) {
-        identitiesFragmentStatePagerAdapter!!.clear()
-        identities.values.forEach {
-            identitiesFragmentStatePagerAdapter!!.add(it)
-        }
-        identitiesFragmentStatePagerAdapter!!.sort(
-                BoardGameActivity.identityComparator(requireContext())
-        )
-        identitiesFragmentStatePagerAdapter!!.notifyDataSetChanged()
-        textViewEmpty!!.visibility = if (identitiesFragmentStatePagerAdapter!!.count == 0) {
-            View.VISIBLE
-        } else {
-            View.GONE
-        }
-        viewPagerIdentities!!.visibility = if (identitiesFragmentStatePagerAdapter!!.count == 0) {
-            View.GONE
-        } else {
-            View.VISIBLE
-        }
-
-        if (selectedIdentity != null && identities.contains(selectedIdentity!!.memberId)) {
-            viewPagerIdentities!!.setCurrentItem(
-                    identitiesFragmentStatePagerAdapter!!.getPosition(
-                            identities[selectedIdentity!!.memberId]!!
-                    ),
-                    false
-            )
-        }
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        identitiesFragmentStatePagerAdapter = IdentitiesFragmentStatePagerAdapter(
-                fragmentManager!!
-        )
-
-        selectedIdentity = savedInstanceState?.getSerializable(STATE_SELECTED_IDENTITY) as
-                BoardGame.Companion.Identity?
     }
 
     override fun onCreateView(inflater: LayoutInflater,
                               container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        val view = inflater.inflate(R.layout.fragment_identities, container, false)
+        return inflater.inflate(R.layout.fragment_identities, container, false)
+    }
 
-        textViewEmpty = view.findViewById(R.id.textview_empty)
-        viewPagerIdentities = view.findViewById(R.id.viewpager_identities)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
-        textViewEmpty!!.setOnClickListener {
-            listener?.onNoIdentitiesTextClicked()
+        val model = ViewModelProviders.of(requireActivity())
+                .get(MainActivity.Companion.BoardGameModel::class.java)
+
+        val identitiesFragmentStatePagerAdapter = IdentitiesFragmentStatePagerAdapter(
+                fragmentManager!!
+        )
+
+        val pageChangeListener = object : ViewPager.SimpleOnPageChangeListener() {
+
+            override fun onPageSelected(position: Int) {
+                if (identitiesFragmentStatePagerAdapter.identities.isNotEmpty()) {
+                    model.selectedIdentity(
+                            MainActivity.Companion.Optional.Some(
+                                    identitiesFragmentStatePagerAdapter.identities[position]
+                            )
+                    )
+                }
+            }
+
         }
-        viewPagerIdentities!!.adapter = identitiesFragmentStatePagerAdapter
-        viewPagerIdentities!!.addOnPageChangeListener(pageChangeListener)
 
-        return view
-    }
+        textview_empty.setOnClickListener {
+            CreateIdentityDialogFragment.newInstance().show(
+                    fragmentManager,
+                    CreateIdentityDialogFragment.TAG
+            )
+        }
+        viewpager_identities.adapter = identitiesFragmentStatePagerAdapter
+        viewpager_identities.addOnPageChangeListener(pageChangeListener)
 
-    override fun onAttach(context: Context?) {
-        super.onAttach(context)
-        listener = context as Listener?
-    }
-
-    override fun onDetach() {
-        super.onDetach()
-        listener = null
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        viewPagerIdentities!!.removeOnPageChangeListener(pageChangeListener)
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putSerializable(STATE_SELECTED_IDENTITY, selectedIdentity)
+        model.boardGame.liveData { it.identitiesObservable }.observe(this, Observer {
+            identitiesFragmentStatePagerAdapter.identities.clear()
+            identitiesFragmentStatePagerAdapter.identities.addAll(
+                    it.values.sortedWith(LiquidityApplication.identityComparator(requireContext()))
+            )
+            identitiesFragmentStatePagerAdapter.notifyDataSetChanged()
+            if (identitiesFragmentStatePagerAdapter.identities.isEmpty()) {
+                textview_empty.visibility = View.VISIBLE
+                viewpager_identities.visibility = View.GONE
+                model.selectedIdentity(
+                        MainActivity.Companion.Optional.None
+                )
+            } else {
+                textview_empty.visibility = View.GONE
+                viewpager_identities.visibility = View.VISIBLE
+                model.selectedIdentity(
+                        MainActivity.Companion.Optional.Some(
+                                identitiesFragmentStatePagerAdapter
+                                        .identities[viewpager_identities.currentItem]
+                        )
+                )
+            }
+        })
+        model.boardGame.liveData { it.addedIdentitiesObservable }.observe(this, Observer {
+            viewpager_identities.currentItem = identitiesFragmentStatePagerAdapter
+                    .identities.indexOf(it)
+        })
+        model.boardGame.liveData { it.identityRequiredObservable }.observe(this, Observer {
+            if (fragmentManager!!.findFragmentByTag(CreateIdentityDialogFragment.TAG) == null) {
+                CreateIdentityDialogFragment.newInstance().show(
+                        fragmentManager!!,
+                        CreateIdentityDialogFragment.TAG
+                )
+            }
+        })
     }
 
 }

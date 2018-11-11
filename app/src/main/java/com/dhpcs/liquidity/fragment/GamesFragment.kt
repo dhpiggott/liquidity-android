@@ -1,23 +1,23 @@
 package com.dhpcs.liquidity.fragment
 
-import android.content.Context
 import android.database.Cursor
 import android.os.Bundle
 import android.os.Handler
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.AdapterView
-import android.widget.ListView
 import android.widget.SimpleCursorAdapter
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProviders
 import androidx.loader.app.LoaderManager
 import androidx.loader.content.CursorLoader
 import androidx.loader.content.Loader
+import androidx.navigation.fragment.findNavController
 import com.dhpcs.liquidity.LiquidityApplication
 import com.dhpcs.liquidity.R
+import com.dhpcs.liquidity.activity.MainActivity
 import com.dhpcs.liquidity.provider.LiquidityContract
+import kotlinx.android.synthetic.main.fragment_games.*
 import org.joda.time.Instant
 
 class GamesFragment : Fragment(),
@@ -25,12 +25,6 @@ class GamesFragment : Fragment(),
         LoaderManager.LoaderCallbacks<Cursor> {
 
     companion object {
-
-        interface Listener {
-
-            fun onGameClicked(gameId: Long, zoneId: String, gameName: String?)
-
-        }
 
         private const val GAMES_LOADER = 0
         private const val REFRESH_INTERVAL: Long = 60000
@@ -44,10 +38,10 @@ class GamesFragment : Fragment(),
 
     private var gamesAdapter: SimpleCursorAdapter? = null
 
-    private var listener: Listener? = null
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        setHasOptionsMenu(true)
 
         LoaderManager.getInstance(this).initLoader(GAMES_LOADER, null, this)
 
@@ -107,6 +101,10 @@ class GamesFragment : Fragment(),
         }
     }
 
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.games_toolbar, menu)
+    }
+
     override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
         return CursorLoader(
                 requireContext(),
@@ -126,37 +124,29 @@ class GamesFragment : Fragment(),
     override fun onCreateView(inflater: LayoutInflater,
                               container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        val view = inflater.inflate(R.layout.fragment_games, container, false)
-
-        val listViewGames = view.findViewById<ListView>(R.id.listview_games)
-        listViewGames.adapter = gamesAdapter
-        listViewGames.emptyView = view.findViewById(R.id.textview_empty)
-        listViewGames.onItemClickListener = this
-
-        return view
+        return inflater.inflate(R.layout.fragment_games, container, false)
     }
 
-    override fun onAttach(context: Context?) {
-        super.onAttach(context)
-        listener = context as Listener?
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        listview_games.adapter = gamesAdapter
+        listview_games.emptyView = view.findViewById(R.id.textview_empty)
+        listview_games.onItemClickListener = this
+        floatingactionbutton_add_game.setOnClickListener {
+            AddGameBottomSheetDialogFragment.newInstance().show(
+                    fragmentManager,
+                    AddGameBottomSheetDialogFragment.TAG
+            )
+        }
     }
 
     override fun onItemClick(parent: AdapterView<*>, view: View, position: Int, id: Long) {
         val cursor = parent.getItemAtPosition(position) as Cursor
-        listener?.onGameClicked(
-                id,
-                cursor.getString(cursor.getColumnIndexOrThrow(
-                        LiquidityContract.Games.ZONE_ID
-                )),
-                cursor.getString(cursor.getColumnIndexOrThrow(
-                        LiquidityContract.Games.NAME
-                ))
-        )
-    }
-
-    override fun onDetach() {
-        super.onDetach()
-        listener = null
+        val model = ViewModelProviders.of(requireActivity())
+                .get(MainActivity.Companion.BoardGameModel::class.java)
+        model.boardGame.zoneId = cursor.getString(cursor.getColumnIndexOrThrow(
+                LiquidityContract.Games.ZONE_ID
+        ))
+        findNavController().navigate(R.id.action_games_fragment_to_board_game_graph)
     }
 
     override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor) {

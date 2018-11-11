@@ -13,26 +13,20 @@ import android.view.WindowManager
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDialogFragment
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
 import com.dhpcs.liquidity.BoardGame
+import com.dhpcs.liquidity.LiquidityApplication
 import com.dhpcs.liquidity.R
-import com.dhpcs.liquidity.activity.BoardGameActivity
+import com.dhpcs.liquidity.activity.MainActivity
+import com.dhpcs.liquidity.activity.MainActivity.Companion.liveData
 import java.math.BigDecimal
 import java.text.DecimalFormat
 import java.text.NumberFormat
-import java.util.*
 
 class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
 
     companion object {
-
-        interface Listener {
-
-            fun onTransferValueEntered(from: BoardGame.Companion.Identity,
-                                       tos: Collection<BoardGame.Companion.Player>,
-                                       transferValue: BigDecimal
-            )
-
-        }
 
         const val TAG = "transfer_to_player_dialog_fragment"
 
@@ -46,17 +40,17 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
 
         fun newInstance(
                 identities: ArrayList<BoardGame.Companion.Identity>,
-                players: ArrayList<out BoardGame.Companion.Player>,
+                players: ArrayList<BoardGame.Companion.Player>,
                 currency: String?,
                 from: BoardGame.Companion.Identity,
                 to: BoardGame.Companion.Player?): TransferToPlayerDialogFragment {
             val transferToPlayerDialogFragment = TransferToPlayerDialogFragment()
             val args = Bundle()
-            args.putSerializable(ARG_IDENTITIES, identities)
-            args.putSerializable(ARG_PLAYERS, players)
+            args.putParcelableArrayList(ARG_IDENTITIES, identities)
+            args.putParcelableArrayList(ARG_PLAYERS, players)
             args.putString(ARG_CURRENCY, currency)
-            args.putSerializable(ARG_FROM, from)
-            args.putSerializable(ARG_TO, to)
+            args.putParcelable(ARG_FROM, from)
+            args.putParcelable(ARG_TO, to)
             transferToPlayerDialogFragment.arguments = args
             return transferToPlayerDialogFragment
         }
@@ -91,7 +85,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
             }
 
             private fun bindView(textView: TextView, player: BoardGame.Companion.Player?): View {
-                textView.text = BoardGameActivity.formatNullable(context, player!!.name)
+                textView.text = LiquidityApplication.formatNullable(context, player!!.name)
                 return textView
             }
 
@@ -132,12 +126,12 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                                  identity: BoardGame.Companion.Identity?
             ): View {
                 textView.text = if (identity!!.isBanker) {
-                    BoardGameActivity.formatNullable(context, identity.name)
+                    LiquidityApplication.formatNullable(context, identity.name)
                 } else {
                     context.getString(
                             R.string.identity_format_string,
-                            BoardGameActivity.formatNullable(context, identity.name),
-                            BoardGameActivity.formatCurrencyValue(
+                            LiquidityApplication.formatNullable(context, identity.name),
+                            LiquidityApplication.formatCurrencyValue(
                                     context,
                                     identity.currency,
                                     identity.balance
@@ -150,8 +144,6 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
         }
 
     }
-
-    private var listener: Listener? = null
 
     private var currency: String? = null
     private var from: BoardGame.Companion.Identity? = null
@@ -173,31 +165,28 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val identities = arguments!!.getSerializable(ARG_IDENTITIES) as
-                List<BoardGame.Companion.Identity>
-        val players = arguments!!.getSerializable(ARG_PLAYERS) as
-                List<BoardGame.Companion.Player>
+        val identities = arguments!!
+                .getParcelableArrayList<BoardGame.Companion.Identity>(ARG_IDENTITIES)!!
+        val players = arguments!!
+                .getParcelableArrayList<BoardGame.Companion.Player>(ARG_PLAYERS)!!
         val currency = arguments!!.getString(ARG_CURRENCY)
         this.currency = currency
-        from = arguments!!.getSerializable(ARG_FROM) as BoardGame.Companion.Identity
-        to = arguments!!.getSerializable(ARG_TO) as BoardGame.Companion.Player?
+        from = arguments!!.getParcelable(ARG_FROM)
+        to = arguments!!.getParcelable(ARG_TO)
         val toList = when {
             to != null ->
                 null
             savedInstanceState != null ->
-                savedInstanceState.getSerializable(EXTRA_TO_LIST) as
-                        ArrayList<BoardGame.Companion.Player>
+                savedInstanceState.getParcelableArrayList<BoardGame.Companion.Player>(EXTRA_TO_LIST)
             else ->
-                ArrayList()
+                arrayListOf<BoardGame.Companion.Player>()
         }
         this.toList = toList
 
-        val identityComparator = BoardGameActivity.identityComparator(requireContext())
-        val playerComparator = BoardGameActivity.playerComparator(requireContext())
         identitiesSpinnerAdapter = IdentitiesAdapter(requireContext(), identities)
-        identitiesSpinnerAdapter!!.sort(identityComparator)
+        identitiesSpinnerAdapter!!.sort(LiquidityApplication.identityComparator(requireContext()))
         playersSpinnerAdapter = PlayersAdapter(requireContext(), players)
-        playersSpinnerAdapter!!.sort(playerComparator)
+        playersSpinnerAdapter!!.sort(LiquidityApplication.playerComparator(requireContext()))
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -214,6 +203,8 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
         val linearLayoutTo = view.findViewById<LinearLayout>(R.id.linearlayout_to)
         val spinnerTo = view.findViewById<Spinner>(R.id.spinner_to)
 
+        val model = ViewModelProviders.of(requireActivity())
+                .get(MainActivity.Companion.BoardGameModel::class.java)
         val alertDialog = AlertDialog.Builder(requireContext())
                 .setTitle(getString(
                         R.string.enter_transfer_details
@@ -221,11 +212,14 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                 .setView(view)
                 .setNegativeButton(R.string.cancel, null)
                 .setPositiveButton(R.string.ok) { _, _ ->
-                    listener?.onTransferValueEntered(
-                            from!!,
-                            if (to != null) listOf(to!!) else toList!!,
-                            value!!
-                    )
+                    val tos = if (to != null) listOf(to!!) else toList!!
+                    tos.forEach { to ->
+                        model.execCommand(
+                                model.boardGame.transferToPlayer(from!!, to, value!!)
+                        ) {
+                            getString(R.string.transfer_to_player_error_format_string, to.name)
+                        }
+                    }
                 }
                 .create()
 
@@ -301,7 +295,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                     } else {
                         editTextScaledValue.text = getString(
                                 R.string.transfer_to_player_scaled_value_format_string,
-                                BoardGameActivity.formatCurrencyValue(
+                                LiquidityApplication.formatCurrencyValue(
                                         requireContext(),
                                         currency!!,
                                         value!!
@@ -345,7 +339,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
 
         }
 
-        textViewCurrency.text = BoardGameActivity.formatCurrency(requireContext(), currency!!)
+        textViewCurrency.text = LiquidityApplication.formatCurrency(requireContext(), currency!!)
 
         spinnerFrom.setSelection(identitiesSpinnerAdapter!!.getPosition(from))
 
@@ -353,8 +347,8 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
             spinnerTo.setSelection(playersSpinnerAdapter!!.getPosition(to))
         } else {
             spinnerTo.visibility = View.GONE
-            val players = arguments!!.getSerializable(ARG_PLAYERS) as
-                    List<BoardGame.Companion.Player>
+            val players = arguments!!
+                    .getParcelableArrayList<BoardGame.Companion.Player>(ARG_PLAYERS)!!
             for (player in players) {
                 val checkedTextViewPlayer = requireActivity().layoutInflater.inflate(
                         android.R.layout.simple_list_item_multiple_choice,
@@ -363,7 +357,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                 ) as CheckedTextView
                 linearLayoutTo.addView(checkedTextViewPlayer)
                 checkedTextViewPlayer.text =
-                        BoardGameActivity.formatNullable(requireContext(), player.name)
+                        LiquidityApplication.formatNullable(requireContext(), player.name)
                 checkedTextViewPlayer.isChecked = toList!!.contains(player)
                 checkedTextViewPlayer.setOnClickListener {
                     checkedTextViewPlayer.toggle()
@@ -394,26 +388,22 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
         return alertDialog
     }
 
-    override fun onAttach(context: Context?) {
-        super.onAttach(context)
-        listener = context as Listener?
-    }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
-    override fun onDetach() {
-        super.onDetach()
-        listener = null
+        val model = ViewModelProviders.of(requireActivity())
+                .get(MainActivity.Companion.BoardGameModel::class.java)
+
+        model.boardGame.liveData { it.identitiesObservable }.observe(this, Observer {
+            this.identities = it
+            identitiesSpinnerAdapter!!.clear()
+            identitiesSpinnerAdapter!!.addAll(it.values)
+            validateInput()
+        })
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putSerializable(EXTRA_TO_LIST, toList)
-    }
-
-    fun onIdentitiesUpdated(identities: Map<String, BoardGame.Companion.Identity>) {
-        this.identities = identities
-        identitiesSpinnerAdapter!!.clear()
-        identitiesSpinnerAdapter!!.addAll(identities.values)
-        if (buttonPositive != null) validateInput()
+        outState.putParcelableArrayList(EXTRA_TO_LIST, toList)
     }
 
     private fun validateInput() {
@@ -434,12 +424,12 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
             if (requiredBalance != null && currentBalance < requiredBalance) {
                 textViewValueError!!.text = getString(
                         R.string.transfer_value_invalid_format_string,
-                        BoardGameActivity.formatCurrencyValue(
+                        LiquidityApplication.formatCurrencyValue(
                                 requireContext(),
                                 currency!!,
                                 currentBalance
                         ),
-                        BoardGameActivity.formatCurrencyValue(
+                        LiquidityApplication.formatCurrencyValue(
                                 requireContext(),
                                 currency!!,
                                 requiredBalance
@@ -454,12 +444,12 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
         val toAccountIds = if (to != null) {
             setOf(to!!.accountId)
         } else {
-            toList!!.asSequence().map { it.accountId }.toSet()
+            toList!!.map { it.accountId }.toSet()
         }
         val isFromValid = if (toAccountIds.contains(from!!.accountId)) {
             textViewFromError!!.text = getString(
                     R.string.transfer_from_invalid_format_string,
-                    BoardGameActivity.formatNullable(requireContext(), from!!.name)
+                    LiquidityApplication.formatNullable(requireContext(), from!!.name)
             )
             false
         } else {

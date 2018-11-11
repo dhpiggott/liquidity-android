@@ -8,170 +8,76 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentStatePagerAdapter
-import androidx.viewpager.widget.PagerAdapter
-import androidx.viewpager.widget.ViewPager
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
 import com.dhpcs.liquidity.BoardGame
+import com.dhpcs.liquidity.LiquidityApplication
 import com.dhpcs.liquidity.R
-import com.dhpcs.liquidity.activity.BoardGameActivity
-import com.google.android.material.tabs.TabLayout
-import java.util.*
-import kotlin.collections.ArrayList
+import com.dhpcs.liquidity.activity.MainActivity
+import com.dhpcs.liquidity.activity.MainActivity.Companion.liveData
+import kotlinx.android.synthetic.main.fragment_players_transfers.*
 
 class PlayersTransfersFragment : Fragment() {
 
     companion object {
-
-        private const val STATE_SELECTED_PLAYER = "selected_player"
 
         private class PlayersTransfersFragmentStatePagerAdapter
         internal constructor(fragmentManager: FragmentManager,
                              private val context: Context
         ) : FragmentStatePagerAdapter(fragmentManager) {
 
-            private val players = ArrayList<BoardGame.Companion.Player>()
-            private val transfersFragments = HashSet<TransfersFragment>()
-
-            private var transfers: ArrayList<BoardGame.Companion.Transfer> = ArrayList()
-
-            fun add(player: BoardGame.Companion.Player) = players.add(player)
+            internal val players = arrayListOf<BoardGame.Companion.Player>()
 
             override fun getCount(): Int = players.size + 1
 
             override fun getPageTitle(position: Int): CharSequence? {
-                val player = get(position)
-                return if (player == null) {
+                return if (position == 0) {
                     context.getString(R.string.all)
                 } else {
-                    BoardGameActivity.formatNullable(context, player.name)
+                    LiquidityApplication.formatNullable(context, players[position - 1].name)
                 }
             }
+
+            override fun getItemPosition(item: Any): Int = POSITION_NONE
 
             override fun getItem(position: Int): Fragment {
-                return TransfersFragment.newInstance(get(position), transfers)
-            }
-
-            override fun instantiateItem(container: ViewGroup, position: Int): Any {
-                val transfersFragment =
-                        super.instantiateItem(container, position) as TransfersFragment
-                transfersFragments.add(transfersFragment)
-                return transfersFragment
-            }
-
-            override fun getItemPosition(item: Any): Int = PagerAdapter.POSITION_NONE
-
-            override fun destroyItem(container: ViewGroup, position: Int, `object`: Any) {
-                val transfersFragment = `object` as TransfersFragment
-                transfersFragments.remove(transfersFragment)
-                super.destroyItem(container, position, `object`)
-            }
-
-            internal fun clear() = players.clear()
-
-            internal operator fun get(position: Int): BoardGame.Companion.Player? {
-                return if (position == 0) null else players[position - 1]
-            }
-
-            internal fun getPosition(player: BoardGame.Companion.Player): Int {
-                return players.indexOf(player) + 1
-            }
-
-            internal fun onTransfersUpdated(
-                    transfers: Map<String, BoardGame.Companion.Transfer>
-            ) {
-                this.transfers = ArrayList(transfers.values)
-                for (transfersFragment in transfersFragments) {
-                    transfersFragment.onTransfersUpdated(transfers)
+                return if (position == 0) {
+                    TransfersFragment.newInstance(null)
+                } else {
+                    TransfersFragment.newInstance(players[position - 1])
                 }
             }
 
-            internal fun sort(comparator: Comparator<BoardGame.Companion.Player>) {
-                Collections.sort(players, comparator)
-            }
-
         }
 
-    }
-
-    private val pageChangeListener = object : ViewPager.SimpleOnPageChangeListener() {
-
-        override fun onPageSelected(position: Int) {
-            selectedPlayer = playersTransfersFragmentStatePagerAdapter!![position]
-        }
-
-    }
-
-    private var playersTransfersFragmentStatePagerAdapter:
-            PlayersTransfersFragmentStatePagerAdapter? = null
-
-    private var lastTransferFragment: LastTransferFragment? = null
-    private var viewPagerPlayersTransfers: ViewPager? = null
-
-    private var selectedPlayer: BoardGame.Companion.Player? = null
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        playersTransfersFragmentStatePagerAdapter = PlayersTransfersFragmentStatePagerAdapter(
-                fragmentManager!!,
-                requireContext()
-        )
-
-        selectedPlayer = savedInstanceState?.getSerializable(STATE_SELECTED_PLAYER) as
-                BoardGame.Companion.Player?
     }
 
     override fun onCreateView(inflater: LayoutInflater,
                               container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        val view = inflater
-                .inflate(R.layout.fragment_players_transfers, container, false)
-
-        lastTransferFragment = childFragmentManager
-                .findFragmentById(R.id.fragment_last_transfer) as LastTransferFragment
-
-        val tabLayoutPlayers = view.findViewById<TabLayout>(R.id.tablayout_players)
-        viewPagerPlayersTransfers = view.findViewById(R.id.viewpager_players_transfers)
-
-        viewPagerPlayersTransfers!!.adapter = playersTransfersFragmentStatePagerAdapter
-        tabLayoutPlayers.setupWithViewPager(viewPagerPlayersTransfers)
-        viewPagerPlayersTransfers!!.addOnPageChangeListener(pageChangeListener)
-
-        return view
+        return inflater.inflate(R.layout.fragment_players_transfers, container, false)
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        viewPagerPlayersTransfers!!.removeOnPageChangeListener(pageChangeListener)
-    }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
-    fun onPlayersUpdated(players: Map<String, BoardGame.Companion.Player>) {
-        playersTransfersFragmentStatePagerAdapter!!.clear()
-        players.values.forEach {
-            playersTransfersFragmentStatePagerAdapter!!.add(it)
-        }
-        playersTransfersFragmentStatePagerAdapter!!.sort(
-                BoardGameActivity.playerComparator(requireContext())
+        val model = ViewModelProviders.of(requireActivity())
+                .get(MainActivity.Companion.BoardGameModel::class.java)
+
+        val playersTransfersFragmentStatePagerAdapter = PlayersTransfersFragmentStatePagerAdapter(
+                fragmentManager!!,
+                requireContext()
         )
-        playersTransfersFragmentStatePagerAdapter!!.notifyDataSetChanged()
 
-        if (selectedPlayer != null && players.contains(selectedPlayer!!.memberId)) {
-            viewPagerPlayersTransfers!!.setCurrentItem(
-                    playersTransfersFragmentStatePagerAdapter!!.getPosition(
-                            players[selectedPlayer!!.memberId]!!
-                    ),
-                    false
+        viewpager_players_transfers.adapter = playersTransfersFragmentStatePagerAdapter
+        tablayout_players.setupWithViewPager(viewpager_players_transfers)
+
+        model.boardGame.liveData { it.playersObservable }.observe(this, Observer {
+            playersTransfersFragmentStatePagerAdapter.players.clear()
+            playersTransfersFragmentStatePagerAdapter.players.addAll(
+                    it.values.sortedWith(LiquidityApplication.playerComparator(requireContext()))
             )
-        }
-    }
-
-    fun onTransferAdded(transfer: BoardGame.Companion.Transfer) {
-        lastTransferFragment!!.onTransferAdded(transfer)
-    }
-
-    fun onTransfersUpdated(
-            transfers: Map<String, BoardGame.Companion.Transfer>) {
-        lastTransferFragment!!.onTransfersUpdated(transfers)
-        playersTransfersFragmentStatePagerAdapter!!.onTransfersUpdated(transfers)
+            playersTransfersFragmentStatePagerAdapter.notifyDataSetChanged()
+        })
     }
 
 }

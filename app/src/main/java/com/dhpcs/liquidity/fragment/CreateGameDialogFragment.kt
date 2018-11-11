@@ -16,8 +16,11 @@ import android.widget.Spinner
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDialogFragment
+import androidx.lifecycle.ViewModelProviders
+import androidx.navigation.fragment.findNavController
 import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.R
+import com.dhpcs.liquidity.activity.MainActivity
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import java.util.*
@@ -25,12 +28,6 @@ import java.util.*
 class CreateGameDialogFragment : AppCompatDialogFragment() {
 
     companion object {
-
-        interface Listener {
-
-            fun onGameDetailsEntered(name: String, currency: Currency)
-
-        }
 
         private class CurrenciesAdapter internal constructor(context: Context,
                                                              currencies: List<Currency>
@@ -86,19 +83,7 @@ class CreateGameDialogFragment : AppCompatDialogFragment() {
 
     }
 
-    private var listener: Listener? = null
-
     private var buttonPositive: Button? = null
-
-    override fun onAttach(context: Context?) {
-        super.onAttach(context)
-        listener = context as Listener?
-    }
-
-    override fun onDetach() {
-        super.onDetach()
-        listener = null
-    }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         @SuppressLint("InflateParams") val view = requireActivity().layoutInflater.inflate(
@@ -123,10 +108,19 @@ class CreateGameDialogFragment : AppCompatDialogFragment() {
                 .setView(view)
                 .setNegativeButton(R.string.cancel, null)
                 .setPositiveButton(R.string.ok) { _, _ ->
-                    listener?.onGameDetailsEntered(
-                            textInputEditTextGameName.text.toString(),
-                            currenciesSpinnerAdapter.getItem(spinnerCurrency.selectedItemPosition)!!
-                    )
+                    val model = ViewModelProviders.of(requireActivity())
+                            .get(MainActivity.Companion.BoardGameModel::class.java)
+                    model.execCreateGameCommand(
+                            model.boardGame.createGame(
+                                    textInputEditTextGameName.text.toString(),
+                                    currenciesSpinnerAdapter
+                                            .getItem(spinnerCurrency.selectedItemPosition)!!,
+                                    getString(R.string.bank_member_name)
+                            )
+                    ) {
+                        getString(R.string.create_game_error)
+                    }
+                    findNavController().navigate(R.id.action_games_fragment_to_board_game_graph)
                 }
                 .create()
 

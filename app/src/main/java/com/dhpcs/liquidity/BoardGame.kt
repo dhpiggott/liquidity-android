@@ -1,5 +1,6 @@
 package com.dhpcs.liquidity
 
+import android.os.Parcelable
 import com.dhpcs.liquidity.BoardGame.Companion.JoinState.*
 import com.dhpcs.liquidity.proto.model.Model
 import com.dhpcs.liquidity.proto.ws.protocol.WsProtocol
@@ -13,21 +14,15 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
-import java.io.Serializable
+import kotlinx.android.parcel.Parcelize
 import java.math.BigDecimal
-import java.util.Currency
+import java.util.*
 import kotlin.collections.component1
 import kotlin.collections.component2
 
-@Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
-class BoardGame private constructor(
+class BoardGame constructor(
         private val serverConnection: ServerConnection,
-        private val gameDatabase: GameDatabase,
-        private val _currency: Currency?,
-        private val _gameName: String?,
-        private val bankMemberName: String?,
-        _zoneId: String?,
-        _gameId: Long?
+        private val gameDatabase: GameDatabase
 ) {
 
     companion object {
@@ -37,8 +32,6 @@ class BoardGame private constructor(
             fun insertGame(zoneId: String, created: Long, expires: Long, name: String?): Long
 
             fun checkAndUpdateGame(zoneId: String, name: String?): Long?
-
-            fun updateGameName(gameId: Long, name: String?)
 
         }
 
@@ -51,6 +44,7 @@ class BoardGame private constructor(
             JOINED
         }
 
+        @Parcelize
         data class Player(
                 val zoneId: String,
                 val memberId: String,
@@ -62,8 +56,9 @@ class BoardGame private constructor(
                 val currency: String?,
                 val isBanker: Boolean,
                 val isConnected: Boolean
-        ) : Serializable
+        ) : Parcelable
 
+        @Parcelize
         data class Identity(
                 val zoneId: String,
                 val memberId: String,
@@ -74,7 +69,7 @@ class BoardGame private constructor(
                 val balance: BigDecimal,
                 val currency: String?,
                 val isBanker: Boolean
-        ) : Serializable
+        ) : Parcelable
 
         data class Transfer(
                 val fromAccountId: String,
@@ -85,9 +80,7 @@ class BoardGame private constructor(
                 val created: Long,
                 val value: BigDecimal,
                 val currency: String?
-        ) : Serializable
-
-        class JoinRequestToken
+        )
 
         const val MAXIMUM_TAG_LENGTH = 160
 
@@ -102,215 +95,166 @@ class BoardGame private constructor(
                 val identities: Map<String, Identity>,
                 val hiddenIdentities: Map<String, Identity>,
                 val players: Map<String, Player>,
-                val transfers: Map<String, Transfer>
+                val transfers: List<Transfer>
         )
-
-        private var instances: Map<String, BoardGame> = emptyMap()
-
-        fun getInstance(zoneId: String): BoardGame? = instances[zoneId]
 
         fun isGameNameValid(name: CharSequence): Boolean = isTagValid(name)
 
-        fun isTagValid(tag: CharSequence): Boolean {
-            return tag.isNotEmpty() && tag.length <= MAXIMUM_TAG_LENGTH
-        }
-
-        private fun currencyFromMetadata(metadata: Struct?): String? {
-            return metadata?.fieldsMap?.get((CURRENCY_CODE_KEY))?.stringValue
+        private fun isTagValid(tag: CharSequence): Boolean {
+            return tag.isNotBlank()
         }
 
         private fun isHidden(member: Model.Member): Boolean {
-            return if (!member.hasMetadata()) {
-                false
-            } else {
-                val hidden = member.metadata.fieldsMap[HIDDEN_FLAG_KEY]
-                hidden?.boolValue ?: false
-            }
+            return member.hasMetadata() &&
+                    member.metadata.fieldsMap[HIDDEN_FLAG_KEY]?.boolValue ?: false
         }
 
     }
 
-    constructor (serverConnection: ServerConnection,
-                 gameDatabase: GameDatabase,
-                 currency: Currency,
-                 gameName: String,
-                 bankMemberName: String
-    ) : this(
-            serverConnection,
-            gameDatabase,
-            currency,
-            gameName,
-            bankMemberName,
-            null,
-            null
-    )
-
-    constructor(serverConnection: ServerConnection,
-                gameDatabase: GameDatabase,
-                zoneId: String,
-                gameId: Long?
-    ) : this(serverConnection,
-            gameDatabase,
-            null,
-            null,
-            null,
-            zoneId,
-            gameId
-    )
-
-    private var joinRequestTokens: Set<JoinRequestToken> = emptySet()
-
-    var zoneId = _zoneId
-        private set
-
-    private var gameId: Single<Long>? = if (_gameId == null) null else Single.just(_gameId)
-
     private val joinStateSubject = BehaviorSubject.createDefault(QUIT)
     val joinState: JoinState get() = joinStateSubject.value!!
-    val joinStateObservable: Observable<JoinState> = joinStateSubject
+    fun joinStateObservable(): Observable<JoinState> = joinStateSubject
 
+    private var gameId: Single<Long>? = null
+    var zoneId: String? = null
+        set(value) {
+            field = value
+            if (subscribers.isNotEmpty()) {
+                join()
+            }
+        }
     private var state: State? = null
-
     val currency get() = state!!.currency
-
-    private val createGameErrorSubject = PublishSubject.create<Unit>()
-    val createGameErrorObservable: Observable<Unit> = createGameErrorSubject
 
     private val gameNameSubject = BehaviorSubject.createDefault("")
     val gameNameObservable: Observable<String> = gameNameSubject
-    val gameName: String get() = gameNameSubject.value!!
 
-    private val identityRequiredSubject = PublishSubject.create<Unit>()
-    val identityRequiredObservable: Observable<Unit> = identityRequiredSubject
+    val gameName get() = gameNameSubject.value!!
+
+    private val playersSubject = BehaviorSubject.createDefault(emptyMap<String, Player>())
+    val playersObservable: Observable<Map<String, Player>> = playersSubject
+
+    val players get() = playersSubject.value!!
+
+    private val identitiesSubject = BehaviorSubject.createDefault(emptyMap<String, Identity>())
+    val identitiesObservable: Observable<Map<String, Identity>> = identitiesSubject
+
+    val identities get() = identitiesSubject.value!!
+
+    private val hiddenIdentitiesSubject =
+            BehaviorSubject.createDefault(emptyMap<String, Identity>())
+    val hiddenIdentities get() = hiddenIdentitiesSubject.value!!
 
     private val addedIdentitiesSubject = PublishSubject.create<Identity>()
     val addedIdentitiesObservable: Observable<Identity> = addedIdentitiesSubject
 
+    private val identityRequiredSubject = PublishSubject.create<Unit>()
+    val identityRequiredObservable: Observable<Unit> = identityRequiredSubject
+
+    private val transfersSubject = BehaviorSubject.createDefault(emptyList<Transfer>())
+    val transfersObservable: Observable<List<Transfer>> = transfersSubject
+
     private val addedTransfersSubject = PublishSubject.create<Transfer>()
     val addedTransfersObservable: Observable<Transfer> = addedTransfersSubject
 
-    private val playersSubject = BehaviorSubject.createDefault(emptyMap<String, Player>())
-    val playersObservable: Observable<Map<String, Player>> = playersSubject
-    val players get() = playersSubject.value
-
-    private val identitiesSubject = BehaviorSubject.createDefault(emptyMap<String, Identity>())
-    val identitiesObservable: Observable<Map<String, Identity>> = identitiesSubject
-    val identities get() = identitiesSubject.value
-
-    private val hiddenIdentitiesSubject =
-            BehaviorSubject.createDefault(emptyMap<String, Identity>())
-    val hiddenIdentities get() = hiddenIdentitiesSubject.value
-
-    private val transfersSubject = BehaviorSubject.createDefault(emptyMap<String, Transfer>())
-    val transfersObservable: Observable<Map<String, Transfer>> = transfersSubject
-    val transfers get() = transfersSubject.value
-
-    fun requestJoin(token: JoinRequestToken) {
-        if (joinRequestTokens.isEmpty()) {
-            val zoneId = zoneId
-            if (zoneId != null && !instances.contains(zoneId)) {
-                instances += Pair(zoneId, this)
-            }
-            if (zoneId == null) {
-                createAndThenJoinZone(_currency!!, _gameName!!)
-            } else {
-                join(zoneId)
-            }
-        }
-        joinRequestTokens += token
-    }
-
-    fun unrequestJoin(token: JoinRequestToken) {
-        joinRequestTokens -= token
-        if (joinRequestTokens.isEmpty()) {
-            quit()
-            val zoneId = zoneId
-            if (zoneId != null && instances.contains(zoneId)) {
-                instances -= zoneId
-            }
-        }
-    }
-
-    private var createZoneDisposable: Disposable? = null
-
-    private fun createAndThenJoinZone(currency: Currency, name: String) {
-        state = null
+    fun createGame(name: String, currency: Currency, bankMemberName: String): Single<String> {
         joinStateSubject.onNext(CREATING)
         val metadata = Struct.newBuilder()
                 .putFields(
                         CURRENCY_CODE_KEY,
                         Value.newBuilder().setStringValue(currency.currencyCode).build()
                 )
-        createZoneDisposable = serverConnection.createZone(
-                WsProtocol.ZoneCommand.CreateZoneCommand.newBuilder()
-                        .setEquityOwnerPublicKey(serverConnection.clientKey)
-                        .setEquityOwnerName(StringValue.newBuilder().setValue(bankMemberName))
-                        .setName(StringValue.newBuilder().setValue(name))
-                        .setMetadata(metadata)
-                        .build()
-        ).subscribe({ zoneResponse ->
-            when (zoneResponse.createZoneResponse.resultCase) {
-                WsProtocol.ZoneResponse.CreateZoneResponse.ResultCase.RESULT_NOT_SET ->
-                    createGameErrorSubject.onNext(Unit)
-                WsProtocol.ZoneResponse.CreateZoneResponse.ResultCase.ERRORS ->
-                    createGameErrorSubject.onNext(Unit)
-                WsProtocol.ZoneResponse.CreateZoneResponse.ResultCase.SUCCESS -> {
-                    val zone = zoneResponse.createZoneResponse.success.zone!!
-                    instances += Pair(zone.id, this)
-                    zoneId = zone.id
-                    join(zone.id)
+        return Single.create<String> { singleEmitter ->
+            serverConnection.createZone(
+                    WsProtocol.ZoneCommand.CreateZoneCommand.newBuilder()
+                            .setEquityOwnerPublicKey(serverConnection.clientKey)
+                            .setEquityOwnerName(StringValue.newBuilder().setValue(bankMemberName))
+                            .setName(StringValue.newBuilder().setValue(name))
+                            .setMetadata(metadata)
+                            .build()
+            ).subscribe({ zoneResponse ->
+                when (zoneResponse.createZoneResponse.resultCase!!) {
+                    WsProtocol.ZoneResponse.CreateZoneResponse.ResultCase.RESULT_NOT_SET ->
+                        singleEmitter.onError(IllegalArgumentException(
+                                zoneResponse.createZoneResponse.resultCase.name
+                        ))
+                    WsProtocol.ZoneResponse.CreateZoneResponse.ResultCase.ERRORS ->
+                        singleEmitter.onError(IllegalArgumentException(
+                                zoneResponse.createZoneResponse.resultCase.name
+                        ))
+                    WsProtocol.ZoneResponse.CreateZoneResponse.ResultCase.SUCCESS ->
+                        singleEmitter.onSuccess(zoneResponse.createZoneResponse.success.zone!!.id)
                 }
-            }
-        }, { _ ->
-            createGameErrorSubject.onNext(Unit)
-        })
+            }, { error ->
+                singleEmitter.onError(error)
+            })
+        }
+    }
+
+    private var subscribers: Set<Any> = emptySet()
+
+    fun onActive(subscriber: Any) {
+        if (subscribers.isEmpty()) {
+            join()
+        }
+        subscribers += subscriber
+    }
+
+    fun onInactive(subscriber: Any) {
+        subscribers -= subscriber
+        if (subscribers.isEmpty()) {
+            quit()
+        }
     }
 
     private var zoneNotificationDisposable: Disposable? = null
 
-    private fun join(zoneId: String) {
-        state = null
-        joinStateSubject.onNext(JOINING)
-        zoneNotificationDisposable = serverConnection
-                .zoneNotifications(zoneId)
-                .subscribe(
-                        {
-                            if (joinState == JOINING || joinState == JOINED) {
-                                onZoneNotificationReceived(zoneId, it)
-                            }
-                        },
-                        {
-                            joinStateSubject.onNext(FAILED)
-                        },
-                        {
-                            if (joinState == JOINING) {
-                                joinStateSubject.onNext(ERROR)
-                            } else {
+    private fun join() {
+        if (zoneId != null) {
+            joinStateSubject.onNext(JOINING)
+            zoneNotificationDisposable = serverConnection
+                    .zoneNotifications(zoneId!!)
+                    .subscribe(
+                            {
+                                if (joinState == JOINING || joinState == JOINED) {
+                                    handleZoneNotification(it)
+                                }
+                            },
+                            {
                                 joinStateSubject.onNext(FAILED)
+                            },
+                            {
+                                if (joinState == JOINING) {
+                                    joinStateSubject.onNext(ERROR)
+                                } else {
+                                    joinStateSubject.onNext(FAILED)
+                                }
                             }
-                        }
-                )
+                    )
+        }
     }
 
     private fun quit() {
-        createZoneDisposable?.dispose()
-        createZoneDisposable = null
         zoneNotificationDisposable?.dispose()
         zoneNotificationDisposable = null
+        gameNameSubject.onNext("")
+        playersSubject.onNext(emptyMap())
+        identitiesSubject.onNext(emptyMap())
+        hiddenIdentitiesSubject.onNext(emptyMap())
+        transfersSubject.onNext(emptyList())
         joinStateSubject.onNext(QUIT)
+        state = null
+        gameId = null
     }
 
-    private fun onZoneNotificationReceived(
-            zoneId: String,
-            zoneNotification: WsProtocol.ZoneNotification
-    ) {
+    private fun handleZoneNotification(zoneNotification: WsProtocol.ZoneNotification) {
         fun updateState(
                 zone: Model.Zone,
                 connectedClients: Map<String, ByteString>,
                 balances: Map<String, BigDecimal>,
                 currency: String?
         ): State {
-            val memberIdsToAccountIds = zone.accountsList.asSequence().filter {
+            val memberIdsToAccountIds = zone.accountsList.filter {
                 it.ownerMemberIdsCount == 1
             }.groupBy {
                 it.getOwnerMemberIds(0)
@@ -331,7 +275,7 @@ class BoardGame private constructor(
             }.mapValues { (memberId, accountId) ->
                 val member = zone.membersList.find { it.id == memberId }!!
                 Identity(
-                        zoneId,
+                        zone.id,
                         member.id,
                         member.getOwnerPublicKeys(0),
                         if (!member.hasName()) null else member.name.value,
@@ -349,7 +293,7 @@ class BoardGame private constructor(
             }.mapValues { (memberId, accountId) ->
                 val member = zone.membersList.find { it.id == memberId }!!
                 Player(
-                        zoneId,
+                        zone.id,
                         member.id,
                         member.getOwnerPublicKeys(0),
                         if (!member.hasName()) null else member.name.value,
@@ -362,7 +306,7 @@ class BoardGame private constructor(
                 )
             }
             val players = allPlayers.filterValues { !it.isHidden }
-            val transfers = zone.transactionsList.asSequence().map { transaction ->
+            val transfers = zone.transactionsList.map { transaction ->
                 val fromAccount = zone.accountsList.find { it.id == transaction.from }!!
                 val fromMemberId = accountIdsToMemberIds[transaction.from]
                 val toAccount = zone.accountsList.find { it.id == transaction.to }!!
@@ -377,7 +321,7 @@ class BoardGame private constructor(
                         BigDecimal(transaction.value),
                         currency
                 )
-            }.associateBy { it.transactionId }
+            }
             return State(
                     zone,
                     connectedClients,
@@ -398,31 +342,34 @@ class BoardGame private constructor(
             val newName = if (newState.zone.hasName()) newState.zone.name.value else null
             if (oldState == null || newName != oldName) {
                 gameNameSubject.onNext(newName ?: "")
-                gameId?.subscribeOn(Schedulers.io())?.subscribe { gameId ->
-                    gameDatabase.updateGameName(gameId, newName)
+                @Suppress("RedundantLambdaArrow")
+                gameId?.subscribeOn(Schedulers.io())?.subscribe { _ ->
+                    gameDatabase.checkAndUpdateGame(newState.zone.id, newName)
                 }
             }
             if (newState.identities != oldState?.identities) {
-                val addedIdentities = newState.identities - oldState?.identities
+                identitiesSubject.onNext(newState.identities)
+                hiddenIdentitiesSubject.onNext(newState.hiddenIdentities)
                 if (oldState != null) {
+                    val addedIdentities = newState.identities - oldState.identities.keys
                     addedIdentities.values.forEach {
                         addedIdentitiesSubject.onNext(it)
                     }
                 }
-                identitiesSubject.onNext(newState.identities)
-                hiddenIdentitiesSubject.onNext(newState.hiddenIdentities)
             }
             if (newState.players != oldState?.players) {
                 playersSubject.onNext(newState.players)
             }
             if (newState.transfers != oldState?.transfers) {
-                val addedTransfers = newState.transfers - oldState?.transfers
+                transfersSubject.onNext(newState.transfers)
                 if (oldState != null) {
+                    val addedTransfers =
+                            newState.transfers.associateBy { it.transactionId } -
+                                    oldState.transfers.associateBy { it.transactionId }.keys
                     addedTransfers.values.forEach {
                         addedTransfersSubject.onNext(it)
                     }
                 }
-                transfersSubject.onNext(newState.transfers)
             }
 
             if (oldState == null &&
@@ -436,22 +383,24 @@ class BoardGame private constructor(
                 gameId = Single.fromCallable {
                     // This is in case a user rejoins a game by scanning its code again rather
                     // than by clicking its list item.
-                    gameDatabase.checkAndUpdateGame(zoneId, newName) ?: gameDatabase.insertGame(
-                            zoneId,
-                            newState.zone.created,
-                            newState.zone.expires,
-                            newName
-                    )
+                    gameDatabase.checkAndUpdateGame(newState.zone.id, newName)
+                            ?: gameDatabase.insertGame(
+                                    newState.zone.id,
+                                    newState.zone.created,
+                                    newState.zone.expires,
+                                    newName
+                            )
                 }.subscribeOn(Schedulers.io()).cache()
                 gameId!!.subscribe()
             } else {
-                gameId!!.subscribeOn(Schedulers.io()).subscribe { gameId ->
-                    gameDatabase.updateGameName(gameId, newName)
+                @Suppress("RedundantLambdaArrow")
+                gameId!!.subscribeOn(Schedulers.io()).subscribe { _ ->
+                    gameDatabase.checkAndUpdateGame(newState.zone.id, newName)
                 }
             }
         }
 
-        val newState = when (zoneNotification.zoneNotificationCase) {
+        val newState = when (zoneNotification.zoneNotificationCase!!) {
             WsProtocol.ZoneNotification.ZoneNotificationCase.ZONENOTIFICATION_NOT_SET ->
                 null
             WsProtocol.ZoneNotification.ZoneNotificationCase.CLIENT_JOINED_ZONE_NOTIFICATION -> {
@@ -585,7 +534,7 @@ class BoardGame private constructor(
                                                     BigDecimal(transaction.value)
                                     )
                         }
-                val currency = currencyFromMetadata(zone.metadata)
+                val currency = zone.metadata?.fieldsMap?.get((CURRENCY_CODE_KEY))?.stringValue
                 updateState(
                         zone,
                         connectedClients,
@@ -605,7 +554,7 @@ class BoardGame private constructor(
     private fun createAccount(ownerMember: Model.Member): Single<Model.Account> {
         return Single.create<Model.Account> { singleEmitter ->
             serverConnection.execZoneCommand(
-                    zoneId!!,
+                    state!!.zone.id,
                     WsProtocol.ZoneCommand.newBuilder()
                             .setCreateAccountCommand(
                                     WsProtocol.ZoneCommand.CreateAccountCommand.newBuilder()
@@ -613,7 +562,7 @@ class BoardGame private constructor(
                             )
                             .build()
             ).subscribe({ zoneResponse ->
-                when (zoneResponse.createAccountResponse.resultCase) {
+                when (zoneResponse.createAccountResponse.resultCase!!) {
                     WsProtocol.ZoneResponse.CreateAccountResponse.ResultCase.RESULT_NOT_SET ->
                         singleEmitter.onError(IllegalArgumentException(
                                 zoneResponse.createAccountResponse.resultCase.name
@@ -634,7 +583,7 @@ class BoardGame private constructor(
     fun changeGameName(name: String): Single<Unit> {
         return Single.create<Unit> { singleEmitter ->
             serverConnection.execZoneCommand(
-                    zoneId!!,
+                    state!!.zone.id,
                     WsProtocol.ZoneCommand.newBuilder()
                             .setChangeZoneNameCommand(
                                     WsProtocol.ZoneCommand.ChangeZoneNameCommand.newBuilder()
@@ -642,7 +591,7 @@ class BoardGame private constructor(
                             )
                             .build()
             ).subscribe({ zoneResponse ->
-                when (zoneResponse.changeZoneNameResponse.resultCase) {
+                when (zoneResponse.changeZoneNameResponse.resultCase!!) {
                     WsProtocol.ZoneResponse.ChangeZoneNameResponse.ResultCase.RESULT_NOT_SET ->
                         singleEmitter.onError(IllegalArgumentException(
                                 zoneResponse.changeZoneNameResponse.resultCase.name
@@ -686,7 +635,7 @@ class BoardGame private constructor(
         } else {
             Single.create<Model.Member> { singleEmitter ->
                 serverConnection.execZoneCommand(
-                        zoneId!!,
+                        state!!.zone.id,
                         WsProtocol.ZoneCommand.newBuilder()
                                 .setCreateMemberCommand(
                                         WsProtocol.ZoneCommand.CreateMemberCommand.newBuilder()
@@ -695,7 +644,7 @@ class BoardGame private constructor(
                                 )
                                 .build()
                 ).subscribe({ zoneResponse ->
-                    when (zoneResponse.createMemberResponse.resultCase) {
+                    when (zoneResponse.createMemberResponse.resultCase!!) {
                         WsProtocol.ZoneResponse.CreateMemberResponse.ResultCase.RESULT_NOT_SET ->
                             singleEmitter.onError(IllegalArgumentException(
                                     zoneResponse.createMemberResponse.resultCase.name
@@ -712,6 +661,7 @@ class BoardGame private constructor(
                 })
             }
         }
+        @Suppress("RedundantLambdaArrow")
         return member.flatMap { createAccount(it).map { _ -> it } }
     }
 
@@ -721,7 +671,7 @@ class BoardGame private constructor(
         }!!
         return Single.create<Unit> { singleEmitter ->
             serverConnection.execZoneCommand(
-                    zoneId!!,
+                    state!!.zone.id,
                     WsProtocol.ZoneCommand.newBuilder()
                             .setUpdateMemberCommand(
                                     WsProtocol.ZoneCommand.UpdateMemberCommand.newBuilder()
@@ -735,7 +685,7 @@ class BoardGame private constructor(
                             )
                             .build()
             ).subscribe({ zoneResponse ->
-                when (zoneResponse.updateMemberResponse.resultCase) {
+                when (zoneResponse.updateMemberResponse.resultCase!!) {
                     WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.RESULT_NOT_SET ->
                         singleEmitter.onError(IllegalArgumentException(
                                 zoneResponse.updateMemberResponse.resultCase.name
@@ -763,7 +713,7 @@ class BoardGame private constructor(
         }!!
         return Single.create<Unit> { singleEmitter ->
             serverConnection.execZoneCommand(
-                    zoneId!!,
+                    state!!.zone.id,
                     WsProtocol.ZoneCommand
                             .newBuilder()
                             .setUpdateMemberCommand(
@@ -772,7 +722,6 @@ class BoardGame private constructor(
                                                     .clearOwnerPublicKeys()
                                                     .addAllOwnerPublicKeys(
                                                             member.ownerPublicKeysList
-                                                                    .asSequence()
                                                                     .minusElement(
                                                                             serverConnection
                                                                                     .clientKey
@@ -786,7 +735,7 @@ class BoardGame private constructor(
                             )
                             .build()
             ).subscribe({ zoneResponse ->
-                when (zoneResponse.updateMemberResponse.resultCase) {
+                when (zoneResponse.updateMemberResponse.resultCase!!) {
                     WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.RESULT_NOT_SET ->
                         singleEmitter.onError(IllegalArgumentException(
                                 zoneResponse.updateMemberResponse.resultCase.name
@@ -812,7 +761,7 @@ class BoardGame private constructor(
                 .putFields(HIDDEN_FLAG_KEY, Value.newBuilder().setBoolValue(true).build())
         return Single.create<Unit> { singleEmitter ->
             serverConnection.execZoneCommand(
-                    zoneId!!,
+                    state!!.zone.id,
                     WsProtocol.ZoneCommand.newBuilder()
                             .setUpdateMemberCommand(
                                     WsProtocol.ZoneCommand.UpdateMemberCommand.newBuilder()
@@ -820,7 +769,7 @@ class BoardGame private constructor(
                             )
                             .build()
             ).subscribe({ zoneResponse ->
-                when (zoneResponse.updateMemberResponse.resultCase) {
+                when (zoneResponse.updateMemberResponse.resultCase!!) {
                     WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.RESULT_NOT_SET ->
                         singleEmitter.onError(IllegalArgumentException(
                                 zoneResponse.updateMemberResponse.resultCase.name
@@ -846,7 +795,7 @@ class BoardGame private constructor(
                 .removeFields(HIDDEN_FLAG_KEY)
         return Single.create<Unit> { singleEmitter ->
             serverConnection.execZoneCommand(
-                    zoneId!!,
+                    state!!.zone.id,
                     WsProtocol.ZoneCommand.newBuilder()
                             .setUpdateMemberCommand(
                                     WsProtocol.ZoneCommand.UpdateMemberCommand.newBuilder()
@@ -854,7 +803,7 @@ class BoardGame private constructor(
                             )
                             .build()
             ).subscribe({ zoneResponse ->
-                when (zoneResponse.updateMemberResponse.resultCase) {
+                when (zoneResponse.updateMemberResponse.resultCase!!) {
                     WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.RESULT_NOT_SET ->
                         singleEmitter.onError(IllegalArgumentException(
                                 zoneResponse.updateMemberResponse.resultCase.name
@@ -872,25 +821,24 @@ class BoardGame private constructor(
         }
     }
 
-    fun transferToPlayer(actingAs: Identity,
-                         from: Identity,
+    fun transferToPlayer(from: Identity,
                          to: Player,
                          value: BigDecimal
     ): Single<Unit> {
         return Single.create<Unit> { singleEmitter ->
             serverConnection.execZoneCommand(
-                    zoneId!!,
+                    state!!.zone.id,
                     WsProtocol.ZoneCommand.newBuilder()
                             .setAddTransactionCommand(
                                     WsProtocol.ZoneCommand.AddTransactionCommand.newBuilder()
-                                            .setActingAs(actingAs.memberId)
+                                            .setActingAs(from.memberId)
                                             .setFrom(from.accountId)
                                             .setTo(to.accountId)
                                             .setValue(value.toString())
                             )
                             .build()
             ).subscribe({ zoneResponse ->
-                when (zoneResponse.addTransactionResponse.resultCase) {
+                when (zoneResponse.addTransactionResponse.resultCase!!) {
                     WsProtocol.ZoneResponse.AddTransactionResponse.ResultCase.RESULT_NOT_SET ->
                         singleEmitter.onError(IllegalArgumentException(
                                 zoneResponse.updateMemberResponse.resultCase.name

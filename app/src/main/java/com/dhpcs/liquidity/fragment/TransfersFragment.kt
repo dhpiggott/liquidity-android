@@ -7,30 +7,30 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.*
 import com.dhpcs.liquidity.BoardGame
+import com.dhpcs.liquidity.LiquidityApplication
 import com.dhpcs.liquidity.R
-import com.dhpcs.liquidity.activity.BoardGameActivity
+import com.dhpcs.liquidity.activity.MainActivity
+import com.dhpcs.liquidity.activity.MainActivity.Companion.liveData
+import kotlinx.android.synthetic.main.fragment_transfers.*
 import java.text.DateFormat
-import java.util.*
 
 class TransfersFragment : Fragment() {
 
     companion object {
 
         private const val ARG_PLAYER = "player"
-        private const val ARG_TRANSFERS = "transfers"
 
         private val timeFormat = DateFormat.getTimeInstance()
         private val dateFormat = DateFormat.getDateInstance()
 
-        fun newInstance(player: BoardGame.Companion.Player?,
-                        transfers: ArrayList<BoardGame.Companion.Transfer>
-        ): TransfersFragment {
+        fun newInstance(player: BoardGame.Companion.Player?): TransfersFragment {
             val transfersFragment = TransfersFragment()
             val args = Bundle()
-            args.putSerializable(ARG_PLAYER, player)
-            args.putSerializable(ARG_TRANSFERS, transfers)
+            args.putParcelable(ARG_PLAYER, player)
             transfersFragment.arguments = args
             return transfersFragment
         }
@@ -114,7 +114,7 @@ class TransfersFragment : Fragment() {
             fun bindTransfer(transfer: BoardGame.Companion.Transfer) {
                 val isFromPlayer = player != null &&
                         transfer.fromPlayer?.memberId == player.memberId
-                val value = BoardGameActivity.formatCurrencyValue(
+                val value = LiquidityApplication.formatCurrencyValue(
                         context,
                         transfer.currency,
                         transfer.value
@@ -125,20 +125,20 @@ class TransfersFragment : Fragment() {
                     context.getString(
                             R.string.transfer_summary_sent_to_format_string,
                             value,
-                            BoardGameActivity.formatNullable(context, transfer.toPlayer?.name)
+                            LiquidityApplication.formatNullable(context, transfer.toPlayer?.name)
                     )
                 } else if (!isFromPlayer && isToPlayer) {
                     context.getString(
                             R.string.transfer_summary_received_from_format_string,
                             value,
-                            BoardGameActivity.formatNullable(context, transfer.fromPlayer?.name)
+                            LiquidityApplication.formatNullable(context, transfer.fromPlayer?.name)
                     )
                 } else {
                     context.getString(
                             R.string.transfer_summary_format_string,
-                            BoardGameActivity.formatNullable(context, transfer.fromPlayer?.name),
+                            LiquidityApplication.formatNullable(context, transfer.fromPlayer?.name),
                             value,
-                            BoardGameActivity.formatNullable(context, transfer.toPlayer?.name)
+                            LiquidityApplication.formatNullable(context, transfer.toPlayer?.name)
                     )
                 }
                 val createdTime = context.getString(
@@ -158,67 +158,50 @@ class TransfersFragment : Fragment() {
 
     }
 
-    private var player: BoardGame.Companion.Player? = null
-    private var transfersAdapter: TransfersAdapter? = null
-
-    private var textViewEmpty: TextView? = null
-    private var recyclerViewTransfers: RecyclerView? = null
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        player = arguments!!.getSerializable(ARG_PLAYER) as BoardGame.Companion.Player?
-        transfersAdapter = TransfersAdapter(player)
-    }
-
     override fun onCreateView(inflater: LayoutInflater,
                               container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        val view = inflater.inflate(R.layout.fragment_transfers, container, false)
+        return inflater.inflate(R.layout.fragment_transfers, container, false)
+    }
 
-        textViewEmpty = view.findViewById(R.id.textview_empty)
-        recyclerViewTransfers = view.findViewById(R.id.recyclerview_transfers)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
-        recyclerViewTransfers!!.setHasFixedSize(true)
-        recyclerViewTransfers!!.layoutManager = LinearLayoutManager(activity)
-        recyclerViewTransfers!!.adapter = transfersAdapter
-        recyclerViewTransfers!!.addItemDecoration(DividerItemDecoration(
-                recyclerViewTransfers!!.context,
+        val model = ViewModelProviders.of(requireActivity())
+                .get(MainActivity.Companion.BoardGameModel::class.java)
+
+        val player = arguments!!.getParcelable<BoardGame.Companion.Player>(ARG_PLAYER)
+        val transfersAdapter = TransfersAdapter(player)
+
+        recyclerview_transfers.setHasFixedSize(true)
+        recyclerview_transfers.layoutManager = LinearLayoutManager(activity)
+        recyclerview_transfers.adapter = transfersAdapter
+        recyclerview_transfers.addItemDecoration(DividerItemDecoration(
+                recyclerview_transfers.context,
                 DividerItemDecoration.VERTICAL
         ))
 
-        if (transfersAdapter!!.itemCount != 0) {
-            textViewEmpty!!.visibility = View.GONE
-            recyclerViewTransfers!!.visibility = View.VISIBLE
+        if (transfersAdapter.itemCount != 0) {
+            textview_empty.visibility = View.GONE
+            recyclerview_transfers.visibility = View.VISIBLE
         }
 
-        val transfers = arguments!!.getSerializable(ARG_TRANSFERS) as
-                Collection<BoardGame.Companion.Transfer>
-        updateTransfers(transfers, player)
-
-        return view
-    }
-
-    fun onTransfersUpdated(transfers: Map<String, BoardGame.Companion.Transfer>) {
-        updateTransfers(transfers.values, player)
-    }
-
-    private fun updateTransfers(
-            transfers: Collection<BoardGame.Companion.Transfer>,
-            player: BoardGame.Companion.Player?) {
-        val visibleTransfers = transfers.filter {
-            player == null ||
-                    (it.fromPlayer != null && player.memberId == it.fromPlayer.memberId) ||
-                    (it.toPlayer != null && player.memberId == it.toPlayer.memberId)
-        }
-        transfersAdapter!!.updateTransfers(visibleTransfers)
-        if (visibleTransfers.isNotEmpty()) {
-            textViewEmpty!!.visibility = View.GONE
-            recyclerViewTransfers!!.visibility = View.VISIBLE
-        } else {
-            textViewEmpty!!.visibility = View.VISIBLE
-            recyclerViewTransfers!!.visibility = View.GONE
-        }
+        model.boardGame.liveData { it.transfersObservable }.observe(this, Observer {
+            val visibleTransfers = it.filter { transfer ->
+                player == null ||
+                        (transfer.fromPlayer != null &&
+                                player.memberId == transfer.fromPlayer.memberId) ||
+                        (transfer.toPlayer != null &&
+                                player.memberId == transfer.toPlayer.memberId)
+            }
+            transfersAdapter.updateTransfers(visibleTransfers)
+            if (visibleTransfers.isNotEmpty()) {
+                textview_empty.visibility = View.GONE
+                recyclerview_transfers.visibility = View.VISIBLE
+            } else {
+                textview_empty.visibility = View.VISIBLE
+                recyclerview_transfers.visibility = View.GONE
+            }
+        })
     }
 
 }

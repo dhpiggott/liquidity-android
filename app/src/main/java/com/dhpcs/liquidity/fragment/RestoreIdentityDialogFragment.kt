@@ -9,21 +9,17 @@ import android.widget.ArrayAdapter
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDialogFragment
+import androidx.lifecycle.ViewModelProviders
 import com.dhpcs.liquidity.BoardGame
+import com.dhpcs.liquidity.LiquidityApplication
 import com.dhpcs.liquidity.R
-import com.dhpcs.liquidity.activity.BoardGameActivity
+import com.dhpcs.liquidity.activity.MainActivity
 import com.dhpcs.liquidity.view.Identicon
 import java.util.*
 
 class RestoreIdentityDialogFragment : AppCompatDialogFragment() {
 
     companion object {
-
-        interface Listener {
-
-            fun onIdentityRestorationRequested(identity: BoardGame.Companion.Identity)
-
-        }
 
         private class IdentitiesAdapter internal constructor(context: Context
         ) : ArrayAdapter<BoardGame.Companion.Identity>(context,
@@ -42,8 +38,8 @@ class RestoreIdentityDialogFragment : AppCompatDialogFragment() {
 
                 val zoneId = identity!!.zoneId
                 val memberId = identity.memberId
-                val name = BoardGameActivity.formatNullable(context, identity.name)
-                val balance = BoardGameActivity.formatCurrencyValue(
+                val name = LiquidityApplication.formatNullable(context, identity.name)
+                val balance = LiquidityApplication.formatCurrencyValue(
                         context,
                         identity.currency,
                         identity.balance
@@ -67,35 +63,36 @@ class RestoreIdentityDialogFragment : AppCompatDialogFragment() {
         ): RestoreIdentityDialogFragment {
             val restoreIdentityDialogFragment = RestoreIdentityDialogFragment()
             val args = Bundle()
-            args.putSerializable(ARG_IDENTITIES, identities)
+            args.putParcelableArrayList(ARG_IDENTITIES, identities)
             restoreIdentityDialogFragment.arguments = args
             return restoreIdentityDialogFragment
         }
 
     }
 
-    private var listener: Listener? = null
-
-    override fun onAttach(context: Context?) {
-        super.onAttach(context)
-        listener = context as Listener?
-    }
-
-    override fun onDetach() {
-        super.onDetach()
-        listener = null
-    }
-
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val identitiesAdapter = IdentitiesAdapter(requireContext())
-        val identities = arguments!!.getSerializable(ARG_IDENTITIES) as
-                ArrayList<BoardGame.Companion.Identity>
+        val identities = arguments!!
+                .getParcelableArrayList<BoardGame.Companion.Identity>(ARG_IDENTITIES)!!
         identitiesAdapter.addAll(identities)
-        identitiesAdapter.sort(BoardGameActivity.identityComparator(requireContext()))
+        identitiesAdapter.sort(LiquidityApplication.identityComparator(requireContext()))
+
+        val model = ViewModelProviders.of(requireActivity())
+                .get(MainActivity.Companion.BoardGameModel::class.java)
         return AlertDialog.Builder(requireContext())
                 .setTitle(R.string.choose_identity_to_restore)
                 .setAdapter(identitiesAdapter) { _, which ->
-                    listener?.onIdentityRestorationRequested(identitiesAdapter.getItem(which))
+                    model.execCommand(
+                            model.boardGame.restoreIdentity(identitiesAdapter.getItem(which)!!)
+                    ) {
+                        getString(
+                                R.string.restore_identity_error_format_string,
+                                LiquidityApplication.formatNullable(
+                                        requireContext(),
+                                        identitiesAdapter.getItem(which)!!.name
+                                )
+                        )
+                    }
                 }
                 .create()
     }
