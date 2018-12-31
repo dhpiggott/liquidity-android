@@ -44,10 +44,7 @@ class TransferIdentityFragment : Fragment() {
         val identity = TransferIdentityFragmentArgs.fromBundle(arguments).identity
 
         zxing_barcode_scanner.barcodeView.decoderFactory = DefaultDecoderFactory(
-                setOf(BarcodeFormat.QR_CODE),
-                null,
-                null,
-                false
+                setOf(BarcodeFormat.QR_CODE)
         )
         zxing_barcode_scanner.setStatusText(
                 getString(

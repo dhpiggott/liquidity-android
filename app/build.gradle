@@ -113,6 +113,6 @@ dependencies {
     implementation 'com.google.android.material:material:1.0.0'
     implementation 'com.sothree.slidinguppanel:library:3.4.0'
     implementation 'net.glxn.qrgen:android:2.0'
-    implementation 'com.journeyapps:zxing-android-embedded:3.5.0'
+    implementation 'com.journeyapps:zxing-android-embedded:3.6.0'
     implementation 'de.psdev.licensesdialog:licensesdialog:1.8.3'
 }

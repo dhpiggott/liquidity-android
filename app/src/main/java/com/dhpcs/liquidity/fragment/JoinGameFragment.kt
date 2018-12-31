@@ -39,10 +39,7 @@ class JoinGameFragment : Fragment() {
                 .get(MainActivity.Companion.BoardGameModel::class.java)
 
         zxing_barcode_scanner.barcodeView.decoderFactory = DefaultDecoderFactory(
-                setOf(BarcodeFormat.QR_CODE),
-                null,
-                null,
-                false
+                setOf(BarcodeFormat.QR_CODE)
         )
         zxing_barcode_scanner.setStatusText(getString(R.string.join_game_instruction))
         zxing_barcode_scanner.decodeSingle(object : BarcodeCallback {
