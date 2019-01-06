@@ -65,7 +65,7 @@ class LiquidityProvider : ContentProvider() {
 
     }
 
-    private var databaseHelper: LiquidityDatabaseHelper? = null
+    private lateinit var databaseHelper: LiquidityDatabaseHelper
 
     override fun onCreate(): Boolean {
         databaseHelper = LiquidityDatabaseHelper(context!!)
@@ -81,7 +81,7 @@ class LiquidityProvider : ContentProvider() {
     override fun insert(uri: Uri, values: ContentValues?): Uri? {
         val id = when (URI_MATCHER.match(uri)) {
             URI_TYPE_GAMES ->
-                databaseHelper!!.writableDatabase.insert(
+                databaseHelper.writableDatabase.insert(
                         LiquidityDatabaseHelper.GAMES_TABLE_NAME, null,
                         values
                 )
@@ -97,7 +97,7 @@ class LiquidityProvider : ContentProvider() {
     ): Int {
         val rowsAffected = when (URI_MATCHER.match(uri)) {
             URI_TYPE_GAMES ->
-                databaseHelper!!.writableDatabase.update(
+                databaseHelper.writableDatabase.update(
                         LiquidityDatabaseHelper.GAMES_TABLE_NAME,
                         values,
                         selection,
@@ -105,7 +105,7 @@ class LiquidityProvider : ContentProvider() {
                 )
             URI_TYPE_GAME_ID -> {
                 val where = "${LiquidityContract.Games.ID} = ${uri.lastPathSegment}"
-                databaseHelper!!.writableDatabase.update(
+                databaseHelper.writableDatabase.update(
                         LiquidityDatabaseHelper.GAMES_TABLE_NAME,
                         values,
                         if (TextUtils.isEmpty(selection)) {
@@ -140,7 +140,7 @@ class LiquidityProvider : ContentProvider() {
             else -> throw IllegalArgumentException("Unsupported URI: $uri")
         }
         val cursor = queryBuilder.query(
-                databaseHelper!!.writableDatabase,
+                databaseHelper.writableDatabase,
                 projection,
                 selection,
                 selectionArgs, null, null,
@@ -157,7 +157,7 @@ class LiquidityProvider : ContentProvider() {
     override fun delete(uri: Uri, selection: String?, selectionArgs: Array<String>?): Int {
         val rowsAffected = when (URI_MATCHER.match(uri)) {
             URI_TYPE_GAMES ->
-                databaseHelper!!.writableDatabase.delete(
+                databaseHelper.writableDatabase.delete(
                         LiquidityDatabaseHelper.GAMES_TABLE_NAME,
                         selection,
                         selectionArgs
@@ -165,7 +165,7 @@ class LiquidityProvider : ContentProvider() {
             // TODO: Switch to zoneId?
             URI_TYPE_GAME_ID -> {
                 val where = "${LiquidityContract.Games.ID} = ${uri.lastPathSegment}"
-                databaseHelper!!.writableDatabase.delete(
+                databaseHelper.writableDatabase.delete(
                         LiquidityDatabaseHelper.GAMES_TABLE_NAME,
                         if (TextUtils.isEmpty(selection)) {
                             where

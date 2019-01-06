@@ -86,8 +86,8 @@ class MainActivity : AppCompatActivity() {
         class BoardGameModel : ViewModel() {
 
             val boardGame = BoardGame(
-                    LiquidityApplication.serverConnection!!,
-                    LiquidityApplication.gameDatabase!!
+                    LiquidityApplication.serverConnection,
+                    LiquidityApplication.gameDatabase
             )
 
             private val selectedIdentityMutableLiveData =
@@ -156,7 +156,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private var model: MainActivity.Companion.BoardGameModel? = null
+    private lateinit var model: MainActivity.Companion.BoardGameModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -177,14 +177,14 @@ class MainActivity : AppCompatActivity() {
                     window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 }
                 R.id.board_game_fragment ->
-                    title = model!!.boardGame.gameName
+                    title = model.boardGame.gameName
                 R.id.games_fragment -> {
-                    model!!.boardGame.zoneId = null
-                    model!!.selectedIdentity(Optional.None)
-                    model!!.pendingCommands.forEach {
+                    model.boardGame.zoneId = null
+                    model.selectedIdentity(Optional.None)
+                    model.pendingCommands.forEach {
                         it.value.dispose()
                     }
-                    model!!.pendingCommands = emptyMap()
+                    model.pendingCommands = emptyMap()
                     window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 }
                 else -> {

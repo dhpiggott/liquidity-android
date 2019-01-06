@@ -150,17 +150,15 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
     private var to: BoardGame.Companion.Player? = null
     private var toList: ArrayList<BoardGame.Companion.Player>? = null
 
-    private var identitiesSpinnerAdapter: ArrayAdapter<BoardGame.Companion.Identity>? =
-            null
-    private var playersSpinnerAdapter: ArrayAdapter<BoardGame.Companion.Player>? = null
+    private lateinit var identitiesSpinnerAdapter: ArrayAdapter<BoardGame.Companion.Identity>
+    private lateinit var playersSpinnerAdapter: ArrayAdapter<BoardGame.Companion.Player>
 
-    private var textViewValueError: TextView? = null
-    private var textViewFromError: TextView? = null
+    private lateinit var textViewValueError: TextView
+    private lateinit var textViewFromError: TextView
+
     private var buttonPositive: Button? = null
 
     private var value: BigDecimal? = null
-
-    private var identities: Map<String, BoardGame.Companion.Identity>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -184,9 +182,9 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
         this.toList = toList
 
         identitiesSpinnerAdapter = IdentitiesAdapter(requireContext(), identities)
-        identitiesSpinnerAdapter!!.sort(LiquidityApplication.identityComparator(requireContext()))
+        identitiesSpinnerAdapter.sort(LiquidityApplication.identityComparator(requireContext()))
         playersSpinnerAdapter = PlayersAdapter(requireContext(), players)
-        playersSpinnerAdapter!!.sort(LiquidityApplication.playerComparator(requireContext()))
+        playersSpinnerAdapter.sort(LiquidityApplication.playerComparator(requireContext()))
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -317,7 +315,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                                         view: View?,
                                         position: Int,
                                         id: Long) {
-                from = identitiesSpinnerAdapter!!.getItem(position)
+                from = identitiesSpinnerAdapter.getItem(position)
                 if (buttonPositive != null) validateInput()
             }
 
@@ -331,7 +329,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                                         view: View?,
                                         position: Int,
                                         id: Long) {
-                to = playersSpinnerAdapter!!.getItem(position)
+                to = playersSpinnerAdapter.getItem(position)
                 if (buttonPositive != null) validateInput()
             }
 
@@ -341,10 +339,10 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
 
         textViewCurrency.text = LiquidityApplication.formatCurrency(requireContext(), currency!!)
 
-        spinnerFrom.setSelection(identitiesSpinnerAdapter!!.getPosition(from))
+        spinnerFrom.setSelection(identitiesSpinnerAdapter.getPosition(from))
 
         if (to != null) {
-            spinnerTo.setSelection(playersSpinnerAdapter!!.getPosition(to))
+            spinnerTo.setSelection(playersSpinnerAdapter.getPosition(to))
         } else {
             spinnerTo.visibility = View.GONE
             val players = arguments!!
@@ -394,9 +392,8 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                 .get(MainActivity.Companion.BoardGameModel::class.java)
 
         model.boardGame.liveData { it.identitiesObservable }.observe(this, Observer {
-            this.identities = it
-            identitiesSpinnerAdapter!!.clear()
-            identitiesSpinnerAdapter!!.addAll(it.values)
+            identitiesSpinnerAdapter.clear()
+            identitiesSpinnerAdapter.addAll(it.values)
             validateInput()
         })
     }
@@ -407,13 +404,13 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
     }
 
     private fun validateInput() {
-        val currentBalance = if (identities == null) {
-            from!!.balance
-        } else {
-            identities!![from!!.memberId]!!.balance
-        }
+
+        val model = ViewModelProviders.of(requireActivity())
+                .get(MainActivity.Companion.BoardGameModel::class.java)
+
+        val currentBalance = model.boardGame.identities[from!!.memberId]!!.balance
         val isValueValid = if (value == null) {
-            textViewValueError!!.text = null
+            textViewValueError.text = null
             false
         } else {
             val requiredBalance = if (from!!.isBanker) {
@@ -422,7 +419,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                 value!!.multiply(BigDecimal(if (to != null) 1 else toList!!.size))
             }
             if (requiredBalance != null && currentBalance < requiredBalance) {
-                textViewValueError!!.text = getString(
+                textViewValueError.text = getString(
                         R.string.transfer_value_invalid_format_string,
                         LiquidityApplication.formatCurrencyValue(
                                 requireContext(),
@@ -437,7 +434,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                 )
                 false
             } else {
-                textViewValueError!!.text = null
+                textViewValueError.text = null
                 true
             }
         }
@@ -447,13 +444,13 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
             toList!!.map { it.accountId }.toSet()
         }
         val isFromValid = if (toAccountIds.contains(from!!.accountId)) {
-            textViewFromError!!.text = getString(
+            textViewFromError.text = getString(
                     R.string.transfer_from_invalid_format_string,
                     LiquidityApplication.formatNullable(requireContext(), from!!.name)
             )
             false
         } else {
-            textViewFromError!!.text = null
+            textViewFromError.text = null
             true
         }
         buttonPositive!!.isEnabled = isValueValid && isFromValid

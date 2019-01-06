@@ -88,7 +88,7 @@ class PlayersFragment : Fragment() {
                 itemView.setOnClickListener(this)
             }
 
-            private var player: BoardGame.Companion.Player? = null
+            private lateinit var player: BoardGame.Companion.Player
 
             fun bindPlayer(player: BoardGame.Companion.Player) {
                 this.player = player

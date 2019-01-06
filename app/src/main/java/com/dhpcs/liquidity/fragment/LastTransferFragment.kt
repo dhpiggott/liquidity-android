@@ -49,7 +49,7 @@ class LastTransferFragment : Fragment() {
                             .getDefaultSharedPreferences(requireContext())
                             .getBoolean("play_transfer_receipt_sounds", true)
             if (it.toPlayer != null && playTransferReceiptSounds &&
-                    it.toPlayer.ownerPublicKey == LiquidityApplication.serverConnection!!.clientKey
+                    it.toPlayer.ownerPublicKey == LiquidityApplication.serverConnection.clientKey
             ) {
                 if (transferReceiptMediaPlayer.isPlaying) {
                     transferReceiptMediaPlayer.seekTo(0)

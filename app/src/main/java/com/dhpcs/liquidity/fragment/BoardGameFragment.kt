@@ -19,7 +19,7 @@ import java.util.*
 
 class BoardGameFragment : Fragment() {
 
-    private var model: MainActivity.Companion.BoardGameModel? = null
+    private lateinit var model: MainActivity.Companion.BoardGameModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,11 +50,11 @@ class BoardGameFragment : Fragment() {
                             SlidingUpPanelLayout.PanelState.EXPANDED ->
                                 requireActivity().setTitle(R.string.transfers)
                             SlidingUpPanelLayout.PanelState.COLLAPSED ->
-                                if (model!!.boardGame.joinState ==
+                                if (model.boardGame.joinState ==
                                         BoardGame.Companion.JoinState.JOINED) {
                                     requireActivity().title = LiquidityApplication.formatNullable(
                                             requireContext(),
-                                            model!!.boardGame.gameName
+                                            model.boardGame.gameName
                                     )
                                 }
                             SlidingUpPanelLayout.PanelState.ANCHORED,
@@ -68,7 +68,7 @@ class BoardGameFragment : Fragment() {
                 }
         )
 
-        model!!.boardGame.liveData { it.joinStateObservable() }.observe(this, Observer {
+        model.boardGame.liveData { it.joinStateObservable() }.observe(this, Observer {
             when (it!!) {
                 BoardGame.Companion.JoinState.QUIT -> {
 
@@ -129,15 +129,15 @@ class BoardGameFragment : Fragment() {
             }
             requireActivity().invalidateOptionsMenu()
         })
-        model!!.boardGame.liveData { it.gameNameObservable }.observe(this, Observer {
+        model.boardGame.liveData { it.gameNameObservable }.observe(this, Observer {
             if (findNavController().currentDestination!!.id == R.id.board_game_fragment) {
                 requireActivity().title = it
             }
         })
-        model!!.selectedIdentityLiveData.observe(this, Observer {
+        model.selectedIdentityLiveData.observe(this, Observer {
             requireActivity().invalidateOptionsMenu()
         })
-        model!!.createGameErrorLiveData.observe(this, Observer {
+        model.createGameErrorLiveData.observe(this, Observer {
             if (it != MainActivity.Companion.Optional.None) {
                 Toast.makeText(
                         requireContext(),
@@ -145,17 +145,17 @@ class BoardGameFragment : Fragment() {
                         Toast.LENGTH_LONG
                 ).show()
                 findNavController().popBackStack()
-                model!!.createGameError(MainActivity.Companion.Optional.None)
+                model.createGameError(MainActivity.Companion.Optional.None)
             }
         })
-        model!!.commandErrorsLiveData.observe(this, Observer {
+        model.commandErrorsLiveData.observe(this, Observer {
             if (it != MainActivity.Companion.Optional.None) {
                 Toast.makeText(
                         requireContext(),
                         (it as? MainActivity.Companion.Optional.Some)?.value,
                         Toast.LENGTH_LONG
                 ).show()
-                model!!.commandError(MainActivity.Companion.Optional.None)
+                model.commandError(MainActivity.Companion.Optional.None)
             }
         })
     }
@@ -165,8 +165,8 @@ class BoardGameFragment : Fragment() {
     }
 
     override fun onPrepareOptionsMenu(menu: Menu) {
-        val isJoined = model!!.boardGame.joinState == BoardGame.Companion.JoinState.JOINED
-        val selectedIdentity = model!!.selectedIdentity
+        val isJoined = model.boardGame.joinState == BoardGame.Companion.JoinState.JOINED
+        val selectedIdentity = model.selectedIdentity
         val isPanelCollapsed = slidinguppanellayout.panelState == PanelState.COLLAPSED
         menu.findItem(R.id.add_players_fragment).isVisible =
                 isJoined
@@ -186,7 +186,7 @@ class BoardGameFragment : Fragment() {
                 isPanelCollapsed
         menu.findItem(R.id.action_restore_identity).isVisible =
                 isJoined &&
-                isPanelCollapsed && model!!.boardGame.hiddenIdentities.isNotEmpty()
+                isPanelCollapsed && model.boardGame.hiddenIdentities.isNotEmpty()
         menu.findItem(R.id.action_delete_identity).isVisible =
                 isJoined &&
                 selectedIdentity is MainActivity.Companion.Optional.Some &&
@@ -203,15 +203,15 @@ class BoardGameFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_group_transfer -> {
-                val identity = model!!.selectedIdentity
+                val identity = model.selectedIdentity
                 when (identity) {
                     is MainActivity.Companion.Optional.None -> {
                     }
                     is MainActivity.Companion.Optional.Some -> {
                         TransferToPlayerDialogFragment.newInstance(
-                                ArrayList(model!!.boardGame.identities.values),
-                                ArrayList(model!!.boardGame.players.values),
-                                model!!.boardGame.currency,
+                                ArrayList(model.boardGame.identities.values),
+                                ArrayList(model.boardGame.players.values),
+                                model.boardGame.currency,
                                 identity.value,
                                 null
                         ).show(childFragmentManager, TransferToPlayerDialogFragment.TAG)
@@ -220,14 +220,14 @@ class BoardGameFragment : Fragment() {
                 true
             }
             R.id.action_change_game_name -> {
-                EnterGameNameDialogFragment.newInstance(model!!.boardGame.gameName).show(
+                EnterGameNameDialogFragment.newInstance(model.boardGame.gameName).show(
                         childFragmentManager,
                         EnterGameNameDialogFragment.TAG
                 )
                 true
             }
             R.id.action_change_identity_name -> {
-                val identity = model!!.selectedIdentity
+                val identity = model.selectedIdentity
                 when (identity) {
                     is MainActivity.Companion.Optional.None -> {
                     }
@@ -249,12 +249,12 @@ class BoardGameFragment : Fragment() {
             }
             R.id.action_restore_identity -> {
                 RestoreIdentityDialogFragment.newInstance(
-                        ArrayList(model!!.boardGame.hiddenIdentities.values)
+                        ArrayList(model.boardGame.hiddenIdentities.values)
                 ).show(childFragmentManager, RestoreIdentityDialogFragment.TAG)
                 true
             }
             R.id.action_delete_identity -> {
-                val identity = model!!.selectedIdentity
+                val identity = model.selectedIdentity
                 when (identity) {
                     is MainActivity.Companion.Optional.None -> {
                     }
@@ -268,7 +268,7 @@ class BoardGameFragment : Fragment() {
                 true
             }
             R.id.action_transfer_identity -> {
-                val identity = model!!.selectedIdentity
+                val identity = model.selectedIdentity
                 when (identity) {
                     is MainActivity.Companion.Optional.None -> {
                     }

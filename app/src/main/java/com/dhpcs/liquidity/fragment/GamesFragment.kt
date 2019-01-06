@@ -36,7 +36,7 @@ class GamesFragment : Fragment(),
         LoaderManager.getInstance(this).restartLoader(GAMES_LOADER, null, this)
     }
 
-    private var gamesAdapter: SimpleCursorAdapter? = null
+    private lateinit var gamesAdapter: SimpleCursorAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,7 +56,7 @@ class GamesFragment : Fragment(),
                 0
         )
 
-        gamesAdapter!!.setViewBinder { view, cursor, columnIndex ->
+        gamesAdapter.setViewBinder { view, cursor, columnIndex ->
             val bound = when (columnIndex) {
                 cursor.getColumnIndexOrThrow(LiquidityContract.Games.CREATED) -> {
                     val createdTimeMillis = cursor.getLong(columnIndex)
@@ -141,6 +141,7 @@ class GamesFragment : Fragment(),
 
     override fun onItemClick(parent: AdapterView<*>, view: View, position: Int, id: Long) {
         val cursor = parent.getItemAtPosition(position) as Cursor
+
         val model = ViewModelProviders.of(requireActivity())
                 .get(MainActivity.Companion.BoardGameModel::class.java)
         model.boardGame.zoneId = cursor.getString(cursor.getColumnIndexOrThrow(
@@ -150,12 +151,12 @@ class GamesFragment : Fragment(),
     }
 
     override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor) {
-        gamesAdapter!!.changeCursor(data)
+        gamesAdapter.changeCursor(data)
         refreshHandler.postDelayed(refreshRunnable, REFRESH_INTERVAL)
     }
 
     override fun onLoaderReset(loader: Loader<Cursor>) {
-        gamesAdapter!!.changeCursor(null)
+        gamesAdapter.changeCursor(null)
     }
 
     override fun onDestroy() {

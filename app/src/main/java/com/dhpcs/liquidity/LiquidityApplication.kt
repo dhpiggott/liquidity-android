@@ -18,9 +18,9 @@ class LiquidityApplication : Application() {
 
     companion object {
 
-        var serverConnection: ServerConnection? = null
+        lateinit var serverConnection: ServerConnection
             private set
-        var gameDatabase: BoardGame.Companion.GameDatabase? = null
+        lateinit var gameDatabase: BoardGame.Companion.GameDatabase
             private set
 
         fun getRelativeTimeSpanString(context: Context,
