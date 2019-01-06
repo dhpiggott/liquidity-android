@@ -1,19 +1,21 @@
 package com.dhpcs.liquidity.activity
 
+import android.app.Application
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.Navigation
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
 import com.dhpcs.liquidity.BoardGame
-import com.dhpcs.liquidity.LiquidityApplication
+import com.dhpcs.liquidity.GameDatabase
 import com.dhpcs.liquidity.R
+import com.dhpcs.liquidity.ServerConnection
 import io.reactivex.BackpressureStrategy
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -83,11 +85,13 @@ class MainActivity : AppCompatActivity() {
 
         }
 
-        class BoardGameModel : ViewModel() {
+        class BoardGameModel(application: Application) : AndroidViewModel(application) {
+
+            val serverConnection = ServerConnection(application.filesDir)
 
             val boardGame = BoardGame(
-                    LiquidityApplication.serverConnection,
-                    LiquidityApplication.gameDatabase
+                    serverConnection,
+                    gameDatabase = GameDatabase(application.contentResolver)
             )
 
             private val selectedIdentityMutableLiveData =

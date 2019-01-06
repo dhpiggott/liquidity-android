@@ -28,7 +28,7 @@ class ReceiveIdentityFragment : Fragment() {
         val model = ViewModelProviders.of(requireActivity())
                 .get(MainActivity.Companion.BoardGameModel::class.java)
 
-        val publicKey = LiquidityApplication.serverConnection.clientKey
+        val publicKey = model.serverConnection.clientKey
         imageview_qr_code.addOnLayoutChangeListener { _, left, top, right, bottom, _, _, _, _ ->
             imageview_qr_code.setImageBitmap(
                     (QRCode.from(okio.ByteString.of(*publicKey.toByteArray()).base64())

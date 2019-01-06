@@ -27,14 +27,6 @@ class BoardGame constructor(
 
     companion object {
 
-        interface GameDatabase {
-
-            fun insertGame(zoneId: String, created: Long, expires: Long, name: String?): Long
-
-            fun checkAndUpdateGame(zoneId: String, name: String?): Long?
-
-        }
-
         enum class JoinState {
             QUIT,
             FAILED,
