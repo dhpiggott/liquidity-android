@@ -19,10 +19,8 @@
         android:id="@+id/recyclerview_transfers"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingEnd="16dp"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp"
         android:paddingStart="16dp"
+        android:paddingEnd="16dp"
         android:scrollbars="vertical"
         android:visibility="gone" />
 

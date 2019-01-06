@@ -5,10 +5,8 @@
     android:id="@+id/textinputlayout_identity_name"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingEnd="24dp"
-    android:paddingLeft="24dp"
-    android:paddingRight="24dp"
     android:paddingStart="24dp"
+    android:paddingEnd="24dp"
     app:counterEnabled="true"
     tools:context="com.dhpcs.liquidity.fragment.CreateIdentityDialogFragment">
 
