@@ -15,7 +15,6 @@ import com.dhpcs.liquidity.LiquidityApplication
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.MainActivity
 import com.dhpcs.liquidity.view.Identicon
-import java.util.*
 
 class RestoreIdentityDialogFragment : AppCompatDialogFragment() {
 
@@ -56,29 +55,19 @@ class RestoreIdentityDialogFragment : AppCompatDialogFragment() {
 
         const val TAG = "restore_identity_dialog_fragment"
 
-        private const val ARG_IDENTITIES = "identities"
-
-        fun newInstance(
-                identities: ArrayList<BoardGame.Companion.Identity>
-        ): RestoreIdentityDialogFragment {
-            val restoreIdentityDialogFragment = RestoreIdentityDialogFragment()
-            val args = Bundle()
-            args.putParcelableArrayList(ARG_IDENTITIES, identities)
-            restoreIdentityDialogFragment.arguments = args
-            return restoreIdentityDialogFragment
-        }
+        fun newInstance(): RestoreIdentityDialogFragment = RestoreIdentityDialogFragment()
 
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val identitiesAdapter = IdentitiesAdapter(requireContext())
-        val identities = arguments!!
-                .getParcelableArrayList<BoardGame.Companion.Identity>(ARG_IDENTITIES)!!
-        identitiesAdapter.addAll(identities)
-        identitiesAdapter.sort(LiquidityApplication.identityComparator(requireContext()))
 
         val model = ViewModelProviders.of(requireActivity())
                 .get(MainActivity.Companion.BoardGameModel::class.java)
+        val identities = model.boardGame.hiddenIdentities
+        val identitiesAdapter = IdentitiesAdapter(requireContext())
+        identitiesAdapter.addAll(identities.values)
+        identitiesAdapter.sort(LiquidityApplication.identityComparator(requireContext()))
+
         return AlertDialog.Builder(requireContext())
                 .setTitle(R.string.choose_identity_to_restore)
                 .setAdapter(identitiesAdapter) { _, which ->

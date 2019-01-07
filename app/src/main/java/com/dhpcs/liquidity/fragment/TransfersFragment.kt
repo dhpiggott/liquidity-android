@@ -22,7 +22,7 @@ class TransfersFragment : Fragment() {
 
     companion object {
 
-        private const val ARG_PLAYER = "player"
+        private const val ARG_PLAYER_ID = "player_id"
 
         private val timeFormat = DateFormat.getTimeInstance()
         private val dateFormat = DateFormat.getDateInstance()
@@ -30,7 +30,7 @@ class TransfersFragment : Fragment() {
         fun newInstance(player: BoardGame.Companion.Player?): TransfersFragment {
             val transfersFragment = TransfersFragment()
             val args = Bundle()
-            args.putParcelable(ARG_PLAYER, player)
+            args.putString(ARG_PLAYER_ID, player?.memberId)
             transfersFragment.arguments = args
             return transfersFragment
         }
@@ -169,7 +169,14 @@ class TransfersFragment : Fragment() {
         val model = ViewModelProviders.of(requireActivity())
                 .get(MainActivity.Companion.BoardGameModel::class.java)
 
-        val player = arguments!!.getParcelable<BoardGame.Companion.Player>(ARG_PLAYER)
+        val playerId = arguments!!.getString(ARG_PLAYER_ID)
+
+        val player = if (playerId != null) {
+            model.boardGame.players[playerId]
+        } else {
+            null
+        }
+
         val transfersAdapter = TransfersAdapter(player)
 
         recyclerview_transfers.setHasFixedSize(true)

@@ -5,9 +5,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
 import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.LiquidityApplication
 import com.dhpcs.liquidity.R
+import com.dhpcs.liquidity.activity.MainActivity
+import com.dhpcs.liquidity.activity.MainActivity.Companion.liveData
 import com.dhpcs.liquidity.view.Identicon
 import kotlinx.android.synthetic.main.fragment_identity.*
 
@@ -15,12 +19,12 @@ class IdentityFragment : Fragment() {
 
     companion object {
 
-        private const val ARG_IDENTITY = "identity"
+        private const val ARG_IDENTITY_ID = "identity_id"
 
         fun newInstance(identity: BoardGame.Companion.Identity): IdentityFragment {
             val identityFragment = IdentityFragment()
             val args = Bundle()
-            args.putParcelable(ARG_IDENTITY, identity)
+            args.putString(ARG_IDENTITY_ID, identity.memberId)
             identityFragment.arguments = args
             return identityFragment
         }
@@ -34,20 +38,30 @@ class IdentityFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val identity = arguments!!.getParcelable<BoardGame.Companion.Identity>(ARG_IDENTITY)!!
 
-        val zoneId = identity.zoneId
-        val memberId = identity.memberId
-        val name = LiquidityApplication.formatNullable(requireContext(), identity.name)
-        val balance = LiquidityApplication.formatCurrencyValue(
-                requireContext(),
-                identity.currency,
-                identity.balance
-        )
+        val model = ViewModelProviders.of(requireActivity())
+                .get(MainActivity.Companion.BoardGameModel::class.java)
+        val identityId = arguments!!.getString(ARG_IDENTITY_ID)!!
 
-        view.findViewById<Identicon>(R.id.identicon_id).show(zoneId, memberId)
-        textview_name.text = name
-        textview_balance.text = balance
+        model.boardGame.liveData {
+            it.identitiesObservable.filter { identities ->
+                identities.values.any { identity -> identity.memberId == identityId }
+            }
+        }.observe(this, Observer {
+            val identity = it[identityId]!!
+            val zoneId = identity.zoneId
+            val memberId = identity.memberId
+            val name = LiquidityApplication.formatNullable(requireContext(), identity.name)
+            val balance = LiquidityApplication.formatCurrencyValue(
+                    requireContext(),
+                    identity.currency,
+                    identity.balance
+            )
+
+            view.findViewById<Identicon>(R.id.identicon_id).show(zoneId, memberId)
+            textview_name.text = name
+            textview_balance.text = balance
+        })
     }
 
 }

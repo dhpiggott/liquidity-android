@@ -16,13 +16,13 @@ class ConfirmIdentityDeletionDialogFragment : AppCompatDialogFragment() {
 
         const val TAG = "confirm_identity_deletion_dialog_fragment"
 
-        private const val ARG_IDENTITY = "identity"
+        private const val ARG_IDENTITY_ID = "identity_id"
 
         fun newInstance(identity: BoardGame.Companion.Identity
         ): ConfirmIdentityDeletionDialogFragment {
             val confirmIdentityDeletionDialogFragment = ConfirmIdentityDeletionDialogFragment()
             val args = Bundle()
-            args.putParcelable(ARG_IDENTITY, identity)
+            args.putString(ARG_IDENTITY_ID, identity.memberId)
             confirmIdentityDeletionDialogFragment.arguments = args
             return confirmIdentityDeletionDialogFragment
         }
@@ -30,10 +30,10 @@ class ConfirmIdentityDeletionDialogFragment : AppCompatDialogFragment() {
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val identity = arguments!!.getParcelable<BoardGame.Companion.Identity>(ARG_IDENTITY)!!
 
         val model = ViewModelProviders.of(requireActivity())
                 .get(MainActivity.Companion.BoardGameModel::class.java)
+        val identity = model.boardGame.identities[arguments!!.getString(ARG_IDENTITY_ID)!!]!!
         return AlertDialog.Builder(requireContext())
                 .setTitle(
                         getString(

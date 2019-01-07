@@ -1,6 +1,5 @@
 package com.dhpcs.liquidity
 
-import android.os.Parcelable
 import com.dhpcs.liquidity.BoardGame.Companion.JoinState.*
 import com.dhpcs.liquidity.proto.model.Model
 import com.dhpcs.liquidity.proto.ws.protocol.WsProtocol
@@ -14,7 +13,6 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
-import kotlinx.android.parcel.Parcelize
 import java.math.BigDecimal
 import java.util.*
 import kotlin.collections.component1
@@ -36,7 +34,6 @@ class BoardGame constructor(
             JOINED
         }
 
-        @Parcelize
         data class Player(
                 val zoneId: String,
                 val memberId: String,
@@ -48,9 +45,8 @@ class BoardGame constructor(
                 val currency: String?,
                 val isBanker: Boolean,
                 val isConnected: Boolean
-        ) : Parcelable
+        )
 
-        @Parcelize
         data class Identity(
                 val zoneId: String,
                 val memberId: String,
@@ -61,7 +57,7 @@ class BoardGame constructor(
                 val balance: BigDecimal,
                 val currency: String?,
                 val isBanker: Boolean
-        ) : Parcelable
+        )
 
         data class Transfer(
                 val fromAccountId: String,

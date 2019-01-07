@@ -15,19 +15,13 @@ import com.dhpcs.liquidity.activity.MainActivity.Companion.liveData
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState
 import kotlinx.android.synthetic.main.fragment_board_game.*
-import java.util.*
 
 class BoardGameFragment : Fragment() {
-
-    private lateinit var model: MainActivity.Companion.BoardGameModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setHasOptionsMenu(true)
-
-        model = ViewModelProviders.of(requireActivity())
-                .get(MainActivity.Companion.BoardGameModel::class.java)
     }
 
     override fun onCreateView(inflater: LayoutInflater,
@@ -37,6 +31,10 @@ class BoardGameFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+
+        val model = ViewModelProviders.of(requireActivity())
+                .get(MainActivity.Companion.BoardGameModel::class.java)
+
         slidinguppanellayout!!.addPanelSlideListener(
                 object : SlidingUpPanelLayout.PanelSlideListener {
 
@@ -165,6 +163,10 @@ class BoardGameFragment : Fragment() {
     }
 
     override fun onPrepareOptionsMenu(menu: Menu) {
+
+        val model = ViewModelProviders.of(requireActivity())
+                .get(MainActivity.Companion.BoardGameModel::class.java)
+
         val isJoined = model.boardGame.joinState == BoardGame.Companion.JoinState.JOINED
         val selectedIdentity = model.selectedIdentity
         val isPanelCollapsed = slidinguppanellayout.panelState == PanelState.COLLAPSED
@@ -201,6 +203,10 @@ class BoardGameFragment : Fragment() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+
+        val model = ViewModelProviders.of(requireActivity())
+                .get(MainActivity.Companion.BoardGameModel::class.java)
+
         return when (item.itemId) {
             R.id.action_group_transfer -> {
                 val identity = model.selectedIdentity
@@ -209,9 +215,6 @@ class BoardGameFragment : Fragment() {
                     }
                     is MainActivity.Companion.Optional.Some -> {
                         TransferToPlayerDialogFragment.newInstance(
-                                ArrayList(model.boardGame.identities.values),
-                                ArrayList(model.boardGame.players.values),
-                                model.boardGame.currency,
                                 identity.value,
                                 null
                         ).show(childFragmentManager, TransferToPlayerDialogFragment.TAG)
@@ -248,9 +251,10 @@ class BoardGameFragment : Fragment() {
                 true
             }
             R.id.action_restore_identity -> {
-                RestoreIdentityDialogFragment.newInstance(
-                        ArrayList(model.boardGame.hiddenIdentities.values)
-                ).show(childFragmentManager, RestoreIdentityDialogFragment.TAG)
+                RestoreIdentityDialogFragment.newInstance().show(
+                        childFragmentManager,
+                        RestoreIdentityDialogFragment.TAG
+                )
                 true
             }
             R.id.action_delete_identity -> {

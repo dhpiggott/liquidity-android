@@ -30,27 +30,16 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
 
         const val TAG = "transfer_to_player_dialog_fragment"
 
-        private const val ARG_IDENTITIES = "identities"
-        private const val ARG_PLAYERS = "players"
-        private const val ARG_CURRENCY = "currency"
-        private const val ARG_FROM = "from"
-        private const val ARG_TO = "to"
-
-        private const val EXTRA_TO_LIST = "to_list"
+        private const val ARG_FROM_IDENTITY_ID = "from_identity_id"
+        private const val ARG_TO_PLAYER_ID = "to_player_id"
 
         fun newInstance(
-                identities: ArrayList<BoardGame.Companion.Identity>,
-                players: ArrayList<BoardGame.Companion.Player>,
-                currency: String?,
                 from: BoardGame.Companion.Identity,
                 to: BoardGame.Companion.Player?): TransferToPlayerDialogFragment {
             val transferToPlayerDialogFragment = TransferToPlayerDialogFragment()
             val args = Bundle()
-            args.putParcelableArrayList(ARG_IDENTITIES, identities)
-            args.putParcelableArrayList(ARG_PLAYERS, players)
-            args.putString(ARG_CURRENCY, currency)
-            args.putParcelable(ARG_FROM, from)
-            args.putParcelable(ARG_TO, to)
+            args.putString(ARG_FROM_IDENTITY_ID, from.memberId)
+            args.putString(ARG_TO_PLAYER_ID, to?.memberId)
             transferToPlayerDialogFragment.arguments = args
             return transferToPlayerDialogFragment
         }
@@ -146,6 +135,9 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
     }
 
     private var currency: String? = null
+    private lateinit var identities: List<BoardGame.Companion.Identity>
+    private lateinit var players: List<BoardGame.Companion.Player>
+
     private var from: BoardGame.Companion.Identity? = null
     private var to: BoardGame.Companion.Player? = null
     private var toList: ArrayList<BoardGame.Companion.Player>? = null
@@ -163,23 +155,23 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val identities = arguments!!
-                .getParcelableArrayList<BoardGame.Companion.Identity>(ARG_IDENTITIES)!!
-        val players = arguments!!
-                .getParcelableArrayList<BoardGame.Companion.Player>(ARG_PLAYERS)!!
-        val currency = arguments!!.getString(ARG_CURRENCY)
-        this.currency = currency
-        from = arguments!!.getParcelable(ARG_FROM)
-        to = arguments!!.getParcelable(ARG_TO)
-        val toList = when {
-            to != null ->
-                null
-            savedInstanceState != null ->
-                savedInstanceState.getParcelableArrayList<BoardGame.Companion.Player>(EXTRA_TO_LIST)
-            else ->
-                arrayListOf<BoardGame.Companion.Player>()
+        val model = ViewModelProviders.of(requireActivity())
+                .get(MainActivity.Companion.BoardGameModel::class.java)
+
+        currency = model.boardGame.currency
+        identities = model.boardGame.identities.values.toList()
+        players = model.boardGame.players.values.toList()
+
+        val fromIdentityId = arguments!!.getString(ARG_FROM_IDENTITY_ID)!!
+        val toPlayerId = arguments!!.getString(ARG_TO_PLAYER_ID)
+
+        from = model.boardGame.identities[fromIdentityId]
+
+        if (toPlayerId != null) {
+            to = model.boardGame.players[toPlayerId]
+        } else {
+            toList = arrayListOf()
         }
-        this.toList = toList
 
         identitiesSpinnerAdapter = IdentitiesAdapter(requireContext(), identities)
         identitiesSpinnerAdapter.sort(LiquidityApplication.identityComparator(requireContext()))
@@ -345,8 +337,6 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
             spinnerTo.setSelection(playersSpinnerAdapter.getPosition(to))
         } else {
             spinnerTo.visibility = View.GONE
-            val players = arguments!!
-                    .getParcelableArrayList<BoardGame.Companion.Player>(ARG_PLAYERS)!!
             for (player in players) {
                 val checkedTextViewPlayer = requireActivity().layoutInflater.inflate(
                         android.R.layout.simple_list_item_multiple_choice,
@@ -396,11 +386,6 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
             identitiesSpinnerAdapter.addAll(it.values)
             validateInput()
         })
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putParcelableArrayList(EXTRA_TO_LIST, toList)
     }
 
     private fun validateInput() {

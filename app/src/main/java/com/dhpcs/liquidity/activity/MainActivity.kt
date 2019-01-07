@@ -160,13 +160,11 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private lateinit var model: MainActivity.Companion.BoardGameModel
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        model = ViewModelProviders.of(this)
+        val model = ViewModelProviders.of(this)
                 .get(MainActivity.Companion.BoardGameModel::class.java)
 
         setSupportActionBar(toolbar)

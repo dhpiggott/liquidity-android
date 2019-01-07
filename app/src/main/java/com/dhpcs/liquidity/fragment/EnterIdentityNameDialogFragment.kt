@@ -24,12 +24,12 @@ class EnterIdentityNameDialogFragment : AppCompatDialogFragment() {
 
         const val TAG = "enter_identity_name_dialog_fragment"
 
-        private const val ARG_IDENTITY = "identity"
+        private const val ARG_IDENTITY_ID = "identity_id"
 
         fun newInstance(identity: BoardGame.Companion.Identity): EnterIdentityNameDialogFragment {
             val enterIdentityNameDialogFragment = EnterIdentityNameDialogFragment()
             val args = Bundle()
-            args.putParcelable(ARG_IDENTITY, identity)
+            args.putString(ARG_IDENTITY_ID, identity.memberId)
             enterIdentityNameDialogFragment.arguments = args
             return enterIdentityNameDialogFragment
         }
@@ -43,8 +43,6 @@ class EnterIdentityNameDialogFragment : AppCompatDialogFragment() {
                 R.layout.fragment_enter_identity_name_dialog, null
         )
 
-        val identity = arguments!!.getParcelable<BoardGame.Companion.Identity>(ARG_IDENTITY)!!
-
         val textInputLayoutIdentityName = view
                 .findViewById<TextInputLayout>(R.id.textinputlayout_identity_name)
         val textInputEditTextIdentityName = view
@@ -52,6 +50,7 @@ class EnterIdentityNameDialogFragment : AppCompatDialogFragment() {
 
         val model = ViewModelProviders.of(requireActivity())
                 .get(MainActivity.Companion.BoardGameModel::class.java)
+        val identity = model.boardGame.identities[arguments!!.getString(ARG_IDENTITY_ID)!!]!!
         val alertDialog = AlertDialog.Builder(requireContext())
                 .setTitle(R.string.enter_identity_name)
                 .setView(view)

@@ -22,7 +22,6 @@ import com.dhpcs.liquidity.activity.MainActivity
 import com.dhpcs.liquidity.activity.MainActivity.Companion.liveData
 import com.dhpcs.liquidity.view.Identicon
 import kotlinx.android.synthetic.main.fragment_players.*
-import java.util.*
 
 class PlayersFragment : Fragment() {
 
@@ -120,9 +119,6 @@ class PlayersFragment : Fragment() {
                     }
                     is MainActivity.Companion.Optional.Some -> {
                         TransferToPlayerDialogFragment.newInstance(
-                                ArrayList(model.boardGame.identities.values),
-                                ArrayList(model.boardGame.players.values),
-                                model.boardGame.currency,
                                 identity.value,
                                 player
                         ).show(fragmentManager, TransferToPlayerDialogFragment.TAG)
