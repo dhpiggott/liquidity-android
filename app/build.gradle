@@ -28,8 +28,8 @@ android {
         applicationId "com.dhpcs.liquidity"
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 24
-        versionName "3.0.9"
+        versionCode 25
+        versionName "3.0.10"
         resConfigs "en"
     }
     signingConfigs {
