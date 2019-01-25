@@ -23,10 +23,9 @@ class PlayersTransfersFragment : Fragment() {
 
         private class PlayersTransfersFragmentStatePagerAdapter
         internal constructor(fragmentManager: FragmentManager,
+                             val players: List<BoardGame.Companion.Player>,
                              private val context: Context
         ) : FragmentStatePagerAdapter(fragmentManager) {
-
-            internal val players = arrayListOf<BoardGame.Companion.Player>()
 
             override fun getCount(): Int = players.size + 1
 
@@ -37,8 +36,6 @@ class PlayersTransfersFragment : Fragment() {
                     LiquidityApplication.formatNullable(context, players[position - 1].name)
                 }
             }
-
-            override fun getItemPosition(item: Any): Int = POSITION_NONE
 
             override fun getItem(position: Int): Fragment {
                 return if (position == 0) {
@@ -63,20 +60,18 @@ class PlayersTransfersFragment : Fragment() {
         val model = ViewModelProviders.of(requireActivity())
                 .get(MainActivity.Companion.BoardGameModel::class.java)
 
-        val playersTransfersFragmentStatePagerAdapter = PlayersTransfersFragmentStatePagerAdapter(
-                fragmentManager!!,
-                requireContext()
-        )
-
-        viewpager_players_transfers.adapter = playersTransfersFragmentStatePagerAdapter
         tablayout_players.setupWithViewPager(viewpager_players_transfers)
 
         model.boardGame.liveData { it.playersObservable }.observe(this, Observer {
-            playersTransfersFragmentStatePagerAdapter.players.clear()
-            playersTransfersFragmentStatePagerAdapter.players.addAll(
-                    it.values.sortedWith(LiquidityApplication.playerComparator(requireContext()))
-            )
-            playersTransfersFragmentStatePagerAdapter.notifyDataSetChanged()
+            val playersTransfersFragmentStatePagerAdapter =
+                    PlayersTransfersFragmentStatePagerAdapter(
+                            fragmentManager!!,
+                            it.values.sortedWith(
+                                    LiquidityApplication.playerComparator(requireContext())
+                            ),
+                            requireContext()
+                    )
+            viewpager_players_transfers.adapter = playersTransfersFragmentStatePagerAdapter
         })
     }
 

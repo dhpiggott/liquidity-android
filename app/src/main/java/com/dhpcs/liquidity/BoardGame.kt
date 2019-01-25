@@ -15,8 +15,6 @@ import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
 import java.math.BigDecimal
 import java.util.*
-import kotlin.collections.component1
-import kotlin.collections.component2
 
 class BoardGame constructor(
         private val serverConnection: ServerConnection,
