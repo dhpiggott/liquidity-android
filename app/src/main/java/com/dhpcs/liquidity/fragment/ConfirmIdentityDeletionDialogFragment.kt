@@ -33,7 +33,7 @@ class ConfirmIdentityDeletionDialogFragment : AppCompatDialogFragment() {
 
         val model = ViewModelProviders.of(requireActivity())
                 .get(MainActivity.Companion.BoardGameModel::class.java)
-        val identity = model.boardGame.identities[arguments!!.getString(ARG_IDENTITY_ID)!!]!!
+        val identity = model.boardGame.identities.getValue(arguments!!.getString(ARG_IDENTITY_ID)!!)
         return AlertDialog.Builder(requireContext())
                 .setTitle(
                         getString(
@@ -45,7 +45,7 @@ class ConfirmIdentityDeletionDialogFragment : AppCompatDialogFragment() {
                 .setNegativeButton(R.string.cancel, null)
                 .setPositiveButton(R.string.delete) { _, _ ->
                     model.execCommand(
-                            model.boardGame.deleteIdentity(identity)
+                            model.boardGame.deleteIdentity(identity.memberId)
                     ) {
                         getString(
                                 R.string.delete_identity_error_format_string,

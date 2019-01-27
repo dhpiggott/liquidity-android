@@ -393,7 +393,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
         val model = ViewModelProviders.of(requireActivity())
                 .get(MainActivity.Companion.BoardGameModel::class.java)
 
-        val currentBalance = model.boardGame.identities[from!!.memberId]!!.balance
+        val currentBalance = model.boardGame.identities.getValue(from!!.memberId).balance
         val isValueValid = if (value == null) {
             textViewValueError.text = null
             false

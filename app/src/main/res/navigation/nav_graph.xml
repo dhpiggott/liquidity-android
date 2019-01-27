@@ -74,8 +74,8 @@
             tools:layout="@layout/fragment_transfer_identity">
 
             <argument
-                android:name="identity"
-                app:argType="com.dhpcs.liquidity.BoardGame.Companion.Identity" />
+                android:name="identity_id"
+                app:argType="string" />
         </fragment>
     </navigation>
 </navigation>

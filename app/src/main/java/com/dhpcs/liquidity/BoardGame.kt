@@ -537,14 +537,14 @@ class BoardGame constructor(
         }
     }
 
-    private fun createAccount(ownerMember: Model.Member): Single<Model.Account> {
+    private fun createAccount(ownerMemberId: String): Single<Model.Account> {
         return Single.create<Model.Account> { singleEmitter ->
             serverConnection.execZoneCommand(
                     state!!.zone.id,
                     WsProtocol.ZoneCommand.newBuilder()
                             .setCreateAccountCommand(
                                     WsProtocol.ZoneCommand.CreateAccountCommand.newBuilder()
-                                            .addOwnerMemberIds(ownerMember.id)
+                                            .addOwnerMemberIds(ownerMemberId)
                             )
                             .build()
             ).subscribe({ zoneResponse ->
@@ -648,12 +648,12 @@ class BoardGame constructor(
             }
         }
         @Suppress("RedundantLambdaArrow")
-        return member.flatMap { createAccount(it).map { _ -> it } }
+        return member.flatMap { createAccount(it.id).map { _ -> it } }
     }
 
-    fun changeIdentityName(identity: Identity, name: String): Single<Unit> {
+    fun changeIdentityName(identityId: String, name: String): Single<Unit> {
         val member = state!!.zone.membersList.find {
-            it.id == identity.memberId
+            it.id == identityId
         }!!
         return Single.create<Unit> { singleEmitter ->
             serverConnection.execZoneCommand(
@@ -693,9 +693,9 @@ class BoardGame constructor(
         return state!!.connectedClients.values.contains(publicKey)
     }
 
-    fun transferIdentity(identity: Identity, toPublicKey: ByteString): Single<Unit> {
+    fun transferIdentity(identityId: String, toPublicKey: ByteString): Single<Unit> {
         val member = state!!.zone.membersList.find {
-            it.id == identity.memberId
+            it.id == identityId
         }!!
         return Single.create<Unit> { singleEmitter ->
             serverConnection.execZoneCommand(
@@ -739,9 +739,9 @@ class BoardGame constructor(
         }
     }
 
-    fun deleteIdentity(identity: Identity): Single<Unit> {
+    fun deleteIdentity(identityId: String): Single<Unit> {
         val member = state!!.zone.membersList.find {
-            it.id == identity.memberId
+            it.id == identityId
         }!!
         val metadata = member.metadata.toBuilder()
                 .putFields(HIDDEN_FLAG_KEY, Value.newBuilder().setBoolValue(true).build())
@@ -773,9 +773,9 @@ class BoardGame constructor(
         }
     }
 
-    fun restoreIdentity(identity: Identity): Single<Unit> {
+    fun restoreIdentity(identityId: String): Single<Unit> {
         val member = state!!.zone.membersList.find {
-            it.id == identity.memberId
+            it.id == identityId
         }!!
         val metadata = member.metadata.toBuilder()
                 .removeFields(HIDDEN_FLAG_KEY)

@@ -46,16 +46,15 @@ class IdentityFragment : Fragment() {
         model.boardGame.liveData {
             it.identitiesObservable.filter { identities ->
                 identities.values.any { identity -> identity.memberId == identityId }
-            }
+            }.map { identities -> identities.getValue(identityId) }
         }.observe(this, Observer {
-            val identity = it[identityId]!!
-            val zoneId = identity.zoneId
-            val memberId = identity.memberId
-            val name = LiquidityApplication.formatNullable(requireContext(), identity.name)
+            val zoneId = it.zoneId
+            val memberId = it.memberId
+            val name = LiquidityApplication.formatNullable(requireContext(), it.name)
             val balance = LiquidityApplication.formatCurrencyValue(
                     requireContext(),
-                    identity.currency,
-                    identity.balance
+                    it.currency,
+                    it.balance
             )
 
             view.findViewById<Identicon>(R.id.identicon_id).show(zoneId, memberId)

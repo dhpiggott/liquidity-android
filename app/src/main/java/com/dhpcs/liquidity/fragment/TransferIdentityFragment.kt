@@ -9,11 +9,13 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.content.PermissionChecker
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.fragment.findNavController
 import com.dhpcs.liquidity.LiquidityApplication
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.MainActivity
+import com.dhpcs.liquidity.activity.MainActivity.Companion.liveData
 import com.google.protobuf.ByteString
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.ResultPoint
@@ -41,17 +43,23 @@ class TransferIdentityFragment : Fragment() {
         val model = ViewModelProviders.of(requireActivity())
                 .get(MainActivity.Companion.BoardGameModel::class.java)
 
-        val identity = TransferIdentityFragmentArgs.fromBundle(arguments).identity
+        val identityId = TransferIdentityFragmentArgs.fromBundle(arguments).identityId
 
         zxing_barcode_scanner.barcodeView.decoderFactory = DefaultDecoderFactory(
                 setOf(BarcodeFormat.QR_CODE)
         )
-        zxing_barcode_scanner.setStatusText(
-                getString(
-                        R.string.transfer_identity_identity_name_format_string,
-                        LiquidityApplication.formatNullable(requireContext(), identity.name)
-                )
-        )
+        model.boardGame.liveData {
+            it.identitiesObservable.filter { identities ->
+                identities.values.any { identity -> identity.memberId == identityId }
+            }.map { identities -> identities.getValue(identityId) }
+        }.observe(this, Observer {
+            zxing_barcode_scanner.setStatusText(
+                    getString(
+                            R.string.transfer_identity_identity_name_format_string,
+                            LiquidityApplication.formatNullable(requireContext(), it.name)
+                    )
+            )
+        })
         zxing_barcode_scanner.decodeSingle(object : BarcodeCallback {
 
             override fun barcodeResult(result: BarcodeResult?) {
@@ -64,13 +72,13 @@ class TransferIdentityFragment : Fragment() {
                         throw IllegalArgumentException()
                     }
                     model.execCommand(
-                            model.boardGame.transferIdentity(identity, publicKey)
+                            model.boardGame.transferIdentity(identityId, publicKey)
                     ) {
                         getString(
                                 R.string.transfer_identity_error_format_string,
                                 LiquidityApplication.formatNullable(
                                         requireContext(),
-                                        identity.name
+                                        model.boardGame.identities.getValue(identityId).name
                                 )
                         )
                     }

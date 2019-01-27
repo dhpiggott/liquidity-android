@@ -72,7 +72,9 @@ class RestoreIdentityDialogFragment : AppCompatDialogFragment() {
                 .setTitle(R.string.choose_identity_to_restore)
                 .setAdapter(identitiesAdapter) { _, which ->
                     model.execCommand(
-                            model.boardGame.restoreIdentity(identitiesAdapter.getItem(which)!!)
+                            model.boardGame.restoreIdentity(
+                                    identitiesAdapter.getItem(which)!!.memberId
+                            )
                     ) {
                         getString(
                                 R.string.restore_identity_error_format_string,
