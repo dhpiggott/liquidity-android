@@ -183,11 +183,11 @@ class BoardGame constructor(
         if (subscribers.isEmpty()) {
             join()
         }
-        subscribers += subscriber
+        subscribers = subscribers + subscriber
     }
 
     fun onInactive(subscriber: Any) {
-        subscribers -= subscriber
+        subscribers = subscribers - subscriber
         if (subscribers.isEmpty()) {
             quit()
         }

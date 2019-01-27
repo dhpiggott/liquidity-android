@@ -114,13 +114,13 @@ class MainActivity : AppCompatActivity() {
                 val disposable = command.subscribe(
                         {
                             boardGame.zoneId = it
-                            pendingCommands -= command
+                            pendingCommands = pendingCommands - command
                         },
                         {
                             createGameError(Optional.Some(error(it)))
                         }
                 )
-                pendingCommands += Pair(command, disposable)
+                pendingCommands = pendingCommands + Pair(command, disposable)
             }
 
             private val createGameErrorMutableLiveData = MutableLiveData<Optional<String>>()
@@ -133,13 +133,13 @@ class MainActivity : AppCompatActivity() {
             fun execCommand(command: Single<Unit>, error: (Throwable) -> String) {
                 val disposable = command.subscribe(
                         {
-                            pendingCommands -= command
+                            pendingCommands = pendingCommands - command
                         },
                         {
                             commandError(Optional.Some(error(it)))
                         }
                 )
-                pendingCommands += Pair(command, disposable)
+                pendingCommands = pendingCommands + Pair(command, disposable)
             }
 
             private val commandErrorsMutableLiveData = MutableLiveData<Optional<String>>()
