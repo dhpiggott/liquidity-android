@@ -7,10 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.*
 import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.LiquidityApplication
 import com.dhpcs.liquidity.R
@@ -97,13 +94,19 @@ class LastTransferFragment : Fragment() {
         )
 
         if (justAdded) {
-            view!!.handler.removeCallbacksAndMessages(null)
+            view!!.handler.removeCallbacks(null)
             textswitcher_summary.setText(summary)
             textswitcher_created.setText(created)
+            val runnable = { showTransfer(transfer, false) }
             view!!.handler.postDelayed(
-                    { showTransfer(transfer, false) },
+                    runnable,
                     TimeUnit.MINUTES.toMillis(1)
             )
+            lifecycle.addObserver(object : DefaultLifecycleObserver {
+                override fun onStop(owner: LifecycleOwner) {
+                    view!!.handler.removeCallbacks(null)
+                }
+            })
         } else {
             textswitcher_summary.setCurrentText(summary)
             textswitcher_created.setCurrentText(created)
