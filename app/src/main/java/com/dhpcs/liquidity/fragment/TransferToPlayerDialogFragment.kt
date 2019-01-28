@@ -13,13 +13,11 @@ import android.view.WindowManager
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDialogFragment
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.LiquidityApplication
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.MainActivity
-import com.dhpcs.liquidity.activity.MainActivity.Companion.liveData
 import java.math.BigDecimal
 import java.text.DecimalFormat
 import java.text.NumberFormat
@@ -44,8 +42,9 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
             return transferToPlayerDialogFragment
         }
 
-        private class PlayersAdapter internal constructor(context: Context,
-                                                          players: List<BoardGame.Companion.Player>
+        private class PlayersAdapter
+        internal constructor(context: Context,
+                             val players: List<BoardGame.Companion.Player>
         ) : ArrayAdapter<BoardGame.Companion.Player>(
                 context,
                 android.R.layout.simple_spinner_item,
@@ -80,10 +79,9 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
 
         }
 
-        private class IdentitiesAdapter internal constructor(context: Context,
-                                                             identities:
-                                                             List<BoardGame.Companion
-                                                             .Identity>
+        private class IdentitiesAdapter
+        internal constructor(context: Context,
+                             val identities: List<BoardGame.Companion.Identity>
         ) : ArrayAdapter<BoardGame.Companion.Identity>(
                 context,
                 android.R.layout.simple_spinner_item,
@@ -135,15 +133,13 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
     }
 
     private var currency: String? = null
-    private lateinit var identities: List<BoardGame.Companion.Identity>
-    private lateinit var players: List<BoardGame.Companion.Player>
 
     private var from: BoardGame.Companion.Identity? = null
     private var to: BoardGame.Companion.Player? = null
     private var toList: ArrayList<BoardGame.Companion.Player>? = null
 
-    private lateinit var identitiesSpinnerAdapter: ArrayAdapter<BoardGame.Companion.Identity>
-    private lateinit var playersSpinnerAdapter: ArrayAdapter<BoardGame.Companion.Player>
+    private lateinit var identitiesSpinnerAdapter: IdentitiesAdapter
+    private lateinit var playersSpinnerAdapter: PlayersAdapter
 
     private lateinit var textViewValueError: TextView
     private lateinit var textViewFromError: TextView
@@ -159,8 +155,6 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                 .get(MainActivity.Companion.BoardGameModel::class.java)
 
         currency = model.boardGame.currency
-        identities = model.boardGame.identities.values.toList()
-        players = model.boardGame.players.values.toList()
 
         val fromIdentityId = arguments!!.getString(ARG_FROM_IDENTITY_ID)!!
         val toPlayerId = arguments!!.getString(ARG_TO_PLAYER_ID)
@@ -173,10 +167,16 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
             toList = arrayListOf()
         }
 
-        identitiesSpinnerAdapter = IdentitiesAdapter(requireContext(), identities)
-        identitiesSpinnerAdapter.sort(LiquidityApplication.identityComparator(requireContext()))
-        playersSpinnerAdapter = PlayersAdapter(requireContext(), players)
-        playersSpinnerAdapter.sort(LiquidityApplication.playerComparator(requireContext()))
+        identitiesSpinnerAdapter = IdentitiesAdapter(
+                requireContext(),
+                model.boardGame.identities.values
+                        .sortedWith(LiquidityApplication.identityComparator(requireContext()))
+        )
+        playersSpinnerAdapter = PlayersAdapter(
+                requireContext(),
+                model.boardGame.players.values
+                        .sortedWith(LiquidityApplication.playerComparator(requireContext()))
+        )
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -337,7 +337,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
             spinnerTo.setSelection(playersSpinnerAdapter.getPosition(to))
         } else {
             spinnerTo.visibility = View.GONE
-            for (player in players) {
+            for (player in playersSpinnerAdapter.players) {
                 val checkedTextViewPlayer = requireActivity().layoutInflater.inflate(
                         android.R.layout.simple_list_item_multiple_choice,
                         linearLayoutTo,
@@ -376,24 +376,10 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
         return alertDialog
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-
-        val model = ViewModelProviders.of(requireActivity())
-                .get(MainActivity.Companion.BoardGameModel::class.java)
-
-        model.boardGame.liveData { it.identitiesObservable }.observe(this, Observer {
-            identitiesSpinnerAdapter.clear()
-            identitiesSpinnerAdapter.addAll(it.values)
-            validateInput()
-        })
-    }
-
     private fun validateInput() {
-
-        val model = ViewModelProviders.of(requireActivity())
-                .get(MainActivity.Companion.BoardGameModel::class.java)
-
-        val currentBalance = model.boardGame.identities.getValue(from!!.memberId).balance
+        val currentBalance = identitiesSpinnerAdapter.identities
+                .find { it.memberId == from!!.memberId}!!
+                .balance
         val isValueValid = if (value == null) {
             textViewValueError.text = null
             false

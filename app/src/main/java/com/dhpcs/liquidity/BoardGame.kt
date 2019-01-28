@@ -715,7 +715,6 @@ class BoardGame constructor(
                                                                     .plusElement(
                                                                             toPublicKey
                                                                     )
-                                                                    .toList()
                                                     )
                                             )
                             )
