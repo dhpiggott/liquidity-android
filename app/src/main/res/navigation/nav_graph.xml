@@ -22,9 +22,6 @@
         <action
             android:id="@+id/action_games_fragment_to_board_game_graph"
             app:destination="@id/board_game_graph" />
-        <action
-            android:id="@+id/action_join_game_fragment_to_board_game_graph"
-            app:destination="@id/board_game_graph" />
     </fragment>
     <fragment
         android:id="@+id/preferences_fragment"
@@ -39,7 +36,11 @@
         android:id="@+id/join_game_fragment"
         android:name="com.dhpcs.liquidity.fragment.JoinGameFragment"
         android:label="@string/fragment_join_game_title"
-        tools:layout="@layout/fragment_join_game" />
+        tools:layout="@layout/fragment_join_game">
+        <action
+            android:id="@+id/action_join_game_fragment_to_board_game_graph"
+            app:destination="@id/board_game_graph" />
+    </fragment>
     <navigation
         android:id="@+id/board_game_graph"
         app:startDestination="@id/board_game_fragment">
