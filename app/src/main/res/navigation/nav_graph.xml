@@ -76,6 +76,10 @@
             <argument
                 android:name="identity_id"
                 app:argType="string" />
+            <argument
+                android:name="identity_name"
+                app:argType="string"
+                app:nullable="true" />
         </fragment>
     </navigation>
 </navigation>

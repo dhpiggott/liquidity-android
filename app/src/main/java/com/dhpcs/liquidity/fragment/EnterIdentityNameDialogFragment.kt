@@ -25,11 +25,13 @@ class EnterIdentityNameDialogFragment : AppCompatDialogFragment() {
         const val TAG = "enter_identity_name_dialog_fragment"
 
         private const val ARG_IDENTITY_ID = "identity_id"
+        private const val ARG_IDENTITY_NAME = "identity_name"
 
         fun newInstance(identity: BoardGame.Companion.Identity): EnterIdentityNameDialogFragment {
             val enterIdentityNameDialogFragment = EnterIdentityNameDialogFragment()
             val args = Bundle()
             args.putString(ARG_IDENTITY_ID, identity.memberId)
+            args.putString(ARG_IDENTITY_NAME, identity.name)
             enterIdentityNameDialogFragment.arguments = args
             return enterIdentityNameDialogFragment
         }
@@ -50,7 +52,8 @@ class EnterIdentityNameDialogFragment : AppCompatDialogFragment() {
 
         val model = ViewModelProviders.of(requireActivity())
                 .get(MainActivity.Companion.BoardGameModel::class.java)
-        val identity = model.boardGame.identities.getValue(arguments!!.getString(ARG_IDENTITY_ID)!!)
+        val identityId = arguments!!.getString(ARG_IDENTITY_ID)!!
+        val identityName = arguments!!.getString(ARG_IDENTITY_NAME)!!
         val alertDialog = AlertDialog.Builder(requireContext())
                 .setTitle(R.string.enter_identity_name)
                 .setView(view)
@@ -58,7 +61,7 @@ class EnterIdentityNameDialogFragment : AppCompatDialogFragment() {
                 .setPositiveButton(R.string.ok) { _, _ ->
                     model.execCommand(
                             model.boardGame.changeIdentityName(
-                                    identity.memberId,
+                                    identityId,
                                     textInputEditTextIdentityName.text.toString()
                             )
                     ) {
@@ -86,7 +89,7 @@ class EnterIdentityNameDialogFragment : AppCompatDialogFragment() {
         })
 
         textInputEditTextIdentityName.setText(
-                LiquidityApplication.formatNullable(requireContext(), identity.name)
+                LiquidityApplication.formatNullable(requireContext(), identityName)
         )
 
         alertDialog.setOnShowListener {

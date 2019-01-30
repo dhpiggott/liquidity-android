@@ -280,7 +280,8 @@ class BoardGameFragment : Fragment() {
                         findNavController().navigate(
                                 BoardGameFragmentDirections
                                         .ActionBoardGameFragmentToTransferIdentityFragment(
-                                                identity.value.memberId
+                                                identity.value.memberId,
+                                                identity.value.name
                                         )
                         )
                     }
