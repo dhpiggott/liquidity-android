@@ -94,7 +94,7 @@ class LastTransferFragment : Fragment() {
         )
 
         if (justAdded) {
-            view!!.handler.removeCallbacks(null)
+            view!!.handler.removeCallbacksAndMessages(null)
             textswitcher_summary.setText(summary)
             textswitcher_created.setText(created)
             val runnable = { showTransfer(transfer, false) }
@@ -104,7 +104,7 @@ class LastTransferFragment : Fragment() {
             )
             lifecycle.addObserver(object : DefaultLifecycleObserver {
                 override fun onStop(owner: LifecycleOwner) {
-                    view!!.handler.removeCallbacks(null)
+                    view!!.handler.removeCallbacks(runnable)
                 }
             })
         } else {
