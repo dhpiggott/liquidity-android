@@ -1,9 +1,9 @@
+apply plugin: "com.github.ben-manes.versions"
 apply plugin: 'com.android.application'
-apply plugin: 'com.google.protobuf'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'com.google.protobuf'
 apply plugin: 'androidx.navigation.safeargs'
-apply plugin: "com.github.ben-manes.versions"
 
 dependencyUpdates.resolutionStrategy {
     componentSelection { rules ->
@@ -57,10 +57,6 @@ android {
     lintOptions {
         disable 'InvalidPackage'
     }
-}
-
-androidExtensions {
-    experimental = true
 }
 
 protobuf {
