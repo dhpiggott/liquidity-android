@@ -11,6 +11,7 @@ import androidx.core.content.PermissionChecker
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import com.dhpcs.liquidity.LiquidityApplication
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.MainActivity
@@ -41,8 +42,9 @@ class TransferIdentityFragment : Fragment() {
         val model = ViewModelProviders.of(requireActivity())
                 .get(MainActivity.Companion.BoardGameModel::class.java)
 
-        val identityId = TransferIdentityFragmentArgs.fromBundle(arguments).identityId
-        val identityName = TransferIdentityFragmentArgs.fromBundle(arguments).identityName
+        val args = TransferIdentityFragmentArgs.fromBundle(arguments!!)
+        val identityId = args.identityId
+        val identityName = args.identityName
 
         zxing_barcode_scanner.barcodeView.decoderFactory = DefaultDecoderFactory(
                 setOf(BarcodeFormat.QR_CODE)

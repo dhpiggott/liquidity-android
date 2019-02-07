@@ -279,7 +279,7 @@ class BoardGameFragment : Fragment() {
                     is MainActivity.Companion.Optional.Some -> {
                         findNavController().navigate(
                                 BoardGameFragmentDirections
-                                        .ActionBoardGameFragmentToTransferIdentityFragment(
+                                        .actionBoardGameFragmentToTransferIdentityFragment(
                                                 identity.value.memberId,
                                                 identity.value.name
                                         )
