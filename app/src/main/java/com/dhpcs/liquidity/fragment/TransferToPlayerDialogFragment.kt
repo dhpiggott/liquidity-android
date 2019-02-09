@@ -135,8 +135,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
     private var currency: String? = null
 
     private lateinit var from: BoardGame.Companion.Identity
-    private var to: BoardGame.Companion.Player? = null
-    private var toList: ArrayList<BoardGame.Companion.Player>? = null
+    private lateinit var to: ArrayList<BoardGame.Companion.Player>
 
     private lateinit var identitiesSpinnerAdapter: IdentitiesAdapter
     private lateinit var playersSpinnerAdapter: PlayersAdapter
@@ -161,10 +160,10 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
 
         from = model.boardGame.identities.getValue(fromIdentityId)
 
-        if (toPlayerId != null) {
-            to = model.boardGame.players[toPlayerId]
+        to = if (toPlayerId != null) {
+            arrayListOf(model.boardGame.players.getValue(toPlayerId))
         } else {
-            toList = arrayListOf()
+            arrayListOf()
         }
 
         identitiesSpinnerAdapter = IdentitiesAdapter(
@@ -202,8 +201,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                 .setView(view)
                 .setNegativeButton(R.string.cancel, null)
                 .setPositiveButton(R.string.ok) { _, _ ->
-                    val tos = if (to != null) listOf(to!!) else toList!!
-                    tos.forEach { to ->
+                    to.forEach { to ->
                         model.execCommand(
                                 model.boardGame.transferToPlayer(from, to, value!!)
                         ) {
@@ -321,7 +319,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                                         view: View?,
                                         position: Int,
                                         id: Long) {
-                to = playersSpinnerAdapter.getItem(position)
+                to = arrayListOf(playersSpinnerAdapter.getItem(position)!!)
                 if (buttonPositive != null) validateInput()
             }
 
@@ -333,8 +331,8 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
 
         spinnerFrom.setSelection(identitiesSpinnerAdapter.getPosition(from))
 
-        if (to != null) {
-            spinnerTo.setSelection(playersSpinnerAdapter.getPosition(to))
+        if (to.isNotEmpty()) {
+            spinnerTo.setSelection(playersSpinnerAdapter.getPosition(to.first()))
         } else {
             spinnerTo.visibility = View.GONE
             for (player in playersSpinnerAdapter.players) {
@@ -346,13 +344,13 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                 linearLayoutTo.addView(checkedTextViewPlayer)
                 checkedTextViewPlayer.text =
                         LiquidityApplication.formatNullable(requireContext(), player.name)
-                checkedTextViewPlayer.isChecked = toList!!.contains(player)
+                checkedTextViewPlayer.isChecked = to.contains(player)
                 checkedTextViewPlayer.setOnClickListener {
                     checkedTextViewPlayer.toggle()
                     if (checkedTextViewPlayer.isChecked) {
-                        toList!!.add(player)
+                        to.add(player)
                     } else {
-                        toList!!.remove(player)
+                        to.remove(player)
                     }
                     validateInput()
                 }
@@ -387,7 +385,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
             val requiredBalance = if (from.isBanker) {
                 null
             } else {
-                value!!.multiply(BigDecimal(if (to != null) 1 else toList!!.size))
+                value!!.multiply(BigDecimal(to.size))
             }
             if (requiredBalance != null && currentBalance < requiredBalance) {
                 textViewValueError.text = getString(
@@ -409,11 +407,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                 true
             }
         }
-        val toAccountIds = if (to != null) {
-            setOf(to!!.accountId)
-        } else {
-            toList!!.map { it.accountId }.toSet()
-        }
+        val toAccountIds = to.map { it.accountId }.toSet()
         val isFromValid = if (toAccountIds.contains(from.accountId)) {
             textViewFromError.text = getString(
                     R.string.transfer_from_invalid_format_string,
