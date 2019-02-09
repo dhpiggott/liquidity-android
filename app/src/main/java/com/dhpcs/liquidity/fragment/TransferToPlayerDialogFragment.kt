@@ -134,7 +134,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
 
     private var currency: String? = null
 
-    private var from: BoardGame.Companion.Identity? = null
+    private lateinit var from: BoardGame.Companion.Identity
     private var to: BoardGame.Companion.Player? = null
     private var toList: ArrayList<BoardGame.Companion.Player>? = null
 
@@ -159,7 +159,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
         val fromIdentityId = arguments!!.getString(ARG_FROM_IDENTITY_ID)!!
         val toPlayerId = arguments!!.getString(ARG_TO_PLAYER_ID)
 
-        from = model.boardGame.identities[fromIdentityId]
+        from = model.boardGame.identities.getValue(fromIdentityId)
 
         if (toPlayerId != null) {
             to = model.boardGame.players[toPlayerId]
@@ -205,7 +205,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                     val tos = if (to != null) listOf(to!!) else toList!!
                     tos.forEach { to ->
                         model.execCommand(
-                                model.boardGame.transferToPlayer(from!!, to, value!!)
+                                model.boardGame.transferToPlayer(from, to, value!!)
                         ) {
                             getString(R.string.transfer_to_player_error_format_string, to.name)
                         }
@@ -307,7 +307,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                                         view: View?,
                                         position: Int,
                                         id: Long) {
-                from = identitiesSpinnerAdapter.getItem(position)
+                from = identitiesSpinnerAdapter.getItem(position)!!
                 if (buttonPositive != null) validateInput()
             }
 
@@ -378,13 +378,13 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
 
     private fun validateInput() {
         val currentBalance = identitiesSpinnerAdapter.identities
-                .find { it.memberId == from!!.memberId}!!
+                .find { it.memberId == from.memberId}!!
                 .balance
         val isValueValid = if (value == null) {
             textViewValueError.text = null
             false
         } else {
-            val requiredBalance = if (from!!.isBanker) {
+            val requiredBalance = if (from.isBanker) {
                 null
             } else {
                 value!!.multiply(BigDecimal(if (to != null) 1 else toList!!.size))
@@ -414,10 +414,10 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
         } else {
             toList!!.map { it.accountId }.toSet()
         }
-        val isFromValid = if (toAccountIds.contains(from!!.accountId)) {
+        val isFromValid = if (toAccountIds.contains(from.accountId)) {
             textViewFromError.text = getString(
                     R.string.transfer_from_invalid_format_string,
-                    LiquidityApplication.formatNullable(requireContext(), from!!.name)
+                    LiquidityApplication.formatNullable(requireContext(), from.name)
             )
             false
         } else {
