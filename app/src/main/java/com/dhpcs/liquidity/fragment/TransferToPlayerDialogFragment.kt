@@ -81,7 +81,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
 
         private class IdentitiesAdapter
         internal constructor(context: Context,
-                             val identities: List<BoardGame.Companion.Identity>
+                             identities: List<BoardGame.Companion.Identity>
         ) : ArrayAdapter<BoardGame.Companion.Identity>(
                 context,
                 android.R.layout.simple_spinner_item,
@@ -137,7 +137,9 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
     private lateinit var from: BoardGame.Companion.Identity
     private lateinit var to: ArrayList<BoardGame.Companion.Player>
 
+    private lateinit var identities: Map<String, BoardGame.Companion.Identity>
     private lateinit var identitiesSpinnerAdapter: IdentitiesAdapter
+
     private lateinit var playersSpinnerAdapter: PlayersAdapter
 
     private lateinit var textViewValueError: TextView
@@ -166,11 +168,13 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
             arrayListOf()
         }
 
+        identities = model.boardGame.identities
         identitiesSpinnerAdapter = IdentitiesAdapter(
                 requireContext(),
-                model.boardGame.identities.values
+                identities.values
                         .sortedWith(LiquidityApplication.identityComparator(requireContext()))
         )
+
         playersSpinnerAdapter = PlayersAdapter(
                 requireContext(),
                 model.boardGame.players.values
@@ -375,9 +379,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
     }
 
     private fun validateInput() {
-        val currentBalance = identitiesSpinnerAdapter.identities
-                .find { it.memberId == from.memberId}!!
-                .balance
+        val currentBalance = identities.getValue(from.memberId).balance
         val isValueValid = if (value == null) {
             textViewValueError.text = null
             false
