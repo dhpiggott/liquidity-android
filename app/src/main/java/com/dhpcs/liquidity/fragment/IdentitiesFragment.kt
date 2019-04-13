@@ -87,8 +87,7 @@ class IdentitiesFragment : Fragment() {
                         )
                 )
                 viewpager_identities.adapter = identitiesFragmentStatePagerAdapter
-                val selectedIdentity = model.selectedIdentity
-                when (selectedIdentity) {
+                when (val selectedIdentity = model.selectedIdentity) {
                     is MainActivity.Companion.Optional.None -> {
                         model.selectedIdentity(
                                 MainActivity.Companion.Optional.Some(
@@ -97,10 +96,19 @@ class IdentitiesFragment : Fragment() {
                         )
                     }
                     is MainActivity.Companion.Optional.Some -> {
-                        viewpager_identities.currentItem =
-                                identitiesFragmentStatePagerAdapter.identities.indexOf(
-                                        selectedIdentity.value
-                                )
+                        val index = identitiesFragmentStatePagerAdapter.identities.indexOf(
+                                selectedIdentity.value
+                        )
+                        viewpager_identities.currentItem = index
+                        if (index == -1) {
+                            // Because setCurrentItem doesn't dispatch to onPageSelected in this
+                            // .case
+                            model.selectedIdentity(
+                                    MainActivity.Companion.Optional.Some(
+                                            identitiesFragmentStatePagerAdapter.identities.first()
+                                    )
+                            )
+                        }
                     }
                 }
             }
