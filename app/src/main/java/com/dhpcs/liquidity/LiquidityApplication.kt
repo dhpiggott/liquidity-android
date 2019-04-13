@@ -188,11 +188,10 @@ class LiquidityApplication : Application() {
                 override fun compare(lhs: BoardGame.Companion.Identity,
                                      rhs: BoardGame.Companion.Identity
                 ): Int {
-                    val nameOrdered = collator.compare(
+                    return when (val nameOrdered = collator.compare(
                             formatNullable(context, lhs.name),
                             formatNullable(context, rhs.name)
-                    )
-                    return when (nameOrdered) {
+                    )) {
                         0 -> lhs.memberId.compareTo(rhs.memberId)
                         else -> nameOrdered
                     }
@@ -209,11 +208,10 @@ class LiquidityApplication : Application() {
                 override fun compare(lhs: BoardGame.Companion.Player,
                                      rhs: BoardGame.Companion.Player
                 ): Int {
-                    val nameOrdered = collator.compare(
+                    return when (val nameOrdered = collator.compare(
                             formatNullable(context, lhs.name),
                             formatNullable(context, rhs.name)
-                    )
-                    return when (nameOrdered) {
+                    )) {
                         0 -> lhs.memberId.compareTo(rhs.memberId)
                         else -> nameOrdered
                     }

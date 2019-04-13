@@ -45,9 +45,9 @@ class BoardGameFragment : Fragment() {
                                                      newState: PanelState
                     ) {
                         when (newState) {
-                            SlidingUpPanelLayout.PanelState.EXPANDED ->
+                            PanelState.EXPANDED ->
                                 requireActivity().setTitle(R.string.transfers)
-                            SlidingUpPanelLayout.PanelState.COLLAPSED ->
+                            PanelState.COLLAPSED ->
                                 if (model.boardGame.joinState ==
                                         BoardGame.Companion.JoinState.JOINED) {
                                     requireActivity().title = LiquidityApplication.formatNullable(
@@ -55,9 +55,9 @@ class BoardGameFragment : Fragment() {
                                             model.boardGame.gameName
                                     )
                                 }
-                            SlidingUpPanelLayout.PanelState.ANCHORED,
-                            SlidingUpPanelLayout.PanelState.HIDDEN,
-                            SlidingUpPanelLayout.PanelState.DRAGGING -> {
+                            PanelState.ANCHORED,
+                            PanelState.HIDDEN,
+                            PanelState.DRAGGING -> {
                             }
                         }
                         requireActivity().invalidateOptionsMenu()
@@ -209,8 +209,7 @@ class BoardGameFragment : Fragment() {
 
         return when (item.itemId) {
             R.id.action_group_transfer -> {
-                val identity = model.selectedIdentity
-                when (identity) {
+                when (val identity = model.selectedIdentity) {
                     is MainActivity.Companion.Optional.None -> {
                     }
                     is MainActivity.Companion.Optional.Some -> {
@@ -230,8 +229,7 @@ class BoardGameFragment : Fragment() {
                 true
             }
             R.id.action_change_identity_name -> {
-                val identity = model.selectedIdentity
-                when (identity) {
+                when (val identity = model.selectedIdentity) {
                     is MainActivity.Companion.Optional.None -> {
                     }
                     is MainActivity.Companion.Optional.Some -> {
@@ -258,8 +256,7 @@ class BoardGameFragment : Fragment() {
                 true
             }
             R.id.action_delete_identity -> {
-                val identity = model.selectedIdentity
-                when (identity) {
+                when (val identity = model.selectedIdentity) {
                     is MainActivity.Companion.Optional.None -> {
                     }
                     is MainActivity.Companion.Optional.Some -> {
@@ -272,8 +269,7 @@ class BoardGameFragment : Fragment() {
                 true
             }
             R.id.action_transfer_identity -> {
-                val identity = model.selectedIdentity
-                when (identity) {
+                when (val identity = model.selectedIdentity) {
                     is MainActivity.Companion.Optional.None -> {
                     }
                     is MainActivity.Companion.Optional.Some -> {

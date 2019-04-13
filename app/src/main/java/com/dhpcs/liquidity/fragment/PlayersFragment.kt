@@ -113,8 +113,7 @@ class PlayersFragment : Fragment() {
             }
 
             override fun onClick(v: View) {
-                val identity = model.selectedIdentity
-                when (identity) {
+                when (val identity = model.selectedIdentity) {
                     is MainActivity.Companion.Optional.None -> {
                     }
                     is MainActivity.Companion.Optional.Some -> {
