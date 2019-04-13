@@ -170,7 +170,7 @@ class BoardGameFragment : Fragment() {
         val isJoined = model.boardGame.joinState == BoardGame.Companion.JoinState.JOINED
         val selectedIdentity = model.selectedIdentity
         val isPanelCollapsed = slidinguppanellayout.panelState == PanelState.COLLAPSED
-        menu.findItem(R.id.add_players_fragment).isVisible =
+        menu.findItem(R.id.action_add_players).isVisible =
                 isJoined
         menu.findItem(R.id.action_group_transfer).isVisible =
                 isJoined &&
@@ -193,7 +193,7 @@ class BoardGameFragment : Fragment() {
                 isJoined &&
                 selectedIdentity is MainActivity.Companion.Optional.Some &&
                 isPanelCollapsed
-        menu.findItem(R.id.receive_identity_fragment).isVisible =
+        menu.findItem(R.id.action_receive_identity).isVisible =
                 isJoined &&
                 isPanelCollapsed
         menu.findItem(R.id.action_transfer_identity).isVisible =
@@ -208,6 +208,13 @@ class BoardGameFragment : Fragment() {
                 .get(MainActivity.Companion.BoardGameModel::class.java)
 
         return when (item.itemId) {
+            R.id.action_add_players -> {
+                findNavController().navigate(
+                        BoardGameFragmentDirections
+                                .actionBoardGameFragmentToAddPlayersFragment()
+                )
+                true
+            }
             R.id.action_group_transfer -> {
                 when (val identity = model.selectedIdentity) {
                     is MainActivity.Companion.Optional.None -> {
@@ -266,6 +273,13 @@ class BoardGameFragment : Fragment() {
                         )
                     }
                 }
+                true
+            }
+            R.id.action_receive_identity -> {
+                findNavController().navigate(
+                        BoardGameFragmentDirections
+                                .actionBoardGameFragmentToReceiveIdentityFragment()
+                )
                 true
             }
             R.id.action_transfer_identity -> {
