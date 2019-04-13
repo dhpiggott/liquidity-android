@@ -206,11 +206,12 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                 .setNegativeButton(R.string.cancel, null)
                 .setPositiveButton(R.string.ok) { _, _ ->
                     to.forEach { to ->
+                        val error = getString(
+                                R.string.transfer_to_player_error_format_string, to.name
+                        )
                         model.execCommand(
                                 model.boardGame.transferToPlayer(from, to, value!!)
-                        ) {
-                            getString(R.string.transfer_to_player_error_format_string, to.name)
-                        }
+                        ) { error }
                     }
                 }
                 .create()

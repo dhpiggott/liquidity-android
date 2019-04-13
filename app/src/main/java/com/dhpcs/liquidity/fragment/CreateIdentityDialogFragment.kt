@@ -46,17 +46,15 @@ class CreateIdentityDialogFragment : AppCompatDialogFragment() {
                 .setView(view)
                 .setNegativeButton(R.string.cancel, null)
                 .setPositiveButton(R.string.ok) { _, _ ->
+                    val error = getString(
+                            R.string.create_identity_error_format_string,
+                            textInputEditTextIdentityName.text.toString()
+                    )
                     model.execCommand(
                             model.boardGame
                                     .createIdentity(textInputEditTextIdentityName.text.toString())
                                     .map { Unit }
-                    ) {
-                        getString(
-                                R.string.create_identity_error_format_string,
-                                textInputEditTextIdentityName.text.toString()
-                        )
-
-                    }
+                    ) { error }
                 }
                 .create()
 

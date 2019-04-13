@@ -47,14 +47,13 @@ class ConfirmIdentityDeletionDialogFragment : AppCompatDialogFragment() {
                 .setMessage(R.string.delete_identity_message)
                 .setNegativeButton(R.string.cancel, null)
                 .setPositiveButton(R.string.delete) { _, _ ->
+                    val error = getString(
+                            R.string.delete_identity_error_format_string,
+                            LiquidityApplication.formatNullable(requireContext(), identityName)
+                    )
                     model.execCommand(
                             model.boardGame.deleteIdentity(identityId)
-                    ) {
-                        getString(
-                                R.string.delete_identity_error_format_string,
-                                LiquidityApplication.formatNullable(requireContext(), identityName)
-                        )
-                    }
+                    ) { error }
                 }
                 .create()
     }

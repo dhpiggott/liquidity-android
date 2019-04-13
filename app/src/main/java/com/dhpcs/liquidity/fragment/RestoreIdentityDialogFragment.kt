@@ -71,19 +71,18 @@ class RestoreIdentityDialogFragment : AppCompatDialogFragment() {
         return AlertDialog.Builder(requireContext())
                 .setTitle(R.string.choose_identity_to_restore)
                 .setAdapter(identitiesAdapter) { _, which ->
+                    val error = getString(
+                            R.string.restore_identity_error_format_string,
+                            LiquidityApplication.formatNullable(
+                                    requireContext(),
+                                    identitiesAdapter.getItem(which)!!.name
+                            )
+                    )
                     model.execCommand(
                             model.boardGame.restoreIdentity(
                                     identitiesAdapter.getItem(which)!!.memberId
                             )
-                    ) {
-                        getString(
-                                R.string.restore_identity_error_format_string,
-                                LiquidityApplication.formatNullable(
-                                        requireContext(),
-                                        identitiesAdapter.getItem(which)!!.name
-                                )
-                        )
-                    }
+                    ) { error }
                 }
                 .create()
     }

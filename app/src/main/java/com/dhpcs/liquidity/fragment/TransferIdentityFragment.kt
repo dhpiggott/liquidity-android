@@ -65,14 +65,13 @@ class TransferIdentityFragment : Fragment() {
                     if (!model.boardGame.isPublicKeyConnectedAndImplicitlyValid(publicKey)) {
                         throw IllegalArgumentException()
                     }
+                    val error = getString(
+                            R.string.transfer_identity_error_format_string,
+                            LiquidityApplication.formatNullable(requireContext(), identityName)
+                    )
                     model.execCommand(
                             model.boardGame.transferIdentity(identityId, publicKey)
-                    ) {
-                        getString(
-                                R.string.transfer_identity_error_format_string,
-                                LiquidityApplication.formatNullable(requireContext(), identityName)
-                        )
-                    }
+                    ) { error }
                 } catch (_: IllegalArgumentException) {
                     Toast.makeText(
                             requireContext(),

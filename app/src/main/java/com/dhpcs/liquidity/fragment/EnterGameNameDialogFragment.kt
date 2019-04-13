@@ -56,12 +56,11 @@ class EnterGameNameDialogFragment : AppCompatDialogFragment() {
                 .setView(view)
                 .setNegativeButton(R.string.cancel, null)
                 .setPositiveButton(R.string.ok) { _, _ ->
+                    val error = getString(R.string.change_game_name_error_format_string, name)
                     model.execCommand(
                             model.boardGame
                                     .changeGameName(textInputEditTextGameName.text.toString())
-                    ) {
-                        getString(R.string.change_game_name_error_format_string, name)
-                    }
+                    ) { error }
                 }
                 .create()
 
