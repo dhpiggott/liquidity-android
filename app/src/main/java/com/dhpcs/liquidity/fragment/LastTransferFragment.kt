@@ -90,7 +90,7 @@ class LastTransferFragment : Fragment() {
                     TimeUnit.MINUTES.toMillis(1)
             )
             if (justAdded) {
-                view.handler.removeCallbacksAndMessages(null)
+                view.handler?.removeCallbacksAndMessages(null)
                 textswitcher_summary.setText(summary)
                 textswitcher_created.setText(created)
                 val playTransferReceiptSounds =
