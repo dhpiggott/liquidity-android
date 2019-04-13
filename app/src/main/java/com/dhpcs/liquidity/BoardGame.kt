@@ -537,10 +537,10 @@ class BoardGame constructor(
         }
     }
 
-    private fun createAccount(ownerMemberId: String): Single<Model.Account> {
+    private fun createAccount(zoneId: String, ownerMemberId: String): Single<Model.Account> {
         return Single.create<Model.Account> { singleEmitter ->
             serverConnection.execZoneCommand(
-                    state!!.zone.id,
+                    zoneId,
                     WsProtocol.ZoneCommand.newBuilder()
                             .setCreateAccountCommand(
                                     WsProtocol.ZoneCommand.CreateAccountCommand.newBuilder()
@@ -616,12 +616,13 @@ class BoardGame constructor(
                                 account.getOwnerMemberIds(0) == member.id
                     }
         }
+        val zoneId = state!!.zone.id
         val member = if (partiallyCreatedIdentity != null) {
             Single.just(partiallyCreatedIdentity)
         } else {
             Single.create<Model.Member> { singleEmitter ->
                 serverConnection.execZoneCommand(
-                        state!!.zone.id,
+                        zoneId,
                         WsProtocol.ZoneCommand.newBuilder()
                                 .setCreateMemberCommand(
                                         WsProtocol.ZoneCommand.CreateMemberCommand.newBuilder()
@@ -640,7 +641,9 @@ class BoardGame constructor(
                                     zoneResponse.createMemberResponse.errors.toString()
                             ))
                         WsProtocol.ZoneResponse.CreateMemberResponse.ResultCase.SUCCESS ->
-                            singleEmitter.onSuccess(zoneResponse.createMemberResponse.success.member)
+                            singleEmitter.onSuccess(
+                                    zoneResponse.createMemberResponse.success.member
+                            )
                     }
                 }, { error ->
                     singleEmitter.onError(error)
@@ -648,7 +651,7 @@ class BoardGame constructor(
             }
         }
         @Suppress("RedundantLambdaArrow")
-        return member.flatMap { createAccount(it.id).map { _ -> it } }
+        return member.flatMap { createAccount(zoneId, it.id).map { _ -> it } }
     }
 
     fun changeIdentityName(identityId: String, name: String): Single<Unit> {
