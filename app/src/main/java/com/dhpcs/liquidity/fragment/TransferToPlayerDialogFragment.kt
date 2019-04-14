@@ -142,9 +142,6 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
 
     private lateinit var playersSpinnerAdapter: PlayersAdapter
 
-    private lateinit var textViewValueError: TextView
-    private lateinit var textViewFromError: TextView
-
     private var buttonPositive: Button? = null
 
     private var value: BigDecimal? = null
@@ -190,9 +187,9 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
         val textViewCurrency = view.findViewById<TextView>(R.id.textview_currency)
         val editTextValue = view.findViewById<EditText>(R.id.edittext_value)
         val editTextScaledValue = view.findViewById<TextView>(R.id.textview_scaled_value)
-        textViewValueError = view.findViewById(R.id.textview_value_error)
+        val textViewValueError = view.findViewById<TextView>(R.id.textview_value_error)
         val spinnerFrom = view.findViewById<Spinner>(R.id.spinner_from)
-        textViewFromError = view.findViewById(R.id.textview_from_error)
+        val textViewFromError = view.findViewById<TextView>(R.id.textview_from_error)
         val linearLayoutTo = view.findViewById<LinearLayout>(R.id.linearlayout_to)
         val spinnerTo = view.findViewById<Spinner>(R.id.spinner_to)
 
@@ -215,6 +212,51 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                     }
                 }
                 .create()
+
+        fun validateInput() {
+            val currentBalance = identities.getValue(from.memberId).balance
+            val isValueValid = if (value == null) {
+                textViewValueError.text = null
+                false
+            } else {
+                val requiredBalance = if (from.isBanker) {
+                    null
+                } else {
+                    value!!.multiply(BigDecimal(to.size))
+                }
+                if (requiredBalance != null && currentBalance < requiredBalance) {
+                    textViewValueError.text = getString(
+                            R.string.transfer_value_invalid_format_string,
+                            LiquidityApplication.formatCurrencyValue(
+                                    requireContext(),
+                                    currency!!,
+                                    currentBalance
+                            ),
+                            LiquidityApplication.formatCurrencyValue(
+                                    requireContext(),
+                                    currency!!,
+                                    requiredBalance
+                            )
+                    )
+                    false
+                } else {
+                    textViewValueError.text = null
+                    true
+                }
+            }
+            val toAccountIds = to.map { it.accountId }.toSet()
+            val isFromValid = if (toAccountIds.contains(from.accountId)) {
+                textViewFromError.text = getString(
+                        R.string.transfer_from_invalid_format_string,
+                        LiquidityApplication.formatNullable(requireContext(), from.name)
+                )
+                false
+            } else {
+                textViewFromError.text = null
+                true
+            }
+            buttonPositive!!.isEnabled = isValueValid && isFromValid
+        }
 
         editTextValue.addTextChangedListener(object : TextWatcher {
 
@@ -377,51 +419,6 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
 
         return alertDialog
-    }
-
-    private fun validateInput() {
-        val currentBalance = identities.getValue(from.memberId).balance
-        val isValueValid = if (value == null) {
-            textViewValueError.text = null
-            false
-        } else {
-            val requiredBalance = if (from.isBanker) {
-                null
-            } else {
-                value!!.multiply(BigDecimal(to.size))
-            }
-            if (requiredBalance != null && currentBalance < requiredBalance) {
-                textViewValueError.text = getString(
-                        R.string.transfer_value_invalid_format_string,
-                        LiquidityApplication.formatCurrencyValue(
-                                requireContext(),
-                                currency!!,
-                                currentBalance
-                        ),
-                        LiquidityApplication.formatCurrencyValue(
-                                requireContext(),
-                                currency!!,
-                                requiredBalance
-                        )
-                )
-                false
-            } else {
-                textViewValueError.text = null
-                true
-            }
-        }
-        val toAccountIds = to.map { it.accountId }.toSet()
-        val isFromValid = if (toAccountIds.contains(from.accountId)) {
-            textViewFromError.text = getString(
-                    R.string.transfer_from_invalid_format_string,
-                    LiquidityApplication.formatNullable(requireContext(), from.name)
-            )
-            false
-        } else {
-            textViewFromError.text = null
-            true
-        }
-        buttonPositive!!.isEnabled = isValueValid && isFromValid
     }
 
 }
