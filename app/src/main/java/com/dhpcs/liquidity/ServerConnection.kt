@@ -56,14 +56,14 @@ class ServerConnection(filesDir: File) {
             call.enqueue(object : Callback {
 
                 override fun onFailure(call: Call, e: IOException) {
-                    if (!it.isDisposed) it.onError(e)
+                    if (!it.isDisposed) it.tryOnError(e)
                 }
 
                 override fun onResponse(call: Call, response: Response) {
                     val source = response.body()!!.source()
                     if (response.code() != 200) {
                         if (!it.isDisposed) {
-                            it.onError(IOException(
+                            it.tryOnError(IOException(
                                     "response.code() != 200 (response.code() = ${response.code()})"
                             ))
                         }
@@ -118,13 +118,13 @@ class ServerConnection(filesDir: File) {
             call.enqueue(object : Callback {
 
                 override fun onFailure(call: Call, e: IOException) {
-                    if (!it.isDisposed) it.onError(e)
+                    if (!it.isDisposed) it.tryOnError(e)
                 }
 
                 override fun onResponse(call: Call, response: Response) {
                     if (response.code() != 200) {
                         if (!it.isDisposed) {
-                            it.onError(IOException(
+                            it.tryOnError(IOException(
                                     "response.code() != 200 (response.code() = ${response.code()})"
                             ))
                         }

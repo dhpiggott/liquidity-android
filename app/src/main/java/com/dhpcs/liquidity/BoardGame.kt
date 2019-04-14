@@ -161,18 +161,18 @@ class BoardGame constructor(
             ).subscribe({ zoneResponse ->
                 when (zoneResponse.createZoneResponse.resultCase!!) {
                     WsProtocol.ZoneResponse.CreateZoneResponse.ResultCase.RESULT_NOT_SET ->
-                        singleEmitter.onError(IllegalArgumentException(
+                        singleEmitter.tryOnError(IllegalArgumentException(
                                 zoneResponse.createZoneResponse.resultCase.name
                         ))
                     WsProtocol.ZoneResponse.CreateZoneResponse.ResultCase.ERRORS ->
-                        singleEmitter.onError(IllegalArgumentException(
+                        singleEmitter.tryOnError(IllegalArgumentException(
                                 zoneResponse.createZoneResponse.resultCase.name
                         ))
                     WsProtocol.ZoneResponse.CreateZoneResponse.ResultCase.SUCCESS ->
                         singleEmitter.onSuccess(zoneResponse.createZoneResponse.success.zone!!.id)
                 }
             }, { error ->
-                singleEmitter.onError(error)
+                singleEmitter.tryOnError(error)
             })
         }
     }
@@ -550,18 +550,18 @@ class BoardGame constructor(
             ).subscribe({ zoneResponse ->
                 when (zoneResponse.createAccountResponse.resultCase!!) {
                     WsProtocol.ZoneResponse.CreateAccountResponse.ResultCase.RESULT_NOT_SET ->
-                        singleEmitter.onError(IllegalArgumentException(
+                        singleEmitter.tryOnError(IllegalArgumentException(
                                 zoneResponse.createAccountResponse.resultCase.name
                         ))
                     WsProtocol.ZoneResponse.CreateAccountResponse.ResultCase.ERRORS ->
-                        singleEmitter.onError(IllegalArgumentException(
+                        singleEmitter.tryOnError(IllegalArgumentException(
                                 zoneResponse.createAccountResponse.errors.toString()
                         ))
                     WsProtocol.ZoneResponse.CreateAccountResponse.ResultCase.SUCCESS ->
                         singleEmitter.onSuccess(zoneResponse.createAccountResponse.success.account)
                 }
             }, { error ->
-                singleEmitter.onError(error)
+                singleEmitter.tryOnError(error)
             })
         }
     }
@@ -579,18 +579,18 @@ class BoardGame constructor(
             ).subscribe({ zoneResponse ->
                 when (zoneResponse.changeZoneNameResponse.resultCase!!) {
                     WsProtocol.ZoneResponse.ChangeZoneNameResponse.ResultCase.RESULT_NOT_SET ->
-                        singleEmitter.onError(IllegalArgumentException(
+                        singleEmitter.tryOnError(IllegalArgumentException(
                                 zoneResponse.changeZoneNameResponse.resultCase.name
                         ))
                     WsProtocol.ZoneResponse.ChangeZoneNameResponse.ResultCase.ERRORS ->
-                        singleEmitter.onError(IllegalArgumentException(
+                        singleEmitter.tryOnError(IllegalArgumentException(
                                 zoneResponse.changeZoneNameResponse.errors.toString()
                         ))
                     WsProtocol.ZoneResponse.ChangeZoneNameResponse.ResultCase.SUCCESS ->
                         singleEmitter.onSuccess(Unit)
                 }
             }, { error ->
-                singleEmitter.onError(error)
+                singleEmitter.tryOnError(error)
             })
         }
     }
@@ -633,11 +633,11 @@ class BoardGame constructor(
                 ).subscribe({ zoneResponse ->
                     when (zoneResponse.createMemberResponse.resultCase!!) {
                         WsProtocol.ZoneResponse.CreateMemberResponse.ResultCase.RESULT_NOT_SET ->
-                            singleEmitter.onError(IllegalArgumentException(
+                            singleEmitter.tryOnError(IllegalArgumentException(
                                     zoneResponse.createMemberResponse.resultCase.name
                             ))
                         WsProtocol.ZoneResponse.CreateMemberResponse.ResultCase.ERRORS ->
-                            singleEmitter.onError(IllegalArgumentException(
+                            singleEmitter.tryOnError(IllegalArgumentException(
                                     zoneResponse.createMemberResponse.errors.toString()
                             ))
                         WsProtocol.ZoneResponse.CreateMemberResponse.ResultCase.SUCCESS ->
@@ -646,7 +646,7 @@ class BoardGame constructor(
                             )
                     }
                 }, { error ->
-                    singleEmitter.onError(error)
+                    singleEmitter.tryOnError(error)
                 })
             }
         }
@@ -676,18 +676,18 @@ class BoardGame constructor(
             ).subscribe({ zoneResponse ->
                 when (zoneResponse.updateMemberResponse.resultCase!!) {
                     WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.RESULT_NOT_SET ->
-                        singleEmitter.onError(IllegalArgumentException(
+                        singleEmitter.tryOnError(IllegalArgumentException(
                                 zoneResponse.updateMemberResponse.resultCase.name
                         ))
                     WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.ERRORS ->
-                        singleEmitter.onError(IllegalArgumentException(
+                        singleEmitter.tryOnError(IllegalArgumentException(
                                 zoneResponse.updateMemberResponse.errors.toString()
                         ))
                     WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.SUCCESS ->
                         singleEmitter.onSuccess(Unit)
                 }
             }, { error ->
-                singleEmitter.onError(error)
+                singleEmitter.tryOnError(error)
             })
         }
     }
@@ -725,18 +725,18 @@ class BoardGame constructor(
             ).subscribe({ zoneResponse ->
                 when (zoneResponse.updateMemberResponse.resultCase!!) {
                     WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.RESULT_NOT_SET ->
-                        singleEmitter.onError(IllegalArgumentException(
+                        singleEmitter.tryOnError(IllegalArgumentException(
                                 zoneResponse.updateMemberResponse.resultCase.name
                         ))
                     WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.ERRORS ->
-                        singleEmitter.onError(IllegalArgumentException(
+                        singleEmitter.tryOnError(IllegalArgumentException(
                                 zoneResponse.updateMemberResponse.errors.toString()
                         ))
                     WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.SUCCESS ->
                         singleEmitter.onSuccess(Unit)
                 }
             }, { error ->
-                singleEmitter.onError(error)
+                singleEmitter.tryOnError(error)
             })
         }
     }
@@ -759,18 +759,18 @@ class BoardGame constructor(
             ).subscribe({ zoneResponse ->
                 when (zoneResponse.updateMemberResponse.resultCase!!) {
                     WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.RESULT_NOT_SET ->
-                        singleEmitter.onError(IllegalArgumentException(
+                        singleEmitter.tryOnError(IllegalArgumentException(
                                 zoneResponse.updateMemberResponse.resultCase.name
                         ))
                     WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.ERRORS ->
-                        singleEmitter.onError(IllegalArgumentException(
+                        singleEmitter.tryOnError(IllegalArgumentException(
                                 zoneResponse.updateMemberResponse.errors.toString()
                         ))
                     WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.SUCCESS ->
                         singleEmitter.onSuccess(Unit)
                 }
             }, { error ->
-                singleEmitter.onError(error)
+                singleEmitter.tryOnError(error)
             })
         }
     }
@@ -793,18 +793,18 @@ class BoardGame constructor(
             ).subscribe({ zoneResponse ->
                 when (zoneResponse.updateMemberResponse.resultCase!!) {
                     WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.RESULT_NOT_SET ->
-                        singleEmitter.onError(IllegalArgumentException(
+                        singleEmitter.tryOnError(IllegalArgumentException(
                                 zoneResponse.updateMemberResponse.resultCase.name
                         ))
                     WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.ERRORS ->
-                        singleEmitter.onError(IllegalArgumentException(
+                        singleEmitter.tryOnError(IllegalArgumentException(
                                 zoneResponse.updateMemberResponse.errors.toString()
                         ))
                     WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.SUCCESS ->
                         singleEmitter.onSuccess(Unit)
                 }
             }, { error ->
-                singleEmitter.onError(error)
+                singleEmitter.tryOnError(error)
             })
         }
     }
@@ -828,18 +828,18 @@ class BoardGame constructor(
             ).subscribe({ zoneResponse ->
                 when (zoneResponse.addTransactionResponse.resultCase!!) {
                     WsProtocol.ZoneResponse.AddTransactionResponse.ResultCase.RESULT_NOT_SET ->
-                        singleEmitter.onError(IllegalArgumentException(
+                        singleEmitter.tryOnError(IllegalArgumentException(
                                 zoneResponse.updateMemberResponse.resultCase.name
                         ))
                     WsProtocol.ZoneResponse.AddTransactionResponse.ResultCase.ERRORS ->
-                        singleEmitter.onError(IllegalArgumentException(
+                        singleEmitter.tryOnError(IllegalArgumentException(
                                 zoneResponse.updateMemberResponse.errors.toString()
                         ))
                     WsProtocol.ZoneResponse.AddTransactionResponse.ResultCase.SUCCESS ->
                         singleEmitter.onSuccess(Unit)
                 }
             }, { error ->
-                singleEmitter.onError(error)
+                singleEmitter.tryOnError(error)
             })
         }
     }
