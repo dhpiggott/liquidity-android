@@ -40,7 +40,7 @@ class BoardGame constructor(
                 val isHidden: Boolean,
                 val accountId: String,
                 val balance: BigDecimal,
-                val currency: String?,
+                val currency: String,
                 val isBanker: Boolean,
                 val isConnected: Boolean
         )
@@ -53,7 +53,7 @@ class BoardGame constructor(
                 val isHidden: Boolean,
                 val accountId: String,
                 val balance: BigDecimal,
-                val currency: String?,
+                val currency: String,
                 val isBanker: Boolean
         )
 
@@ -65,7 +65,7 @@ class BoardGame constructor(
                 val transactionId: String,
                 val created: Long,
                 val value: BigDecimal,
-                val currency: String?
+                val currency: String
         )
 
         const val MAXIMUM_TAG_LENGTH = 160
@@ -77,7 +77,7 @@ class BoardGame constructor(
                 val zone: Model.Zone,
                 val connectedClients: Map<String, ByteString>,
                 val balances: Map<String, BigDecimal>,
-                val currency: String?,
+                val currency: String,
                 val identities: Map<String, Identity>,
                 val hiddenIdentities: Map<String, Identity>,
                 val players: Map<String, Player>,
@@ -110,7 +110,9 @@ class BoardGame constructor(
             }
         }
     private var state: State? = null
-    val currency get() = state!!.currency
+
+    private val currencySubject = BehaviorSubject.createDefault("")
+    val currencyObservable: Observable<String> = currencySubject
 
     private val gameNameSubject = BehaviorSubject.createDefault("")
     val gameNameObservable: Observable<String> = gameNameSubject
@@ -238,7 +240,7 @@ class BoardGame constructor(
                 zone: Model.Zone,
                 connectedClients: Map<String, ByteString>,
                 balances: Map<String, BigDecimal>,
-                currency: String?
+                currency: String
         ): State {
             val memberIdsToAccountIds = zone.accountsList.filter {
                 it.ownerMemberIdsCount == 1
@@ -323,6 +325,11 @@ class BoardGame constructor(
         fun dispatchUpdates(oldState: State?, newState: State) {
             if (oldState == null) {
                 joinStateSubject.onNext(JOINED)
+            }
+            val oldCurrency = oldState?.currency
+            val newCurrency = newState.currency
+            if (oldState == null || newCurrency != oldCurrency) {
+                currencySubject.onNext(newCurrency)
             }
             val oldName = if (oldState?.zone?.hasName() == true) oldState.zone.name.value else null
             val newName = if (newState.zone.hasName()) newState.zone.name.value else null
@@ -520,7 +527,7 @@ class BoardGame constructor(
                                                     BigDecimal(transaction.value)
                                     )
                         }
-                val currency = zone.metadata?.fieldsMap?.get((CURRENCY_CODE_KEY))?.stringValue
+                val currency = zone.metadata?.fieldsMap?.get((CURRENCY_CODE_KEY))?.stringValue ?: ""
                 updateState(
                         zone,
                         connectedClients,

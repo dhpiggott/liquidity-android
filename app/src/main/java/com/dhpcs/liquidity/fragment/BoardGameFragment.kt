@@ -11,7 +11,7 @@ import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.LiquidityApplication
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.MainActivity
-import com.dhpcs.liquidity.activity.MainActivity.Companion.liveData
+import com.dhpcs.liquidity.activity.MainActivity.Companion.observableLiveData
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState
 import kotlinx.android.synthetic.main.fragment_board_game.*
@@ -66,7 +66,9 @@ class BoardGameFragment : Fragment() {
                 }
         )
 
-        model.boardGame.liveData { it.joinStateObservable() }.observe(this, Observer {
+        model.boardGame.observableLiveData {
+            it.joinStateObservable()
+        }.observe(this, Observer {
             when (it!!) {
                 BoardGame.Companion.JoinState.QUIT -> {
 
@@ -127,7 +129,9 @@ class BoardGameFragment : Fragment() {
             }
             requireActivity().invalidateOptionsMenu()
         })
-        model.boardGame.liveData { it.gameNameObservable }.observe(this, Observer {
+        model.boardGame.observableLiveData {
+            it.gameNameObservable
+        }.observe(this, Observer {
             if (findNavController().currentDestination!!.id == R.id.board_game_fragment) {
                 requireActivity().title = it
             }
@@ -174,32 +178,32 @@ class BoardGameFragment : Fragment() {
                 isJoined
         menu.findItem(R.id.action_group_transfer).isVisible =
                 isJoined &&
-                selectedIdentity is MainActivity.Companion.Optional.Some &&
-                isPanelCollapsed
+                        selectedIdentity is MainActivity.Companion.Optional.Some &&
+                        isPanelCollapsed
         menu.findItem(R.id.action_change_game_name).isVisible =
                 isJoined
         menu.findItem(R.id.action_change_identity_name).isVisible =
                 isJoined &&
-                (selectedIdentity as? MainActivity.Companion.Optional.Some)?.value?.isBanker ==
-                false &&
-                isPanelCollapsed
+                        (selectedIdentity as? MainActivity.Companion.Optional.Some)?.value?.isBanker ==
+                        false &&
+                        isPanelCollapsed
         menu.findItem(R.id.action_create_identity).isVisible =
                 isJoined &&
-                isPanelCollapsed
+                        isPanelCollapsed
         menu.findItem(R.id.action_restore_identity).isVisible =
                 isJoined &&
-                isPanelCollapsed && model.boardGame.hiddenIdentities.isNotEmpty()
+                        isPanelCollapsed && model.boardGame.hiddenIdentities.isNotEmpty()
         menu.findItem(R.id.action_delete_identity).isVisible =
                 isJoined &&
-                selectedIdentity is MainActivity.Companion.Optional.Some &&
-                isPanelCollapsed
+                        selectedIdentity is MainActivity.Companion.Optional.Some &&
+                        isPanelCollapsed
         menu.findItem(R.id.action_receive_identity).isVisible =
                 isJoined &&
-                isPanelCollapsed
+                        isPanelCollapsed
         menu.findItem(R.id.action_transfer_identity).isVisible =
                 isJoined &&
-                selectedIdentity is MainActivity.Companion.Optional.Some &&
-                isPanelCollapsed
+                        selectedIdentity is MainActivity.Companion.Optional.Some &&
+                        isPanelCollapsed
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

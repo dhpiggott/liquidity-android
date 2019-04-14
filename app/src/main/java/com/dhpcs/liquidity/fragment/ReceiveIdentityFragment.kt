@@ -10,7 +10,7 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.fragment.findNavController
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.MainActivity
-import com.dhpcs.liquidity.activity.MainActivity.Companion.liveData
+import com.dhpcs.liquidity.activity.MainActivity.Companion.observableLiveData
 import kotlinx.android.synthetic.main.fragment_receive_identity.*
 import net.glxn.qrgen.android.QRCode
 
@@ -36,7 +36,9 @@ class ReceiveIdentityFragment : Fragment() {
             )
         }
 
-        model.boardGame.liveData { it.addedIdentitiesObservable }.observe(this, Observer {
+        model.boardGame.observableLiveData {
+            it.addedIdentitiesObservable
+        }.observe(this, Observer {
             findNavController().popBackStack()
         })
     }

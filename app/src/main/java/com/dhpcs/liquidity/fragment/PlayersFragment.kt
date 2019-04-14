@@ -19,7 +19,7 @@ import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.LiquidityApplication
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.MainActivity
-import com.dhpcs.liquidity.activity.MainActivity.Companion.liveData
+import com.dhpcs.liquidity.activity.MainActivity.Companion.observableLiveData
 import com.dhpcs.liquidity.view.Identicon
 import kotlinx.android.synthetic.main.fragment_players.*
 
@@ -175,7 +175,7 @@ class PlayersFragment : Fragment() {
             }
         }
 
-        model.boardGame.liveData { it.playersObservable }.observe(this, Observer {
+        model.boardGame.observableLiveData { it.playersObservable }.observe(this, Observer {
             updatePlayers(it.values, model.selectedIdentity)
         })
         model.selectedIdentityLiveData.observe(this, Observer {

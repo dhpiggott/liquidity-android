@@ -14,7 +14,7 @@ import androidx.lifecycle.ViewModelProviders
 import com.dhpcs.liquidity.LiquidityApplication
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.MainActivity
-import com.dhpcs.liquidity.activity.MainActivity.Companion.liveData
+import com.dhpcs.liquidity.activity.MainActivity.Companion.observableLiveData
 import io.reactivex.Observable
 import kotlinx.android.synthetic.main.fragment_last_transfer.*
 import org.joda.time.Instant
@@ -42,7 +42,7 @@ class LastTransferFragment : Fragment() {
                 transferReceiptMediaPlayer.release()
             }
         })
-        model.boardGame.liveData {
+        model.boardGame.observableLiveData {
             Observable.merge(
                     it.transfersObservable.filter { transfers ->
                         transfers.isNotEmpty()

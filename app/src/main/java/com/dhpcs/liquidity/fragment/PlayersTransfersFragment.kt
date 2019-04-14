@@ -14,7 +14,7 @@ import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.LiquidityApplication
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.MainActivity
-import com.dhpcs.liquidity.activity.MainActivity.Companion.liveData
+import com.dhpcs.liquidity.activity.MainActivity.Companion.observableLiveData
 import kotlinx.android.synthetic.main.fragment_players_transfers.*
 
 class PlayersTransfersFragment : Fragment() {
@@ -62,7 +62,9 @@ class PlayersTransfersFragment : Fragment() {
 
         tablayout_players.setupWithViewPager(viewpager_players_transfers)
 
-        model.boardGame.liveData { it.playersObservable }.observe(this, Observer {
+        model.boardGame.observableLiveData {
+            it.playersObservable
+        }.observe(this, Observer {
             val playersTransfersFragmentStatePagerAdapter =
                     PlayersTransfersFragmentStatePagerAdapter(
                             fragmentManager!!,

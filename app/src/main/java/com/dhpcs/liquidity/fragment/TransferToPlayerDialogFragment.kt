@@ -13,11 +13,14 @@ import android.view.WindowManager
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDialogFragment
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.LiquidityApplication
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.MainActivity
+import com.dhpcs.liquidity.activity.MainActivity.Companion.maybeLiveData
+import com.dhpcs.liquidity.activity.MainActivity.Companion.observableLiveData
 import java.math.BigDecimal
 import java.text.DecimalFormat
 import java.text.NumberFormat
@@ -132,8 +135,6 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
 
     }
 
-    private var currency: String? = null
-
     private lateinit var from: BoardGame.Companion.Identity
     private lateinit var to: ArrayList<BoardGame.Companion.Player>
 
@@ -151,8 +152,6 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
 
         val model = ViewModelProviders.of(requireActivity())
                 .get(MainActivity.Companion.BoardGameModel::class.java)
-
-        currency = model.boardGame.currency
 
         val fromIdentityId = arguments!!.getString(ARG_FROM_IDENTITY_ID)!!
         val toPlayerId = arguments!!.getString(ARG_TO_PLAYER_ID)
@@ -225,19 +224,23 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                     value!!.multiply(BigDecimal(to.size))
                 }
                 if (requiredBalance != null && currentBalance < requiredBalance) {
-                    textViewValueError.text = getString(
-                            R.string.transfer_value_invalid_format_string,
-                            LiquidityApplication.formatCurrencyValue(
-                                    requireContext(),
-                                    currency!!,
-                                    currentBalance
-                            ),
-                            LiquidityApplication.formatCurrencyValue(
-                                    requireContext(),
-                                    currency!!,
-                                    requiredBalance
-                            )
-                    )
+                    model.boardGame.maybeLiveData {
+                        model.boardGame.currencyObservable.firstElement()
+                    }.observe(this@TransferToPlayerDialogFragment, Observer { currency ->
+                        textViewValueError.text = getString(
+                                R.string.transfer_value_invalid_format_string,
+                                LiquidityApplication.formatCurrencyValue(
+                                        requireContext(),
+                                        currency,
+                                        currentBalance
+                                ),
+                                LiquidityApplication.formatCurrencyValue(
+                                        requireContext(),
+                                        currency,
+                                        requiredBalance
+                                )
+                        )
+                    })
                     false
                 } else {
                     textViewValueError.text = null
@@ -328,14 +331,18 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                     if (value!!.scaleByPowerOfTen(-3).abs() < BigDecimal.ONE) {
                         editTextScaledValue.text = null
                     } else {
-                        editTextScaledValue.text = getString(
-                                R.string.transfer_to_player_scaled_value_format_string,
-                                LiquidityApplication.formatCurrencyValue(
-                                        requireContext(),
-                                        currency!!,
-                                        value!!
-                                )
-                        )
+                        model.boardGame.maybeLiveData {
+                            model.boardGame.currencyObservable.firstElement()
+                        }.observe(this@TransferToPlayerDialogFragment, Observer { currency ->
+                            editTextScaledValue.text = getString(
+                                    R.string.transfer_to_player_scaled_value_format_string,
+                                    LiquidityApplication.formatCurrencyValue(
+                                            requireContext(),
+                                            currency,
+                                            value!!
+                                    )
+                            )
+                        })
                     }
 
                 }
@@ -374,7 +381,11 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
 
         }
 
-        textViewCurrency.text = LiquidityApplication.formatCurrency(requireContext(), currency!!)
+        model.boardGame.observableLiveData {
+            model.boardGame.currencyObservable
+        }.observe(this, Observer { currency ->
+            textViewCurrency.text = LiquidityApplication.formatCurrency(requireContext(), currency)
+        })
 
         spinnerFrom.setSelection(identitiesSpinnerAdapter.getPosition(from))
 

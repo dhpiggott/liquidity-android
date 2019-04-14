@@ -11,7 +11,7 @@ import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.LiquidityApplication
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.MainActivity
-import com.dhpcs.liquidity.activity.MainActivity.Companion.liveData
+import com.dhpcs.liquidity.activity.MainActivity.Companion.observableLiveData
 import com.dhpcs.liquidity.view.Identicon
 import kotlinx.android.synthetic.main.fragment_identity.*
 
@@ -43,7 +43,7 @@ class IdentityFragment : Fragment() {
                 .get(MainActivity.Companion.BoardGameModel::class.java)
         val identityId = arguments!!.getString(ARG_IDENTITY_ID)!!
 
-        model.boardGame.liveData {
+        model.boardGame.observableLiveData {
             it.identitiesObservable.filter { identities ->
                 identities.values.any { identity -> identity.memberId == identityId }
             }.map { identities -> identities.getValue(identityId) }

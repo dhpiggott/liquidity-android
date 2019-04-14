@@ -85,8 +85,8 @@ class LiquidityApplication : Application() {
             return String.format(context.resources.getQuantityString(resId, count), count)
         }
 
-        fun formatCurrency(context: Context, currencyCode: String?): String {
-            return if (currencyCode == null) {
+        fun formatCurrency(context: Context, currencyCode: String): String {
+            return if (currencyCode == "") {
                 ""
             } else {
                 try {
@@ -108,7 +108,7 @@ class LiquidityApplication : Application() {
             }
         }
 
-        fun formatCurrencyValue(context: Context, currencyCode: String?, value: BigDecimal): String {
+        fun formatCurrencyValue(context: Context, currencyCode: String, value: BigDecimal): String {
             val scaleAmount: Int
             val scaledValue: BigDecimal
             val multiplier: String

@@ -14,7 +14,7 @@ import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.LiquidityApplication
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.MainActivity
-import com.dhpcs.liquidity.activity.MainActivity.Companion.liveData
+import com.dhpcs.liquidity.activity.MainActivity.Companion.observableLiveData
 import kotlinx.android.synthetic.main.fragment_transfers.*
 import java.text.DateFormat
 
@@ -192,7 +192,9 @@ class TransfersFragment : Fragment() {
             recyclerview_transfers.visibility = View.VISIBLE
         }
 
-        model.boardGame.liveData { it.transfersObservable }.observe(this, Observer {
+        model.boardGame.observableLiveData {
+            it.transfersObservable
+        }.observe(this, Observer {
             val visibleTransfers = it.filter { transfer ->
                 player == null ||
                         (transfer.fromPlayer != null &&

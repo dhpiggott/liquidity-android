@@ -14,7 +14,7 @@ import com.dhpcs.liquidity.BoardGame
 import com.dhpcs.liquidity.LiquidityApplication
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.MainActivity
-import com.dhpcs.liquidity.activity.MainActivity.Companion.liveData
+import com.dhpcs.liquidity.activity.MainActivity.Companion.observableLiveData
 import kotlinx.android.synthetic.main.fragment_identities.*
 
 class IdentitiesFragment : Fragment() {
@@ -69,7 +69,9 @@ class IdentitiesFragment : Fragment() {
         }
         viewpager_identities.addOnPageChangeListener(pageChangeListener)
 
-        model.boardGame.liveData { it.identitiesObservable }.observe(this, Observer {
+        model.boardGame.observableLiveData {
+            it.identitiesObservable
+        }.observe(this, Observer {
             if (it.isEmpty()) {
                 textview_empty.visibility = View.VISIBLE
                 viewpager_identities.visibility = View.GONE
@@ -113,13 +115,17 @@ class IdentitiesFragment : Fragment() {
                 }
             }
         })
-        model.boardGame.liveData { it.addedIdentitiesObservable }.observe(this, Observer {
+        model.boardGame.observableLiveData {
+            it.addedIdentitiesObservable
+        }.observe(this, Observer {
             val adapter = viewpager_identities.adapter as? IdentitiesFragmentStatePagerAdapter
             if (adapter != null) {
                 viewpager_identities.currentItem = adapter.identities.indexOf(it)
             }
         })
-        model.boardGame.liveData { it.identityRequiredObservable }.observe(this, Observer {
+        model.boardGame.observableLiveData {
+            it.identityRequiredObservable
+        }.observe(this, Observer {
             if (fragmentManager!!.findFragmentByTag(CreateIdentityDialogFragment.TAG) == null) {
                 CreateIdentityDialogFragment.newInstance().show(
                         fragmentManager!!,

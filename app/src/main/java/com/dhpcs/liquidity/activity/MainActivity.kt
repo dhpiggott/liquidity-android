@@ -17,6 +17,7 @@ import com.dhpcs.liquidity.GameDatabase
 import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.ServerConnection
 import io.reactivex.BackpressureStrategy
+import io.reactivex.Maybe
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.disposables.Disposable
@@ -151,7 +152,16 @@ class MainActivity : AppCompatActivity() {
 
         }
 
-        fun <T> BoardGame.liveData(observable: (BoardGame) -> Observable<T>): PublisherLiveData<T> {
+        fun <T> BoardGame.maybeLiveData(maybe: (BoardGame) -> Maybe<T>): PublisherLiveData<T> {
+            return PublisherLiveData(
+                    this,
+                    maybe(this).toFlowable()
+            )
+        }
+
+        fun <T> BoardGame.observableLiveData(
+                observable: (BoardGame) -> Observable<T>
+        ): PublisherLiveData<T> {
             return PublisherLiveData(
                     this,
                     observable(this).toFlowable(BackpressureStrategy.BUFFER)
