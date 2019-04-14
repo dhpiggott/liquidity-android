@@ -692,8 +692,8 @@ class BoardGame constructor(
         }
     }
 
-    fun isPublicKeyConnectedAndImplicitlyValid(publicKey: ByteString): Boolean {
-        return state!!.connectedClients.values.contains(publicKey)
+    fun isPublicKeyConnectedAndImplicitlyValid(publicKey: ByteString): Boolean? {
+        return state?.connectedClients?.values?.contains(publicKey)
     }
 
     fun transferIdentity(identityId: String, toPublicKey: ByteString): Single<Unit> {

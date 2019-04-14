@@ -62,7 +62,7 @@ class TransferIdentityFragment : Fragment() {
                     val publicKey = ByteString.copyFrom(
                             okio.ByteString.decodeBase64(result!!.text)!!.toByteArray()
                     )
-                    if (!model.boardGame.isPublicKeyConnectedAndImplicitlyValid(publicKey)) {
+                    if (model.boardGame.isPublicKeyConnectedAndImplicitlyValid(publicKey) != true) {
                         throw IllegalArgumentException()
                     }
                     val error = getString(
