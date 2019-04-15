@@ -24,7 +24,7 @@ class ServerConnection(filesDir: File) {
     companion object {
 
         private val okHttpClient = OkHttpClient.Builder()
-                .connectionSpecs(listOf(ConnectionSpec.MODERN_TLS))
+                .connectionSpecs(listOf(ConnectionSpec.RESTRICTED_TLS))
                 .build()
 
     }
