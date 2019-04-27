@@ -132,7 +132,7 @@ class BoardGameFragment : Fragment() {
         model.boardGame.observableLiveData {
             it.gameNameObservable
         }.observe(this, Observer {
-            if (findNavController().currentDestination!!.id == R.id.board_game_fragment) {
+            if (findNavController().currentDestination?.id == R.id.board_game_fragment) {
                 requireActivity().title = it
             }
         })
