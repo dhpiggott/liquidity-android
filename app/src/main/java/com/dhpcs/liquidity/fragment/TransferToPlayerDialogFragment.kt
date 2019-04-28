@@ -21,6 +21,7 @@ import com.dhpcs.liquidity.R
 import com.dhpcs.liquidity.activity.MainActivity
 import com.dhpcs.liquidity.activity.MainActivity.Companion.maybeLiveData
 import com.dhpcs.liquidity.activity.MainActivity.Companion.observableLiveData
+import io.reactivex.subjects.BehaviorSubject
 import java.math.BigDecimal
 import java.text.DecimalFormat
 import java.text.NumberFormat
@@ -47,7 +48,7 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
 
         private class PlayersAdapter
         internal constructor(context: Context,
-                             val players: List<BoardGame.Companion.Player>
+                             players: List<BoardGame.Companion.Player>
         ) : ArrayAdapter<BoardGame.Companion.Player>(
                 context,
                 android.R.layout.simple_spinner_item,
@@ -135,49 +136,6 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
 
     }
 
-    private lateinit var from: BoardGame.Companion.Identity
-    private lateinit var to: ArrayList<BoardGame.Companion.Player>
-
-    private lateinit var identities: Map<String, BoardGame.Companion.Identity>
-    private lateinit var identitiesSpinnerAdapter: IdentitiesAdapter
-
-    private lateinit var playersSpinnerAdapter: PlayersAdapter
-
-    private var buttonPositive: Button? = null
-
-    private var value: BigDecimal? = null
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        val model = ViewModelProviders.of(requireActivity())
-                .get(MainActivity.Companion.BoardGameModel::class.java)
-
-        val fromIdentityId = arguments!!.getString(ARG_FROM_IDENTITY_ID)!!
-        val toPlayerId = arguments!!.getString(ARG_TO_PLAYER_ID)
-
-        from = model.boardGame.identities.getValue(fromIdentityId)
-
-        to = if (toPlayerId != null) {
-            arrayListOf(model.boardGame.players.getValue(toPlayerId))
-        } else {
-            arrayListOf()
-        }
-
-        identities = model.boardGame.identities
-        identitiesSpinnerAdapter = IdentitiesAdapter(
-                requireContext(),
-                identities.values
-                        .sortedWith(LiquidityApplication.identityComparator(requireContext()))
-        )
-
-        playersSpinnerAdapter = PlayersAdapter(
-                requireContext(),
-                model.boardGame.players.values
-                        .sortedWith(LiquidityApplication.playerComparator(requireContext()))
-        )
-    }
-
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         @SuppressLint("InflateParams") val view = requireActivity().layoutInflater.inflate(
                 R.layout.fragment_transfer_to_player_dialog, null
@@ -192,6 +150,20 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
         val linearLayoutTo = view.findViewById<LinearLayout>(R.id.linearlayout_to)
         val spinnerTo = view.findViewById<Spinner>(R.id.spinner_to)
 
+        var value = BigDecimal.ZERO
+        lateinit var buttonPositive: Button
+
+        val fromIdentityId = arguments!!.getString(ARG_FROM_IDENTITY_ID)!!
+        val fromIdentityIdSubject = BehaviorSubject.createDefault(
+                fromIdentityId
+        )
+        val toPlayerId = arguments!!.getString(ARG_TO_PLAYER_ID)
+        val toPlayerIdsSubject = BehaviorSubject.createDefault(
+                if (toPlayerId != null) listOf(toPlayerId) else emptyList()
+        )
+        val fromSubject = BehaviorSubject.create<BoardGame.Companion.Identity>()
+        val toSubject = BehaviorSubject.create<Collection<BoardGame.Companion.Player>>()
+
         val model = ViewModelProviders.of(requireActivity())
                 .get(MainActivity.Companion.BoardGameModel::class.java)
         val alertDialog = AlertDialog.Builder(requireContext())
@@ -201,32 +173,36 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                 .setView(view)
                 .setNegativeButton(R.string.cancel, null)
                 .setPositiveButton(R.string.ok) { _, _ ->
-                    to.forEach { to ->
-                        val error = getString(
-                                R.string.transfer_to_player_error_format_string, to.name
-                        )
-                        model.execCommand(
-                                model.boardGame.transferToPlayer(from, to, value!!)
-                        ) { error }
+                    val from = fromSubject.value
+                    if (from != null) {
+                        toSubject.value?.forEach { to ->
+                            val error = getString(
+                                    R.string.transfer_to_player_error_format_string, to.name
+                            )
+                            model.execCommand(
+                                    model.boardGame.transferToPlayer(from, to, value!!)
+                            ) { error }
+                        }
                     }
                 }
                 .create()
 
         fun validateInput() {
-            val currentBalance = identities.getValue(from.memberId).balance
+            val currentBalance = fromSubject.value?.balance
             val isValueValid = if (value == null) {
                 textViewValueError.text = null
                 false
             } else {
-                val requiredBalance = if (from.isBanker) {
+                val requiredBalance = if (fromSubject.value?.isBanker == true) {
                     null
                 } else {
-                    value!!.multiply(BigDecimal(to.size))
+                    value!!.multiply(BigDecimal(toSubject.value?.size ?: 0))
                 }
-                if (requiredBalance != null && currentBalance < requiredBalance) {
+                if (currentBalance != null && requiredBalance != null &&
+                        currentBalance < requiredBalance) {
                     model.boardGame.maybeLiveData {
                         model.boardGame.currencyObservable.firstElement()
-                    }.observe(this@TransferToPlayerDialogFragment, Observer { currency ->
+                    }.observe(this, Observer { currency ->
                         textViewValueError.text = getString(
                                 R.string.transfer_value_invalid_format_string,
                                 LiquidityApplication.formatCurrencyValue(
@@ -247,18 +223,21 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                     true
                 }
             }
-            val toAccountIds = to.map { it.accountId }.toSet()
-            val isFromValid = if (toAccountIds.contains(from.accountId)) {
+            val toAccountIds = toSubject.value?.map { it.accountId } ?: emptyList()
+            val isFromValid = if (toAccountIds.contains(fromSubject.value?.accountId)) {
                 textViewFromError.text = getString(
                         R.string.transfer_from_invalid_format_string,
-                        LiquidityApplication.formatNullable(requireContext(), from.name)
+                        LiquidityApplication.formatNullable(
+                                requireContext(),
+                                fromSubject.value?.name
+                        )
                 )
                 false
             } else {
                 textViewFromError.text = null
                 true
             }
-            buttonPositive!!.isEnabled = isValueValid && isFromValid
+            buttonPositive.isEnabled = isValueValid && isFromValid
         }
 
         editTextValue.addTextChangedListener(object : TextWatcher {
@@ -269,29 +248,23 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
 
             @SuppressLint("SetTextI18n")
             override fun afterTextChanged(s: Editable) {
-
                 val numberFormat = NumberFormat.getNumberInstance() as DecimalFormat
-
-                value = try {
+                value = if (s.isEmpty()) {
+                    BigDecimal.ZERO
+                } else {
                     BigDecimal(
                             s.toString().replace(
                                     numberFormat.decimalFormatSymbols.groupingSeparator.toString(),
                                     ""
                             )
                     )
-                } catch (_: IllegalArgumentException) {
-                    null
                 }
-
                 if (value == null) {
-
                     editTextValue.removeTextChangedListener(this)
                     editTextValue.text = null
                     editTextValue.addTextChangedListener(this)
                     editTextScaledValue.text = null
-
                 } else {
-
                     val trailingZeros = StringBuilder()
                     val currentDecimalSeparatorIndex = s.toString().indexOf(
                             numberFormat.decimalFormatSymbols.decimalSeparator
@@ -321,7 +294,6 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
 
                     val updatedLength = editTextValue.text.length
                     val updatedSelection = currentSelection + updatedLength - currentLength
-
                     if (updatedSelection < 0 || updatedSelection > updatedLength) {
                         editTextValue.setSelection(0)
                     } else {
@@ -344,42 +316,11 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                             )
                         })
                     }
-
                 }
-
-                if (buttonPositive != null) validateInput()
-
+                validateInput()
             }
 
         })
-        spinnerFrom.adapter = identitiesSpinnerAdapter
-        spinnerFrom.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-
-            override fun onItemSelected(parent: AdapterView<*>,
-                                        view: View?,
-                                        position: Int,
-                                        id: Long) {
-                from = identitiesSpinnerAdapter.getItem(position)!!
-                if (buttonPositive != null) validateInput()
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>) {}
-
-        }
-        spinnerTo.adapter = playersSpinnerAdapter
-        spinnerTo.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-
-            override fun onItemSelected(parent: AdapterView<*>,
-                                        view: View?,
-                                        position: Int,
-                                        id: Long) {
-                to = arrayListOf(playersSpinnerAdapter.getItem(position)!!)
-                if (buttonPositive != null) validateInput()
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>) {}
-
-        }
 
         model.boardGame.observableLiveData {
             model.boardGame.currencyObservable
@@ -387,43 +328,115 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
             textViewCurrency.text = LiquidityApplication.formatCurrency(requireContext(), currency)
         })
 
-        spinnerFrom.setSelection(identitiesSpinnerAdapter.getPosition(from))
+        model.boardGame.observableLiveData {
+            it.identitiesObservable
+        }.observe(this, Observer {
+            val identitiesSpinnerAdapter = IdentitiesAdapter(
+                    requireContext(),
+                    it.values.sortedWith(LiquidityApplication.identityComparator(requireContext()))
+            )
+            spinnerFrom.adapter = identitiesSpinnerAdapter
+            spinnerFrom.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
 
-        if (to.isNotEmpty()) {
-            spinnerTo.setSelection(playersSpinnerAdapter.getPosition(to.first()))
-        } else {
-            spinnerTo.visibility = View.GONE
-            for (player in playersSpinnerAdapter.players) {
-                val checkedTextViewPlayer = requireActivity().layoutInflater.inflate(
-                        android.R.layout.simple_list_item_multiple_choice,
-                        linearLayoutTo,
-                        false
-                ) as CheckedTextView
-                linearLayoutTo.addView(checkedTextViewPlayer)
-                checkedTextViewPlayer.text =
-                        LiquidityApplication.formatNullable(requireContext(), player.name)
-                checkedTextViewPlayer.isChecked = to.contains(player)
-                checkedTextViewPlayer.setOnClickListener {
-                    checkedTextViewPlayer.toggle()
-                    if (checkedTextViewPlayer.isChecked) {
-                        to.add(player)
-                    } else {
-                        to.remove(player)
+                override fun onItemSelected(parent: AdapterView<*>,
+                                            view: View?,
+                                            position: Int,
+                                            id: Long) {
+                    fromIdentityIdSubject.onNext(
+                            identitiesSpinnerAdapter.getItem(position)!!.memberId
+                    )
+                }
+
+                override fun onNothingSelected(parent: AdapterView<*>) {}
+
+            }
+
+            spinnerFrom.setSelection(
+                    identitiesSpinnerAdapter.getPosition(
+                            it[fromIdentityIdSubject.value!!]
+                    )
+            )
+        })
+
+        model.boardGame.observableLiveData {
+            it.playersObservable
+        }.observe(this, Observer {
+            val playersSpinnerAdapter = PlayersAdapter(
+                    requireContext(),
+                    it.values.sortedWith(LiquidityApplication.playerComparator(requireContext()))
+            )
+            spinnerTo.adapter = playersSpinnerAdapter
+            spinnerTo.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+
+                override fun onItemSelected(parent: AdapterView<*>,
+                                            view: View?,
+                                            position: Int,
+                                            id: Long) {
+                    toPlayerIdsSubject.onNext(
+                            listOf(playersSpinnerAdapter.getItem(position)!!.memberId)
+                    )
+                }
+
+                override fun onNothingSelected(parent: AdapterView<*>) {}
+
+            }
+
+            if (toPlayerId != null) {
+                spinnerTo.setSelection(playersSpinnerAdapter.getPosition(it[toPlayerId]))
+            } else {
+                spinnerTo.visibility = View.GONE
+                for (player in it.values) {
+                    val checkedTextViewPlayer = requireActivity().layoutInflater.inflate(
+                            android.R.layout.simple_list_item_multiple_choice,
+                            linearLayoutTo,
+                            false
+                    ) as CheckedTextView
+                    linearLayoutTo.addView(checkedTextViewPlayer)
+                    checkedTextViewPlayer.text = LiquidityApplication.formatNullable(
+                            requireContext(),
+                            player.name
+                    )
+                    checkedTextViewPlayer.isChecked = toPlayerIdsSubject.value!!.contains(
+                            player.memberId
+                    )
+                    checkedTextViewPlayer.setOnClickListener {
+                        checkedTextViewPlayer.toggle()
+                        val toIdentities = toPlayerIdsSubject.value ?: emptyList()
+                        toPlayerIdsSubject.onNext(
+                                if (checkedTextViewPlayer.isChecked) {
+                                    toIdentities.plus(player.memberId)
+                                } else {
+                                    toIdentities.minus(player.memberId)
+                                }
+                        )
                     }
-                    validateInput()
                 }
             }
-        }
+        })
+
+        model.boardGame.observableLiveData { boardGame ->
+            fromIdentityIdSubject.flatMap {
+                boardGame.identitiesObservable.filter { identities ->
+                    identities.values.any { identity -> identity.memberId == it }
+                }.map { identities -> identities.getValue(it) }
+            }
+        }.observe(this, Observer {
+            fromSubject.onNext(it)
+            validateInput()
+        })
+        model.boardGame.observableLiveData { boardGame ->
+            toPlayerIdsSubject.flatMap {
+                boardGame.playersObservable.map { players ->
+                    players.values.filter { player -> it.contains(player.memberId) }
+                }
+            }
+        }.observe(this, Observer {
+            toSubject.onNext(it)
+            validateInput()
+        })
 
         alertDialog.setOnShowListener {
             buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE)
-            value = try {
-                BigDecimal(editTextValue.text.toString())
-            } catch (_: IllegalArgumentException) {
-                null
-            }
-
-            validateInput()
         }
 
         val window = alertDialog.window!!

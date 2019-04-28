@@ -127,8 +127,6 @@ class BoardGame constructor(
     private val identitiesSubject = BehaviorSubject.createDefault(emptyMap<String, Identity>())
     val identitiesObservable: Observable<Map<String, Identity>> = identitiesSubject
 
-    val identities get() = identitiesSubject.value!!
-
     private val hiddenIdentitiesSubject =
             BehaviorSubject.createDefault(emptyMap<String, Identity>())
     val hiddenIdentities get() = hiddenIdentitiesSubject.value!!

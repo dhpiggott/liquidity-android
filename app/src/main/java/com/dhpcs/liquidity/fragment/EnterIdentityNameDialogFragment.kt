@@ -38,8 +38,6 @@ class EnterIdentityNameDialogFragment : AppCompatDialogFragment() {
 
     }
 
-    private var buttonPositive: Button? = null
-
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         @SuppressLint("InflateParams") val view = requireActivity().layoutInflater.inflate(
                 R.layout.fragment_enter_identity_name_dialog, null
@@ -50,10 +48,13 @@ class EnterIdentityNameDialogFragment : AppCompatDialogFragment() {
         val textInputEditTextIdentityName = view
                 .findViewById<TextInputEditText>(R.id.textinputedittext_identity_name)
 
-        val model = ViewModelProviders.of(requireActivity())
-                .get(MainActivity.Companion.BoardGameModel::class.java)
+        lateinit var buttonPositive: Button
+
         val identityId = arguments!!.getString(ARG_IDENTITY_ID)!!
         val identityName = arguments!!.getString(ARG_IDENTITY_NAME)!!
+
+        val model = ViewModelProviders.of(requireActivity())
+                .get(MainActivity.Companion.BoardGameModel::class.java)
         val alertDialog = AlertDialog.Builder(requireContext())
                 .setTitle(R.string.enter_identity_name)
                 .setView(view)
@@ -73,7 +74,7 @@ class EnterIdentityNameDialogFragment : AppCompatDialogFragment() {
                 .create()
 
         fun validateInput(identityName: CharSequence) {
-            buttonPositive?.isEnabled = model.boardGame.isIdentityNameValid(identityName)
+            buttonPositive.isEnabled = model.boardGame.isIdentityNameValid(identityName)
         }
 
         textInputLayoutIdentityName.counterMaxLength = BoardGame.MAXIMUM_TAG_LENGTH

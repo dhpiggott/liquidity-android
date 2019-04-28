@@ -35,19 +35,19 @@ class EnterGameNameDialogFragment : AppCompatDialogFragment() {
 
     }
 
-    private var buttonPositive: Button? = null
-
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         @SuppressLint("InflateParams") val view = requireActivity().layoutInflater.inflate(
                 R.layout.fragment_enter_game_name_dialog, null
         )
 
-        val name = arguments!!.getString(ARG_NAME)
-
         val textInputLayoutGameName =
                 view.findViewById<TextInputLayout>(R.id.textinputlayout_game_name)
         val textInputEditTextGameName =
                 view.findViewById<TextInputEditText>(R.id.textinputedittext_game_name)
+
+        lateinit var buttonPositive: Button
+
+        val name = arguments!!.getString(ARG_NAME)
 
         val model = ViewModelProviders.of(requireActivity())
                 .get(MainActivity.Companion.BoardGameModel::class.java)
@@ -63,6 +63,10 @@ class EnterGameNameDialogFragment : AppCompatDialogFragment() {
                     ) { error }
                 }
                 .create()
+
+        fun validateInput(gameName: CharSequence) {
+            buttonPositive.isEnabled = BoardGame.isGameNameValid(gameName)
+        }
 
         textInputLayoutGameName.counterMaxLength = BoardGame.MAXIMUM_TAG_LENGTH
         textInputEditTextGameName.addTextChangedListener(object : TextWatcher {
@@ -86,10 +90,6 @@ class EnterGameNameDialogFragment : AppCompatDialogFragment() {
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
 
         return alertDialog
-    }
-
-    private fun validateInput(gameName: CharSequence) {
-        buttonPositive?.isEnabled = BoardGame.isGameNameValid(gameName)
     }
 
 }

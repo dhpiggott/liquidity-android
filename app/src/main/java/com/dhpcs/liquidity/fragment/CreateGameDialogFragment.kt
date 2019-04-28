@@ -83,16 +83,9 @@ class CreateGameDialogFragment : AppCompatDialogFragment() {
 
     }
 
-    private var buttonPositive: Button? = null
-
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         @SuppressLint("InflateParams") val view = requireActivity().layoutInflater.inflate(
                 R.layout.fragment_create_game_dialog, null
-        )
-
-        val currenciesSpinnerAdapter = CurrenciesAdapter(
-                requireContext(),
-                ArrayList(Currency.getAvailableCurrencies())
         )
 
         val textInputLayoutGameName =
@@ -100,6 +93,13 @@ class CreateGameDialogFragment : AppCompatDialogFragment() {
         val textInputEditTextGameName =
                 view.findViewById<TextInputEditText>(R.id.textinputedittext_game_name)
         val spinnerCurrency = view.findViewById<Spinner>(R.id.spinner_game_currency)
+
+        lateinit var buttonPositive: Button
+
+        val currenciesSpinnerAdapter = CurrenciesAdapter(
+                requireContext(),
+                ArrayList(Currency.getAvailableCurrencies())
+        )
 
         val alertDialog = AlertDialog.Builder(requireContext())
                 .setTitle(getString(
@@ -123,6 +123,10 @@ class CreateGameDialogFragment : AppCompatDialogFragment() {
                     findNavController().navigate(R.id.action_games_fragment_to_board_game_graph)
                 }
                 .create()
+
+        fun validateInput(gameName: CharSequence) {
+            buttonPositive.isEnabled = BoardGame.isGameNameValid(gameName)
+        }
 
         textInputLayoutGameName.counterMaxLength = BoardGame.MAXIMUM_TAG_LENGTH
         textInputEditTextGameName.addTextChangedListener(object : TextWatcher {
@@ -151,10 +155,6 @@ class CreateGameDialogFragment : AppCompatDialogFragment() {
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
 
         return alertDialog
-    }
-
-    private fun validateInput(gameName: CharSequence) {
-        buttonPositive?.isEnabled = BoardGame.isGameNameValid(gameName)
     }
 
 }
