@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.WindowManager
-import android.widget.Button
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.lifecycle.ViewModelProviders
@@ -37,8 +36,6 @@ class CreateIdentityDialogFragment : AppCompatDialogFragment() {
         val textInputEditTextIdentityName = view
                 .findViewById<TextInputEditText>(R.id.textinputedittext_identity_name)
 
-        lateinit var buttonPositive: Button
-
         val model = ViewModelProviders.of(requireActivity())
                 .get(MainActivity.Companion.BoardGameModel::class.java)
         val alertDialog = AlertDialog.Builder(requireContext())
@@ -58,23 +55,26 @@ class CreateIdentityDialogFragment : AppCompatDialogFragment() {
                 }
                 .create()
 
-        fun validateInput(identityName: CharSequence) {
-            buttonPositive.isEnabled = model.boardGame.isIdentityNameValid(identityName)
-        }
-
         textInputLayoutIdentityName.counterMaxLength = BoardGame.MAXIMUM_TAG_LENGTH
-        textInputEditTextIdentityName.addTextChangedListener(object : TextWatcher {
-
-            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
-
-            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {}
-
-            override fun afterTextChanged(s: Editable) = validateInput(s)
-
-        })
 
         alertDialog.setOnShowListener {
-            buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE)
+            val buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE)
+
+            fun validateInput(identityName: CharSequence) {
+                buttonPositive.isEnabled = model.boardGame.isIdentityNameValid(identityName)
+            }
+
+            textInputEditTextIdentityName.addTextChangedListener(object : TextWatcher {
+
+                override fun beforeTextChanged(
+                        s: CharSequence, start: Int, count: Int, after: Int) {}
+
+                override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {}
+
+                override fun afterTextChanged(s: Editable) = validateInput(s)
+
+            })
+
             validateInput(textInputEditTextIdentityName.text!!)
         }
 

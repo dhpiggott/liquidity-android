@@ -11,7 +11,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.ArrayAdapter
-import android.widget.Button
 import android.widget.Spinner
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
@@ -94,8 +93,6 @@ class CreateGameDialogFragment : AppCompatDialogFragment() {
                 view.findViewById<TextInputEditText>(R.id.textinputedittext_game_name)
         val spinnerCurrency = view.findViewById<Spinner>(R.id.spinner_game_currency)
 
-        lateinit var buttonPositive: Button
-
         val currenciesSpinnerAdapter = CurrenciesAdapter(
                 requireContext(),
                 ArrayList(Currency.getAvailableCurrencies())
@@ -124,20 +121,7 @@ class CreateGameDialogFragment : AppCompatDialogFragment() {
                 }
                 .create()
 
-        fun validateInput(gameName: CharSequence) {
-            buttonPositive.isEnabled = BoardGame.isGameNameValid(gameName)
-        }
-
         textInputLayoutGameName.counterMaxLength = BoardGame.MAXIMUM_TAG_LENGTH
-        textInputEditTextGameName.addTextChangedListener(object : TextWatcher {
-
-            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
-
-            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {}
-
-            override fun afterTextChanged(s: Editable) = validateInput(s)
-
-        })
         spinnerCurrency.adapter = currenciesSpinnerAdapter
 
         spinnerCurrency.setSelection(
@@ -147,7 +131,23 @@ class CreateGameDialogFragment : AppCompatDialogFragment() {
         )
 
         alertDialog.setOnShowListener {
-            buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE)
+            val buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE)
+
+            fun validateInput(gameName: CharSequence) {
+                buttonPositive.isEnabled = BoardGame.isGameNameValid(gameName)
+            }
+
+            textInputEditTextGameName.addTextChangedListener(object : TextWatcher {
+
+                override fun beforeTextChanged(
+                        s: CharSequence, start: Int, count: Int, after: Int) {}
+
+                override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {}
+
+                override fun afterTextChanged(s: Editable) = validateInput(s)
+
+            })
+
             validateInput(textInputEditTextGameName.text!!)
         }
 

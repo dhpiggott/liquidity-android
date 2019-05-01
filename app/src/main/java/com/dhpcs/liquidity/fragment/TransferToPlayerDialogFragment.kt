@@ -151,7 +151,6 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
         val spinnerTo = view.findViewById<Spinner>(R.id.spinner_to)
 
         var value = BigDecimal.ZERO
-        lateinit var buttonPositive: Button
 
         val fromIdentityId = arguments!!.getString(ARG_FROM_IDENTITY_ID)!!
         val fromIdentityIdSubject = BehaviorSubject.createDefault(
@@ -186,141 +185,6 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
                     }
                 }
                 .create()
-
-        fun validateInput() {
-            val currentBalance = fromSubject.value?.balance
-            val isValueValid = if (value == null) {
-                textViewValueError.text = null
-                false
-            } else {
-                val requiredBalance = if (fromSubject.value?.isBanker == true) {
-                    null
-                } else {
-                    value!!.multiply(BigDecimal(toSubject.value?.size ?: 0))
-                }
-                if (currentBalance != null && requiredBalance != null &&
-                        currentBalance < requiredBalance) {
-                    model.boardGame.maybeLiveData {
-                        model.boardGame.currencyObservable.firstElement()
-                    }.observe(this, Observer { currency ->
-                        textViewValueError.text = getString(
-                                R.string.transfer_value_invalid_format_string,
-                                LiquidityApplication.formatCurrencyValue(
-                                        requireContext(),
-                                        currency,
-                                        currentBalance
-                                ),
-                                LiquidityApplication.formatCurrencyValue(
-                                        requireContext(),
-                                        currency,
-                                        requiredBalance
-                                )
-                        )
-                    })
-                    false
-                } else {
-                    textViewValueError.text = null
-                    true
-                }
-            }
-            val toAccountIds = toSubject.value?.map { it.accountId } ?: emptyList()
-            val isFromValid = if (toAccountIds.contains(fromSubject.value?.accountId)) {
-                textViewFromError.text = getString(
-                        R.string.transfer_from_invalid_format_string,
-                        LiquidityApplication.formatNullable(
-                                requireContext(),
-                                fromSubject.value?.name
-                        )
-                )
-                false
-            } else {
-                textViewFromError.text = null
-                true
-            }
-            buttonPositive.isEnabled = isValueValid && isFromValid
-        }
-
-        editTextValue.addTextChangedListener(object : TextWatcher {
-
-            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
-
-            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {}
-
-            @SuppressLint("SetTextI18n")
-            override fun afterTextChanged(s: Editable) {
-                val numberFormat = NumberFormat.getNumberInstance() as DecimalFormat
-                value = if (s.isEmpty()) {
-                    BigDecimal.ZERO
-                } else {
-                    BigDecimal(
-                            s.toString().replace(
-                                    numberFormat.decimalFormatSymbols.groupingSeparator.toString(),
-                                    ""
-                            )
-                    )
-                }
-                if (value == null) {
-                    editTextValue.removeTextChangedListener(this)
-                    editTextValue.text = null
-                    editTextValue.addTextChangedListener(this)
-                    editTextScaledValue.text = null
-                } else {
-                    val trailingZeros = StringBuilder()
-                    val currentDecimalSeparatorIndex = s.toString().indexOf(
-                            numberFormat.decimalFormatSymbols.decimalSeparator
-                    )
-                    if (currentDecimalSeparatorIndex != -1) {
-                        for (i in currentDecimalSeparatorIndex + 1 until s.length) {
-                            if (s[i] == numberFormat.decimalFormatSymbols.zeroDigit) {
-                                trailingZeros.append(
-                                        numberFormat.decimalFormatSymbols.zeroDigit
-                                )
-                            } else {
-                                trailingZeros.setLength(0)
-                            }
-                        }
-                        numberFormat.isDecimalSeparatorAlwaysShown = true
-                    }
-
-                    val currentSelection = editTextValue.selectionStart
-                    val currentLength = editTextValue.text.length
-
-                    numberFormat.maximumFractionDigits = value!!.scale()
-                    numberFormat.minimumFractionDigits = 0
-
-                    editTextValue.removeTextChangedListener(this)
-                    editTextValue.setText(numberFormat.format(value) + trailingZeros)
-                    editTextValue.addTextChangedListener(this)
-
-                    val updatedLength = editTextValue.text.length
-                    val updatedSelection = currentSelection + updatedLength - currentLength
-                    if (updatedSelection < 0 || updatedSelection > updatedLength) {
-                        editTextValue.setSelection(0)
-                    } else {
-                        editTextValue.setSelection(updatedSelection)
-                    }
-
-                    if (value!!.scaleByPowerOfTen(-3).abs() < BigDecimal.ONE) {
-                        editTextScaledValue.text = null
-                    } else {
-                        model.boardGame.maybeLiveData {
-                            model.boardGame.currencyObservable.firstElement()
-                        }.observe(this@TransferToPlayerDialogFragment, Observer { currency ->
-                            editTextScaledValue.text = getString(
-                                    R.string.transfer_to_player_scaled_value_format_string,
-                                    LiquidityApplication.formatCurrencyValue(
-                                            requireContext(),
-                                            currency,
-                                            value!!
-                                    )
-                            )
-                        })
-                    }
-                }
-                validateInput()
-            }
-
-        })
 
         model.boardGame.observableLiveData {
             model.boardGame.currencyObservable
@@ -414,29 +278,167 @@ class TransferToPlayerDialogFragment : AppCompatDialogFragment() {
             }
         })
 
-        model.boardGame.observableLiveData { boardGame ->
-            fromIdentityIdSubject.flatMap {
-                boardGame.identitiesObservable.filter { identities ->
-                    identities.values.any { identity -> identity.memberId == it }
-                }.map { identities -> identities.getValue(it) }
-            }
-        }.observe(this, Observer {
-            fromSubject.onNext(it)
-            validateInput()
-        })
-        model.boardGame.observableLiveData { boardGame ->
-            toPlayerIdsSubject.flatMap {
-                boardGame.playersObservable.map { players ->
-                    players.values.filter { player -> it.contains(player.memberId) }
-                }
-            }
-        }.observe(this, Observer {
-            toSubject.onNext(it)
-            validateInput()
-        })
-
         alertDialog.setOnShowListener {
-            buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE)
+            val buttonPositive = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE)
+
+            fun validateInput() {
+                val currentBalance = fromSubject.value?.balance
+                val isValueValid = if (value == null) {
+                    textViewValueError.text = null
+                    false
+                } else {
+                    val requiredBalance = if (fromSubject.value?.isBanker == true) {
+                        null
+                    } else {
+                        value!!.multiply(BigDecimal(toSubject.value?.size ?: 0))
+                    }
+                    if (currentBalance != null && requiredBalance != null &&
+                            currentBalance < requiredBalance) {
+                        model.boardGame.maybeLiveData {
+                            model.boardGame.currencyObservable.firstElement()
+                        }.observe(this, Observer { currency ->
+                            textViewValueError.text = getString(
+                                    R.string.transfer_value_invalid_format_string,
+                                    LiquidityApplication.formatCurrencyValue(
+                                            requireContext(),
+                                            currency,
+                                            currentBalance
+                                    ),
+                                    LiquidityApplication.formatCurrencyValue(
+                                            requireContext(),
+                                            currency,
+                                            requiredBalance
+                                    )
+                            )
+                        })
+                        false
+                    } else {
+                        textViewValueError.text = null
+                        true
+                    }
+                }
+                val toAccountIds = toSubject.value?.map { it.accountId } ?: emptyList()
+                val isFromValid = if (toAccountIds.contains(fromSubject.value?.accountId)) {
+                    textViewFromError.text = getString(
+                            R.string.transfer_from_invalid_format_string,
+                            LiquidityApplication.formatNullable(
+                                    requireContext(),
+                                    fromSubject.value?.name
+                            )
+                    )
+                    false
+                } else {
+                    textViewFromError.text = null
+                    true
+                }
+                buttonPositive.isEnabled = isValueValid && isFromValid
+            }
+
+            editTextValue.addTextChangedListener(object : TextWatcher {
+
+                override fun beforeTextChanged(
+                        s: CharSequence, start: Int, count: Int, after: Int) {}
+
+                override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {}
+
+                @SuppressLint("SetTextI18n")
+                override fun afterTextChanged(s: Editable) {
+                    val numberFormat = NumberFormat.getNumberInstance() as DecimalFormat
+                    value = if (s.isEmpty()) {
+                        BigDecimal.ZERO
+                    } else {
+                        BigDecimal(
+                                s.toString().replace(
+                                        numberFormat
+                                                .decimalFormatSymbols.groupingSeparator.toString(),
+                                        ""
+                                )
+                        )
+                    }
+                    if (value == null) {
+                        editTextValue.removeTextChangedListener(this)
+                        editTextValue.text = null
+                        editTextValue.addTextChangedListener(this)
+                        editTextScaledValue.text = null
+                    } else {
+                        val trailingZeros = StringBuilder()
+                        val currentDecimalSeparatorIndex = s.toString().indexOf(
+                                numberFormat.decimalFormatSymbols.decimalSeparator
+                        )
+                        if (currentDecimalSeparatorIndex != -1) {
+                            for (i in currentDecimalSeparatorIndex + 1 until s.length) {
+                                if (s[i] == numberFormat.decimalFormatSymbols.zeroDigit) {
+                                    trailingZeros.append(
+                                            numberFormat.decimalFormatSymbols.zeroDigit
+                                    )
+                                } else {
+                                    trailingZeros.setLength(0)
+                                }
+                            }
+                            numberFormat.isDecimalSeparatorAlwaysShown = true
+                        }
+
+                        val currentSelection = editTextValue.selectionStart
+                        val currentLength = editTextValue.text.length
+
+                        numberFormat.maximumFractionDigits = value!!.scale()
+                        numberFormat.minimumFractionDigits = 0
+
+                        editTextValue.removeTextChangedListener(this)
+                        editTextValue.setText(numberFormat.format(value) + trailingZeros)
+                        editTextValue.addTextChangedListener(this)
+
+                        val updatedLength = editTextValue.text.length
+                        val updatedSelection = currentSelection + updatedLength - currentLength
+                        if (updatedSelection < 0 || updatedSelection > updatedLength) {
+                            editTextValue.setSelection(0)
+                        } else {
+                            editTextValue.setSelection(updatedSelection)
+                        }
+
+                        if (value!!.scaleByPowerOfTen(-3).abs() < BigDecimal.ONE) {
+                            editTextScaledValue.text = null
+                        } else {
+                            model.boardGame.maybeLiveData {
+                                model.boardGame.currencyObservable.firstElement()
+                            }.observe(
+                                    this@TransferToPlayerDialogFragment, Observer { currency ->
+                                editTextScaledValue.text = getString(
+                                        R.string.transfer_to_player_scaled_value_format_string,
+                                        LiquidityApplication.formatCurrencyValue(
+                                                requireContext(),
+                                                currency,
+                                                value!!
+                                        )
+                                )
+                            })
+                        }
+                    }
+                    validateInput()
+                }
+
+            })
+
+            model.boardGame.observableLiveData { boardGame ->
+                fromIdentityIdSubject.flatMap {
+                    boardGame.identitiesObservable.filter { identities ->
+                        identities.values.any { identity -> identity.memberId == it }
+                    }.map { identities -> identities.getValue(it) }
+                }
+            }.observe(this, Observer {
+                fromSubject.onNext(it)
+                validateInput()
+            })
+            model.boardGame.observableLiveData { boardGame ->
+                toPlayerIdsSubject.flatMap {
+                    boardGame.playersObservable.map { players ->
+                        players.values.filter { player -> it.contains(player.memberId) }
+                    }
+                }
+            }.observe(this, Observer {
+                toSubject.onNext(it)
+                validateInput()
+            })
         }
 
         val window = alertDialog.window!!
