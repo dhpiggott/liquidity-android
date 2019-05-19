@@ -1,6 +1,6 @@
 package com.dhpcs.liquidity
 
-import com.dhpcs.liquidity.proto.ws.protocol.WsProtocol
+import com.dhpcs.liquidity.proto.rest.protocol.RestProtocol
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.JWSHeader
 import com.nimbusds.jose.crypto.RSASSASigner
@@ -36,13 +36,13 @@ class ServerConnection(filesDir: File) {
     }
 
     fun createZone(
-            createZoneCommand: WsProtocol.ZoneCommand.CreateZoneCommand
-    ): Single<WsProtocol.ZoneResponse> {
+            createZoneCommand: RestProtocol.CreateZoneCommand
+    ): Single<RestProtocol.ZoneResponse> {
         return execZoneCommand("", createZoneCommand.toByteArray())
     }
 
-    fun zoneNotifications(zoneId: String): Observable<WsProtocol.ZoneNotification> {
-        return Observable.create<WsProtocol.ZoneNotification>
+    fun zoneNotifications(zoneId: String): Observable<RestProtocol.ZoneNotification> {
+        return Observable.create<RestProtocol.ZoneNotification>
         {
             val call = okHttpClient.newCall(
                     Request.Builder()
@@ -76,7 +76,7 @@ class ServerConnection(filesDir: File) {
                             }
                         }
                         while (!exhausted()) {
-                            it.onNext(WsProtocol.ZoneNotification.parseDelimitedFrom(
+                            it.onNext(RestProtocol.ZoneNotification.parseDelimitedFrom(
                                     source.inputStream()
                             ))
                         }
@@ -89,8 +89,8 @@ class ServerConnection(filesDir: File) {
         }.observeOn(AndroidSchedulers.mainThread())
     }
 
-    fun execZoneCommand(zoneId: String, zoneCommand: WsProtocol.ZoneCommand
-    ): Single<WsProtocol.ZoneResponse> {
+    fun execZoneCommand(zoneId: String, zoneCommand: RestProtocol.ZoneCommand
+    ): Single<RestProtocol.ZoneResponse> {
         return execZoneCommand(
                 "/${URLEncoder.encode(zoneId, StandardCharsets.UTF_8.name())}",
                 zoneCommand.toByteArray()
@@ -100,8 +100,8 @@ class ServerConnection(filesDir: File) {
     private fun execZoneCommand(
             zoneSubPath: String,
             entity: ByteArray
-    ): Single<WsProtocol.ZoneResponse> {
-        return Single.create<WsProtocol.ZoneResponse>
+    ): Single<RestProtocol.ZoneResponse> {
+        return Single.create<RestProtocol.ZoneResponse>
         {
             val call = okHttpClient.newCall(
                     Request.Builder()
@@ -130,7 +130,7 @@ class ServerConnection(filesDir: File) {
                         }
                         response.body()!!.source().close()
                     } else {
-                        it.onSuccess(WsProtocol.ZoneResponse.parseFrom(
+                        it.onSuccess(RestProtocol.ZoneResponse.parseFrom(
                                 response.body()!!.bytes()
                         ))
                     }

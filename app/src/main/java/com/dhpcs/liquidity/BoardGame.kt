@@ -2,7 +2,7 @@ package com.dhpcs.liquidity
 
 import com.dhpcs.liquidity.BoardGame.Companion.JoinState.*
 import com.dhpcs.liquidity.proto.model.Model
-import com.dhpcs.liquidity.proto.ws.protocol.WsProtocol
+import com.dhpcs.liquidity.proto.rest.protocol.RestProtocol
 import com.google.protobuf.ByteString
 import com.google.protobuf.StringValue
 import com.google.protobuf.Struct
@@ -152,7 +152,7 @@ class BoardGame constructor(
                 )
         return Single.create<String> { singleEmitter ->
             serverConnection.createZone(
-                    WsProtocol.ZoneCommand.CreateZoneCommand.newBuilder()
+                    RestProtocol.CreateZoneCommand.newBuilder()
                             .setEquityOwnerPublicKey(serverConnection.clientKey)
                             .setEquityOwnerName(StringValue.newBuilder().setValue(bankMemberName))
                             .setName(StringValue.newBuilder().setValue(name))
@@ -160,15 +160,15 @@ class BoardGame constructor(
                             .build()
             ).subscribe({ zoneResponse ->
                 when (zoneResponse.createZoneResponse.resultCase!!) {
-                    WsProtocol.ZoneResponse.CreateZoneResponse.ResultCase.RESULT_NOT_SET ->
+                    RestProtocol.CreateZoneResponse.ResultCase.RESULT_NOT_SET ->
                         singleEmitter.tryOnError(IllegalArgumentException(
                                 zoneResponse.createZoneResponse.resultCase.name
                         ))
-                    WsProtocol.ZoneResponse.CreateZoneResponse.ResultCase.ERRORS ->
+                    RestProtocol.CreateZoneResponse.ResultCase.ERRORS ->
                         singleEmitter.tryOnError(IllegalArgumentException(
                                 zoneResponse.createZoneResponse.resultCase.name
                         ))
-                    WsProtocol.ZoneResponse.CreateZoneResponse.ResultCase.SUCCESS ->
+                    RestProtocol.CreateZoneResponse.ResultCase.SUCCESS ->
                         singleEmitter.onSuccess(zoneResponse.createZoneResponse.success.zone!!.id)
                 }
             }, { error ->
@@ -233,7 +233,7 @@ class BoardGame constructor(
         gameId = null
     }
 
-    private fun handleZoneNotification(zoneNotification: WsProtocol.ZoneNotification) {
+    private fun handleZoneNotification(zoneNotification: RestProtocol.ZoneNotification) {
         fun updateState(
                 zone: Model.Zone,
                 connectedClients: Map<String, ByteString>,
@@ -391,10 +391,10 @@ class BoardGame constructor(
             }
         }
 
-        val newState = when (zoneNotification.zoneNotificationCase!!) {
-            WsProtocol.ZoneNotification.ZoneNotificationCase.ZONENOTIFICATION_NOT_SET ->
+        val newState = when (zoneNotification.sealedValueCase!!) {
+            RestProtocol.ZoneNotification.SealedValueCase.SEALEDVALUE_NOT_SET ->
                 null
-            WsProtocol.ZoneNotification.ZoneNotificationCase.CLIENT_JOINED_ZONE_NOTIFICATION -> {
+            RestProtocol.ZoneNotification.SealedValueCase.CLIENT_JOINED_ZONE_NOTIFICATION -> {
                 val connectionId = zoneNotification.clientJoinedZoneNotification.connectionId
                 val publicKey = zoneNotification.clientJoinedZoneNotification.publicKey
                 val connectedClients = state!!.connectedClients + Pair(connectionId, publicKey)
@@ -405,7 +405,7 @@ class BoardGame constructor(
                         state!!.currency
                 )
             }
-            WsProtocol.ZoneNotification.ZoneNotificationCase.CLIENT_QUIT_ZONE_NOTIFICATION -> {
+            RestProtocol.ZoneNotification.SealedValueCase.CLIENT_QUIT_ZONE_NOTIFICATION -> {
                 val connectionId = zoneNotification.clientQuitZoneNotification.connectionId
                 val connectedClients = state!!.connectedClients - connectionId
                 updateState(
@@ -415,7 +415,7 @@ class BoardGame constructor(
                         state!!.currency
                 )
             }
-            WsProtocol.ZoneNotification.ZoneNotificationCase.ZONE_NAME_CHANGED_NOTIFICATION -> {
+            RestProtocol.ZoneNotification.SealedValueCase.ZONE_NAME_CHANGED_NOTIFICATION -> {
                 val name = zoneNotification.zoneNameChangedNotification.name
                 val zone = state!!.zone.toBuilder()
                         .setName(name)
@@ -427,7 +427,7 @@ class BoardGame constructor(
                         state!!.currency
                 )
             }
-            WsProtocol.ZoneNotification.ZoneNotificationCase.MEMBER_CREATED_NOTIFICATION -> {
+            RestProtocol.ZoneNotification.SealedValueCase.MEMBER_CREATED_NOTIFICATION -> {
                 val member = zoneNotification.memberCreatedNotification.member
                 val zone = state!!.zone.toBuilder()
                         .addMembers(member)
@@ -439,7 +439,7 @@ class BoardGame constructor(
                         state!!.currency
                 )
             }
-            WsProtocol.ZoneNotification.ZoneNotificationCase.MEMBER_UPDATED_NOTIFICATION -> {
+            RestProtocol.ZoneNotification.SealedValueCase.MEMBER_UPDATED_NOTIFICATION -> {
                 val member = zoneNotification.memberUpdatedNotification.member
                 val zone = state!!.zone.toBuilder()
                         .removeMembers(
@@ -456,7 +456,7 @@ class BoardGame constructor(
                         state!!.currency
                 )
             }
-            WsProtocol.ZoneNotification.ZoneNotificationCase.ACCOUNT_CREATED_NOTIFICATION -> {
+            RestProtocol.ZoneNotification.SealedValueCase.ACCOUNT_CREATED_NOTIFICATION -> {
                 val account = zoneNotification.accountCreatedNotification.account
                 val zone = state!!.zone.toBuilder()
                         .addAccounts(account)
@@ -468,7 +468,7 @@ class BoardGame constructor(
                         state!!.currency
                 )
             }
-            WsProtocol.ZoneNotification.ZoneNotificationCase.ACCOUNT_UPDATED_NOTIFICATION -> {
+            RestProtocol.ZoneNotification.SealedValueCase.ACCOUNT_UPDATED_NOTIFICATION -> {
                 val account = zoneNotification.accountUpdatedNotification.account
                 val zone = state!!.zone.toBuilder()
                         .removeAccounts(
@@ -485,7 +485,7 @@ class BoardGame constructor(
                         state!!.currency
                 )
             }
-            WsProtocol.ZoneNotification.ZoneNotificationCase.TRANSACTION_ADDED_NOTIFICATION -> {
+            RestProtocol.ZoneNotification.SealedValueCase.TRANSACTION_ADDED_NOTIFICATION -> {
                 val transaction = zoneNotification.transactionAddedNotification.transaction
                 val zone = state!!.zone.toBuilder()
                         .addTransactions(transaction)
@@ -508,7 +508,7 @@ class BoardGame constructor(
                         state!!.currency
                 )
             }
-            WsProtocol.ZoneNotification.ZoneNotificationCase.ZONE_STATE_NOTIFICATION -> {
+            RestProtocol.ZoneNotification.SealedValueCase.ZONE_STATE_NOTIFICATION -> {
                 val zone = zoneNotification.zoneStateNotification.zone
                 val connectedClients = zoneNotification.zoneStateNotification.connectedClientsMap
                 val balances = zone.transactionsList
@@ -533,7 +533,7 @@ class BoardGame constructor(
                         currency
                 )
             }
-            WsProtocol.ZoneNotification.ZoneNotificationCase.PING_NOTIFICATION ->
+            RestProtocol.ZoneNotification.SealedValueCase.PING_NOTIFICATION ->
                 null
         }
         if (newState != null) {
@@ -546,23 +546,23 @@ class BoardGame constructor(
         return Single.create<Model.Account> { singleEmitter ->
             serverConnection.execZoneCommand(
                     zoneId,
-                    WsProtocol.ZoneCommand.newBuilder()
+                    RestProtocol.ZoneCommand.newBuilder()
                             .setCreateAccountCommand(
-                                    WsProtocol.ZoneCommand.CreateAccountCommand.newBuilder()
+                                    RestProtocol.CreateAccountCommand.newBuilder()
                                             .addOwnerMemberIds(ownerMemberId)
                             )
                             .build()
             ).subscribe({ zoneResponse ->
                 when (zoneResponse.createAccountResponse.resultCase!!) {
-                    WsProtocol.ZoneResponse.CreateAccountResponse.ResultCase.RESULT_NOT_SET ->
+                    RestProtocol.CreateAccountResponse.ResultCase.RESULT_NOT_SET ->
                         singleEmitter.tryOnError(IllegalArgumentException(
                                 zoneResponse.createAccountResponse.resultCase.name
                         ))
-                    WsProtocol.ZoneResponse.CreateAccountResponse.ResultCase.ERRORS ->
+                    RestProtocol.CreateAccountResponse.ResultCase.ERRORS ->
                         singleEmitter.tryOnError(IllegalArgumentException(
                                 zoneResponse.createAccountResponse.errors.toString()
                         ))
-                    WsProtocol.ZoneResponse.CreateAccountResponse.ResultCase.SUCCESS ->
+                    RestProtocol.CreateAccountResponse.ResultCase.SUCCESS ->
                         singleEmitter.onSuccess(zoneResponse.createAccountResponse.success.account)
                 }
             }, { error ->
@@ -575,23 +575,23 @@ class BoardGame constructor(
         return Single.create<Unit> { singleEmitter ->
             serverConnection.execZoneCommand(
                     state!!.zone.id,
-                    WsProtocol.ZoneCommand.newBuilder()
+                    RestProtocol.ZoneCommand.newBuilder()
                             .setChangeZoneNameCommand(
-                                    WsProtocol.ZoneCommand.ChangeZoneNameCommand.newBuilder()
+                                    RestProtocol.ChangeZoneNameCommand.newBuilder()
                                             .setName(StringValue.newBuilder().setValue(name))
                             )
                             .build()
             ).subscribe({ zoneResponse ->
                 when (zoneResponse.changeZoneNameResponse.resultCase!!) {
-                    WsProtocol.ZoneResponse.ChangeZoneNameResponse.ResultCase.RESULT_NOT_SET ->
+                    RestProtocol.ChangeZoneNameResponse.ResultCase.RESULT_NOT_SET ->
                         singleEmitter.tryOnError(IllegalArgumentException(
                                 zoneResponse.changeZoneNameResponse.resultCase.name
                         ))
-                    WsProtocol.ZoneResponse.ChangeZoneNameResponse.ResultCase.ERRORS ->
+                    RestProtocol.ChangeZoneNameResponse.ResultCase.ERRORS ->
                         singleEmitter.tryOnError(IllegalArgumentException(
                                 zoneResponse.changeZoneNameResponse.errors.toString()
                         ))
-                    WsProtocol.ZoneResponse.ChangeZoneNameResponse.ResultCase.SUCCESS ->
+                    RestProtocol.ChangeZoneNameResponse.ResultCase.SUCCESS ->
                         singleEmitter.onSuccess(Unit)
                 }
             }, { error ->
@@ -628,24 +628,24 @@ class BoardGame constructor(
             Single.create<Model.Member> { singleEmitter ->
                 serverConnection.execZoneCommand(
                         zoneId,
-                        WsProtocol.ZoneCommand.newBuilder()
+                        RestProtocol.ZoneCommand.newBuilder()
                                 .setCreateMemberCommand(
-                                        WsProtocol.ZoneCommand.CreateMemberCommand.newBuilder()
+                                        RestProtocol.CreateMemberCommand.newBuilder()
                                                 .addOwnerPublicKeys(serverConnection.clientKey)
                                                 .setName(StringValue.newBuilder().setValue(name))
                                 )
                                 .build()
                 ).subscribe({ zoneResponse ->
                     when (zoneResponse.createMemberResponse.resultCase!!) {
-                        WsProtocol.ZoneResponse.CreateMemberResponse.ResultCase.RESULT_NOT_SET ->
+                        RestProtocol.CreateMemberResponse.ResultCase.RESULT_NOT_SET ->
                             singleEmitter.tryOnError(IllegalArgumentException(
                                     zoneResponse.createMemberResponse.resultCase.name
                             ))
-                        WsProtocol.ZoneResponse.CreateMemberResponse.ResultCase.ERRORS ->
+                        RestProtocol.CreateMemberResponse.ResultCase.ERRORS ->
                             singleEmitter.tryOnError(IllegalArgumentException(
                                     zoneResponse.createMemberResponse.errors.toString()
                             ))
-                        WsProtocol.ZoneResponse.CreateMemberResponse.ResultCase.SUCCESS ->
+                        RestProtocol.CreateMemberResponse.ResultCase.SUCCESS ->
                             singleEmitter.onSuccess(
                                     zoneResponse.createMemberResponse.success.member
                             )
@@ -666,9 +666,9 @@ class BoardGame constructor(
         return Single.create<Unit> { singleEmitter ->
             serverConnection.execZoneCommand(
                     state!!.zone.id,
-                    WsProtocol.ZoneCommand.newBuilder()
+                    RestProtocol.ZoneCommand.newBuilder()
                             .setUpdateMemberCommand(
-                                    WsProtocol.ZoneCommand.UpdateMemberCommand.newBuilder()
+                                    RestProtocol.UpdateMemberCommand.newBuilder()
                                             .setMember(
                                                     member.toBuilder()
                                                             .setName(
@@ -680,15 +680,15 @@ class BoardGame constructor(
                             .build()
             ).subscribe({ zoneResponse ->
                 when (zoneResponse.updateMemberResponse.resultCase!!) {
-                    WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.RESULT_NOT_SET ->
+                    RestProtocol.UpdateMemberResponse.ResultCase.RESULT_NOT_SET ->
                         singleEmitter.tryOnError(IllegalArgumentException(
                                 zoneResponse.updateMemberResponse.resultCase.name
                         ))
-                    WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.ERRORS ->
+                    RestProtocol.UpdateMemberResponse.ResultCase.ERRORS ->
                         singleEmitter.tryOnError(IllegalArgumentException(
                                 zoneResponse.updateMemberResponse.errors.toString()
                         ))
-                    WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.SUCCESS ->
+                    RestProtocol.UpdateMemberResponse.ResultCase.SUCCESS ->
                         singleEmitter.onSuccess(Unit)
                 }
             }, { error ->
@@ -708,10 +708,10 @@ class BoardGame constructor(
         return Single.create<Unit> { singleEmitter ->
             serverConnection.execZoneCommand(
                     state!!.zone.id,
-                    WsProtocol.ZoneCommand
+                    RestProtocol.ZoneCommand
                             .newBuilder()
                             .setUpdateMemberCommand(
-                                    WsProtocol.ZoneCommand.UpdateMemberCommand.newBuilder()
+                                    RestProtocol.UpdateMemberCommand.newBuilder()
                                             .setMember(member.toBuilder()
                                                     .clearOwnerPublicKeys()
                                                     .addAllOwnerPublicKeys(
@@ -729,15 +729,15 @@ class BoardGame constructor(
                             .build()
             ).subscribe({ zoneResponse ->
                 when (zoneResponse.updateMemberResponse.resultCase!!) {
-                    WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.RESULT_NOT_SET ->
+                    RestProtocol.UpdateMemberResponse.ResultCase.RESULT_NOT_SET ->
                         singleEmitter.tryOnError(IllegalArgumentException(
                                 zoneResponse.updateMemberResponse.resultCase.name
                         ))
-                    WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.ERRORS ->
+                    RestProtocol.UpdateMemberResponse.ResultCase.ERRORS ->
                         singleEmitter.tryOnError(IllegalArgumentException(
                                 zoneResponse.updateMemberResponse.errors.toString()
                         ))
-                    WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.SUCCESS ->
+                    RestProtocol.UpdateMemberResponse.ResultCase.SUCCESS ->
                         singleEmitter.onSuccess(Unit)
                 }
             }, { error ->
@@ -755,23 +755,23 @@ class BoardGame constructor(
         return Single.create<Unit> { singleEmitter ->
             serverConnection.execZoneCommand(
                     state!!.zone.id,
-                    WsProtocol.ZoneCommand.newBuilder()
+                    RestProtocol.ZoneCommand.newBuilder()
                             .setUpdateMemberCommand(
-                                    WsProtocol.ZoneCommand.UpdateMemberCommand.newBuilder()
+                                    RestProtocol.UpdateMemberCommand.newBuilder()
                                             .setMember(member.toBuilder().setMetadata(metadata))
                             )
                             .build()
             ).subscribe({ zoneResponse ->
                 when (zoneResponse.updateMemberResponse.resultCase!!) {
-                    WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.RESULT_NOT_SET ->
+                    RestProtocol.UpdateMemberResponse.ResultCase.RESULT_NOT_SET ->
                         singleEmitter.tryOnError(IllegalArgumentException(
                                 zoneResponse.updateMemberResponse.resultCase.name
                         ))
-                    WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.ERRORS ->
+                    RestProtocol.UpdateMemberResponse.ResultCase.ERRORS ->
                         singleEmitter.tryOnError(IllegalArgumentException(
                                 zoneResponse.updateMemberResponse.errors.toString()
                         ))
-                    WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.SUCCESS ->
+                    RestProtocol.UpdateMemberResponse.ResultCase.SUCCESS ->
                         singleEmitter.onSuccess(Unit)
                 }
             }, { error ->
@@ -789,23 +789,23 @@ class BoardGame constructor(
         return Single.create<Unit> { singleEmitter ->
             serverConnection.execZoneCommand(
                     state!!.zone.id,
-                    WsProtocol.ZoneCommand.newBuilder()
+                    RestProtocol.ZoneCommand.newBuilder()
                             .setUpdateMemberCommand(
-                                    WsProtocol.ZoneCommand.UpdateMemberCommand.newBuilder()
+                                    RestProtocol.UpdateMemberCommand.newBuilder()
                                             .setMember(member.toBuilder().setMetadata(metadata))
                             )
                             .build()
             ).subscribe({ zoneResponse ->
                 when (zoneResponse.updateMemberResponse.resultCase!!) {
-                    WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.RESULT_NOT_SET ->
+                    RestProtocol.UpdateMemberResponse.ResultCase.RESULT_NOT_SET ->
                         singleEmitter.tryOnError(IllegalArgumentException(
                                 zoneResponse.updateMemberResponse.resultCase.name
                         ))
-                    WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.ERRORS ->
+                    RestProtocol.UpdateMemberResponse.ResultCase.ERRORS ->
                         singleEmitter.tryOnError(IllegalArgumentException(
                                 zoneResponse.updateMemberResponse.errors.toString()
                         ))
-                    WsProtocol.ZoneResponse.UpdateMemberResponse.ResultCase.SUCCESS ->
+                    RestProtocol.UpdateMemberResponse.ResultCase.SUCCESS ->
                         singleEmitter.onSuccess(Unit)
                 }
             }, { error ->
@@ -821,9 +821,9 @@ class BoardGame constructor(
         return Single.create<Unit> { singleEmitter ->
             serverConnection.execZoneCommand(
                     state!!.zone.id,
-                    WsProtocol.ZoneCommand.newBuilder()
+                    RestProtocol.ZoneCommand.newBuilder()
                             .setAddTransactionCommand(
-                                    WsProtocol.ZoneCommand.AddTransactionCommand.newBuilder()
+                                    RestProtocol.AddTransactionCommand.newBuilder()
                                             .setActingAs(from.memberId)
                                             .setFrom(from.accountId)
                                             .setTo(to.accountId)
@@ -832,15 +832,15 @@ class BoardGame constructor(
                             .build()
             ).subscribe({ zoneResponse ->
                 when (zoneResponse.addTransactionResponse.resultCase!!) {
-                    WsProtocol.ZoneResponse.AddTransactionResponse.ResultCase.RESULT_NOT_SET ->
+                    RestProtocol.AddTransactionResponse.ResultCase.RESULT_NOT_SET ->
                         singleEmitter.tryOnError(IllegalArgumentException(
                                 zoneResponse.updateMemberResponse.resultCase.name
                         ))
-                    WsProtocol.ZoneResponse.AddTransactionResponse.ResultCase.ERRORS ->
+                    RestProtocol.AddTransactionResponse.ResultCase.ERRORS ->
                         singleEmitter.tryOnError(IllegalArgumentException(
                                 zoneResponse.updateMemberResponse.errors.toString()
                         ))
-                    WsProtocol.ZoneResponse.AddTransactionResponse.ResultCase.SUCCESS ->
+                    RestProtocol.AddTransactionResponse.ResultCase.SUCCESS ->
                         singleEmitter.onSuccess(Unit)
                 }
             }, { error ->
