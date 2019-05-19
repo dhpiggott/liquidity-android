@@ -1,159 +1,122 @@
 package com.dhpcs.liquidity
 
-import com.dhpcs.liquidity.proto.rest.protocol.RestProtocol
+import com.dhpcs.liquidity.proto.grpc.protocol.GrpcProtocol
+import com.dhpcs.liquidity.proto.grpc.protocol.LiquidityServiceGrpc
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.JWSHeader
 import com.nimbusds.jose.crypto.RSASSASigner
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.SignedJWT
+import io.grpc.CallCredentials
+import io.grpc.ManagedChannelBuilder
+import io.grpc.Metadata
+import io.grpc.stub.ClientCallStreamObserver
+import io.grpc.stub.ClientResponseObserver
 import io.reactivex.Observable
-import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposables
-import okhttp3.*
-import okio.ByteString
 import java.io.File
-import java.io.IOException
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 import java.util.*
+import java.util.concurrent.Executor
 import java.util.concurrent.TimeUnit
 
 class ServerConnection(filesDir: File) {
 
-    companion object {
+    private val clientKeyStore by lazy { ClientKeyStore(filesDir) }
 
-        private val okHttpClient = OkHttpClient.Builder()
-                .connectionSpecs(listOf(ConnectionSpec.RESTRICTED_TLS))
-                .build()
+    private val callCredentials = object : CallCredentials() {
+
+        override fun applyRequestMetadata(
+                requestInfo: RequestInfo?,
+                appExecutor: Executor?,
+                applier: MetadataApplier?) {
+            val metadata = Metadata()
+            val now = Date()
+            val jwt = SignedJWT(
+                    JWSHeader.Builder(JWSAlgorithm.RS256)
+                            .build(),
+                    JWTClaimsSet.Builder()
+                            .subject(
+                                    com.nimbusds.jose.util.Base64.encode(
+                                            clientKeyStore.publicKey.encoded
+                                    ).toString()
+                            )
+                            .issueTime(
+                                    Date(now.time)
+                            )
+                            .notBeforeTime(
+                                    Date(now.time - TimeUnit.MINUTES.toMillis(1))
+                            )
+                            .expirationTime(
+                                    Date(now.time + TimeUnit.MINUTES.toMillis(1))
+                            )
+                            .build()
+            )
+            jwt.sign(RSASSASigner(clientKeyStore.privateKey))
+            metadata.put(
+                    Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER),
+                    "bearer ${jwt.serialize()}"
+            )
+            applier!!.apply(metadata)
+        }
+
+        override fun thisUsesUnstableApi() {}
 
     }
 
-    private val clientKeyStore by lazy { ClientKeyStore(filesDir) }
+    private val channel = ManagedChannelBuilder.forAddress(
+            "api.liquidityapp.com",
+            443
+    ).build()
 
     val clientKey: com.google.protobuf.ByteString by lazy {
         com.google.protobuf.ByteString.copyFrom(clientKeyStore.publicKey.encoded)
     }
 
-    fun createZone(
-            createZoneCommand: RestProtocol.CreateZoneCommand
-    ): Single<RestProtocol.ZoneResponse> {
-        return execZoneCommand("", createZoneCommand.toByteArray())
-    }
+    val commandStub: LiquidityServiceGrpc.LiquidityServiceFutureStub = LiquidityServiceGrpc
+            .newFutureStub(channel)
+            .withCallCredentials(callCredentials)
 
-    fun zoneNotifications(zoneId: String): Observable<RestProtocol.ZoneNotification> {
-        return Observable.create<RestProtocol.ZoneNotification>
-        {
-            val call = okHttpClient.newCall(
-                    Request.Builder()
-                            .url("https://api.liquidityapp.com/zone/$zoneId")
-                            .header("Authorization", "Bearer ${selfSignedJwt()}")
-                            .header("Accept", "application/x-protobuf; delimited=true")
-                            .get()
-                            .build()
-            )
-            it.setDisposable(Disposables.fromRunnable { call.cancel() })
-            call.enqueue(object : Callback {
+    fun zoneNotifications(zoneId: String): Observable<GrpcProtocol.ZoneNotification> {
+        return Observable.create<GrpcProtocol.ZoneNotification> {
+            LiquidityServiceGrpc.newStub(channel)
+                    .withCallCredentials(callCredentials)
+                    .zoneNotifications(
+                            GrpcProtocol.ZoneSubscription.newBuilder()
+                                    .setZoneId(zoneId)
+                                    .build(),
+                            object : ClientResponseObserver<
+                                    GrpcProtocol.ZoneSubscription,
+                                    GrpcProtocol.ZoneNotification
+                                    > {
 
-                override fun onFailure(call: Call, e: IOException) {
-                    if (!it.isDisposed) it.tryOnError(e)
-                }
+                                override fun beforeStart(
+                                        requestStream:
+                                        ClientCallStreamObserver<GrpcProtocol.ZoneSubscription>
+                                ) {
+                                    it.setDisposable(Disposables.fromAction {
+                                        requestStream.cancel(null, null)
+                                    })
+                                    if (it.isDisposed) {
+                                        requestStream.cancel(null, null)
+                                    }
+                                }
 
-                override fun onResponse(call: Call, response: Response) {
-                    val source = response.body()!!.source()
-                    if (response.code() != 200) {
-                        if (!it.isDisposed) {
-                            it.tryOnError(IOException(
-                                    "response.code() != 200 (response.code() = ${response.code()})"
-                            ))
-                        }
-                    } else {
-                        fun exhausted(): Boolean {
-                            return try {
-                                source.exhausted()
-                            } catch (_: IOException) {
-                                true
+                                override fun onError(t: Throwable?) {
+                                    it.tryOnError(t!!)
+                                }
+
+                                override fun onNext(value: GrpcProtocol.ZoneNotification?) {
+                                    it.onNext(value!!)
+                                }
+
+                                override fun onCompleted() {
+                                    it.onComplete()
+                                }
+
                             }
-                        }
-                        while (!exhausted()) {
-                            it.onNext(RestProtocol.ZoneNotification.parseDelimitedFrom(
-                                    source.inputStream()
-                            ))
-                        }
-                        it.onComplete()
-                    }
-                    source.close()
-                }
-
-            })
+                    )
         }.observeOn(AndroidSchedulers.mainThread())
-    }
-
-    fun execZoneCommand(zoneId: String, zoneCommand: RestProtocol.ZoneCommand
-    ): Single<RestProtocol.ZoneResponse> {
-        return execZoneCommand(
-                "/${URLEncoder.encode(zoneId, StandardCharsets.UTF_8.name())}",
-                zoneCommand.toByteArray()
-        )
-    }
-
-    private fun execZoneCommand(
-            zoneSubPath: String,
-            entity: ByteArray
-    ): Single<RestProtocol.ZoneResponse> {
-        return Single.create<RestProtocol.ZoneResponse>
-        {
-            val call = okHttpClient.newCall(
-                    Request.Builder()
-                            .url("https://api.liquidityapp.com/zone$zoneSubPath")
-                            .header("Authorization", "Bearer ${selfSignedJwt()}")
-                            .header("Accept", "application/x-protobuf")
-                            .put(RequestBody.create(
-                                    MediaType.parse("application/x-protobuf"),
-                                    entity
-                            ))
-                            .build()
-            )
-            it.setDisposable(Disposables.fromRunnable { call.cancel() })
-            call.enqueue(object : Callback {
-
-                override fun onFailure(call: Call, e: IOException) {
-                    if (!it.isDisposed) it.tryOnError(e)
-                }
-
-                override fun onResponse(call: Call, response: Response) {
-                    if (response.code() != 200) {
-                        if (!it.isDisposed) {
-                            it.tryOnError(IOException(
-                                    "response.code() != 200 (response.code() = ${response.code()})"
-                            ))
-                        }
-                        response.body()!!.source().close()
-                    } else {
-                        it.onSuccess(RestProtocol.ZoneResponse.parseFrom(
-                                response.body()!!.bytes()
-                        ))
-                    }
-                }
-
-            })
-        }.observeOn(AndroidSchedulers.mainThread())
-    }
-
-    private fun selfSignedJwt(): String {
-        val now = Date()
-        val jwt = SignedJWT(
-                JWSHeader.Builder(JWSAlgorithm.RS256)
-                        .build(),
-                JWTClaimsSet.Builder()
-                        .subject(ByteString.of(*clientKeyStore.publicKey.encoded).base64())
-                        .issueTime(Date(now.time))
-                        .notBeforeTime(Date(now.time - TimeUnit.MINUTES.toMillis(1)))
-                        .expirationTime(Date(now.time + TimeUnit.MINUTES.toMillis(1)))
-                        .build()
-        )
-        jwt.sign(RSASSASigner(clientKeyStore.privateKey))
-        return jwt.serialize()
     }
 
 }

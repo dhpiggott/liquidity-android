@@ -4,44 +4,31 @@
     <notice>
         <name>The Kotlin Language libraries</name>
         <url>https://kotlinlang.org/</url>
-        <copyright>Copyright 2010-2018 JetBrains s.r.o.</copyright>
         <license>Apache Software License 2.0</license>
     </notice>
     <notice>
-        <name>Protocol Buffers</name>
-        <url>https://developers.google.com/protocol-buffers/</url>
-        <copyright>Copyright 2008, Google Inc.</copyright>
-        <license>BSD 3-Clause License</license>
+        <name>gRPC</name>
+        <url>https://www.grpc.io/</url>
+        <license>Apache Software License 2.0</license>
     </notice>
     <notice>
         <name>Spongy Castle</name>
         <url>https://rtyley.github.io/spongycastle/</url>
-        <copyright>Copyright (c) 2000-2017 The Legion of the Bouncy Castle Inc. (http://www.bouncycastle.org)
-        </copyright>
         <license>MIT License</license>
     </notice>
     <notice>
         <name>Nimbus JOSE + JWT</name>
         <url>https://connect2id.com/products/nimbus-jose-jwt</url>
-        <copyright>Copyright 2012 - 2018, Connect2id Ltd.</copyright>
-        <license>Apache Software License 2.0</license>
-    </notice>
-    <notice>
-        <name>OkHttp</name>
-        <url>https://square.github.io/okhttp/</url>
-        <copyright>Copyright 2016 Square, Inc.</copyright>
         <license>Apache Software License 2.0</license>
     </notice>
     <notice>
         <name>RxJava</name>
         <url>https://github.com/ReactiveX/RxJava</url>
-        <copyright>Copyright (c) 2016-present, RxJava Contributors.</copyright>
         <license>Apache Software License 2.0</license>
     </notice>
     <notice>
         <name>RxAndroid</name>
         <url>https://github.com/ReactiveX/RxAndroid</url>
-        <copyright>Copyright 2015 The RxAndroid authors</copyright>
         <license>Apache Software License 2.0</license>
     </notice>
     <notice>
@@ -52,7 +39,6 @@
     <notice>
         <name>AndroidX</name>
         <url>https://developer.android.com/jetpack/androidx/</url>
-        <copyright>Copyright (C) 2011-2018 The Android Open Source Project</copyright>
         <license>Apache Software License 2.0</license>
     </notice>
     <notice>
@@ -68,13 +54,11 @@
     <notice>
         <name>ZXing Android Embedded</name>
         <url>https://github.com/journeyapps/zxing-android-embedded</url>
-        <copyright>Copyright (C) 2012-2018 ZXing authors, Journey Mobile</copyright>
         <license>Apache Software License 2.0</license>
     </notice>
     <notice>
         <name>LicensesDialog</name>
         <url>https://psdev.de/LicensesDialog</url>
-        <copyright>Copyright 2013 Philip Schiffer</copyright>
         <license>Apache Software License 2.0</license>
     </notice>
     <!-- @formatter:on -->

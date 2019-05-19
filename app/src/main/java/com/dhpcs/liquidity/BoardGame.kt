@@ -1,8 +1,8 @@
 package com.dhpcs.liquidity
 
 import com.dhpcs.liquidity.BoardGame.Companion.JoinState.*
+import com.dhpcs.liquidity.proto.grpc.protocol.GrpcProtocol
 import com.dhpcs.liquidity.proto.model.Model
-import com.dhpcs.liquidity.proto.rest.protocol.RestProtocol
 import com.google.protobuf.ByteString
 import com.google.protobuf.StringValue
 import com.google.protobuf.Struct
@@ -151,25 +151,25 @@ class BoardGame constructor(
                         Value.newBuilder().setStringValue(currency.currencyCode).build()
                 )
         return Single.create<String> { singleEmitter ->
-            serverConnection.createZone(
-                    RestProtocol.CreateZoneCommand.newBuilder()
+            Single.fromFuture(serverConnection.commandStub.createZone(
+                    GrpcProtocol.CreateZoneCommand.newBuilder()
                             .setEquityOwnerPublicKey(serverConnection.clientKey)
                             .setEquityOwnerName(StringValue.newBuilder().setValue(bankMemberName))
                             .setName(StringValue.newBuilder().setValue(name))
                             .setMetadata(metadata)
                             .build()
-            ).subscribe({ zoneResponse ->
-                when (zoneResponse.createZoneResponse.resultCase!!) {
-                    RestProtocol.CreateZoneResponse.ResultCase.RESULT_NOT_SET ->
+            )).subscribe({ createZoneResponse ->
+                when (createZoneResponse.resultCase!!) {
+                    GrpcProtocol.CreateZoneResponse.ResultCase.RESULT_NOT_SET ->
                         singleEmitter.tryOnError(IllegalArgumentException(
-                                zoneResponse.createZoneResponse.resultCase.name
+                                createZoneResponse.resultCase.name
                         ))
-                    RestProtocol.CreateZoneResponse.ResultCase.ERRORS ->
+                    GrpcProtocol.CreateZoneResponse.ResultCase.ERRORS ->
                         singleEmitter.tryOnError(IllegalArgumentException(
-                                zoneResponse.createZoneResponse.resultCase.name
+                                createZoneResponse.resultCase.name
                         ))
-                    RestProtocol.CreateZoneResponse.ResultCase.SUCCESS ->
-                        singleEmitter.onSuccess(zoneResponse.createZoneResponse.success.zone!!.id)
+                    GrpcProtocol.CreateZoneResponse.ResultCase.SUCCESS ->
+                        singleEmitter.onSuccess(createZoneResponse.success.zone!!.id)
                 }
             }, { error ->
                 singleEmitter.tryOnError(error)
@@ -233,7 +233,7 @@ class BoardGame constructor(
         gameId = null
     }
 
-    private fun handleZoneNotification(zoneNotification: RestProtocol.ZoneNotification) {
+    private fun handleZoneNotification(zoneNotification: GrpcProtocol.ZoneNotification) {
         fun updateState(
                 zone: Model.Zone,
                 connectedClients: Map<String, ByteString>,
@@ -392,123 +392,11 @@ class BoardGame constructor(
         }
 
         val newState = when (zoneNotification.sealedValueCase!!) {
-            RestProtocol.ZoneNotification.SealedValueCase.SEALEDVALUE_NOT_SET ->
+            GrpcProtocol.ZoneNotification.SealedValueCase.SEALEDVALUE_NOT_SET ->
                 null
-            RestProtocol.ZoneNotification.SealedValueCase.CLIENT_JOINED_ZONE_NOTIFICATION -> {
-                val connectionId = zoneNotification.clientJoinedZoneNotification.connectionId
-                val publicKey = zoneNotification.clientJoinedZoneNotification.publicKey
-                val connectedClients = state!!.connectedClients + Pair(connectionId, publicKey)
-                updateState(
-                        state!!.zone,
-                        connectedClients,
-                        state!!.balances,
-                        state!!.currency
-                )
-            }
-            RestProtocol.ZoneNotification.SealedValueCase.CLIENT_QUIT_ZONE_NOTIFICATION -> {
-                val connectionId = zoneNotification.clientQuitZoneNotification.connectionId
-                val connectedClients = state!!.connectedClients - connectionId
-                updateState(
-                        state!!.zone,
-                        connectedClients,
-                        state!!.balances,
-                        state!!.currency
-                )
-            }
-            RestProtocol.ZoneNotification.SealedValueCase.ZONE_NAME_CHANGED_NOTIFICATION -> {
-                val name = zoneNotification.zoneNameChangedNotification.name
-                val zone = state!!.zone.toBuilder()
-                        .setName(name)
-                        .build()
-                updateState(
-                        zone,
-                        state!!.connectedClients,
-                        state!!.balances,
-                        state!!.currency
-                )
-            }
-            RestProtocol.ZoneNotification.SealedValueCase.MEMBER_CREATED_NOTIFICATION -> {
-                val member = zoneNotification.memberCreatedNotification.member
-                val zone = state!!.zone.toBuilder()
-                        .addMembers(member)
-                        .build()
-                updateState(
-                        zone,
-                        state!!.connectedClients,
-                        state!!.balances,
-                        state!!.currency
-                )
-            }
-            RestProtocol.ZoneNotification.SealedValueCase.MEMBER_UPDATED_NOTIFICATION -> {
-                val member = zoneNotification.memberUpdatedNotification.member
-                val zone = state!!.zone.toBuilder()
-                        .removeMembers(
-                                state!!.zone.membersList.indexOfFirst {
-                                    it.id == member.id
-                                }
-                        )
-                        .addMembers(member)
-                        .build()
-                updateState(
-                        zone,
-                        state!!.connectedClients,
-                        state!!.balances,
-                        state!!.currency
-                )
-            }
-            RestProtocol.ZoneNotification.SealedValueCase.ACCOUNT_CREATED_NOTIFICATION -> {
-                val account = zoneNotification.accountCreatedNotification.account
-                val zone = state!!.zone.toBuilder()
-                        .addAccounts(account)
-                        .build()
-                updateState(
-                        zone,
-                        state!!.connectedClients,
-                        state!!.balances,
-                        state!!.currency
-                )
-            }
-            RestProtocol.ZoneNotification.SealedValueCase.ACCOUNT_UPDATED_NOTIFICATION -> {
-                val account = zoneNotification.accountUpdatedNotification.account
-                val zone = state!!.zone.toBuilder()
-                        .removeAccounts(
-                                state!!.zone.accountsList.indexOfFirst {
-                                    it.id == account.id
-                                }
-                        )
-                        .addAccounts(account)
-                        .build()
-                updateState(
-                        zone,
-                        state!!.connectedClients,
-                        state!!.balances,
-                        state!!.currency
-                )
-            }
-            RestProtocol.ZoneNotification.SealedValueCase.TRANSACTION_ADDED_NOTIFICATION -> {
-                val transaction = zoneNotification.transactionAddedNotification.transaction
-                val zone = state!!.zone.toBuilder()
-                        .addTransactions(transaction)
-                        .build()
-                val balances = state!!.balances +
-                        Pair(
-                                transaction.from!!,
-                                state!!.balances.getOrElse(transaction.from) { BigDecimal.ZERO } -
-                                        BigDecimal(transaction.value)
-                        ) +
-                        Pair(
-                                transaction.to!!,
-                                state!!.balances.getOrElse(transaction.to) { BigDecimal.ZERO } +
-                                        BigDecimal(transaction.value)
-                        )
-                updateState(
-                        zone,
-                        state!!.connectedClients,
-                        balances,
-                        state!!.currency
-                )
-            }
-            RestProtocol.ZoneNotification.SealedValueCase.ZONE_STATE_NOTIFICATION -> {
+            GrpcProtocol.ZoneNotification.SealedValueCase.ERRORS ->
+                null
+            GrpcProtocol.ZoneNotification.SealedValueCase.ZONE_STATE_NOTIFICATION -> {
                 val zone = zoneNotification.zoneStateNotification.zone
                 val connectedClients = zoneNotification.zoneStateNotification.connectedClientsMap
                 val balances = zone.transactionsList
@@ -533,8 +421,120 @@ class BoardGame constructor(
                         currency
                 )
             }
-            RestProtocol.ZoneNotification.SealedValueCase.PING_NOTIFICATION ->
-                null
+            GrpcProtocol.ZoneNotification.SealedValueCase.CLIENT_JOINED_ZONE_NOTIFICATION -> {
+                val connectionId = zoneNotification.clientJoinedZoneNotification.connectionId
+                val publicKey = zoneNotification.clientJoinedZoneNotification.publicKey
+                val connectedClients = state!!.connectedClients + Pair(connectionId, publicKey)
+                updateState(
+                        state!!.zone,
+                        connectedClients,
+                        state!!.balances,
+                        state!!.currency
+                )
+            }
+            GrpcProtocol.ZoneNotification.SealedValueCase.CLIENT_QUIT_ZONE_NOTIFICATION -> {
+                val connectionId = zoneNotification.clientQuitZoneNotification.connectionId
+                val connectedClients = state!!.connectedClients - connectionId
+                updateState(
+                        state!!.zone,
+                        connectedClients,
+                        state!!.balances,
+                        state!!.currency
+                )
+            }
+            GrpcProtocol.ZoneNotification.SealedValueCase.ZONE_NAME_CHANGED_NOTIFICATION -> {
+                val name = zoneNotification.zoneNameChangedNotification.name
+                val zone = state!!.zone.toBuilder()
+                        .setName(name)
+                        .build()
+                updateState(
+                        zone,
+                        state!!.connectedClients,
+                        state!!.balances,
+                        state!!.currency
+                )
+            }
+            GrpcProtocol.ZoneNotification.SealedValueCase.MEMBER_CREATED_NOTIFICATION -> {
+                val member = zoneNotification.memberCreatedNotification.member
+                val zone = state!!.zone.toBuilder()
+                        .addMembers(member)
+                        .build()
+                updateState(
+                        zone,
+                        state!!.connectedClients,
+                        state!!.balances,
+                        state!!.currency
+                )
+            }
+            GrpcProtocol.ZoneNotification.SealedValueCase.MEMBER_UPDATED_NOTIFICATION -> {
+                val member = zoneNotification.memberUpdatedNotification.member
+                val zone = state!!.zone.toBuilder()
+                        .removeMembers(
+                                state!!.zone.membersList.indexOfFirst {
+                                    it.id == member.id
+                                }
+                        )
+                        .addMembers(member)
+                        .build()
+                updateState(
+                        zone,
+                        state!!.connectedClients,
+                        state!!.balances,
+                        state!!.currency
+                )
+            }
+            GrpcProtocol.ZoneNotification.SealedValueCase.ACCOUNT_CREATED_NOTIFICATION -> {
+                val account = zoneNotification.accountCreatedNotification.account
+                val zone = state!!.zone.toBuilder()
+                        .addAccounts(account)
+                        .build()
+                updateState(
+                        zone,
+                        state!!.connectedClients,
+                        state!!.balances,
+                        state!!.currency
+                )
+            }
+            GrpcProtocol.ZoneNotification.SealedValueCase.ACCOUNT_UPDATED_NOTIFICATION -> {
+                val account = zoneNotification.accountUpdatedNotification.account
+                val zone = state!!.zone.toBuilder()
+                        .removeAccounts(
+                                state!!.zone.accountsList.indexOfFirst {
+                                    it.id == account.id
+                                }
+                        )
+                        .addAccounts(account)
+                        .build()
+                updateState(
+                        zone,
+                        state!!.connectedClients,
+                        state!!.balances,
+                        state!!.currency
+                )
+            }
+            GrpcProtocol.ZoneNotification.SealedValueCase.TRANSACTION_ADDED_NOTIFICATION -> {
+                val transaction = zoneNotification.transactionAddedNotification.transaction
+                val zone = state!!.zone.toBuilder()
+                        .addTransactions(transaction)
+                        .build()
+                val balances = state!!.balances +
+                        Pair(
+                                transaction.from!!,
+                                state!!.balances.getOrElse(transaction.from) { BigDecimal.ZERO } -
+                                        BigDecimal(transaction.value)
+                        ) +
+                        Pair(
+                                transaction.to!!,
+                                state!!.balances.getOrElse(transaction.to) { BigDecimal.ZERO } +
+                                        BigDecimal(transaction.value)
+                        )
+                updateState(
+                        zone,
+                        state!!.connectedClients,
+                        balances,
+                        state!!.currency
+                )
+            }
         }
         if (newState != null) {
             dispatchUpdates(state, newState)
@@ -544,26 +544,23 @@ class BoardGame constructor(
 
     private fun createAccount(zoneId: String, ownerMemberId: String): Single<Model.Account> {
         return Single.create<Model.Account> { singleEmitter ->
-            serverConnection.execZoneCommand(
-                    zoneId,
-                    RestProtocol.ZoneCommand.newBuilder()
-                            .setCreateAccountCommand(
-                                    RestProtocol.CreateAccountCommand.newBuilder()
-                                            .addOwnerMemberIds(ownerMemberId)
-                            )
+            Single.fromFuture(serverConnection.commandStub.createAccount(
+                    GrpcProtocol.CreateAccountCommand.newBuilder()
+                            .setZoneId(zoneId)
+                            .addOwnerMemberIds(ownerMemberId)
                             .build()
-            ).subscribe({ zoneResponse ->
-                when (zoneResponse.createAccountResponse.resultCase!!) {
-                    RestProtocol.CreateAccountResponse.ResultCase.RESULT_NOT_SET ->
+            )).subscribe({ createAccountResponse ->
+                when (createAccountResponse.resultCase!!) {
+                    GrpcProtocol.CreateAccountResponse.ResultCase.RESULT_NOT_SET ->
                         singleEmitter.tryOnError(IllegalArgumentException(
-                                zoneResponse.createAccountResponse.resultCase.name
+                                createAccountResponse.resultCase.name
                         ))
-                    RestProtocol.CreateAccountResponse.ResultCase.ERRORS ->
+                    GrpcProtocol.CreateAccountResponse.ResultCase.ERRORS ->
                         singleEmitter.tryOnError(IllegalArgumentException(
-                                zoneResponse.createAccountResponse.errors.toString()
+                                createAccountResponse.errors.toString()
                         ))
-                    RestProtocol.CreateAccountResponse.ResultCase.SUCCESS ->
-                        singleEmitter.onSuccess(zoneResponse.createAccountResponse.success.account)
+                    GrpcProtocol.CreateAccountResponse.ResultCase.SUCCESS ->
+                        singleEmitter.onSuccess(createAccountResponse.success.account)
                 }
             }, { error ->
                 singleEmitter.tryOnError(error)
@@ -573,25 +570,22 @@ class BoardGame constructor(
 
     fun changeGameName(name: String): Single<Unit> {
         return Single.create<Unit> { singleEmitter ->
-            serverConnection.execZoneCommand(
-                    state!!.zone.id,
-                    RestProtocol.ZoneCommand.newBuilder()
-                            .setChangeZoneNameCommand(
-                                    RestProtocol.ChangeZoneNameCommand.newBuilder()
-                                            .setName(StringValue.newBuilder().setValue(name))
-                            )
+            Single.fromFuture(serverConnection.commandStub.changeZoneName(
+                    GrpcProtocol.ChangeZoneNameCommand.newBuilder()
+                            .setZoneId(state!!.zone.id)
+                            .setName(StringValue.newBuilder().setValue(name))
                             .build()
-            ).subscribe({ zoneResponse ->
-                when (zoneResponse.changeZoneNameResponse.resultCase!!) {
-                    RestProtocol.ChangeZoneNameResponse.ResultCase.RESULT_NOT_SET ->
+            )).subscribe({ changeZoneNameResponse ->
+                when (changeZoneNameResponse.resultCase!!) {
+                    GrpcProtocol.ChangeZoneNameResponse.ResultCase.RESULT_NOT_SET ->
                         singleEmitter.tryOnError(IllegalArgumentException(
-                                zoneResponse.changeZoneNameResponse.resultCase.name
+                                changeZoneNameResponse.resultCase.name
                         ))
-                    RestProtocol.ChangeZoneNameResponse.ResultCase.ERRORS ->
+                    GrpcProtocol.ChangeZoneNameResponse.ResultCase.ERRORS ->
                         singleEmitter.tryOnError(IllegalArgumentException(
-                                zoneResponse.changeZoneNameResponse.errors.toString()
+                                changeZoneNameResponse.errors.toString()
                         ))
-                    RestProtocol.ChangeZoneNameResponse.ResultCase.SUCCESS ->
+                    GrpcProtocol.ChangeZoneNameResponse.ResultCase.SUCCESS ->
                         singleEmitter.onSuccess(Unit)
                 }
             }, { error ->
@@ -626,28 +620,25 @@ class BoardGame constructor(
             Single.just(partiallyCreatedIdentity)
         } else {
             Single.create<Model.Member> { singleEmitter ->
-                serverConnection.execZoneCommand(
-                        zoneId,
-                        RestProtocol.ZoneCommand.newBuilder()
-                                .setCreateMemberCommand(
-                                        RestProtocol.CreateMemberCommand.newBuilder()
-                                                .addOwnerPublicKeys(serverConnection.clientKey)
-                                                .setName(StringValue.newBuilder().setValue(name))
-                                )
+                Single.fromFuture(serverConnection.commandStub.createMember(
+                        GrpcProtocol.CreateMemberCommand.newBuilder()
+                                .setZoneId(zoneId)
+                                .addOwnerPublicKeys(serverConnection.clientKey)
+                                .setName(StringValue.newBuilder().setValue(name))
                                 .build()
-                ).subscribe({ zoneResponse ->
-                    when (zoneResponse.createMemberResponse.resultCase!!) {
-                        RestProtocol.CreateMemberResponse.ResultCase.RESULT_NOT_SET ->
+                )).subscribe({ createMemberResponse ->
+                    when (createMemberResponse.resultCase!!) {
+                        GrpcProtocol.CreateMemberResponse.ResultCase.RESULT_NOT_SET ->
                             singleEmitter.tryOnError(IllegalArgumentException(
-                                    zoneResponse.createMemberResponse.resultCase.name
+                                    createMemberResponse.resultCase.name
                             ))
-                        RestProtocol.CreateMemberResponse.ResultCase.ERRORS ->
+                        GrpcProtocol.CreateMemberResponse.ResultCase.ERRORS ->
                             singleEmitter.tryOnError(IllegalArgumentException(
-                                    zoneResponse.createMemberResponse.errors.toString()
+                                    createMemberResponse.errors.toString()
                             ))
-                        RestProtocol.CreateMemberResponse.ResultCase.SUCCESS ->
+                        GrpcProtocol.CreateMemberResponse.ResultCase.SUCCESS ->
                             singleEmitter.onSuccess(
-                                    zoneResponse.createMemberResponse.success.member
+                                    createMemberResponse.success.member
                             )
                     }
                 }, { error ->
@@ -664,31 +655,28 @@ class BoardGame constructor(
             it.id == identityId
         }!!
         return Single.create<Unit> { singleEmitter ->
-            serverConnection.execZoneCommand(
-                    state!!.zone.id,
-                    RestProtocol.ZoneCommand.newBuilder()
-                            .setUpdateMemberCommand(
-                                    RestProtocol.UpdateMemberCommand.newBuilder()
-                                            .setMember(
-                                                    member.toBuilder()
-                                                            .setName(
-                                                                    StringValue.newBuilder()
-                                                                            .setValue(name)
-                                                            )
+            Single.fromFuture(serverConnection.commandStub.updateMember(
+                    GrpcProtocol.UpdateMemberCommand.newBuilder()
+                            .setZoneId(state!!.zone.id)
+                            .setMember(
+                                    member.toBuilder()
+                                            .setName(
+                                                    StringValue.newBuilder()
+                                                            .setValue(name)
                                             )
                             )
                             .build()
-            ).subscribe({ zoneResponse ->
-                when (zoneResponse.updateMemberResponse.resultCase!!) {
-                    RestProtocol.UpdateMemberResponse.ResultCase.RESULT_NOT_SET ->
+            )).subscribe({ updateMemberResponse ->
+                when (updateMemberResponse.resultCase!!) {
+                    GrpcProtocol.UpdateMemberResponse.ResultCase.RESULT_NOT_SET ->
                         singleEmitter.tryOnError(IllegalArgumentException(
-                                zoneResponse.updateMemberResponse.resultCase.name
+                                updateMemberResponse.resultCase.name
                         ))
-                    RestProtocol.UpdateMemberResponse.ResultCase.ERRORS ->
+                    GrpcProtocol.UpdateMemberResponse.ResultCase.ERRORS ->
                         singleEmitter.tryOnError(IllegalArgumentException(
-                                zoneResponse.updateMemberResponse.errors.toString()
+                                updateMemberResponse.errors.toString()
                         ))
-                    RestProtocol.UpdateMemberResponse.ResultCase.SUCCESS ->
+                    GrpcProtocol.UpdateMemberResponse.ResultCase.SUCCESS ->
                         singleEmitter.onSuccess(Unit)
                 }
             }, { error ->
@@ -706,38 +694,30 @@ class BoardGame constructor(
             it.id == identityId
         }!!
         return Single.create<Unit> { singleEmitter ->
-            serverConnection.execZoneCommand(
-                    state!!.zone.id,
-                    RestProtocol.ZoneCommand
-                            .newBuilder()
-                            .setUpdateMemberCommand(
-                                    RestProtocol.UpdateMemberCommand.newBuilder()
-                                            .setMember(member.toBuilder()
-                                                    .clearOwnerPublicKeys()
-                                                    .addAllOwnerPublicKeys(
-                                                            member.ownerPublicKeysList
-                                                                    .minusElement(
-                                                                            serverConnection
-                                                                                    .clientKey
-                                                                    )
-                                                                    .plusElement(
-                                                                            toPublicKey
-                                                                    )
-                                                    )
-                                            )
+            Single.fromFuture(serverConnection.commandStub.updateMember(
+                    GrpcProtocol.UpdateMemberCommand.newBuilder()
+                            .setZoneId(state!!.zone.id)
+                            .setMember(
+                                    member.toBuilder()
+                                    .clearOwnerPublicKeys()
+                                    .addAllOwnerPublicKeys(
+                                            member.ownerPublicKeysList
+                                                    .minusElement(serverConnection.clientKey)
+                                                    .plusElement(toPublicKey)
+                                    )
                             )
                             .build()
-            ).subscribe({ zoneResponse ->
-                when (zoneResponse.updateMemberResponse.resultCase!!) {
-                    RestProtocol.UpdateMemberResponse.ResultCase.RESULT_NOT_SET ->
+            )).subscribe({ updateMemberResponse ->
+                when (updateMemberResponse.resultCase!!) {
+                    GrpcProtocol.UpdateMemberResponse.ResultCase.RESULT_NOT_SET ->
                         singleEmitter.tryOnError(IllegalArgumentException(
-                                zoneResponse.updateMemberResponse.resultCase.name
+                                updateMemberResponse.resultCase.name
                         ))
-                    RestProtocol.UpdateMemberResponse.ResultCase.ERRORS ->
+                    GrpcProtocol.UpdateMemberResponse.ResultCase.ERRORS ->
                         singleEmitter.tryOnError(IllegalArgumentException(
-                                zoneResponse.updateMemberResponse.errors.toString()
+                                updateMemberResponse.errors.toString()
                         ))
-                    RestProtocol.UpdateMemberResponse.ResultCase.SUCCESS ->
+                    GrpcProtocol.UpdateMemberResponse.ResultCase.SUCCESS ->
                         singleEmitter.onSuccess(Unit)
                 }
             }, { error ->
@@ -753,25 +733,22 @@ class BoardGame constructor(
         val metadata = member.metadata.toBuilder()
                 .putFields(HIDDEN_FLAG_KEY, Value.newBuilder().setBoolValue(true).build())
         return Single.create<Unit> { singleEmitter ->
-            serverConnection.execZoneCommand(
-                    state!!.zone.id,
-                    RestProtocol.ZoneCommand.newBuilder()
-                            .setUpdateMemberCommand(
-                                    RestProtocol.UpdateMemberCommand.newBuilder()
+            Single.fromFuture(serverConnection.commandStub.updateMember(
+                                    GrpcProtocol.UpdateMemberCommand.newBuilder()
+                                            .setZoneId(state!!.zone.id)
                                             .setMember(member.toBuilder().setMetadata(metadata))
-                            )
                             .build()
-            ).subscribe({ zoneResponse ->
-                when (zoneResponse.updateMemberResponse.resultCase!!) {
-                    RestProtocol.UpdateMemberResponse.ResultCase.RESULT_NOT_SET ->
+            )).subscribe({ updateMemberResponse ->
+                when (updateMemberResponse.resultCase!!) {
+                    GrpcProtocol.UpdateMemberResponse.ResultCase.RESULT_NOT_SET ->
                         singleEmitter.tryOnError(IllegalArgumentException(
-                                zoneResponse.updateMemberResponse.resultCase.name
+                                updateMemberResponse.resultCase.name
                         ))
-                    RestProtocol.UpdateMemberResponse.ResultCase.ERRORS ->
+                    GrpcProtocol.UpdateMemberResponse.ResultCase.ERRORS ->
                         singleEmitter.tryOnError(IllegalArgumentException(
-                                zoneResponse.updateMemberResponse.errors.toString()
+                                updateMemberResponse.errors.toString()
                         ))
-                    RestProtocol.UpdateMemberResponse.ResultCase.SUCCESS ->
+                    GrpcProtocol.UpdateMemberResponse.ResultCase.SUCCESS ->
                         singleEmitter.onSuccess(Unit)
                 }
             }, { error ->
@@ -787,25 +764,22 @@ class BoardGame constructor(
         val metadata = member.metadata.toBuilder()
                 .removeFields(HIDDEN_FLAG_KEY)
         return Single.create<Unit> { singleEmitter ->
-            serverConnection.execZoneCommand(
-                    state!!.zone.id,
-                    RestProtocol.ZoneCommand.newBuilder()
-                            .setUpdateMemberCommand(
-                                    RestProtocol.UpdateMemberCommand.newBuilder()
+            Single.fromFuture(serverConnection.commandStub.updateMember(
+                                    GrpcProtocol.UpdateMemberCommand.newBuilder()
+                                            .setZoneId(state!!.zone.id)
                                             .setMember(member.toBuilder().setMetadata(metadata))
-                            )
                             .build()
-            ).subscribe({ zoneResponse ->
-                when (zoneResponse.updateMemberResponse.resultCase!!) {
-                    RestProtocol.UpdateMemberResponse.ResultCase.RESULT_NOT_SET ->
+            )).subscribe({ updateMemberResponse ->
+                when (updateMemberResponse.resultCase!!) {
+                    GrpcProtocol.UpdateMemberResponse.ResultCase.RESULT_NOT_SET ->
                         singleEmitter.tryOnError(IllegalArgumentException(
-                                zoneResponse.updateMemberResponse.resultCase.name
+                                updateMemberResponse.resultCase.name
                         ))
-                    RestProtocol.UpdateMemberResponse.ResultCase.ERRORS ->
+                    GrpcProtocol.UpdateMemberResponse.ResultCase.ERRORS ->
                         singleEmitter.tryOnError(IllegalArgumentException(
-                                zoneResponse.updateMemberResponse.errors.toString()
+                                updateMemberResponse.errors.toString()
                         ))
-                    RestProtocol.UpdateMemberResponse.ResultCase.SUCCESS ->
+                    GrpcProtocol.UpdateMemberResponse.ResultCase.SUCCESS ->
                         singleEmitter.onSuccess(Unit)
                 }
             }, { error ->
@@ -819,28 +793,25 @@ class BoardGame constructor(
                          value: BigDecimal
     ): Single<Unit> {
         return Single.create<Unit> { singleEmitter ->
-            serverConnection.execZoneCommand(
-                    state!!.zone.id,
-                    RestProtocol.ZoneCommand.newBuilder()
-                            .setAddTransactionCommand(
-                                    RestProtocol.AddTransactionCommand.newBuilder()
+            Single.fromFuture(serverConnection.commandStub.addTransaction(
+                                    GrpcProtocol.AddTransactionCommand.newBuilder()
+                                            .setZoneId(state!!.zone.id)
                                             .setActingAs(from.memberId)
                                             .setFrom(from.accountId)
                                             .setTo(to.accountId)
                                             .setValue(value.toString())
-                            )
                             .build()
-            ).subscribe({ zoneResponse ->
-                when (zoneResponse.addTransactionResponse.resultCase!!) {
-                    RestProtocol.AddTransactionResponse.ResultCase.RESULT_NOT_SET ->
+            )).subscribe({ addTransactionResponse ->
+                when (addTransactionResponse.resultCase!!) {
+                    GrpcProtocol.AddTransactionResponse.ResultCase.RESULT_NOT_SET ->
                         singleEmitter.tryOnError(IllegalArgumentException(
-                                zoneResponse.updateMemberResponse.resultCase.name
+                                addTransactionResponse.resultCase.name
                         ))
-                    RestProtocol.AddTransactionResponse.ResultCase.ERRORS ->
+                    GrpcProtocol.AddTransactionResponse.ResultCase.ERRORS ->
                         singleEmitter.tryOnError(IllegalArgumentException(
-                                zoneResponse.updateMemberResponse.errors.toString()
+                                addTransactionResponse.errors.toString()
                         ))
-                    RestProtocol.AddTransactionResponse.ResultCase.SUCCESS ->
+                    GrpcProtocol.AddTransactionResponse.ResultCase.SUCCESS ->
                         singleEmitter.onSuccess(Unit)
                 }
             }, { error ->
