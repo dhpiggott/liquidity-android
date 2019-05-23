@@ -68,7 +68,7 @@ protobuf {
             artifact = 'com.google.protobuf:protoc:3.7.1'
         }
         grpc {
-            artifact = 'io.grpc:protoc-gen-grpc-java:1.20.0'
+            artifact = 'io.grpc:protoc-gen-grpc-java:1.21.0'
         }
     }
     generateProtoTasks {
@@ -84,9 +84,9 @@ protobuf {
 dependencies {
     protobuf 'com.dhpcs:liquidity-ws-protocol:3'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'io.grpc:grpc-protobuf:1.20.0'
-    implementation 'io.grpc:grpc-stub:1.20.0'
-    implementation 'io.grpc:grpc-okhttp:1.20.0'
+    implementation 'io.grpc:grpc-protobuf:1.21.0'
+    implementation 'io.grpc:grpc-stub:1.21.0'
+    implementation 'io.grpc:grpc-okhttp:1.21.0'
     implementation 'javax.annotation:javax.annotation-api:1.3.2'
     implementation 'com.madgag.spongycastle:pkix:1.54.0.0'
     implementation 'com.nimbusds:nimbus-jose-jwt:7.2.1'
