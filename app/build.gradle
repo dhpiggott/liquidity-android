@@ -82,7 +82,7 @@ protobuf {
 }
 
 dependencies {
-    protobuf 'com.dhpcs:liquidity-ws-protocol:3.0-RC1'
+    protobuf 'com.dhpcs:liquidity-ws-protocol:3'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'io.grpc:grpc-protobuf:1.20.0'
     implementation 'io.grpc:grpc-stub:1.20.0'
