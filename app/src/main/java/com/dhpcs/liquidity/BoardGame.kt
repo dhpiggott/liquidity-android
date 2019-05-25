@@ -595,13 +595,13 @@ class BoardGame constructor(
     }
 
     fun isIdentityNameValid(name: CharSequence): Boolean {
-        val equityMemberId = state!!.zone.accountsList.find {
+        val equityMemberId = state?.zone?.accountsList?.find {
             it.id == state!!.zone.equityAccountId && it.ownerMemberIdsCount == 1
         }?.getOwnerMemberIds(0)
         return isTagValid(name) &&
-                name.toString() != state!!.zone.membersList.find {
+                name.toString() != state?.zone?.membersList?.find {
             it.id == equityMemberId
-        }!!.name?.value
+        }?.name?.value
     }
 
     fun createIdentity(name: String): Single<Model.Member> {
