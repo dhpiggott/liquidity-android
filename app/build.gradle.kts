@@ -37,8 +37,8 @@ android {
         applicationId = "com.dhpcs.liquidity"
         minSdkVersion(21)
         targetSdkVersion(28)
-        versionCode = 39
-        versionName = "39"
+        versionCode = 40
+        versionName = "40"
         resConfigs("en")
     }
     signingConfigs {
