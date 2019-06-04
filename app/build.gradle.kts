@@ -9,6 +9,7 @@ plugins {
     id("kotlin-android")
     id("kotlin-android-extensions")
     id("androidx.navigation.safeargs.kotlin")
+    id("com.github.triplet.play") version "2.2.1"
 }
 
 tasks.named<DependencyUpdatesTask>("dependencyUpdates") {
@@ -41,12 +42,6 @@ android {
         resConfigs("en")
     }
     signingConfigs {
-        getByName("debug") {
-            storeFile = file("debug.keystore")
-            storePassword = "android"
-            keyAlias = "androiddebugkey"
-            keyPassword = "android"
-        }
         create("release") {
             storeFile = file("release.keystore")
             storePassword = "android"
@@ -55,9 +50,6 @@ android {
         }
     }
     buildTypes {
-        getByName("debug") {
-            signingConfig = signingConfigs.getByName("debug")
-        }
         getByName("release") {
             signingConfig = signingConfigs.getByName("release")
         }
@@ -65,6 +57,11 @@ android {
             disable("InvalidPackage")
         }
     }
+}
+
+play {
+    defaultToAppBundles = true
+    serviceAccountCredentials = file("service-account-credentials.json")
 }
 
 protobuf {

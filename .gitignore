@@ -4,3 +4,4 @@ build/
 local.properties
 *.iml
 *.keystore
+service-account-credentials.json

@@ -1,0 +1,20 @@
+Have you ever got frustrated with cash (or plastic cards) when playing Monopoly or another game that involves currency? Concerned about losing your cash or worse, having it stolen? Have you got irritated as the banker by people constantly asking you to handle transactions, or for you to break notes into change?
+
+With Liquidity, not only do these problems go away, but games become simpler and more fun too. And as a bonus, Liquidity lets you view the history of all payments made in a game, so you can resume from distractions more easily and cheating and mistakes are easier to detect.
+
+Setting up a game is easy:
+
+1. Install Liquidity on each Android phone that will be part of your game (you don't need everyone to have an Android phone).
+2. Choose the "Create new game" action on one of the phones. Give the game a name and check your currency. You'll then be prompted to enter your own name too. This phone will also be the bank (but you can move the bank later if you need).
+3. Click "Add players" to show the QR code that you'll use to join the other players' phones to the game.
+4. Choose the "Join existing game" action on the other phones. Scan the QR code that's showing on the first phone. Each of the other players' phone will then prompt for their names as they join.
+
+Each phone will now be showing the list of players that have joined, and will now have one "identity". An identity is just a player that is controlled by the phone that it's an identity on. If it helps, think of each identity as a card, and the phone as a holder of cards. Each phone shows the active identity name and its balance above the list of other players.
+
+To get started playing you'll want to allocate some funds to each player. To do this, select the "Bank" identity on the phone that created the game by swiping the player at the top of the list to one side. Then, click the menu button and choose "Group transfer". Enter the amount of starting money you want to send, check the recipients, and click OK.
+
+That's it – you can now play. To make payments, simply tap the name of the recipient in the player list, enter the amount to send, and click OK. On phones with more than one "identity" (like the bank), choose the identity to send as first by swiping as necessary.
+
+Although Liquidity is only available for Android, there's no need for everyone to have an Android phone. Each phone running Liquidity can represent more than one player – and play is still simpler and more fun than with cash and cards. Just click the menu button and choose "Create identity" to associate extra players with a phone. Then swipe between the "identities" at the top of the list as required during play.
+
+If you need to move the bank from the phone that the game was created with, choose "Transfer identity" on the source phone, and "Receive identity" on the destination phone. You can also use these to move other identities between phones.
