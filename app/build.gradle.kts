@@ -95,7 +95,7 @@ dependencies {
     implementation("javax.annotation:javax.annotation-api:1.3.2")
     implementation("com.madgag.spongycastle:pkix:1.54.0.0")
     implementation("com.nimbusds:nimbus-jose-jwt:7.2.1")
-    implementation("io.reactivex.rxjava2:rxjava:2.2.8")
+    implementation("io.reactivex.rxjava2:rxjava:2.2.9")
     implementation("io.reactivex.rxjava2:rxandroid:2.1.1")
     implementation("net.danlew:android.joda:2.10.1.2")
     implementation("android.arch.navigation:navigation-fragment-ktx:1.0.0")
