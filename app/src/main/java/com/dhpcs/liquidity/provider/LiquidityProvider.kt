@@ -162,7 +162,6 @@ class LiquidityProvider : ContentProvider() {
                         selection,
                         selectionArgs
                 )
-            // TODO: Switch to zoneId?
             URI_TYPE_GAME_ID -> {
                 val where = "${LiquidityContract.Games.ID} = ${uri.lastPathSegment}"
                 databaseHelper.writableDatabase.delete(
